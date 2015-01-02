@@ -1,0 +1,13 @@
+/* CSS declarations go here */
+#errorDisplay {
+  color: red;
+}
+
+#aceEditor {
+    height:400px;
+    width: 500px;
+}
+
+#ast {
+  padding-left: 20px;
+}
