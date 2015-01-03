@@ -1,19 +1,12 @@
-window.editor = new ReactiveAce
+window.editor = MandrillAce.getInstance()
 
 Router.route('/', ->
   @render('home')
 )
 
-Template.aceEditor.rendered = ->
-  editor.attach ace.edit "aceEditor"
-  # editor.theme = "monokai"
-  editor.syntaxMode = "javascript"
-
-window.editor = new ReactiveAce
-
 Template.home.rendered = ->
-  #generate abstract syntax tree
-  editor.parseEnabled = true
+  editor.setTheme('ace/theme/monokai')
+  editor.setMode('ace/mode/markdown')
 
 Template.home.helpers
   status: ->

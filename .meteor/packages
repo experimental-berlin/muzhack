@@ -8,6 +8,6 @@ meteor-platform
 autopublish
 insecure
 bootstrap
-aknudsen:reactive-ace
 coffeescript
 iron:router
+mandrill:ace
