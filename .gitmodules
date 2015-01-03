@@ -1,3 +1,0 @@
-[submodule "packages/reactive-ace"]
-	path = packages/reactive-ace
-	url = git@github.com:aknuds1/meteor-reactive-ace.git
