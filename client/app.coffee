@@ -1,5 +1,9 @@
 window.editor = new ReactiveAce
 
+Router.route('/', ->
+  @render('home')
+)
+
 Template.aceEditor.rendered = ->
   editor.attach ace.edit "aceEditor"
   # editor.theme = "monokai"
@@ -7,11 +11,11 @@ Template.aceEditor.rendered = ->
 
 window.editor = new ReactiveAce
 
-Template.demo.rendered = ->
+Template.home.rendered = ->
   #generate abstract syntax tree
   editor.parseEnabled = true
 
-Template.demo.helpers
+Template.home.helpers
   status: ->
     lineNumber = editor.lineNumber ? 0
     column = editor.column ? 0

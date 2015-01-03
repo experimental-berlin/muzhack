@@ -10,3 +10,4 @@ insecure
 bootstrap
 aknudsen:reactive-ace
 coffeescript
+iron:router
