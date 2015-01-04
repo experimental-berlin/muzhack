@@ -1,11 +1,15 @@
-window.editor = MandrillAce.getInstance()
+Logger.setLevel("debug")
 
-Router.configure(
-  layoutTemplate: 'layout'
+@editor = MandrillAce.getInstance()
+logger = new Logger('app')
+
+Meteor.startup(->
+  @loginService = new LoginService()
+  @loginService.setupTemplate()
+  @notificationService = new NotificationService()
 )
-Router.route('/', ->
-  @render('home')
-)
+
+Template.registerHelper('appName', -> 'MusitechHub')
 
 Template.home.rendered = ->
   editor.setTheme('ace/theme/monokai')
