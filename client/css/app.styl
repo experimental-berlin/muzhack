@@ -1,0 +1,204 @@
+menu-background = #272F32
+menu-color = #C71CC0
+padding-horizontal = 3em
+padding-vertical = 1em
+padding-top = 20px
+grey-background = #E3E6E7
+border-color = #811E79
+action-color = #C71CC0
+action-hover-color = #F511EB
+lighter-background = #2D363A
+border-radius = 4px
+
+rounded-corners()
+  border-radius border-radius
+
+rounded-corners-top()
+  border-radius border-radius border-radius 0px 0px
+
+body
+  background-color lighter-background
+  color menu-color
+
+a
+  color #70FD12
+
+.content
+  border-radius: 10px
+  margin-top 36px
+
+  padding-left 0px
+  padding-right 0px
+
+  #editor-container
+    padding-top: 0
+    border-left: 1px solid border-color
+    border-right: 1px solid border-color
+    padding-left: 0
+    height: 600px
+    background-color white
+
+    & > h1
+      margin-top: 0
+
+    .ace_editor
+      width: 700px
+      height: 500px
+
+#menu
+  border-bottom 0px
+  background-color menu-background
+  .pure-menu-heading
+    color menu-color
+    margin-top: 0.2em
+
+  li
+    a
+      color action-color
+      &:hover
+        background-color rgb(51, 51, 51)
+
+    &.pure-menu-selected
+      a
+        -webkit-box-shadow inset 0 3px 8px rgba(0, 0, 0, 0.125)
+        -moz-box-shadow inset 0 3px 8px rgba(0, 0, 0, 0.125)
+        box-shadow inset 0 3px 8px rgba(0, 0, 0, 0.125)
+        background-color: #111111
+        color rgb(220, 220, 220)
+
+footer
+  //margin-top 5em
+  margin-top 0px
+  border-top 1px solid border-color
+  padding 1em
+  text-align center
+  font-size 80%
+
+.toolbar
+  padding-left 20px
+
+  .toolbar-btn
+    display inline-block
+    padding-left 6px
+    padding-right 6px
+    color action-hover-color
+    &.enabled:hover
+      color action-hover-color
+    &.enabled:active
+      -webkit-box-shadow inset 0 3px 8px rgba(0, 0, 0, 0.125)
+      -moz-box-shadow inset 0 3px 8px rgba(0, 0, 0, 0.125)
+      box-shadow inset 0 3px 8px rgba(0, 0, 0, 0.125)
+      background-color: #111111
+    &.disabled
+      color: #5F2D5D
+      cursor: default
+
+.upper
+  text-transform uppercase
+
+.small
+  font-size 11px
+
+.border-btm
+  border-bottom 1px solid border-color
+
+.light-padding
+  padding 7px
+
+.airy-padding-sides
+  padding-left 20px
+  padding-right 20px
+
+.lighter-background
+  background-color lighter-background
+
+.file-explorer
+  padding-left 0px
+  .menu-item
+    display block
+    margin-bottom 3px
+    cursor: pointer
+    padding-left 40px
+    &.selected
+      background-color #3E4A50
+
+.contextmenu
+  padding-top 5px
+  padding-bottom 5px
+  padding-left 23px
+  padding-right 23px
+  background-color menu-background
+
+  ul
+    padding 0
+    margin 0
+  .contextmenu-item
+    display block
+    cursor: pointer
+    color action-color
+    &:hover
+      color action-hover-color
+
+.pull-right
+  float: right
+
+.pure-form
+  legend
+    display none
+
+.login-pad
+  background-color menu-background
+  margin 56px
+  rounded-corners
+  border 2px solid menu-background
+  box-shadow 2px 2px 13px 1px #2C2C2C
+
+  form
+    background-color lighter-background
+    padding-top 43px
+    padding-bottom 43px
+    padding-left 120px
+    padding-right 120px
+
+    fieldset
+      padding 0
+      input
+        margin-bottom 10px
+        width 100%
+        display: block
+
+  .button-group
+    margin-top 20px
+    text-align right
+
+  .login-header
+    padding-top 14px
+    padding-sides = 14px
+    padding-left padding-sides
+    padding-right padding-sides
+    padding = 10px
+
+    display flex
+
+    .tab
+      padding padding
+
+    .login-prompt
+      padding padding
+      margin-right auto
+      display inline-block
+
+.pure-button-primary
+  color action-color
+  background-color menu-background
+  rounded-corners()
+
+.tabs
+  display inline-block
+  .tab
+    &.active
+      background-color lighter-background
+    padding 10px
+    rounded-corners-top()
+    display inline-block
+    cursor: pointer

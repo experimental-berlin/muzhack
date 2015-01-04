@@ -1,5 +1,8 @@
 window.editor = MandrillAce.getInstance()
 
+Router.configure(
+  layoutTemplate: 'layout'
+)
 Router.route('/', ->
   @render('home')
 )
@@ -41,19 +44,3 @@ Template.home.helpers
     e = editor.parseError
     return unless e
     "SYNTAX ERROR: (#{e.lineNumber}, #{e.column}) #{e.description}"
-
-Template.tagList.helpers
-  #Not yet working.
-  tags: ->
-    return unless editor.parsedBody
-    tokens = editor.parsedBody.tokens
-    tags = []
-    for token in tokens
-      continue unless token.type == "Identifier"
-      tag =
-          name: token.value
-          position: token.loc.start
-      tags.push tag
-    return tags
-
-

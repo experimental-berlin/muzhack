@@ -1,37 +1,14 @@
 <template name="home">
-<div class="container">
-    <div class="row">
-        <div class="span5 editor">
-            <h1>Hello Ace!</h1>
-            <div>
-                {{> mandrill_ace }}
-            </div>
-            <div id="status">
-                {{status}}
-            </div>
-            <div id="errorDisplay">
-                {{errorDisplay}}
-            </div>
-            <div id="tagList">
-                {{> tagList}}
-            </div>
-        </div>
-
-        <div class="span5 ast">
-            <h2>Ast</h2>
-            <pre>{{ast}}</pre>
-        </div>
+  <div class="pure-g">
+    <div class="pure-u-4-5">
+      <div id="editor-container">
+        {{> mandrill_ace }}
+      </div>
     </div>
-</div>
-</template>
-
-<template name="tagList">
-  <div>
-    <h2>Tags</h2>
-    <ul>
-        {{#each tags}}
-          <li>{{name}}: ({{position.line}}, {{position.column}})</li>
-        {{/each}}
-    </ul>
+    <div class="pure-u-1-5">
+      <div id="right-sidebar" class="airy-padding-sides">
+        <h1>MusitechHub</h1>
+      </div>
+    </div>
   </div>
 </template>

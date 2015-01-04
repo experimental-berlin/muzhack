@@ -6,7 +6,6 @@ binary-heap@1.0.2
 blaze@2.0.4
 blaze-tools@1.0.2
 boilerplate-generator@1.0.2
-bootstrap@1.0.1
 callback-hook@1.0.2
 check@1.0.3
 coffeescript@1.0.5
@@ -31,6 +30,7 @@ iron:router@1.0.6
 iron:url@1.0.6
 jquery@1.0.2
 json@1.0.2
+lampe:purecss@0.5.0
 launch-screen@1.0.1
 livedata@1.0.12
 logging@1.0.6
@@ -53,6 +53,7 @@ session@1.0.5
 spacebars@1.0.4
 spacebars-compiler@1.0.4
 standard-app-packages@1.0.4
+stylus@1.0.6
 templating@1.0.10
 tracker@1.0.4
 ui@1.0.5
