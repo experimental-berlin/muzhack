@@ -10,7 +10,6 @@ findPassword = (t) ->
 
 class @LoginService
   constructor: ->
-    logger.info('Constructing LoginService')
     Session.set("loginForm", "signin")
 
   setupTemplate: =>

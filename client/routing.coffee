@@ -1,3 +1,5 @@
+logger = new Logger('routing')
+
 Router.configure(
   layoutTemplate: 'layout'
 )
@@ -6,9 +8,9 @@ Router.route('/', ->
 )
 Router.onBeforeAction(->
   if !Meteor.userId()?
-    console.log('User not logged in, rendering login page')
+    logger.debug('User not logged in, rendering login page')
     this.render('login')
   else
-    console.log('User logged in')
+    logger.debug('User is authenticated')
     this.next()
 )
