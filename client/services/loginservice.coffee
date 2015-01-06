@@ -12,13 +12,14 @@ class @LoginService
   constructor: ->
     Session.set("loginForm", "signin")
 
-  setupTemplate: =>
+  setupTemplate: ->
     Template.login.helpers({
-      showSignIn: =>
+      showSignIn: ->
         return Session.get("loginForm") == "signin"
       ,
-      showSignUp: =>
+      showSignUp: ->
         return Session.get("loginForm") == "signup"
+      ,
     })
     Template.login.events({
       "click #login-signin-tab": ->
@@ -88,5 +89,6 @@ class @LoginService
             logger.warn("Couldn't register user: #{err}")
         )
 
-        return false;
+        return false
+      ,
     })
