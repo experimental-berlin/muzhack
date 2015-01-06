@@ -1,0 +1,29 @@
+@font-face {
+	font-family: 'icomoon';
+	src:url('fonts/icomoon.eot?-gg78np');
+	src:url('fonts/icomoon.eot?#iefix-gg78np') format('embedded-opentype'),
+		url('fonts/icomoon.woff?-gg78np') format('woff'),
+		url('fonts/icomoon.ttf?-gg78np') format('truetype'),
+		url('fonts/icomoon.svg?-gg78np#icomoon') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+	font-family: 'icomoon';
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+
+	/* Better Font Rendering =========== */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.icon-exit:before {
+	content: "\ea14";
+}
+

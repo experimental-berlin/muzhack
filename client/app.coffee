@@ -7,6 +7,7 @@ Meteor.startup(->
   @loginService = new LoginService()
   @loginService.setupTemplate()
   @notificationService = new NotificationService()
+  @accountService = new AccountService()
 )
 
 Template.registerHelper('appName', -> 'MusitechHub')
@@ -48,3 +49,16 @@ Template.home.helpers
     e = editor.parseError
     return unless e
     "SYNTAX ERROR: (#{e.lineNumber}, #{e.column}) #{e.description}"
+
+class Accountbutton
+  constructor: (icon, name) ->
+    @icon = icon
+    @name = name
+    @klass = "enabled"
+
+Template.accountbar.helpers({
+  buttons: ->
+    return [
+      new Accountbutton('exit', 'logout')
+    ]
+})
