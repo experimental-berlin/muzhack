@@ -6,9 +6,11 @@
           <div class="pure-menu-heading">{{appName}}</div>
         </div>
         <div class="pure-u-4-5">
+          {{#if isLoggedIn}}
           <div class="pull-right">
             {{> accountbar}}
           </div>
+          {{/if}}
         </div>
       </div>
     </nav>

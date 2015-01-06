@@ -11,6 +11,7 @@ Meteor.startup(->
 )
 
 Template.registerHelper('appName', -> 'MusitechHub')
+Template.registerHelper('isLoggedIn', -> Meteor.userId()?)
 
 Template.home.rendered = ->
   editor.setTheme('ace/theme/monokai')
