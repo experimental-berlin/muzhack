@@ -13,7 +13,8 @@ mandrill:ace
 stylus
 lampe:purecss
 accounts-password
-accounts-ui
 jag:pince
 wizonesolutions:underscore-string
 stevezhu:sass
+email
+accounts-ui

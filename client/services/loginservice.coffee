@@ -92,3 +92,46 @@ class @LoginService
         return false
       ,
     })
+    Template.forgotPassword.helpers({
+      showRedirect: -> Session.get("isRedirecting")
+      ,
+      remainingSecondsString: ->
+        seconds = Session.get("remainingSeconds")
+        "#{seconds} second#{if seconds != 1 then "s" else ""}"
+      ,
+    })
+    Template.forgotPassword.events({
+      'submit #forgotpassword-form': (e, t) ->
+        caption = "Signup Error"
+        passwordLength = 8
+
+        e.preventDefault()
+        # Retrieve the input field values
+        email = findEmail(t)
+        logger.debug("Handling forgotten password for email #{email}")
+        Accounts.forgotPassword({
+          email: email,
+        }, (err) ->
+          if !err?
+            logger.debug("Forgotten password has been handled for email #{email}")
+            handleRedirect = ->
+              if remainingSeconds == 0
+                Session.set("isRedirecting", false)
+                Router.go('/')
+              else
+                remainingSeconds -= 1
+                Session.set("remainingSeconds", remainingSeconds)
+                setTimeout(handleRedirect, 1000)
+
+            remainingSeconds = 5
+            Session.set("remainingSeconds", remainingSeconds)
+            setTimeout(handleRedirect, 1000)
+            Session.set("isRedirecting", true)
+          else
+            notificationService.warn(caption, err.reason)
+            logger.warn("Couldn't handle forgotten password: #{err}")
+        )
+
+        return false
+      ,
+    })

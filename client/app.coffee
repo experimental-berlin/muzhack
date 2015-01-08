@@ -1,5 +1,3 @@
-Logger.setLevel("debug")
-
 @editor = MandrillAce.getInstance()
 logger = new Logger('app')
 
