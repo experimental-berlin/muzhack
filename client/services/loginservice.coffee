@@ -9,21 +9,18 @@ findPassword = (t) ->
   return t.find('.account-password').value
 
 class @LoginService
-  constructor: ->
-    Session.set("loginForm", "signin")
-
   setupTemplate: ->
     Template.login.helpers({
       showSignIn: ->
-        return Session.get("loginForm") == "signin"
+        return !Session.get("isInSignupMode")
       ,
       showSignUp: ->
-        return Session.get("loginForm") == "signup"
+        return !!Session.get("isInSignupMode")
       ,
     })
     Template.login.events({
       "click #login-signin-tab": ->
-        if Session.get("loginForm") == "signin"
+        if !Session.get("isInSignupMode")
           return
 
         logger.debug("Showing signin form")
@@ -31,16 +28,16 @@ class @LoginService
         $("##{idSignup}").removeClass('active')
         $("#signin-email").focus()
         # Display form corresponding to tab
-        Session.set("loginForm", "signin")
+        Session.set("isInSignupMode", false)
       "click #login-signup-tab": ->
-        if Session.get("loginForm") == "signup"
+        if Session.get("isInSignupMode")
           return
 
         $("##{idSignup}").addClass('active')
         $("##{idSignIn}").removeClass('active')
         $("#signup-email").focus()
         logger.debug("Showing signup form")
-        Session.set("loginForm", "signup")
+        Session.set("isInSignupMode", true)
       ,
       'submit #signin-form': (e, t) ->
         e.preventDefault()
@@ -89,7 +86,8 @@ class @LoginService
             logger.warn("Couldn't register user: #{err}")
         )
 
-        return false
+        Session.set("isInSignupMode", false)
+        false
       ,
     })
     Template.forgotPassword.helpers({
