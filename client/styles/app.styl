@@ -9,6 +9,7 @@ action-color = #C71CC0
 action-hover-color = #F511EB
 lighter-background = #2D363A
 border-radius = 4px
+login-pad-margin = 56px
 
 rounded-corners()
   border-radius border-radius
@@ -53,6 +54,8 @@ a
     margin-top 0.2em
     a
       color menu-color
+      padding 0
+      border-width 0
 
   li
     a
@@ -151,7 +154,7 @@ footer
 
 .login-pad
   background-color menu-background
-  margin 56px
+  margin login-pad-margin
   rounded-corners
   border 2px solid menu-background
   box-shadow 2px 2px 13px 1px #2C2C2C
@@ -208,3 +211,6 @@ footer
 
 #forgot-password
   margin-left 4px
+
+#password-reset-page
+  margin login-pad-margin
