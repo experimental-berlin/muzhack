@@ -1,20 +1,18 @@
 <template name="layout">
   <header>
     <nav id="menu" class="pure-menu pure-menu-open pure-menu-fixed pure-menu-horizontal">
-      <div class="pure-g">
-        <div class="pure-u-1-5">
-          <div class="pure-menu-heading">
-            <a href="/">{{appName}}</a>
-          </div>
-        </div>
-        <div class="pure-u-4-5">
-          {{#if isLoggedIn}}
-          <div class="pull-right">
-            {{> accountbar}}
-          </div>
-          {{/if}}
-        </div>
+      <a class="pure-menu-heading" href="/">{{appName}}</a>
+      <ul>
+        {{#each menuElements}}
+        <li {{attrs}}><a href="#">{{name}}</a></li>
+        {{/each}}
+      </ul>
+
+      {{#if isLoggedIn}}
+      <div class="pull-right">
+        {{> accountbar}}
       </div>
+      {{/if}}
     </nav>
   </header>
   <article class="content">
