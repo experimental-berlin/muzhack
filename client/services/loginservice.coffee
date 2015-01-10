@@ -3,10 +3,10 @@ idSignIn = "login-signin-tab"
 idSignup = "login-signup-tab"
 
 findEmail = (t) ->
-  return _(t.find('.account-email').value).trim()
+  return _.trim(t.find('.account-email').value)
 
 findPassword = (t) ->
-  return t.find('.account-password').value
+  return _.trim(t.find('.account-password').value)
 
 class @LoginService
   setupTemplate: ->
@@ -55,34 +55,46 @@ class @LoginService
         return false;
       ,
       'submit #signup-form': (e, t) ->
-        caption = "Signup Error"
+        errorCaption = "Signup Error"
         passwordLength = 8
 
         e.preventDefault()
-        # retrieve the input field values
+
+        username = _.trim(t.find(".account-username").value)
+        if _.isBlank(username)
+          notificationService.warn(errorCaption, "You must supply a username")
+          return false
+        name = _.trim(t.find(".account-name").value)
+        if _.isBlank(name)
+          notificationService.warn(errorCaption, "You must supply a name")
+          return false
         email = findEmail(t)
         password = findPassword(t)
         confirmedPassword = _(t.find('.account-password-confirm').value).trim()
         if password != confirmedPassword
-          notificationService.warn(caption, "Passwords don't match")
+          notificationService.warn(errorCaption, "Passwords don't match")
           return false
 
         if _(password).isBlank()
-          notificationService.warn(caption, "You must supply a password")
+          notificationService.warn(errorCaption, "You must supply a password")
           return false
         if password.length < passwordLength
-          notificationService.warn(caption, "The password must consist of at least #{passwordLength} characters")
+          notificationService.warn(errorCaption, "The password must consist of at least #{passwordLength} characters")
           return false
 
         logger.debug("Registering user #{email}")
         Accounts.createUser({
+          username: username,
           email: email,
-          password: password
+          password: password,
+          profile: {
+            name: name,
+          },
         }, (err) ->
           if !err?
             logger.debug("User has been registered and logged in")
           else
-            notificationService.warn(caption, err.reason)
+            notificationService.warn(errorCaption, err.reason)
             logger.warn("Couldn't register user: #{err}")
         )
 
@@ -100,7 +112,6 @@ class @LoginService
     })
     Template.forgotPassword.events({
       'submit #forgotpassword-form': (e, t) ->
-        caption = "Signup Error"
         passwordLength = 8
 
         e.preventDefault()
@@ -126,7 +137,7 @@ class @LoginService
             setTimeout(handleRedirect, 1000)
             Session.set("isRedirecting", true)
           else
-            notificationService.warn(caption, err.reason)
+            notificationService.warn("Error", err.reason)
             logger.warn("Couldn't handle forgotten password: #{err}")
         )
 

@@ -10,6 +10,10 @@ Router.route('/account/forgotpassword', ->
   @render('forgotPassword')
 , name: 'forgotPassword'
 )
+Router.route('/:owner/:project', ->
+  @render("project")
+, controller: ProjectController,
+)
 Router.onBeforeAction(->
   if !Meteor.userId()?
     logger.debug('User not logged in, rendering login page')
