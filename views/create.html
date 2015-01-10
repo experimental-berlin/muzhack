@@ -1,14 +1,43 @@
 <template name="create">
-  <div id="create-pad">
-    <pure-g>
+  <div id="create-pad" class="airy-padding-sides">
+    <div class="pure-g">
       <div class="pure-u-1">
-        
+        <div class="pure-g project-input">
+          <div class="pure-u-2-24">
+            <label>ID</label>
+          </div>
+          <div class="pure-u-22-24">
+            <input placeholder="What should the ID of your project be?"/>
+          </div>
+        </div>
+        <div class="pure-g">
+          <div class="pure-u-2-24 project-input">
+            <label>Title</label>
+          </div>
+          <div class="pure-u-22-24">
+            <input placeholder="What's the title of your project?"/>
+          </div>
+        </div>
       </div>
       <div class="pure-u-1">
         <div id="editor-container">
           {{> mandrill_ace }}
         </div>
       </div>
-    </pure-g>
+      <div class="pure-u-1">
+        <div class="pure-g">
+          <div class="pure-u-2-24">
+            <label>Tags</label>
+          </div>
+          <div class="pure-u-22-24">
+            <input/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="create-buttons" class="button-group">
+      <input type="submit" class="pure-button pure-button-primary" id="submit-button" value="Create"/>
+    </div>
   </div>
 </template>
