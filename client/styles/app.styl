@@ -1,4 +1,5 @@
-menu-background = #272F32
+@import 'common.import'
+
 menu-color = #FF14F6
 padding-horizontal = 3em
 padding-vertical = 1em
@@ -8,14 +9,6 @@ border-color = #811E79
 action-color = #C71CC0
 action-hover-color = #F511EB
 lighter-background = #2D363A
-border-radius = 4px
-login-pad-margin = 56px
-
-rounded-corners()
-  border-radius border-radius
-
-rounded-corners-top()
-  border-radius border-radius border-radius 0px 0px
 
 body
   background-color lighter-background
@@ -154,48 +147,6 @@ footer
   legend
     display none
 
-.login-pad
-  background-color menu-background
-  margin login-pad-margin
-  rounded-corners
-  border 2px solid menu-background
-  box-shadow 2px 2px 13px 1px #2C2C2C
-
-  form
-    background-color lighter-background
-    padding-top 43px
-    padding-bottom 43px
-    padding-left 120px
-    padding-right 120px
-
-    fieldset
-      padding 0
-      input
-        margin-bottom 10px
-        width 100%
-        display block
-
-  .button-group
-    margin-top 20px
-    text-align right
-
-  .login-header
-    padding-top 14px
-    padding-sides = 14px
-    padding-left padding-sides
-    padding-right padding-sides
-    padding = 10px
-
-    display flex
-
-    .tab
-      padding padding
-
-    .login-prompt
-      padding padding
-      margin-right auto
-      display inline-block
-
 .pure-button-primary
   color action-color
   background-color menu-background
@@ -210,9 +161,3 @@ footer
     rounded-corners-top()
     display inline-block
     cursor pointer
-
-#forgot-password
-  margin-left 4px
-
-#password-reset-page
-  margin login-pad-margin

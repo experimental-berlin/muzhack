@@ -1,0 +1,49 @@
+@require 'common.import'
+
+pad-margin = 56px
+
+.login-pad
+  pad-base()
+
+  margin pad-margin
+
+  form
+    background-color lighter-background
+    padding-top 43px
+    padding-bottom 43px
+    padding-left 120px
+    padding-right 120px
+
+    fieldset
+      padding 0
+      input
+        margin-bottom 10px
+        width 100%
+        display block
+
+  .button-group
+    margin-top 20px
+    text-align right
+
+  .login-header
+    padding-top 14px
+    padding-sides = 14px
+    padding-left padding-sides
+    padding-right padding-sides
+    padding = 10px
+
+    display flex
+
+    .tab
+      padding padding
+
+    .login-prompt
+      padding padding
+      margin-right auto
+      display inline-block
+
+#forgot-password
+  margin-left 4px
+
+#password-reset-page
+  margin pad-margin

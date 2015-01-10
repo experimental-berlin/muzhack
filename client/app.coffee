@@ -39,10 +39,6 @@ Template.layout.events(
     Session.set("selectedSection", @name)
 )
 
-Template.create.rendered = ->
-  editor.setTheme('ace/theme/monokai')
-  editor.setMode('ace/mode/markdown')
-
 Template.home.helpers(
   sectionTemplate: -> Session.get("selectedSection").toLowerCase()
 

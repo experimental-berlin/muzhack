@@ -2,11 +2,13 @@
   <header>
     <nav id="menu" class="pure-menu pure-menu-open pure-menu-fixed pure-menu-horizontal">
       <a class="pure-menu-heading" href="/">{{appName}}</a>
+      {{#if isLoggedIn}}
       <ul>
         {{#each menuElements}}
         <li {{attrs}}><a href="#">{{name}}</a></li>
         {{/each}}
       </ul>
+      {{/if}}
 
       {{#if isLoggedIn}}
       <div class="pull-right">
