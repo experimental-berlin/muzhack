@@ -4,6 +4,14 @@
       <div id="explore-pad" class="airy-padding-sides">
         {{#if isEmpty}}
         <p>No documents have been added yet. Get working!</p>
+        {{else}}
+        <div id="isotope-container">
+          {{#each projects}}
+          <div class="project-item">
+            <div class="project item-title">{{title}}</div>
+          </div>
+          {{/each}}
+        </div>
         {{/if}}
       </div>
     </div>

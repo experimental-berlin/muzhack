@@ -33,6 +33,7 @@ iron:location@1.0.6
 iron:middleware-stack@1.0.6
 iron:router@1.0.6
 iron:url@1.0.6
+isotope:isotope@2.1.0_1
 jag:pince@0.0.6
 jquery@1.0.2
 json@1.0.2
