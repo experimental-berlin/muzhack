@@ -1,14 +1,19 @@
 <template name="project">
   <div class="pure-g">
-    <div class="pure-u-1">
+    <div class="pure-u-4-5">
       <div id="project-pad" class="airy-padding-sides">
         <h1>{{title}}</h1>
         <p>Added {{creationDateString}} by {{userFullName}}</p>
         <div id="project-text">
           {{#markdown}}{{text}}{{/markdown}}
         </div>
+      </div>
+    </div>
+    <div class="pure-u-1-5">
+      <div id="tag-pad" class="airy-padding-sides">
+        <h2>Tags</h2>
         <div id="project-tags">
-          Tags: {{tags}}
+          {{tagsString}}
         </div>
       </div>
     </div>

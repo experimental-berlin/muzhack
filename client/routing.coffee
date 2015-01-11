@@ -4,7 +4,7 @@ Router.configure(
   layoutTemplate: 'layout'
 )
 Router.route('/', ->
-  @render('home')
+  @render('explore')
 )
 Router.route('/account/forgotpassword', ->
   @render('forgotPassword')

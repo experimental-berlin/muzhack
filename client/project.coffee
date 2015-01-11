@@ -11,4 +11,8 @@ Template.project.helpers(
   ,
   userFullName: ->
     Meteor.users.findOne({username: this.owner}).profile.name
+  ,
+  tagsString: ->
+    @tags.join(',')
+  ,
 )
