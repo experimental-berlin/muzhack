@@ -5,7 +5,9 @@ Router.configure(
 )
 Router.route('/', ->
   @render('explore')
-)
+, {
+    waitOn: -> Meteor.subscribe("projects")
+})
 Router.route('/account/forgotpassword', ->
   @render('forgotPassword')
 ,
