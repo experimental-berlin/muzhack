@@ -6,14 +6,13 @@ Meteor.startup(->
   @loginService.setupTemplate()
   @notificationService = new NotificationService()
   @accountService = new AccountService()
-  Session.set("selectedSection", "explore")
 )
 
 Template.registerHelper('appName', -> 'MusitechHub')
 Template.registerHelper('isLoggedIn', -> Meteor.userId()?)
 
 class MenuElement
-  constructor: (@name) ->
+  constructor: (@name, @url) ->
 
   attrs: ->
     classes = ["menu-element"]
@@ -23,24 +22,17 @@ class MenuElement
       classes.join(" ")
 
   isSelected: ->
-    Session.get("selectedSection").toLowerCase() == @name.toLowerCase()
+    if !Session.get("currentSection")?
+      return
+    Session.get("currentSection").toLowerCase() == @name.toLowerCase()
 
 Template.layout.helpers(
-  menuElements: -> [new MenuElement("Explore"), new MenuElement("Create")]
-)
-Template.layout.events(
-  "click .menu-element": ->
-    logger.debug("Menu element '#{@name}' clicked")
-    if @isSelected()
-      logger.debug("Section '#{@name}' is already active, ignoring")
-      return
-
-    logger.debug("Switching to section '#{@name}'")
-    Session.set("selectedSection", @name)
+  menuElements: -> [new MenuElement("Explore", "/"), new MenuElement("Create", "/create"),
+    new MenuElement("About", "/about")]
 )
 
 Template.home.helpers(
-  sectionTemplate: -> Session.get("selectedSection").toLowerCase()
+  sectionTemplate: -> Session.get("currentSection").toLowerCase()
 
   status: ->
     lineNumber = editor.lineNumber ? 0

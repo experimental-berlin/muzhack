@@ -5,10 +5,32 @@ Router.configure(
 )
 Router.route('/', ->
   @render('home')
+,
+  onBeforeAction: ->
+    Session.set("currentSection", "explore")
+    @next()
 )
 Router.route('/account/forgotpassword', ->
   @render('forgotPassword')
-, name: 'forgotPassword'
+,
+  name: 'forgotPassword',
+  onBeforeAction: ->
+    Session.set("currentSection", "account")
+    @next()
+)
+Router.route('/about', ->
+  @render('about')
+,
+  onBeforeAction: ->
+    Session.set("currentSection", "about")
+    @next()
+)
+Router.route('/create', ->
+  @render('create')
+,
+  onBeforeAction: ->
+    Session.set("currentSection", "create")
+    @next()
 )
 Router.onBeforeAction(->
   if !Meteor.userId()?
