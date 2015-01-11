@@ -21,13 +21,12 @@ Template.create.events(
     logger.info("Creating project with ID '#{qualifiedId}', title '#{title}' and tag(s) #{tags.join(', ')}")
     logger.info("Text: '#{text}'")
 
-    Projects.insert(
-      owner: username,
-      projectId: id,
-      title: title,
-      tags: tags,
-      text: text,
-      created: moment().utc().format(),
+    Meteor.call("createProject", id, title, tags, text, (error) ->
+      if !error?
+        Router.go("/#{qualifiedId}")
+      else
+        logger.warn("Server error when trying to create project:", error)
+        notificationService.warn("Project Creation Failure",
+          "Failed to create project due to error on server")
     )
-    Router.go("/#{qualifiedId}")
 )
