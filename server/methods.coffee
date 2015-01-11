@@ -11,7 +11,7 @@ Meteor.methods({
       projectId: id,
       title: title,
       tags: tags,
-      created: moment().utc().format(),
+      created: moment().utc().toDate(),
     }
     logger.info("Creating project #{user.username}/#{id}:", metadata)
     data = _.extend(metadata, {

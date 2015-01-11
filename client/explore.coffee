@@ -5,7 +5,7 @@ Template.explore.helpers({
     !Projects.findOne()
   ,
   projects: ->
-    Projects.find()
+    Projects.find({}, {sort: [["created", "asc"]]})
   ,
   projectUrl: -> "#{@owner}/#{@projectId}"
   ,
