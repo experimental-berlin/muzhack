@@ -27,11 +27,11 @@ Router.onBeforeAction(->
     logger.debug('User not logged in, rendering login page')
     @render('login')
   else
-    if @url.startsWith('/account')
+    if _.startsWith(@url, '/account')
       curSection = "account"
-    else if @url.startsWith("/create")
+    else if _.startsWith(@url, "/create")
       curSection = "create"
-    else if @url.startsWith("/about")
+    else if _.startsWith(@url, "/about")
       curSection = "about"
     else
       curSection = "explore"
