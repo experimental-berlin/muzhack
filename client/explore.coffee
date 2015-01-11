@@ -6,6 +6,9 @@ Template.explore.helpers({
   ,
   projects: ->
     Projects.find()
+  ,
+  projectUrl: -> "#{@owner}/#{@projectId}"
+  ,
 })
 
 Template.explore.rendered = ->

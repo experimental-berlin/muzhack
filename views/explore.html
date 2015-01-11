@@ -7,9 +7,11 @@
         {{else}}
         <div id="isotope-container">
           {{#each projects}}
-          <div class="project-item">
-            <div class="project item-title">{{title}}</div>
-          </div>
+          <a href="{{projectUrl}}">
+            <div class="project-item">
+              <div class="project item-title">{{title}}</div>
+            </div>
+          </a>
           {{/each}}
         </div>
         {{/if}}
