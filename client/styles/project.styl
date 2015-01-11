@@ -1,10 +1,13 @@
 @require 'common.import'
 
+margin = 25px
+
 #project-pad
   pad-base()
 
   padding 20px
-  margin 25px
+  margin-bottom margin
+  margin-top margin
   :first-child
     margin-top 0
 
@@ -19,7 +22,9 @@
       margin-top 0
       margin-bottom 0
 
+#right-column
+  margin margin
+
 #tag-pad
   pad-base()
-  margin 25 px
   padding-bottom 20px
