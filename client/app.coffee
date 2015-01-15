@@ -27,8 +27,9 @@ class MenuElement
     Session.get("currentSection").toLowerCase() == @name.toLowerCase()
 
 Template.layout.helpers(
-  menuElements: -> [new MenuElement("Explore", "/"), new MenuElement("Create", "/create"),
-    new MenuElement("About", "/about")]
+  menuElements: ->
+    [new MenuElement("Explore", "/"), new MenuElement("Create", "/create"),
+      new MenuElement("About", "/about")]
 )
 
 class Accountbutton

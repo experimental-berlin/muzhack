@@ -10,8 +10,13 @@ Router.route('/', ->
 })
 Router.route('/account/forgotpassword', ->
   @render('forgotPassword')
+, {
+    name: 'forgotPassword',
+    onBeforeAction: ->
+      if Meteor.userId()?
+        @go('/')
 ,
-  name: 'forgotPassword',
+  }
 )
 Router.route('/about', ->
   @render('about')
@@ -24,8 +29,9 @@ Router.route('/:owner/:project', ->
 ,
   controller: ProjectController,
 )
+
 Router.onBeforeAction(->
-  if !Meteor.userId()?
+  if _.startsWith(@url, "/create") and !Meteor.userId()?
     logger.debug('User not logged in, rendering login page')
     @render('login')
   else
@@ -41,6 +47,4 @@ Router.onBeforeAction(->
 
     logger.debug('User is authenticated')
     @next()
-, {
-  except: ['forgotPassword',]
-})
+)
