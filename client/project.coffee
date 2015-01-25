@@ -4,10 +4,13 @@ logger = new Logger("project")
   waitOn: -> Meteor.subscribe("projects")
   ,
   data: ->
-    Projects.findOne(
+    project = Projects.findOne(
       owner: @params.owner,
       projectId: @params.project,
     )
+    _.extend({
+      isEditingText: false,
+    }, project)
 })
 
 Template.project.helpers(
@@ -26,6 +29,9 @@ Template.project.helpers(
     @tags.join(',')
   ,
 )
+Template.project.rendered = ->
+  editor.setTheme('ace/theme/monokai')
+  editor.setMode('ace/mode/markdown')
 Template.project.created = ->
   rVar = @ownerFullName
   if !rVar?
