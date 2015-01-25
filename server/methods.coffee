@@ -1,11 +1,15 @@
 logger = new Logger("methods")
 
+getUser = (data) ->
+  if !data.userId?
+    throw new Error("You must be logged in to call this method")
+
+  Meteor.users.findOne({_id: data.userId})
+
 Meteor.methods({
   createProject: (id, title, tags, text) ->
-    if !@userId?
-      throw new Error("You must be logged in to call this method")
+    user = getUser(@)
 
-    user = Meteor.users.findOne({_id: @userId})
     metadata = {
       owner: user.username,
       projectId: id,
@@ -25,4 +29,9 @@ Meteor.methods({
       user.profile.name
     else
       logger.warn("Could not find user by username '#{username}'")
+  ,
+  updateProjectText: (id, text) ->
+    logger.debug("User #{@userId} updating text of project #{id}")
+    user = getUser(@)
+    Projects.update({projectId: id}, {$set: {text: text}})
 })
