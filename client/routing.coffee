@@ -3,18 +3,34 @@ logger = new Logger('routing')
 Router.configure(
   layoutTemplate: 'layout'
 )
+Router.route('/login', ->
+  logger.debug("Handling login route")
+  @render('login')
+, {
+  onBeforeAction: ->
+    if Meteor.userId()?
+      logger.debug("User is already logged in - redirecting to home")
+      @redirect('/')
+    else
+      @next()
+,
+  }
+)
 Router.route('/', ->
   @render('explore')
 , {
+    name: 'home',
     waitOn: -> Meteor.subscribe("projects")
 })
 Router.route('/account/forgotpassword', ->
   @render('forgotPassword')
 , {
-    name: 'forgotPassword',
-    onBeforeAction: ->
-      if Meteor.userId()?
-        @go('/')
+  name: 'forgotPassword',
+  onBeforeAction: ->
+    if Meteor.userId()?
+      @redirect('/')
+    else
+      @next()
 ,
   }
 )

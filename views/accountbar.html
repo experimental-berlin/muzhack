@@ -1,7 +1,11 @@
 <template name="accountbar">
   <div class="accountbar pull-right">
+    {{#if isLoggedIn}}
     {{#each buttons}}
     <a href="#" class="toolbar-btn {{klass}}"><span class="icon-{{icon}}"></span></a>
     {{/each}}
+    {{else}}
+    <a href="/login" id="login" class="toolbar-btn"><span class="icon-enter"></span></a>
+    {{/if}}
   </div>
 </template>

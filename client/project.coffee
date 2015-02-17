@@ -2,7 +2,6 @@ logger = new Logger("project")
 
 @ProjectController = RouteController.extend({
   waitOn: -> Meteor.subscribe("projects")
-  ,
   data: ->
     Projects.findOne(
       owner: @params.owner,
@@ -13,7 +12,6 @@ logger = new Logger("project")
 Template.project.helpers(
   creationDateString: ->
     moment(this.created).format("MMMM Do YYYY")
-  ,
   userFullName: ->
     template = Template.instance()
     rVar = template? && template.ownerFullName
@@ -21,12 +19,9 @@ Template.project.helpers(
       rVar.get()
     else
       null
-  ,
   tagsString: ->
     @tags.join(',')
-  ,
   isEditing: -> Session.get("isEditingProject")
-  ,
 )
 Template.editorContainer.rendered = ->
   logger.debug("Editor container rendered, giving Ace focus")
