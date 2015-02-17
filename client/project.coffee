@@ -32,7 +32,8 @@ Template.editorContainer.rendered = ->
   logger.debug("Editor container rendered, giving Ace focus")
   editor.setTheme('ace/theme/monokai')
   editor.setMode('ace/mode/markdown')
-  editor.setValue(@data.text, 0)
+  if @data.text
+    editor.setValue(@data.text, 0)
   editor.setFocus()
   editor.ace.on("change", ->
     logger.debug("Project text has changed - setting dirty state")
@@ -63,8 +64,14 @@ Template.project.events({
       return
 
     Session.set("isEditingProject", false)
+
+    title = $("#title-input").val()
+    text = editor.value()
+    tags = $("#tags-input").val()
+
     logger.info("Saving project...")
-    Meteor.call('updateProjectText', @.projectId, editor.value(), (error) ->
+    logger.debug("title: #{title}, text: #{text}, tags: #{tags}")
+    Meteor.call('updateProject', @.projectId, title, text, tags, (error) ->
       if error?
         logger.error("Updating project on server failed: #{error}")
         notificationService.warn("Saving project to server failed: #{error}")

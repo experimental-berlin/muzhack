@@ -28,10 +28,11 @@ Meteor.methods({
       user.profile.name
     else
       logger.warn("Could not find user by username '#{username}'")
-  updateProjectText: (id, text) ->
-    logger.debug("User #{@userId} updating text of project #{id}")
+  updateProject: (id, title, text, tags) ->
+    logger.debug("User #{@userId} updating project #{id}")
     user = getUser(@)
-    Projects.update({projectId: id}, {$set: {text: text}})
+    Projects.update({projectId: id}, {$set: {title: title, text: text, tags: _.map(
+      tags.split(','), (tag) -> _.trim(tag))}})
   removeProject: (id) ->
     user = getUser(@)
 

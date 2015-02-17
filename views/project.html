@@ -13,9 +13,13 @@
       <div id="right-column">
         <div id="tag-pad" class="airy-padding-sides">
           <h2>Tags</h2>
+          {{#unless isEditing}}
           <div id="project-tags">
             {{tagsString}}
           </div>
+          {{else}}
+          <input id="tags-input" placeholder="Project tags" value="{{tagsString}}" />
+          {{/unless}}
         </div>
       </div>
     </div>

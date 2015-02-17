@@ -1,8 +1,9 @@
 <template name="editProject">
-{{> editorContainer}}
-<div id="edit-buttons">
-  <button id="save-project" class="pure-button pure-button-primary">Save</button>
-  <button id="cancel-edit" class="pure-button">Cancel</button>
-  <a id="remove-project" href="#">Remove this project</a>
-</div>
+  <input id="title-input" placeholder="Project title" value="{{title}}" />
+  {{> editorContainer}}
+  <div id="edit-buttons">
+    <button id="save-project" class="pure-button pure-button-primary">Save</button>
+    <button id="cancel-edit" class="pure-button">Cancel</button>
+    <a id="remove-project" href="#">Remove this project</a>
+  </div>
 </template>
