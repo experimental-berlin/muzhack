@@ -22,16 +22,24 @@ Meteor.methods({
       text: text,
     })
     Projects.insert(data)
-  ,
   getUserFullName: (username) ->
     user = Meteor.users.findOne({username: username})
     if user?
       user.profile.name
     else
       logger.warn("Could not find user by username '#{username}'")
-  ,
   updateProjectText: (id, text) ->
     logger.debug("User #{@userId} updating text of project #{id}")
     user = getUser(@)
     Projects.update({projectId: id}, {$set: {text: text}})
+  removeProject: (id) ->
+    user = getUser(@)
+
+    project = Projects.findOne({projectId: id})
+    if !project?
+      return
+    if project.owner != user.username
+      throw new Meteor.Error("unauthorized", "Only the owner may remove a project")
+
+    Projects.remove({projectId: id})
 })

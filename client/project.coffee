@@ -66,7 +66,8 @@ Template.project.events({
     logger.info("Saving project...")
     Meteor.call('updateProjectText', @.projectId, editor.value(), (error) ->
       if error?
-        logger.error("Updating project text on server failed: #{error}")
+        logger.error("Updating project on server failed: #{error}")
+        notificationService.warn("Saving project to server failed: #{error}")
         Session.set("isEditingProject", true)
       else
         logger.info("Successfully saved project")
@@ -76,4 +77,17 @@ Template.project.events({
     # TODO: Ask user if there have been modifications
     logger.debug("Canceling editing of project, dirty: #{isModified}")
     Session.set("isEditingProject", false)
+  'click #remove-project': ->
+    # TODO: Ask user
+    Session.set("isEditingProject", false)
+    logger.info("Removing project...")
+    Meteor.call("removeProject", @.projectId, (error) ->
+      if error?
+        logger.error("Removing project on server failed: #{error}")
+        notificationService.warn("Removing project on server failed: #{error}")
+        Session.set("isEditingProject", true)
+      else
+        logger.info("Successfully removed project")
+        Router.go('/')
+    )
 })
