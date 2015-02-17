@@ -2,14 +2,10 @@
   <div class="pure-g">
     <div class="pure-u-4-5">
       <div id="project-pad" class="airy-padding-sides">
-        <h1>{{title}}</h1>
-        <p>Added {{creationDateString}} by {{userFullName}}</p>
-        {{#unless isEditingText}}
-        <div id="project-text">
-          {{#markdown}}{{text}}{{/markdown}}
-        </div>
+        {{#unless isEditing}}
+        {{> displayProject}}
         {{else}}
-        {{> editorContainer}}
+        {{> editProject}}
         {{/unless}}
       </div>
     </div>

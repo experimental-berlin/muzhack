@@ -1,0 +1,8 @@
+<template name="displayProject">
+<a id="edit-action" class="action pull-right" href="#"><span class="icon-pencil"></span></a>
+<h1>{{title}}</h1>
+<p>Added {{creationDateString}} by {{userFullName}}</p>
+<div id="project-text">
+  {{#markdown}}{{text}}{{/markdown}}
+</div>
+</template>

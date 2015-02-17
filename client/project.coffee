@@ -25,7 +25,7 @@ Template.project.helpers(
   tagsString: ->
     @tags.join(',')
   ,
-  isEditingText: -> Session.get("isEditingProjectText")
+  isEditing: -> Session.get("isEditingProject")
   ,
 )
 Template.editorContainer.rendered = ->
@@ -36,7 +36,7 @@ Template.editorContainer.rendered = ->
   editor.setFocus()
   editor.ace.on("change", ->
     logger.debug("Project text has changed - setting dirty state")
-    Session.set("isProjectTextModified", true)
+    Session.set("isProjectModified", true)
   )
   editor.ace.clearSelection()
   editor.ace.gotoLine(0, 0)
@@ -55,19 +55,25 @@ Template.project.created = ->
       notificationService.warn("Server Error", "Could not get name of project owner")
   )
 Template.project.events({
-  'click #project-text': ->
-    logger.debug('Project text clicked, enabling editing')
-    Session.set("isEditingProjectText", true)
-  ,
-  'blur .ace_editor': ->
-    isModified = Session.get("isProjectTextModified")
-    stateStr = if isModified then "dirty" else "clean"
-    logger.debug("Editor has lost focus - state: #{stateStr}")
-    if isModified
-      logger.debug("Updating project text on server")
-      Meteor.call('updateProjectText', @.projectId, editor.value(), (error) ->
-        if error?
-          logger.error("Updating project text on server failed: #{error}")
-      )
-    Session.set("isEditingProjectText", false)
+  'click #edit-action': ->
+    logger.debug("Entering edit mode")
+    Session.set("isEditingProject", true)
+  'click #save-project': ->
+    if !Session.get("isEditingProject")
+      return
+
+    Session.set("isEditingProject", false)
+    logger.info("Saving project...")
+    Meteor.call('updateProjectText', @.projectId, editor.value(), (error) ->
+      if error?
+        logger.error("Updating project text on server failed: #{error}")
+        Session.set("isEditingProject", true)
+      else
+        logger.info("Successfully saved project")
+    )
+  'click #cancel-edit': ->
+    isModified = Session.get("isProjectModified")
+    # TODO: Ask user if there have been modifications
+    logger.debug("Canceling editing of project, dirty: #{isModified}")
+    Session.set("isEditingProject", false)
 })
