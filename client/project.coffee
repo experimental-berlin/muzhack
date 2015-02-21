@@ -1,12 +1,17 @@
 logger = new Logger("project")
 
 @ProjectController = RouteController.extend({
-  waitOn: -> Meteor.subscribe("projects")
+  waitOn: -> [Meteor.subscribe("projects"), Meteor.subscribe("users")]
   data: ->
-    Projects.findOne(
+    owner = Meteor.users.findOne(username: @params.owner)
+    project = Projects.findOne(
       owner: @params.owner,
       projectId: @params.project,
     )
+    if project? && owner?
+      project.ownerName = owner.profile.name
+      logger.debug("Project owner's name: #{project.ownerName}")
+    project
 })
 
 Template.project.helpers(
