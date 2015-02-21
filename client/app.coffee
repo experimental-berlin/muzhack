@@ -6,6 +6,15 @@ Meteor.startup(->
   @loginService.setupTemplate()
   @notificationService = new NotificationService()
   @accountService = new AccountService()
+
+  SEO.config({
+    title: 'MusitechHub'
+    meta: {
+      'description': 'The hub for finding and publishing music technology projects'
+    }
+  })
+
+  undefined
 )
 
 Template.registerHelper('appName', -> 'MusitechHub')

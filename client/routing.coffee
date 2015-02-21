@@ -1,5 +1,11 @@
 logger = new Logger('routing')
 
+Router.onAfterAction(->
+  logger.debug("Setting title")
+  SEO.config({
+    title: "MusitechHub"
+  })
+)
 Router.configure(
   layoutTemplate: 'layout'
 )
@@ -43,7 +49,8 @@ Router.route('/create', ->
 Router.route('/:owner/:project', ->
   @render("project")
 ,
-  controller: ProjectController,
+  name: "project"
+  controller: ProjectController
 )
 
 Router.onBeforeAction(->

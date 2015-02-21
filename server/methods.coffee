@@ -22,12 +22,6 @@ Meteor.methods({
       text: text,
     })
     Projects.insert(data)
-  getUserFullName: (username) ->
-    user = Meteor.users.findOne({username: username})
-    if user?
-      user.profile.name
-    else
-      logger.warn("Could not find user by username '#{username}'")
   updateProject: (id, title, text, tags) ->
     logger.debug("User #{@userId} updating project #{id}")
     user = getUser(@)

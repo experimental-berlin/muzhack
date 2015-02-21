@@ -12,6 +12,16 @@ logger = new Logger("project")
       project.ownerName = owner.profile.name
       logger.debug("Project owner's name: #{project.ownerName}")
     project
+  onAfterAction: ->
+    data = this.data()
+    if data?
+      title = "#{data.owner}/#{data.projectId}"
+      logger.debug("Setting title: #{title}")
+      SEO.config({
+        title: "MusitechHub - #{title}"
+      })
+    else
+      logger.debug("@data is not defined")
 })
 
 Template.project.helpers(

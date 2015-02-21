@@ -42,6 +42,7 @@ livedata@1.0.12
 localstorage@1.0.2
 logging@1.0.6
 mandrill:ace@1.0.2
+manuelschoebel:ms-seo@0.4.1
 markdown@1.0.3
 meteor@1.1.4
 meteor-platform@1.2.1
@@ -50,6 +51,7 @@ minimongo@1.0.6
 mobile-status-bar@1.0.2
 momentjs:moment@2.9.0
 mongo@1.0.11
+mquandalle:jade@0.4.1
 npm-bcrypt@0.7.7
 observe-sequence@1.0.4
 ordered-dict@1.0.2
