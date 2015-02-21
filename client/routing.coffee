@@ -1,11 +1,5 @@
 logger = new Logger('routing')
 
-Router.onAfterAction(->
-  logger.debug("Setting title")
-  SEO.config({
-    title: "MusitechHub"
-  })
-)
 Router.configure(
   layoutTemplate: 'layout'
 )

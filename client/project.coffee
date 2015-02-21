@@ -17,7 +17,7 @@ logger = new Logger("project")
     if data?
       title = "#{data.owner}/#{data.projectId}"
       logger.debug("Setting title: #{title}")
-      SEO.config({
+      SEO.set({
         title: "MusitechHub - #{title}"
       })
     else
