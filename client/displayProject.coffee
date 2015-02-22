@@ -5,6 +5,4 @@ Template.displayProject.helpers(
     moment(@created).format("MMMM Do YYYY")
   userFullName: ->
     @ownerName
-  tagsString: ->
-    @tags.join(',')
 )

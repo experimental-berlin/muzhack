@@ -13,7 +13,7 @@ logger = new Logger("project")
       logger.debug("Project owner's name: #{project.ownerName}")
     project
   onAfterAction: ->
-    data = this.data()
+    data = @data()
     if data?
       title = "#{data.owner}/#{data.projectId}"
       logger.debug("Setting title: #{title}")
@@ -26,6 +26,7 @@ logger = new Logger("project")
 
 Template.project.helpers(
   isEditing: -> Session.get("isEditingProject")
+  tagsString: -> @tags.join(',')
 )
 Template.editorContainer.rendered = ->
   logger.debug("Editor container rendered, giving Ace focus")
