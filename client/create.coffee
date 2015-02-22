@@ -5,12 +5,15 @@ Template.create.rendered = ->
   editor.setMode('ace/mode/markdown')
 
 Template.create.events(
-  'click #create-button': ->
+  'click #create-button': (event) ->
     id = $('#input-id').val()
     title = $('#input-title').val()
     tags = $('#input-tags').val()
     text = editor.value()
     logger.debug("Create button was clicked")
+    button = event.currentTarget
+    logger.debug("Disabling create button")
+    button.disabled = true
 
     tags = _.words(tags)
     if _.isBlank(id) || _.isBlank(title) || _.isEmpty(tags)
@@ -22,6 +25,8 @@ Template.create.events(
     logger.info("Text: '#{text}'")
 
     Meteor.call("createProject", id, title, tags, text, (error) ->
+      logger.debug("Re-enabling create button")
+      button.disabled = false
       if !error?
         Router.go("/#{qualifiedId}")
       else
