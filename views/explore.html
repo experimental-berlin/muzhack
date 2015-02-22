@@ -9,7 +9,11 @@
           {{#each projects}}
           <a href="{{projectUrl}}">
             <div class="project-item">
-              <div class="project item-title">{{title}}</div>
+              <div class="project-item-header">
+                <div class="project-item-title">{{title}}</div>
+                <div class="project-item-author">by {{owner}}</div>
+              </div>
+              <img class="project-item-image" src="images/revox-reel-to-reel-resized.jpg" />
             </div>
           </a>
           {{/each}}
