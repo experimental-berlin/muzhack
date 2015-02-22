@@ -22,6 +22,11 @@ logger = new Logger("project")
       })
     else
       logger.debug("@data is not defined")
+  onStop: ->
+    logger.debug("Route is stopped")
+    if Session.get("isEditingProject")
+      logger.debug("Exiting editing mode")
+      Session.set("isEditingProject", false)
 })
 
 Template.project.helpers(
