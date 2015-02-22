@@ -18,7 +18,7 @@ logger = new Logger("project")
       title = "#{data.owner}/#{data.projectId}"
       logger.debug("Setting title: #{title}")
       SEO.set({
-        title: "MusitechHub - #{title}"
+        title: "#{title}"
       })
     else
       logger.debug("@data is not defined")
@@ -30,6 +30,7 @@ logger = new Logger("project")
 })
 
 Template.project.helpers(
+  projectPath: -> "#{@owner} / #{@projectId}"
   isEditing: -> Session.get("isEditingProject")
   tagsString: -> @tags.join(',')
 )
