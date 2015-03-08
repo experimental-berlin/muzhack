@@ -5,6 +5,9 @@ margin = 25px
 #project-pad
   pad-base()
 
+  box-sizing border-box
+  display inline-block
+  width 720px
   padding 20px
   margin margin
 
@@ -27,6 +30,10 @@ margin = 25px
     height: 500px
 
 #right-column
+  box-sizing border-box
+  display inline-block
+  vertical-align top
+  width 370px
   margin-top margin
   margin-bottom margin
   margin-right margin
@@ -38,13 +45,48 @@ margin = 25px
 #edit-buttons
   margin-top 20px
 
-h1
+#project-title
   margin-top 0
+  margin-bottom 0
+
+#project-creation-date
+  margin-top 4px
 
 #title-input
   margin-bottom 16px
 
-#project-title
+#project-path
   margin-bottom 0
   margin-top 20px
   padding-left 20px
+
+#image-box
+  width 620px
+  margin-left auto
+  margin-right auto
+
+#displayed-image
+  rounded-corners()
+  overflow hidden
+  width 500px
+  height 409px
+  display inline-block
+  margin-bottom 10px
+  box-shadow 2px 2px 13px 1px #0D0D0D
+
+  img
+    width 100%
+
+#thumbnails
+  display inline-block
+  margin-right 14px
+  vertical-align top
+
+.thumbnail-wrapper
+  rounded-corners()
+  overflow hidden
+  width 100px
+  box-shadow 2px 2px 13px 1px #0D0D0D
+
+  img
+    width 100%

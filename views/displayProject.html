@@ -2,8 +2,20 @@
   {{#if isLoggedIn}}
   <a id="edit-action" class="action pull-right" href="#"><span class="icon-pencil"></span></a>
   {{/if}}
-  <h1>{{title}}</h1>
-  <p>Added {{creationDateString}} by {{userFullName}}</p>
+  <div id="project-heading">
+    <h1 id="project-title">{{title}}</h1>
+    <p id="project-creation-date">Added {{creationDateString}} by {{userFullName}}</p>
+  </div>
+  <div id="image-box">
+    <div id="thumbnails">
+      <div class="thumbnail-wrapper">
+        <img src="/images/revox-reel-to-reel.jpg" />
+      </div>
+    </div>
+    <div id="displayed-image">
+      <img src="/images/revox-reel-to-reel.jpg" />
+    </div>
+  </div>
   <div id="project-text">
     {{#markdown}}{{text}}{{/markdown}}
   </div>
