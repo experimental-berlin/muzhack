@@ -27,7 +27,15 @@
       {{/each}}
     </ul>
     <div id="tab-contents">
-      {{#markdown}}{{displayedText}}{{/markdown}}
+      {{#if displayDescription}}
+      {{#markdown}}{{text}}{{/markdown}}
+      {{/if}}
+      {{#if displayInstructions}}
+      {{#markdown}}{{instructions}}{{/markdown}}
+      {{/if}}
+      {{#if displayFiles}}
+      {{> projectFiles}}
+      {{/if}}
     </div>
   </div>
 </template>
