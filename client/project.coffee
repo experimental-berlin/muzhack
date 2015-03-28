@@ -1,6 +1,15 @@
 logger = new Logger("project")
 
 @ProjectController = RouteController.extend({
+  action: ->
+    logger.debug('Getting active tab')
+    tabNameMatch = /^.+#([^#]+)$/.exec(@url)
+    tabName = if tabNameMatch? then tabNameMatch[1] else 'description'
+    if tabName not in ['description', 'instructions']
+      tabName = 'description'
+    logger.debug("Current tab name: '#{tabName}'")
+    @state.set('activeTab', tabName)
+    @render()
   waitOn: -> [Meteor.subscribe("projects"), Meteor.subscribe("users")]
   data: ->
     owner = Meteor.users.findOne(username: @params.owner)

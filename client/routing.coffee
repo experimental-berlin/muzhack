@@ -40,9 +40,7 @@ Router.route('/about', ->
 Router.route('/create', ->
   @render('create')
 )
-Router.route('/:owner/:project', ->
-  @render("project")
-,
+Router.route('/:owner/:project',
   name: "project"
   controller: ProjectController
 )
