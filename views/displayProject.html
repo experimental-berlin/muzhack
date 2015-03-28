@@ -18,7 +18,16 @@
       <img src="/images/revox-reel-to-reel.jpg" />
     </div>
   </div>
-  <div id="project-text">
-    {{#markdown}}{{text}}{{/markdown}}
+  <div id="project-contents">
+    <ul class="tabs" role="tablist">
+      {{#each projectTabs}}
+      <li class="{{classes}}">
+        <a role="tab" href="#{{title.toLowerCase}}">{{title}}</a>
+      </li>
+      {{/each}}
+    </ul>
+    <div id="tab-contents">
+      {{#markdown}}{{text}}{{/markdown}}
+    </div>
   </div>
 </template>

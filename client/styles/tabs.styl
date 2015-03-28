@@ -1,0 +1,32 @@
+@import 'common.import'
+
+.tabs
+  list-style none
+  width 100%
+  padding 0
+  border-bottom 1px solid menu-color
+  margin 0
+
+  li
+    padding 10px 25px
+    margin 0
+    display inline-block
+    margin-bottom -1px
+    border 1px solid transparent
+
+    a
+      text-decoration none
+
+    &.active
+      border-left 1px solid menu-color
+      border-right 1px solid menu-color
+      background-color menu-background
+
+      a
+        color menu-color
+
+      &:first-child
+        border-left 1px solid transparent
+
+      &:last-child
+        border-right 1px solid transparent

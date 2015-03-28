@@ -2,6 +2,9 @@
 
 margin = 25px
 
+subtle-shadow()
+  box-shadow 2px 2px 13px 1px #0D0D0D
+
 #project-pad
   pad-base()
 
@@ -14,20 +17,24 @@ margin = 25px
   :first-child
     margin-top 0
 
-  #project-text
-    rounded-corners()
-
-    border-style solid
-    border-width 1px
-    padding 20px
-
-    :first-child
-      margin-top 0
-      margin-bottom 0
-
   .ace_editor
     width: auto
     height: 500px
+
+#project-contents
+  rounded-corners()
+  subtle-shadow()
+
+  border-style solid
+  border-width 1px
+  padding 0
+
+#tab-contents
+  padding 20px
+
+  :first-child
+    margin-top 0
+    margin-bottom 0
 
 #right-column
   box-sizing border-box
@@ -59,6 +66,7 @@ margin = 25px
   margin-bottom 0
   margin-top 20px
   padding-left 20px
+  text-shadow 3px 3px 10px #1F1F1F
 
 #image-box
   width 620px
@@ -72,7 +80,7 @@ margin = 25px
   width 500px
   height 409px
   display inline-block
-  box-shadow 2px 2px 13px 1px #0D0D0D
+  subtle-shadow()
 
   img
     width 100%
@@ -86,7 +94,7 @@ margin = 25px
   rounded-corners()
   overflow hidden
   width 100px
-  box-shadow 2px 2px 13px 1px #0D0D0D
+  subtle-shadow()
 
   img
     width 100%

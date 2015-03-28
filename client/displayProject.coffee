@@ -5,4 +5,13 @@ Template.displayProject.helpers(
     moment(@created).format("MMMM Do YYYY")
   userFullName: ->
     @ownerName
+  projectTabs: -> [
+    {
+      title: 'Description'
+      classes: 'active'
+    },
+    {
+      title: 'Instructions'
+    }
+  ]
 )
