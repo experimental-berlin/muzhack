@@ -5,7 +5,7 @@ logger = new Logger("project")
     logger.debug('Getting active tab')
     tabNameMatch = /^.+#([^#]+)$/.exec(@url)
     tabName = if tabNameMatch? then tabNameMatch[1] else 'description'
-    if tabName not in ['description', 'instructions']
+    if tabName not in ['description', 'instructions', 'files']
       tabName = 'description'
     logger.debug("Current tab name: '#{tabName}'")
     @state.set('activeTab', tabName)
