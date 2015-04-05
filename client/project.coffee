@@ -49,7 +49,7 @@ extendFile = (file) ->
       project.files = R.map(extendFile, project.files || [])
       project.hasFiles = !R.isEmpty(project.files)
       project.pictures = project.pictures || ['/images/revox-reel-to-reel.jpg']
-      project.mainPicture = project.pictures[0]
+      Session.set("mainPicture", project.pictures[0])
       logger.debug("Project has files: #{project.hasFiles}")
       logger.debug("Project has pictures: #{!R.isEmpty(project.pictures)}")
     project

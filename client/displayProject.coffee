@@ -30,9 +30,13 @@ Template.displayProject.helpers(
   displayDescription: -> getActiveTab() == 'description'
   displayInstructions: -> getActiveTab() == 'instructions'
   displayFiles: -> getActiveTab() == 'files'
+  mainPicture: -> Session.get("mainPicture")
 )
 Template.displayProject.events({
   'click .tabs > li': ->
     Iron.controller().state.set('activeTab', @name)
     logger.debug("Set activeTab: #{@name}")
+  'click #thumbnails > a': ->
+    logger.debug("Thumbnail clicked: #{@}")
+    Session.set("mainPicture", String(@))
 })
