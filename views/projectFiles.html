@@ -1,8 +1,8 @@
 <template name="projectFiles">
   {{#if hasFiles}}
-  <button id="download-zip-button" class="pure-button">
-    <span class="icon-file-zip"></span>&nbsp;Download zip ({{zipFileSize}})
-  </button>
+  <a href="{{zipFile.url}}" id="download-zip-button" class="pure-button">
+    <span class="icon-file-zip"></span>&nbsp;Download zip <span class="small">({{zipFileSize}})</span>
+  </a>
   <table id="project-files-table">
     <thead>
       <tr>
