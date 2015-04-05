@@ -15,7 +15,7 @@ subtle-shadow()
   margin margin
   margin-bottom 60px
 
-  :first-child
+  &>:first-child
     margin-top 0
 
   .ace_editor
@@ -33,7 +33,8 @@ subtle-shadow()
 #tab-contents
   padding 20px
 
-  :first-child
+#description,#instructions
+  &>:first-child
     margin-top 0
     margin-bottom 0
 
@@ -124,3 +125,6 @@ cell-padding = 8px
     a
       color menu-color
       text-decoration none
+
+#download-zip-button
+  margin-bottom 10px

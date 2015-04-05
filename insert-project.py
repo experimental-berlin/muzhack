@@ -42,6 +42,7 @@ project = {
     'pictures': json['pictures'],
     'files': json['files'],
     'license': json['license'],
+    'zipFile': json['zipFile'],
 }
 db.projects.update({'owner': project['owner'], 'projectId': project['projectId']}, project,
     upsert=True)

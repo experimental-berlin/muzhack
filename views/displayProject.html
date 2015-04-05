@@ -1,6 +1,6 @@
 <template name="displayProject">
   {{#if isLoggedIn}}
-  <a id="edit-action" class="action pull-right" href="#"><span class="icon-pencil"></span></a>
+  <a id="edit-action" class="action pull-right" href="#"><span class="icon-pencil3"></span></a>
   {{/if}}
   <div id="project-heading">
     <h1 id="project-title">{{title}}</h1>
@@ -28,10 +28,14 @@
     </ul>
     <div id="tab-contents">
       {{#if displayDescription}}
-      {{#markdown}}{{text}}{{/markdown}}
+      <div id="description">
+        {{#markdown}}{{text}}{{/markdown}}
+      </div>
       {{/if}}
       {{#if displayInstructions}}
-      {{#markdown}}{{instructions}}{{/markdown}}
+      <div id="instructions">
+        {{#markdown}}{{instructions}}{{/markdown}}
+      </div>
       {{/if}}
       {{#if displayFiles}}
       {{> projectFiles}}

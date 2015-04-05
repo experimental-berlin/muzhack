@@ -1,17 +1,20 @@
 logger = new Logger("project")
 
-extendFile = (file) ->
-  if file.size < 1024
-    sizeStr = "#{file.size} B"
-  else if file.size < 1024*1024
-    sizeStr = "#{Math.ceil(file.size / 1024.0)} KB"
-  else if file.size < 1024*1024*1024
-    sizeStr = "#{Math.ceil(file.size / 1024*1024.0)} MB"
-  else if file.size < 1024*1024*1024*1024
-    sizeStr = "#{Math.ceil(file.size / 1024*1024*1024.0)} GB"
+getFileSize = (numBytes) ->
+  if numBytes < 1024
+    sizeStr = "#{numBytes} B"
+  else if numBytes < 1024*1024
+    sizeStr = "#{Math.ceil(numBytes / 1024.0)} KB"
+  else if numBytes < 1024*1024*1024
+    sizeStr = "#{Math.ceil(numBytes / 1024*1024.0)} MB"
+  else if numBytes < 1024*1024*1024*1024
+    sizeStr = "#{Math.ceil(numBytes / 1024*1024*1024.0)} GB"
   else
-    throw new Error("File size too large: #{file.size}")
+    throw new Error("File size too large: #{numBytes}")
+  sizeStr
 
+extendFile = (file) ->
+  sizeStr = getFileSize(file.size)
   filenameMatch = /^.+\/(.+)$/.exec(file.url)
   if !filenameMatch?
     throw new Error("File URL on invalid format: '#{file.url}'")
@@ -42,6 +45,7 @@ extendFile = (file) ->
         logger.debug("Project owner's name: #{project.ownerName}")
       else
         logger.warn('Project has no owner')
+      project.zipFileSize = getFileSize(project.zipFile.size)
       project.files = R.map(extendFile, project.files || [])
       project.hasFiles = !R.isEmpty(project.files)
       logger.debug("Project has files: #{project.hasFiles}")

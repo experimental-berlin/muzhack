@@ -50,6 +50,6 @@ class Accountbutton
 Template.accountbar.helpers({
   buttons: ->
     return [
-      new Accountbutton('exit', 'logout')
+      new Accountbutton('exit3', 'logout')
     ]
 })
