@@ -26,8 +26,8 @@ if args.site:
     command.append(args.site)
 _info('Getting Mongo URL...')
 mongo_url = subprocess.check_output(command).decode().strip()
-mongo_url, db_name = mongo_url.rsplit('/', 1)
-_info('Connecting to MongoDB: {} (DB: {})'.format(mongo_url, db_name))
+db_name = mongo_url.rsplit('/', 1)[1]
+_info('Connecting to MongoDB: {}'.format(mongo_url))
 client = pymongo.MongoClient(mongo_url)
 db = client[db_name]
 
