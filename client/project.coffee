@@ -1,5 +1,18 @@
 logger = new Logger("project")
 
+extendFile = (file) ->
+  if file.size < 1024
+    sizeStr = "#{file.size} B"
+  else if file.size < 1024*1024
+    sizeStr = "#{file.size / 1024.0} KB"
+  else if file.size < 1024*1024*1024
+    sizeStr = "#{file.size / 1024*1024.0} MB"
+  else if file.size < 1024*1024*1024*1024
+    sizeStr = "#{file.size / 1024*1024*1024.0} GB"
+  else
+    throw new Error("File size too large: #{file.size}")
+  R.merge(file, {sizeStr: sizeStr})
+
 @ProjectController = RouteController.extend({
   action: ->
     logger.debug('Getting active tab')
@@ -17,9 +30,13 @@ logger = new Logger("project")
       owner: @params.owner,
       projectId: @params.project,
     )
-    if project? && owner?
-      project.ownerName = owner.profile.name
-      logger.debug("Project owner's name: #{project.ownerName}")
+    if project?
+      if owner?
+        project.ownerName = owner.profile.name
+        logger.debug("Project owner's name: #{project.ownerName}")
+      project.files = R.map(extendFile, project.files || [])
+      project.hasFiles = !R.isEmpty(project.files)
+      logger.debug("Project has files: #{project.hasFiles}")
     project
   onAfterAction: ->
     data = @data()

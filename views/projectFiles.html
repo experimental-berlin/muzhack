@@ -1,3 +1,22 @@
 <template name="projectFiles">
+  {{#if hasFiles}}
+  <table id="project-files-table">
+    <thead>
+      <tr>
+        <th>Filename</th>
+        <th>Size</th>
+      </tr>
+    </thead>
+    <tbody>
+    {{#each files}}
+    <tr>
+      <td>{{filename}}</td>
+      <td>{{sizeStr}}</td>
+    </tr>
+    {{/each}}
+    </tbody>
+  </table>
+  {{else}}
   <em>The project has no files.</em>
+  {{/if}}
 </template>
