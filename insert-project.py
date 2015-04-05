@@ -41,7 +41,7 @@ project = {
     'instructions': json['instructions'],
     'pictures': json['pictures'],
     'files': json['files'],
-    'license': json['license'],
+    'licenseId': json['licenseId'],
     'zipFile': json['zipFile'],
 }
 db.projects.update({'owner': project['owner'], 'projectId': project['projectId']}, project,

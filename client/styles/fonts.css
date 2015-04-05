@@ -1,11 +1,11 @@
 @font-face {
 	font-family: 'icomoon';
-	src:url('fonts/icomoon.eot?-g52wq4');
-	src:url('fonts/icomoon.eot?#iefix-g52wq4') format('embedded-opentype'),
-		url('fonts/icomoon.woff2?-g52wq4') format('woff2'),
-		url('fonts/icomoon.woff?-g52wq4') format('woff'),
-		url('fonts/icomoon.ttf?-g52wq4') format('truetype'),
-		url('fonts/icomoon.svg?-g52wq4#icomoon') format('svg');
+	src:url('fonts/icomoon.eot?-r7rd05');
+	src:url('fonts/icomoon.eot?#iefix-r7rd05') format('embedded-opentype'),
+		url('fonts/icomoon.woff2?-r7rd05') format('woff2'),
+		url('fonts/icomoon.woff?-r7rd05') format('woff'),
+		url('fonts/icomoon.ttf?-r7rd05') format('truetype'),
+		url('fonts/icomoon.svg?-r7rd05#icomoon') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -24,16 +24,24 @@
 	-moz-osx-font-smoothing: grayscale;
 }
 
+.icon-creative-commons-attribution:before {
+	content: "\e601";
+}
+
+.icon-creative-commons-sharealike:before {
+	content: "\e602";
+}
+
+.icon-creative-commons:before {
+	content: "\e603";
+}
+
 .icon-file-zip:before {
 	content: "\e9b9";
 }
 
 .icon-file-zip2:before {
 	content: "\e9ba";
-}
-
-.icon-cc:before {
-	content: "\e9ec";
 }
 
 .icon-puzzle3:before {
@@ -102,6 +110,10 @@
 
 .icon-exit3:before {
 	content: "\ed78";
+}
+
+.icon-pencil:before {
+	content: "\e00d";
 }
 
 .icon-settings:before {

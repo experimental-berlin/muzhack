@@ -32,7 +32,7 @@ extendFile = (file) ->
     logger.debug("Current tab name: '#{tabName}'")
     @state.set('activeTab', tabName)
     @render()
-  waitOn: -> [Meteor.subscribe("projects"), Meteor.subscribe("users")]
+  waitOn: -> R.map(Meteor.subscribe, ["projects", "users", "licenses"])
   data: ->
     owner = Meteor.users.findOne(username: @params.owner)
     project = Projects.findOne(
@@ -49,6 +49,11 @@ extendFile = (file) ->
       project.files = R.map(extendFile, project.files || [])
       project.hasFiles = !R.isEmpty(project.files)
       project.pictures = project.pictures || ['/images/revox-reel-to-reel.jpg']
+      # TODO: Default to latest version
+      licenseId = project.licenseId or "cc-by-sa-3.0"
+      license = Licenses.findOne({licenseId: licenseId})
+      logger.debug("Project has license #{licenseId}:", Licenses.findOne())
+      project.license = license
       Session.set("mainPicture", project.pictures[0])
       logger.debug("Project has files: #{project.hasFiles}")
       logger.debug("Project has pictures: #{!R.isEmpty(project.pictures)}")
