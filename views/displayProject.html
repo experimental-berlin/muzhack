@@ -22,7 +22,12 @@
     <ul class="tabs" role="tablist">
       {{#each projectTabs}}
       <li class="{{classes}}">
-        <a role="tab" href="#{{title.toLowerCase}}">{{title}}</a>
+        <a role="tab" href="#{{title.toLowerCase}}">
+          {{#if icon}}
+          <span class="icon-{{icon}}"></span>&nbsp;
+          {{/if}}
+          {{title}}
+        </a>
       </li>
       {{/each}}
     </ul>

@@ -1,6 +1,8 @@
 <template name="projectFiles">
   {{#if hasFiles}}
-  <button id="download-zip-button" class="pure-button">Download zip ({{zipFileSize}})</button>
+  <button id="download-zip-button" class="pure-button">
+    <span class="icon-file-zip"></span>&nbsp;Download zip ({{zipFileSize}})
+  </button>
   <table id="project-files-table">
     <thead>
       <tr>
@@ -11,7 +13,7 @@
     <tbody>
     {{#each files}}
     <tr>
-      <td><a href="{{url}}">{{filename}}</a></td>
+      <td><a href="{{url}}"><span class="icon-puzzle4"></span>&nbsp;{{filename}}</a></td>
       <td><a href="{{url}}">{{sizeStr}}</a></td>
     </tr>
     {{/each}}

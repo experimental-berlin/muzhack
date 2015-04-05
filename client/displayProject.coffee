@@ -1,7 +1,7 @@
 logger = new Logger("displayProject")
 
 class ProjectTab
-  constructor: (@title) ->
+  constructor: (@title, @icon) ->
     @name = @title.toLowerCase()
 
   classes: ->
@@ -25,7 +25,7 @@ Template.displayProject.helpers(
   projectTabs: -> [
     new ProjectTab('Description')
     new ProjectTab('Instructions')
-    new ProjectTab('Files')
+    new ProjectTab('Files', 'puzzle4')
   ]
   displayDescription: -> getActiveTab() == 'description'
   displayInstructions: -> getActiveTab() == 'instructions'
