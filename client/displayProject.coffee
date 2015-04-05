@@ -23,8 +23,8 @@ Template.displayProject.helpers(
   userFullName: ->
     @ownerName
   projectTabs: -> [
-    new ProjectTab('Description')
-    new ProjectTab('Instructions')
+    new ProjectTab('Description', 'file-text')
+    new ProjectTab('Instructions', 'book')
     new ProjectTab('Files', 'puzzle4')
   ]
   displayDescription: -> getActiveTab() == 'description'

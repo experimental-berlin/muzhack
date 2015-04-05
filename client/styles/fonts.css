@@ -1,11 +1,11 @@
 @font-face {
 	font-family: 'icomoon';
-	src:url('fonts/icomoon.eot?-r7rd05');
-	src:url('fonts/icomoon.eot?#iefix-r7rd05') format('embedded-opentype'),
-		url('fonts/icomoon.woff2?-r7rd05') format('woff2'),
-		url('fonts/icomoon.woff?-r7rd05') format('woff'),
-		url('fonts/icomoon.ttf?-r7rd05') format('truetype'),
-		url('fonts/icomoon.svg?-r7rd05#icomoon') format('svg');
+	src:url('fonts/icomoon.eot?-5pfxnu');
+	src:url('fonts/icomoon.eot?#iefix-5pfxnu') format('embedded-opentype'),
+		url('fonts/icomoon.woff2?-5pfxnu') format('woff2'),
+		url('fonts/icomoon.woff?-5pfxnu') format('woff'),
+		url('fonts/icomoon.ttf?-5pfxnu') format('truetype'),
+		url('fonts/icomoon.svg?-5pfxnu#icomoon') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -80,6 +80,22 @@
 	content: "\e910";
 }
 
+.icon-book:before {
+	content: "\e990";
+}
+
+.icon-file-text2:before {
+	content: "\e99b";
+}
+
+.icon-tags:before {
+	content: "\e9ef";
+}
+
+.icon-tags2:before {
+	content: "\e9f1";
+}
+
 .icon-undo:before {
 	content: "\eaa2";
 }
@@ -119,3 +135,4 @@
 .icon-settings:before {
 	content: "\e600";
 }
+

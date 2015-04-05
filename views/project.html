@@ -11,7 +11,7 @@
   </div>
   <div id="right-column">
     <div id="tag-pad" class="airy-padding-sides">
-      <h2>Tags</h2>
+      <h2><span class="icon-tags2"></span>&nbsp;Tags</h2>
       {{#unless isEditing}}
       <div id="project-tags">
         {{tagsString}}
@@ -29,7 +29,7 @@
         {{/each}}
       </div>
       <p>
-        <strong>{{title}}</strong> is licensed under the <a href="">
+        <strong>{{title}}</strong> is licensed under the <a href="{{license.url}}" target="_blank">
         <strong>{{license.name}}</strong></a> license.
       </p>
     </div>
