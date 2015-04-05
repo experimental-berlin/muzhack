@@ -5,7 +5,11 @@ Template.explore.helpers({
     !Projects.findOne()
   ,
   projects: ->
-    Projects.find({}, {sort: [["created", "asc"]]})
+    extendProject = (project) ->
+      picture = if !R.isEmpty(project.pictures || []) then project.pictures[0] else \
+        '/images/revox-reel-to-reel-resized.jpg'
+      R.merge(project, {projectThumbnail: picture})
+    R.map(extendProject, Projects.find({}, {sort: [["created", "asc"]]}))
   ,
   projectUrl: -> "#{@owner}/#{@projectId}"
   ,
