@@ -13,7 +13,7 @@ def _info(msg):
     sys.stdout.flush()
 
 
-cl_parser = argparse.ArgumentParser(description='Insert a project into Meteor\'s local MongoDB')
+cl_parser = argparse.ArgumentParser(description='Insert a project into Meteor\'s MongoDB instance')
 cl_parser.add_argument('input', help='JSON input file')
 cl_parser.add_argument('--site', default=None, help='Specify Meteor site (default: localhost)')
 args = cl_parser.parse_args()
