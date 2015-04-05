@@ -24,9 +24,11 @@
     <div id="license-pad" class="airy-padding-sides">
       <h2>License</h2>
       <div id="license-icons">
-        {{#each license.icons}}
-        <span class="icon-{{this}}"></span>
-        {{/each}}
+        <a href="{{license.url}}" target="_blank">
+          {{#each license.icons}}
+          <span class="icon-{{this}}"></span>
+          {{/each}}
+        </a>
       </div>
       <p>
         <strong>{{title}}</strong> is licensed under the <a href="{{license.url}}" target="_blank">
