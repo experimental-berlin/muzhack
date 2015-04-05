@@ -45,10 +45,13 @@ extendFile = (file) ->
         logger.debug("Project owner's name: #{project.ownerName}")
       else
         logger.warn('Project has no owner')
-      project.zipFileSize = getFileSize(project.zipFile.size)
+      project.zipFileSize = if project.zipFile? then getFileSize(project.zipFile.size) else 0
       project.files = R.map(extendFile, project.files || [])
       project.hasFiles = !R.isEmpty(project.files)
+      project.pictures = project.pictures || ['/images/revox-reel-to-reel.jpg']
+      project.mainPicture = project.pictures[0]
       logger.debug("Project has files: #{project.hasFiles}")
+      logger.debug("Project has pictures: #{!R.isEmpty(project.pictures)}")
     project
   onAfterAction: ->
     data = @data()

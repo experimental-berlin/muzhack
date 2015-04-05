@@ -8,14 +8,16 @@
   </div>
   <div id="image-box">
     <div id="thumbnails">
+      {{#each pictures}}
       <a href="#">
         <div class="thumbnail-wrapper">
-          <img src="/images/revox-reel-to-reel.jpg" />
+          <img src="{{this}}" />
         </div>
       </a>
+      {{/each}}
     </div>
     <div id="displayed-image">
-      <img src="/images/revox-reel-to-reel.jpg" />
+      <img src="{{mainPicture}}" />
     </div>
   </div>
   <div id="project-contents">
