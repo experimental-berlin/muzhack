@@ -4,14 +4,20 @@ extendFile = (file) ->
   if file.size < 1024
     sizeStr = "#{file.size} B"
   else if file.size < 1024*1024
-    sizeStr = "#{file.size / 1024.0} KB"
+    sizeStr = "#{Math.ceil(file.size / 1024.0)} KB"
   else if file.size < 1024*1024*1024
-    sizeStr = "#{file.size / 1024*1024.0} MB"
+    sizeStr = "#{Math.ceil(file.size / 1024*1024.0)} MB"
   else if file.size < 1024*1024*1024*1024
-    sizeStr = "#{file.size / 1024*1024*1024.0} GB"
+    sizeStr = "#{Math.ceil(file.size / 1024*1024*1024.0)} GB"
   else
     throw new Error("File size too large: #{file.size}")
-  R.merge(file, {sizeStr: sizeStr})
+
+  filenameMatch = /^.+\/(.+)$/.exec(file.url)
+  if !filenameMatch?
+    throw new Error("File URL on invalid format: '#{file.url}'")
+  filename = filenameMatch[1]
+  logger.debug("Filename #{filename} from URL #{file.url}")
+  R.merge(file, {filename: filename, sizeStr: sizeStr})
 
 @ProjectController = RouteController.extend({
   action: ->
@@ -34,6 +40,8 @@ extendFile = (file) ->
       if owner?
         project.ownerName = owner.profile.name
         logger.debug("Project owner's name: #{project.ownerName}")
+      else
+        logger.warn('Project has no owner')
       project.files = R.map(extendFile, project.files || [])
       project.hasFiles = !R.isEmpty(project.files)
       logger.debug("Project has files: #{project.hasFiles}")
