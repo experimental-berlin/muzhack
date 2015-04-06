@@ -2,39 +2,9 @@
   <div class="airy-padding-sides">
     <h1 id="project-path">{{projectPath}}</h1>
   </div>
-  <div id="project-pad" class="airy-padding-sides">
-    {{#unless isEditing}}
-    {{> displayProject}}
-    {{else}}
-    {{> editProject}}
-    {{/unless}}
-  </div>
-  <div id="right-column">
-    <div id="tag-pad" class="airy-padding-sides">
-      <h2><span class="icon-tags2"></span>&nbsp;Tags</h2>
-      {{#unless isEditing}}
-      <div id="project-tags">
-        {{tagsString}}
-      </div>
-      {{else}}
-      <input id="tags-input" placeholder="Project tags" value="{{tagsString}}" />
-      {{/unless}}
-    </div>
-    {{#unless isEditing}}
-    <div id="license-pad" class="airy-padding-sides">
-      <h2>License</h2>
-      <div id="license-icons">
-        <a href="{{license.url}}" target="_blank">
-          {{#each license.icons}}
-          <span class="icon-{{this}}"></span>
-          {{/each}}
-        </a>
-      </div>
-      <p>
-        <strong>{{title}}</strong> is licensed under the <a href="{{license.url}}" target="_blank">
-        <strong>{{license.name}}</strong></a> license.
-      </p>
-    </div>
-    {{/unless}}
-  </div>
+  {{#unless isEditing}}
+  {{> displayProject}}
+  {{else}}
+  {{> editProject}}
+  {{/unless}}
 </template>

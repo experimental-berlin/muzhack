@@ -78,7 +78,6 @@ extendFile = (file) ->
 Template.project.helpers(
   projectPath: -> "#{@owner} / #{@projectId}"
   isEditing: -> Session.get("isEditingProject")
-  tagsString: -> @tags.join(', ')
 )
 Template.project.events({
   'click #edit-action': ->

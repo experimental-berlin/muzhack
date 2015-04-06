@@ -53,3 +53,6 @@ Template.project.events({
         Router.go('/')
     )
 })
+Template.editProject.helpers(
+  tagsString: -> @tags.join(',')
+)

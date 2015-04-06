@@ -31,6 +31,7 @@ Template.displayProject.helpers(
   displayInstructions: -> getActiveTab() == 'instructions'
   displayFiles: -> getActiveTab() == 'files'
   mainPicture: -> Session.get("mainPicture")
+  tagsString: -> @tags.join(', ')
 )
 Template.displayProject.events({
   'click .tabs > li': ->

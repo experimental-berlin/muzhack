@@ -1,26 +1,52 @@
 <template name="displayProject">
-  {{#if isLoggedIn}}
-  <a id="edit-action" class="action pull-right" href="#"><span class="icon-pencil3"></span></a>
-  {{/if}}
-  <div id="project-heading">
-    <h1 id="project-title">{{title}}</h1>
-    <p id="project-creation-date">Added {{creationDateString}} by {{userFullName}}</p>
-  </div>
-  <div id="image-box">
-    <div id="thumbnails">
-      {{#each pictures}}
-      <a href="#">
-        <div class="thumbnail-wrapper">
-          <img src="{{this}}" />
-        </div>
-      </a>
-      {{/each}}
+  <div id="project-top-pad" class="airy-padding-sides">
+    {{#if isLoggedIn}}
+    <a id="edit-action" class="action pull-right" href="#"><span class="icon-pencil3"></span></a>
+    {{/if}}
+    <div id="project-heading">
+      <h1 id="project-title">{{title}}</h1>
+      <p id="project-creation-date">Added {{creationDateString}} by {{userFullName}}</p>
     </div>
-    <div id="displayed-image">
-      <img src="{{mainPicture}}" />
+    <div id="image-box">
+      <div id="thumbnails">
+        {{#each pictures}}
+        <a href="#">
+          <div class="thumbnail-wrapper">
+            <img src="{{this}}" />
+          </div>
+        </a>
+        {{/each}}
+      </div>
+      <div id="displayed-image">
+        <img src="{{mainPicture}}" />
+      </div>
     </div>
   </div>
-  <div id="project-contents">
+
+  <div id="right-column">
+    <div id="tag-pad" class="airy-padding-sides">
+      <h2><span class="icon-tags2"></span>&nbsp;Tags</h2>
+      <div id="project-tags">
+        {{tagsString}}
+      </div>
+    </div>
+    <div id="license-pad" class="airy-padding-sides">
+      <h2>License</h2>
+      <div id="license-icons">
+        <a href="{{license.url}}" target="_blank">
+          {{#each license.icons}}
+          <span class="icon-{{this}}"></span>
+          {{/each}}
+        </a>
+      </div>
+      <p>
+        <strong>{{title}}</strong> is licensed under the <a href="{{license.url}}" target="_blank">
+        <strong>{{license.name}}</strong></a> license.
+      </p>
+    </div>
+  </div>
+
+  <div id="project-bottom-pad">
     <ul class="tabs" role="tablist">
       {{#each projectTabs}}
       <li class="{{classes}}">

@@ -1,19 +1,19 @@
 @require 'common.import'
 
 margin = 25px
+padding = 20px
 
 subtle-shadow()
   box-shadow 2px 2px 13px 1px #0D0D0D
 
-#project-pad
+#project-top-pad
   pad-base()
 
-  box-sizing border-box
   display inline-block
   width 720px
-  padding 20px
+  padding padding
   margin margin
-  margin-bottom 60px
+  margin-bottom 0
 
   &>:first-child
     margin-top 0
@@ -22,16 +22,16 @@ subtle-shadow()
     width: auto
     height: 500px
 
-#project-contents
-  rounded-corners()
-  subtle-shadow()
+#project-bottom-pad
+  pad-base()
 
-  border-style solid
-  border-width 1px
-  padding 0
+  padding padding
+  margin margin
+  margin-top 16px
+  margin-bottom 60px
 
 #tab-contents
-  padding 20px
+  padding padding
 
 #description,#instructions
   &>:first-child
@@ -49,12 +49,12 @@ subtle-shadow()
 
 #tag-pad
   pad-base()
-  padding-bottom 20px
+  padding-bottom padding
 
 #license-pad
   pad-base()
   margin-top 14px
-  padding-bottom 20px
+  padding-bottom padding
 
   p
     margin 0
@@ -83,7 +83,7 @@ subtle-shadow()
 #project-path
   margin-bottom 0
   margin-top 20px
-  padding-left 20px
+  padding-left padding
   text-shadow 3px 3px 10px #1F1F1F
 
 #image-box

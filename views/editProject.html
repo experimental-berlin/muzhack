@@ -1,9 +1,18 @@
 <template name="editProject">
-  <input id="title-input" placeholder="Project title" value="{{title}}" />
-  {{> editorContainer}}
-  <div id="edit-buttons">
-    <button id="save-project" class="pure-button pure-button-primary">Save</button>
-    <button id="cancel-edit" class="pure-button">Cancel</button>
-    <a id="remove-project" href="#">Remove this project</a>
+  {{! TODO: Drop the "pad" design and design properly for editing of all project aspects }}
+  <div id="project-top-pad" class="airy-padding-sides">
+    <input id="title-input" placeholder="Project title" value="{{title}}" />
+    {{> editorContainer}}
+    <div id="edit-buttons">
+      <button id="save-project" class="pure-button pure-button-primary">Save</button>
+      <button id="cancel-edit" class="pure-button">Cancel</button>
+      <a id="remove-project" href="#">Remove this project</a>
+    </div>
+  </div>
+  <div id="right-column">
+    <div id="tag-pad" class="airy-padding-sides">
+      <h2><span class="icon-tags2"></span>&nbsp;Tags</h2>
+      <input id="tags-input" placeholder="Project tags" value="{{tagsString}}" />
+    </div>
   </div>
 </template>
