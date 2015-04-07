@@ -46,15 +46,15 @@ Router.route('/:owner/:project',
 )
 
 Router.onBeforeAction(->
-  if _.startsWith(@url, "/create") and !Meteor.userId()?
+  if S.startsWith(@url, "/create") and !Meteor.userId()?
     logger.debug('User not logged in, rendering login page')
     @render('login')
   else
-    if _.startsWith(@url, '/account')
+    if S.startsWith(@url, '/account')
       curSection = "account"
-    else if _.startsWith(@url, "/create")
+    else if S.startsWith(@url, "/create")
       curSection = "create"
-    else if _.startsWith(@url, "/about")
+    else if S.startsWith(@url, "/about")
       curSection = "about"
     else
       curSection = "explore"

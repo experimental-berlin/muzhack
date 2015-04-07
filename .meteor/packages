@@ -12,7 +12,6 @@ stylus
 lampe:purecss
 accounts-password
 jag:pince
-wizonesolutions:underscore-string
 stevezhu:sass
 email
 accounts-ui
@@ -23,3 +22,4 @@ reactive-var
 mquandalle:jade
 manuelschoebel:ms-seo
 kevohagan:ramda
+underscorestringfp:underscore.string.fp

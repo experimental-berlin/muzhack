@@ -18,15 +18,15 @@ Meteor.methods({
       created: moment().utc().toDate(),
     }
     logger.info("Creating project #{user.username}/#{id}:", metadata)
-    data = _.extend(metadata, {
+    data = R.merge(metadata, {
       text: text,
     })
     Projects.insert(data)
   updateProject: (id, title, text, tags) ->
     logger.debug("User #{@userId} updating project #{id}")
     user = getUser(@)
-    Projects.update({projectId: id}, {$set: {title: title, text: text, tags: _.map(
-      tags.split(','), (tag) -> _.trim(tag))}})
+    Projects.update({projectId: id}, {$set: {title: title, text: text, tags: R.map(
+      (tag) -> S.trim(tag), tags.split(','))}})
   removeProject: (id) ->
     user = getUser(@)
 

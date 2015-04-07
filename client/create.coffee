@@ -15,8 +15,8 @@ Template.create.events(
     logger.debug("Disabling create button")
     button.disabled = true
 
-    tags = _.words(tags)
-    if _.isBlank(id) || _.isBlank(title) || _.isEmpty(tags)
+    tags = S.words(tags)
+    if S.isBlank(id) || S.isBlank(title) || R.isEmpty(tags)
       throw new Error('Fields not correctly filled in')
 
     username = Meteor.user().username
