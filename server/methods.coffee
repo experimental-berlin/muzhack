@@ -26,7 +26,7 @@ Meteor.methods({
     logger.debug("User #{@userId} updating project #{id}")
     user = getUser(@)
     Projects.update({projectId: id}, {$set: {title: title, text: text, tags:
-      R.map(S.trim, tags.split(','))}})
+      R.map(S.trim(null), tags.split(','))}})
   removeProject: (id) ->
     user = getUser(@)
 
