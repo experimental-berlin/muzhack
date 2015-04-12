@@ -18,14 +18,14 @@ COPY ./ /app
 WORKDIR /app
 RUN meteor build --directory /tmp/the-app
 WORKDIR /tmp/the-app/bundle/programs/server/
-RUN npm i
+RUN npm install
 RUN mv /tmp/the-app/bundle /built_app
+WORKDIR /built_app
 
 # cleanup
-RUN rm -rf /tmp/the-app
-RUN rm -rf ~/.meteor
-RUN rm /usr/local/bin/meteor
+RUN rm -rf /tmp/the-app ~/.meteor /usr/local/bin/meteor
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+ENV PORT 80
 EXPOSE 80
-ENTRYPOINT [node, main.js]
+ENTRYPOINT ["node", "main.js"]
