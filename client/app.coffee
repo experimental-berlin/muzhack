@@ -8,7 +8,7 @@ Meteor.startup(->
   @accountService = new AccountService()
 
   SEO.config({
-    title: 'MusitechHub'
+    title: 'MuzHack'
     meta: {
       'description': 'The hub for finding and publishing music technology projects'
     }
@@ -17,7 +17,7 @@ Meteor.startup(->
   undefined
 )
 
-Template.registerHelper('appName', -> 'MusitechHub')
+Template.registerHelper('appName', -> 'MuzHack')
 Template.registerHelper('isLoggedIn', -> Meteor.userId()?)
 
 class MenuElement
