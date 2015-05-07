@@ -16,7 +16,6 @@ deps@1.0.7
 ejson@1.0.6
 email@1.0.6
 fastclick@1.0.3
-force-ssl@1.0.4
 geojson-utils@1.0.3
 html-tools@1.0.4
 htmljs@1.0.4
@@ -49,9 +48,10 @@ meteor-platform@1.2.2
 minifiers@1.1.5
 minimongo@1.0.8
 mobile-status-bar@1.0.3
-momentjs:moment@2.10.0
+momentjs:moment@2.10.3
 mongo@1.1.0
-mquandalle:jade@0.4.1
+mquandalle:jade@0.4.3
+mquandalle:jade-compiler@0.4.3
 npm-bcrypt@0.7.8_2
 observe-sequence@1.0.6
 ordered-dict@1.0.3
