@@ -1,4 +1,4 @@
-FROM node:0.10.36
+FROM node:0.10.38
 MAINTAINER Arve Knudsen
 
 RUN apt-get update -y && apt-get install -y curl wget
