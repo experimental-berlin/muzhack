@@ -1,5 +1,6 @@
 mongo-production:
   image: mongo:3.0.2
+  command: --auth
   volumes:
     - /data/db
   ports:
