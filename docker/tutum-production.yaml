@@ -1,0 +1,34 @@
+mongo-production:
+  image: mongo:3.0.2
+  volumes:
+    - /data/db
+  ports:
+    - "27017:27017"
+  tags:
+    - production
+  autorestart: always
+muzhack-production:
+  image: aknudsen/muzhack:latest
+  links:
+    - mongo-production:db
+  environment:
+    - ROOT_URL=https://muzhack.com
+    - MONGO_URL
+    - METEOR_SETTINGS
+  tags:
+    - production
+  autorestart: always
+nginx-production:
+  image: aknudsen/meteor-frontend-server
+  command: /start.sh
+  tags:
+    - production
+  autorestart: always
+  ports:
+    - "443:443"
+    - "80:80"
+  volumes:
+    - /etc/nginx/ssl/bundle.crt:/bundle.crt
+    - /etc/nginx/ssl/private.key:/private.key
+  links:
+    - muzhack-production:backend

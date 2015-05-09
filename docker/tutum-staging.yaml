@@ -1,0 +1,34 @@
+mongo-staging:
+  image: mongo:3.0.2
+  volumes:
+    - /data/db
+  ports:
+    - "27017:27017"
+  tags:
+    - staging
+  autorestart: always
+muzhack-staging:
+  image: aknudsen/muzhack:latest
+  links:
+    - mongo-staging:db
+  environment:
+    - ROOT_URL=https://staging.muzhack.com
+    - MONGO_URL
+    - METEOR_SETTINGS
+  tags:
+    - staging
+  autorestart: always
+nginx-staging:
+  image: aknudsen/meteor-frontend-server
+  command: /start.sh
+  tags:
+    - staging
+  autorestart: always
+  ports:
+    - "443:443"
+    - "80:80"
+  volumes:
+    - /etc/nginx/ssl/bundle.crt:/bundle.crt
+    - /etc/nginx/ssl/private.key:/private.key
+  links:
+    - muzhack-staging:backend
