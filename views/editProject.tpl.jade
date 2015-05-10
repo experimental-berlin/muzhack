@@ -1,0 +1,14 @@
+//- TODO: Drop the "pad" design and design properly for editing of all project aspects
+#project-top-pad.airy-padding-sides
+  input#title-input(placeholder="Project title" value="#{title}")
+  +editorContainer
+  #edit-buttons
+    button#save-project.pure-button.pure-button-primary Save
+    button#cancel-edit.pure-button Cancel
+    a#remove-project(href="#") Remove this project
+#right-column
+  #tag-pad.airy-padding-sides
+    h2
+      span.icon-tags2
+      &nbsp;Tags
+    input#tags-input(placeholder="Project tags" value="#{tagsString}")
