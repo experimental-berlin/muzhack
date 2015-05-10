@@ -12,6 +12,8 @@ handleEditorRendered = (editor, text) ->
   )
   editor.ace.clearSelection()
   editor.ace.gotoLine(0, 0)
+  editor.ace.session.setUseWrapMode(true)
+
 
 Template.descriptionEditor.rendered = ->
   logger.debug("Description editor rendered, giving Ace focus")
