@@ -1,8 +1,6 @@
 logger = new Logger("editProject")
 
 handleEditorRendered = (editor, text) ->
-  editor.setTheme('ace/theme/monokai')
-  editor.setMode('ace/mode/markdown')
   # Make sure ace is aware of the fact the things might have changed.
   editor.attachAce()
   if text
