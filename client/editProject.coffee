@@ -14,7 +14,6 @@ handleEditorRendered = (editor, text) ->
   editor.ace.gotoLine(0, 0)
   editor.ace.session.setUseWrapMode(true)
 
-
 Template.descriptionEditor.rendered = ->
   logger.debug("Description editor rendered, giving Ace focus")
   handleEditorRendered(descriptionEditor, @data.text)
@@ -29,12 +28,13 @@ Template.project.events({
     Session.set("isEditingProject", false)
 
     title = $("#title-input").val()
-    text = editor.value()
+    description = descriptionEditor.value()
+    instructions = instructionsEditor.value()
     tags = $("#tags-input").val()
 
     logger.info("Saving project...")
-    logger.debug("title: #{title}, text: #{text}, tags: #{tags}")
-    Meteor.call('updateProject', @.projectId, title, text, tags, (error) ->
+    logger.debug("title: #{title}, description: #{description}, tags: #{tags}")
+    Meteor.call('updateProject', @.projectId, title, description, instructions, tags, (error) ->
       if error?
         logger.error("Updating project on server failed: #{error}")
         notificationService.warn("Saving project to server failed: #{error}")
