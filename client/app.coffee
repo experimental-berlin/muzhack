@@ -1,7 +1,13 @@
-@editor = MandrillAce.getInstance()
 logger = new Logger('app')
 
 Meteor.startup(->
+  logger.debug("Instantiating editors")
+  @descriptionEditor = new MandrillAce('description-ace')
+  @instructionsEditor = new MandrillAce('instructions-ace')
+  for editor in [descriptionEditor, instructionsEditor,]
+    editor.setTheme('ace/theme/monokai')
+    editor.setMode('ace/mode/markdown')
+
   @loginService = new LoginService()
   @loginService.setupTemplate()
   @notificationService = new NotificationService()

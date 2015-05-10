@@ -1,8 +1,9 @@
 logger = new Logger('create')
 
 Template.create.rendered = ->
-  editor.setTheme('ace/theme/monokai')
-  editor.setMode('ace/mode/markdown')
+  for editor in [descriptionEditor, instructionsEditor,]
+    editor.setTheme('ace/theme/monokai')
+    editor.setMode('ace/mode/markdown')
 
 Template.create.events(
   'click #create-button': (event) ->

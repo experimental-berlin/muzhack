@@ -1,11 +1,12 @@
 logger = new Logger("editProject")
 
-Template.editorContainer.rendered = ->
-  logger.debug("Editor container rendered, giving Ace focus")
+handleEditorRendered = (editor, text) ->
   editor.setTheme('ace/theme/monokai')
   editor.setMode('ace/mode/markdown')
-  if @data.text
-    editor.setValue(@data.text, 0)
+  # Make sure ace is aware of the fact the things might have changed.
+  editor.attachAce()
+  if text
+    editor.setValue(text, 0)
   editor.setFocus()
   editor.ace.on("change", ->
     logger.debug("Project text has changed - setting dirty state")
@@ -13,6 +14,13 @@ Template.editorContainer.rendered = ->
   )
   editor.ace.clearSelection()
   editor.ace.gotoLine(0, 0)
+
+Template.descriptionEditor.rendered = ->
+  logger.debug("Description editor rendered, giving Ace focus")
+  handleEditorRendered(descriptionEditor, @data.text)
+Template.instructionsEditor.rendered = ->
+  logger.debug("Instructions editor rendered, giving Ace focus")
+  handleEditorRendered(instructionsEditor, @data.instructions)
 Template.project.events({
   'click #save-project': ->
     if !Session.get("isEditingProject")
