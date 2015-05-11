@@ -7,7 +7,7 @@ RUN apt-get update -y && apt-get install -y curl wget
 RUN apt-get install libfreetype6 libfreetype6-dev fontconfig
 ENV PHANTOM_JS="phantomjs-1.9.8-linux-x86_64"
 WORKDIR /usr/local/share
-RUN wget https://bitbucket.org/ariya/phantomjs/downloads/$PHANTOM_JS.tar.bz2
+RUN wget https://s3.amazonaws.com/arve-various/$PHANTOM_JS.tar.bz2
 RUN tar xvjf $PHANTOM_JS.tar.bz2
 RUN rm $PHANTOM_JS.tar.bz2
 RUN ln -sf /usr/local/share/$PHANTOM_JS/bin/phantomjs /usr/local/bin
