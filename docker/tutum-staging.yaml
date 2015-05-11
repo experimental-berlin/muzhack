@@ -9,7 +9,7 @@ mongo-staging:
     - staging
   autorestart: always
 muzhack-staging:
-  image: aknudsen/muzhack:latest
+  image: quay.io/aknuds1/muzhack:latest
   links:
     - mongo-staging:db
   environment:
