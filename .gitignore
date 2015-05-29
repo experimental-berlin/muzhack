@@ -1,3 +1,4 @@
 settings.json
 .meteor
 *.env
+docker/deploy-*.sh
