@@ -1,3 +1,6 @@
 [submodule "packages/mandrill:ace"]
 	path = packages/mandrill:ace
 	url = git@github.com:aknuds1/meteor-reactive-ace-1.git
+[submodule "packages/aknudsen:dropzone"]
+	path = packages/aknudsen:dropzone
+	url = git@github.com:aknuds1/dropzone.git

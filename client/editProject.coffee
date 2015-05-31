@@ -1,4 +1,12 @@
 logger = new Logger("editProject")
+dropzoneLogger = new Logger("dropzone")
+pictureDropzone = null
+
+uploadPictures = (files) ->
+  logger.debug('Uploading pictures:', files)
+
+logDropzone = (event, args...) =>
+  dropzoneLogger.debug("#{event}:", args)
 
 handleEditorRendered = (editor, text) ->
   # Make sure ace is aware of the fact the things might have changed.
@@ -20,17 +28,34 @@ Template.descriptionEditor.rendered = ->
 Template.instructionsEditor.rendered = ->
   logger.debug("Instructions editor rendered, giving Ace focus")
   handleEditorRendered(instructionsEditor, @data.instructions)
+Template.picturesEditor.rendered = ->
+  logger.debug("Pictures editor rendered")
+  Dropzone.autoDiscover = false
+  pictureDropzone = new Dropzone("#picture-dropzone", {
+    acceptedFiles: "image/*",
+    url: "/upload",
+    dictDefaultMessage: "Drop pictures here to upload",
+    addRemoveLinks: true,
+    uploadFiles: uploadPictures,
+    autoProcessQueue: false,
+    dictDefaultMessage: "Drop pictures here to add",
+  })
+  for event in pictureDropzone.events
+    pictureDropzone.on(event, R.partial(logDropzone, event))
 Template.project.events({
   'click #save-project': ->
     if !Session.get("isEditingProject")
       return
 
-    Session.set("isEditingProject", false)
-
     title = $("#title-input").val()
     description = descriptionEditor.value()
     instructions = instructionsEditor.value()
     tags = $("#tags-input").val()
+
+    queuedFiles = pictureDropzone.getQueuedFiles()
+    if !R.isEmpty(queuedFiles)
+      logger.debug("Uploading pictures...")
+      pictureDropzone.processFiles(queuedFiles)
 
     logger.info("Saving project...")
     logger.debug("title: #{title}, description: #{description}, tags: #{tags}")
@@ -38,8 +63,8 @@ Template.project.events({
       if error?
         logger.error("Updating project on server failed: #{error}")
         notificationService.warn("Saving project to server failed: #{error}")
-        Session.set("isEditingProject", true)
       else
+        Session.set("isEditingProject", false)
         logger.info("Successfully saved project")
     )
   'click #cancel-edit': ->
@@ -64,3 +89,17 @@ Template.project.events({
 Template.editProject.helpers(
   tagsString: -> @tags.join(',')
 )
+
+@previewFile = () ->
+  preview = $('img')[0]
+  file = $('input[type=file]')[0].files[0]
+  reader = new FileReader()
+
+  reader.onloadend = () ->
+    logger.debug('Reader has finished loading')
+    preview.src = reader.result
+
+  if file?
+   reader.readAsDataURL(file)
+  else
+    preview.src = ''
