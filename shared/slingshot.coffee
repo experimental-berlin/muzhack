@@ -8,6 +8,7 @@ Slingshot.fileRestrictions("pictures", {
 if Meteor.isServer
   # TODO: Verify that user is owner of destination project
   Slingshot.createDirective("pictures", Slingshot.S3Storage, {
+    acl: "public-read",
     authorize: ->
       # Deny uploads if user is not logged in.
       if !@userId?
