@@ -127,7 +127,7 @@ Template.project.events({
     pictureUrlsPromise
       .then((pictureUrls) ->
         logger.info("Saving project...")
-        logger.debug("Picture URLs:", pictureUrls)
+        logger.debug("Picture URLs:", pictureUrls.join(", "))
         logger.debug("title: #{title}, description: #{description}, tags: #{tags}")
         Meteor.call('updateProject', @.projectId, title, description, instructions, tags, (error) ->
           if error?
@@ -163,17 +163,3 @@ Template.project.events({
 Template.editProject.helpers(
   tagsString: -> @tags.join(',')
 )
-
-@previewFile = () ->
-  preview = $('img')[0]
-  file = $('input[type=file]')[0].files[0]
-  reader = new FileReader()
-
-  reader.onloadend = () ->
-    logger.debug('Reader has finished loading')
-    preview.src = reader.result
-
-  if file?
-   reader.readAsDataURL(file)
-  else
-    preview.src = ''
