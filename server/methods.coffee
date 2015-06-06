@@ -22,15 +22,17 @@ Meteor.methods({
       text: text,
     })
     Projects.insert(data)
-  updateProject: (id, title, description, instructions, tags) ->
+  updateProject: (id, title, description, instructions, tags, pictureUrls) ->
     logger.debug("User #{@userId} updating project #{id}")
     user = getUser(@)
     Projects.update({projectId: id}, {$set: {
       title: title,
       text: description,
       instructions: instructions,
-      tags: R.map(S.trim(null), tags.split(','))
+      tags: R.map(S.trim(null), tags.split(',')),
+      pictureUrls: pictureUrls,
     }})
+
   removeProject: (id) ->
     user = getUser(@)
 
