@@ -31,3 +31,23 @@
       | is licensed under the
       a(href="#{license.url}" target="_blank") #{license.name}
       | license.
+
+#project-bottom-pad
+  ul.tabs(role="tablist")
+    each projectTabs
+      li(class="#{classes}")
+        a(role="tab" href="##{title.toLowerCase}")
+          if icon
+            span(class="icon-#{icon}") &nbsp;
+          = title
+  #tab-contents
+    if displayDescription
+      #description
+        +markdown
+          #{text}
+    if displayInstructions
+      #instructions
+        +markdown
+          #{instructions}
+    if displayFiles
+      +projectFiles
