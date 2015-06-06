@@ -1,0 +1,33 @@
+#project-top-pad.airy-padding-sides
+  if isLoggedIn
+    a#edit-action.action.pull-right(href="#")
+      span.icon-pencil3
+  #project-heading
+    h1#project-title
+      = title
+    p#project-creation-date Added #{creationDateString} by #{userFullName}
+  #image-box
+    #thumbnails
+      each pictures
+        a(href="#")
+          .thumbnail-wrapper
+            img(src="#{this}")
+    #displayed-image
+      img(src="#{mainPicture}")
+#right-column
+  #tag-pad.airy-padding-sides
+    h2
+      span.icon-tags2 &nbsp;Tags
+    #project-tags
+      = tagsString
+  #license-pad.airy-padding-sides
+    h2 License
+    #license-icons
+      a(href="#{license.url}" target="_blank")
+        each license.icons
+          span(class="icon-#{this}")
+    p
+      strong #{title}
+      | is licensed under the
+      a(href="#{license.url}" target="_blank") #{license.name}
+      | license.
