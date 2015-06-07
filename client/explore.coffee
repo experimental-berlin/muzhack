@@ -6,7 +6,7 @@ Template.explore.helpers({
   ,
   projects: ->
     extendProject = (project) ->
-      picture = if !R.isEmpty(project.pictures || []) then project.pictures[0] else \
+      picture = if !R.isEmpty(project.pictures || []) then project.pictures[0].url else \
         '/images/revox-reel-to-reel-resized.jpg'
       R.merge(project, {projectThumbnail: picture})
     R.map(extendProject, Projects.find({}, {sort: [["created", "asc"]]}))
