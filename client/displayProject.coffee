@@ -38,6 +38,6 @@ Template.displayProject.events({
     Iron.controller().state.set('activeTab', @name)
     logger.debug("Set activeTab: #{@name}")
   'click #thumbnails > a': ->
-    logger.debug("Thumbnail clicked: #{@}")
-    Session.set("mainPicture", String(@))
+    logger.debug("Thumbnail clicked: #{@url}")
+    Session.set("mainPicture", String(@url))
 })

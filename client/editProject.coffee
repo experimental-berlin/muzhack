@@ -70,7 +70,7 @@ Template.picturesEditor.rendered = ->
 
   uploadPictures = (files) ->
     pictureDatas = []
-    pictureUrls = []
+    pictures = []
     uploader = new Slingshot.Upload("pictures", {
       folder: "u/#{data.owner}/#{data.projectId}/pictures",
     })
@@ -83,7 +83,7 @@ Template.picturesEditor.rendered = ->
         if !match?
           reject(
             "processImage for file '#{file.name}' returned data URI on wrong format: '#{dataUri}'")
-        pictureDatas.push([file.name, match[1], match[2]])
+        pictureDatas.push([file, match[1], match[2]])
         if !R.isEmpty(files)
           processOnePicture(resolve, reject)
         else
@@ -91,22 +91,22 @@ Template.picturesEditor.rendered = ->
       )
 
     uploadOnePicture = (resolve, reject) ->
-      [name, type, b64] = pictureDatas.shift()
-      logger.debug("Uploading file '#{name}', type '#{type}'")
+      [file, type, b64] = pictureDatas.shift()
+      logger.debug("Uploading file '#{file.name}', type '#{type}'")
       blob = b64ToBlob(b64, type)
-      blob.name = name
+      blob.name = file.name
       uploader.send(blob, (error, downloadUrl) ->
         if error?
           reject(error.message)
         else
-          pictureUrls.push(downloadUrl)
+          file.url = downloadUrl
+          file.status = Dropzone.SUCCESS
+          pictures.push(file)
           if !R.isEmpty(pictureDatas)
             uploadOnePicture(resolve, reject)
           else
-            for file in files
-              file.status = Dropzone.SUCCESS
-            logger.debug('Finished uploading pictures, URLs:', pictureUrls)
-            resolve(pictureUrls)
+            logger.debug('Finished uploading pictures, URLs:', pictures)
+            resolve(pictures)
       )
 
     logger.debug("Processing pictures...")
@@ -134,24 +134,14 @@ Template.picturesEditor.rendered = ->
   for event in monitoredDropzoneEvents
     pictureDropzone.on(event, R.partial(logDropzone, event))
   logger.debug("Adding pictures to dropzone thumbnails: #{data.pictures.join(', ')}")
-  pictureDropzone.addExistingFiles(R.map((url) ->
-    components = url.split('/')
-    name = components[components.length - 1]
-    # TODO: Insert real parameters here
-    {
-      url: url,
-      name: name,
-      width: 120,
-      height: 120,
-      size: 100,
-      type: 'image/jpeg',
-    }
-  , data.pictures))
+  pictureDropzone.addExistingFiles(data.pictures)
 Template.project.events({
   'click #save-project': ->
     if !Session.get("isEditingProject")
       return
 
+    owner = @owner
+    projectId = @projectId
     title = $("#title-input").val()
     description = descriptionEditor.value()
     instructions = instructionsEditor.value()
@@ -163,25 +153,27 @@ Template.project.events({
 
     queuedFiles = pictureDropzone.getQueuedFiles()
     if !R.isEmpty(queuedFiles)
-      pictureUrlsPromise = pictureDropzone.processFiles(queuedFiles)
+      picturesPromise = pictureDropzone.processFiles(queuedFiles)
     else
-      pictureUrlsPromise = new Promise((resolve) -> resolve([]))
-    pictureUrlsPromise
-      .then((uploadedPictureUrls) ->
+      picturesPromise = new Promise((resolve) -> resolve([]))
+    picturesPromise
+      .then((uploadedPictures) ->
         logger.info("Saving project...")
-        pictureUrls = R.concat(
-          R.map(((file) -> file.url), pictureDropzone.getExistingFiles()),
-          uploadedPictureUrls
+        transformFiles = R.map(R.pick(['width', 'height', 'size', 'url', 'name', 'type']))
+        pictures = R.concat(
+          transformFiles(pictureDropzone.getExistingFiles()),
+          transformFiles(uploadedPictures)
         )
-        logger.debug("Picture URLs:", pictureUrls.join(", "))
+        logger.debug("Picture files:", pictures)
         logger.debug("title: #{title}, description: #{description}, tags: #{tags}")
-        Meteor.call('updateProject', @.projectId, title, description, instructions, tags, (error) ->
-          if error?
-            logger.error("Updating project on server failed: #{error}")
-            notificationService.warn("Saving project to server failed: #{error}")
-          else
-            Session.set("isEditingProject", false)
-            logger.info("Successfully saved project")
+        Meteor.call('updateProject', owner, projectId, title, description, instructions, tags,
+          pictures, (error) ->
+            if error?
+              logger.error("Updating project on server failed: #{error}")
+              notificationService.warn("Saving project to server failed: #{error}")
+            else
+              Session.set("isEditingProject", false)
+              logger.info("Successfully saved project")
         )
       )
       .catch((error) ->
@@ -196,7 +188,7 @@ Template.project.events({
     # TODO: Ask user
     Session.set("isEditingProject", false)
     logger.info("Removing project...")
-    Meteor.call("removeProject", @.projectId, (error) ->
+    Meteor.call("removeProject", @projectId, (error) ->
       if error?
         logger.error("Removing project on server failed: #{error}")
         notificationService.warn("Removing project on server failed: #{error}")

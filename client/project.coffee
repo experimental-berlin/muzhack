@@ -54,7 +54,7 @@ extendFile = (file) ->
       license = Licenses.findOne({licenseId: licenseId})
       logger.debug("Project has license #{licenseId}:", Licenses.findOne())
       project.license = license
-      Session.set("mainPicture", project.pictures[0])
+      Session.set("mainPicture", project.pictures[0].url)
       logger.debug("Project has files: #{project.hasFiles}")
       logger.debug("Project has pictures: #{!R.isEmpty(project.pictures)}")
     project
