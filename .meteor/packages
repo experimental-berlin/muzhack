@@ -21,9 +21,10 @@ isotope:isotope
 reactive-var
 mquandalle:jade
 manuelschoebel:ms-seo
-kevohagan:ramda
 stoeffel:underscore.string.fp
 aknudsen:dropzone
 ccorcos:clientside-image-manipulation
 edgee:slingshot
 codeadventure:es6-promises
+aknudsen:ramda
+peerlibrary:aws-sdk

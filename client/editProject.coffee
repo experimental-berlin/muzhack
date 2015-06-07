@@ -160,14 +160,14 @@ Template.project.events({
       .then((uploadedPictures) ->
         logger.info("Saving project...")
         transformFiles = R.map(R.pick(['width', 'height', 'size', 'url', 'name', 'type']))
-        pictures = R.concat(
+        pictureFiles = R.concat(
           transformFiles(pictureDropzone.getExistingFiles()),
           transformFiles(uploadedPictures)
         )
-        logger.debug("Picture files:", pictures)
+        logger.debug("Picture files:", pictureFiles)
         logger.debug("title: #{title}, description: #{description}, tags: #{tags}")
         Meteor.call('updateProject', owner, projectId, title, description, instructions, tags,
-          pictures, (error) ->
+          pictureFiles, (error) ->
             if error?
               logger.error("Updating project on server failed: #{error}")
               notificationService.warn("Saving project to server failed: #{error}")

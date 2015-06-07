@@ -3,6 +3,7 @@ accounts-password@1.1.1
 accounts-ui@1.1.5
 accounts-ui-unstyled@1.1.7
 aknudsen:dropzone@4.0.0
+aknudsen:ramda@0.14.0
 autoupdate@1.2.1
 base64@1.0.3
 binary-heap@1.0.3
@@ -38,7 +39,6 @@ isotope:isotope@2.1.0_1
 jag:pince@0.0.6
 jquery@1.11.3_2
 json@1.0.3
-kevohagan:ramda@0.13.0
 lampe:purecss@0.5.0
 launch-screen@1.0.2
 less@1.0.14
@@ -60,6 +60,8 @@ mquandalle:jade-compiler@0.4.3
 npm-bcrypt@0.7.8_2
 observe-sequence@1.0.6
 ordered-dict@1.0.3
+peerlibrary:aws-sdk@2.1.17_1
+peerlibrary:blocking@0.5.2
 random@1.0.3
 reactive-dict@1.1.0
 reactive-var@1.0.5
