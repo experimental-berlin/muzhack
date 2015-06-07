@@ -2,6 +2,31 @@ logger = new Logger("editProject")
 dropzoneLogger = new Logger("dropzone")
 pictureDropzone = null
 
+monitoredDropzoneEvents = [
+  "addedfile"
+  "addedfiles"
+  "removedfile"
+  "thumbnail"
+  "error"
+  "errormultiple"
+  "processing"
+  "processingmultiple"
+  "uploadprogress"
+  "totaluploadprogress"
+  "sending"
+  "sendingmultiple"
+  "success"
+  "successmultiple"
+  "canceled"
+  "canceledmultiple"
+  "complete"
+  "completemultiple"
+  "reset"
+  "maxfilesexceeded"
+  "maxfilesreached"
+  "queuecomplete"
+]
+
 b64ToBlob = (b64Data, contentType, sliceSize) ->
   sliceSize = sliceSize || 512
 
@@ -106,8 +131,22 @@ Template.picturesEditor.rendered = ->
     autoProcessQueue: false,
     dictDefaultMessage: "Drop pictures here to add",
   })
-  for event in pictureDropzone.events
+  for event in monitoredDropzoneEvents
     pictureDropzone.on(event, R.partial(logDropzone, event))
+  logger.debug("Adding pictures to dropzone thumbnails: #{data.pictures.join(', ')}")
+  pictureDropzone.addExistingFiles(R.map((url) ->
+    components = url.split('/')
+    name = components[components.length - 1]
+    # TODO: Insert real parameters here
+    {
+      url: url,
+      name: name,
+      width: 120,
+      height: 120,
+      size: 100,
+      type: 'image/jpeg',
+    }
+  , data.pictures))
 Template.project.events({
   'click #save-project': ->
     if !Session.get("isEditingProject")
@@ -118,15 +157,22 @@ Template.project.events({
     instructions = instructionsEditor.value()
     tags = $("#tags-input").val()
 
+    allFiles = pictureDropzone.getAcceptedFiles()
+    if R.isEmpty(allFiles)
+      throw new Error("There must at least be one picture")
+
     queuedFiles = pictureDropzone.getQueuedFiles()
     if !R.isEmpty(queuedFiles)
       pictureUrlsPromise = pictureDropzone.processFiles(queuedFiles)
     else
-      throw new Error("There must at least be one picture")
-
+      pictureUrlsPromise = new Promise((resolve) -> resolve([]))
     pictureUrlsPromise
-      .then((pictureUrls) ->
+      .then((uploadedPictureUrls) ->
         logger.info("Saving project...")
+        pictureUrls = R.concat(
+          R.map(((file) -> file.url), pictureDropzone.getExistingFiles()),
+          uploadedPictureUrls
+        )
         logger.debug("Picture URLs:", pictureUrls.join(", "))
         logger.debug("title: #{title}, description: #{description}, tags: #{tags}")
         Meteor.call('updateProject', @.projectId, title, description, instructions, tags, (error) ->
