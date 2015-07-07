@@ -28,7 +28,7 @@ Meteor.methods({
       text: text,
     })
     Projects.insert(data)
-  updateProject: (owner, id, title, description, instructions, tags, pictures) ->
+  updateProject: (owner, id, title, description, instructions, tags, pictures, files) ->
     s3Client = new AWS.S3({
       accessKeyId: getSetting('AWSAccessKeyId'),
       secretAccessKey: getSetting('AWSSecretAccessKey'),
@@ -40,6 +40,7 @@ Meteor.methods({
     user = getUser(@)
     logger.debug("User #{user.username} updating project #{owner}/#{id}")
     logger.debug("Pictures:", pictures)
+    logger.debug("Files:", files)
     selector = {owner: owner, projectId: id}
     project = Projects.findOne(selector)
     if !project?

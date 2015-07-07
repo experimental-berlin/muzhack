@@ -1,18 +1,20 @@
 logger = new Logger("editProject")
 dropzoneLogger = new Logger("dropzone")
 pictureDropzone = null
+fileDropzone = null
 
 monitoredDropzoneEvents = [
   "addedfile"
   "addedfiles"
-  "removedfile"
-  "thumbnail"
+  "debug"
   "error"
   "errormultiple"
   "processing"
   "processingmultiple"
-  "uploadprogress"
+  "removedfile"
+  "thumbnail"
   "totaluploadprogress"
+  "uploadprogress"
   "sending"
   "sendingmultiple"
   "success"
@@ -129,12 +131,65 @@ Template.picturesEditor.rendered = ->
     addRemoveLinks: true,
     uploadFiles: uploadPictures,
     autoProcessQueue: false,
-    dictDefaultMessage: "Drop pictures here to add",
   })
   for event in monitoredDropzoneEvents
     pictureDropzone.on(event, R.partial(logDropzone, event))
   logger.debug("Adding pictures to dropzone thumbnails: #{data.pictures.join(', ')}")
   pictureDropzone.addExistingFiles(data.pictures)
+Template.filesEditor.rendered = ->
+    data = @data
+
+    uploadFiles = (files) ->
+      processedFiles = []
+      uploader = new Slingshot.Upload("files", {
+        folder: "u/#{data.owner}/#{data.projectId}/files",
+      })
+
+      uploadOneFile = (resolve, reject) ->
+        file = files.shift()
+        logger.debug("Uploading file '#{file.name}'")
+        # blob = b64ToBlob(b64, type)
+        # blob.name = file.name
+        uploader.send(file, (error, downloadUrl) ->
+          if error?
+            logger.warn("Failed to upload file '#{file.name}': '#{error.message}'")
+            reject(error.message)
+          else
+            logger.debug("Succeeded in uploading file '#{file.name}'")
+            file.url = downloadUrl
+            file.status = Dropzone.SUCCESS
+            processedFiles.push(file)
+            if !R.isEmpty(files)
+              uploadOneFile(resolve, reject)
+            else
+              logger.debug('Finished uploading files:', processedFiles)
+              resolve(processedFiles)
+        )
+
+      logger.debug('Uploading files...', files)
+      new Promise(uploadOneFile)
+        .catch((error) ->
+          for file in files
+            file.status = Dropzone.ERROR
+          throw new Error("Failed to upload files: #{error}")
+        )
+
+    logger.debug("Files editor rendered")
+    Dropzone.autoDiscover = false
+    fileDropzone = new Dropzone("#file-dropzone", {
+      dictDefaultMessage: "Drop files here to upload",
+      addRemoveLinks: true,
+      uploadFiles: uploadFiles,
+      autoProcessQueue: false,
+      createImageThumbnails: false,
+    })
+    for event in monitoredDropzoneEvents
+      fileDropzone.on(event, R.partial(logDropzone, event))
+    logger.debug("Adding files to file dropzone: #{R.map(((f) -> f.filename), data.files).join(
+      ', ')}")
+    fileDropzone.addExistingFiles(
+      R.map(((x) -> R.merge(x, {name: x.filename})), data.files)
+    )
 Template.project.events({
   'click #save-project': ->
     if !Session.get("isEditingProject")
@@ -147,27 +202,46 @@ Template.project.events({
     instructions = instructionsEditor.value()
     tags = $("#tags-input").val()
 
-    allFiles = pictureDropzone.getAcceptedFiles()
-    if R.isEmpty(allFiles)
+    allPictures = pictureDropzone.getAcceptedFiles()
+    if R.isEmpty(allPictures)
       throw new Error("There must at least be one picture")
 
-    queuedFiles = pictureDropzone.getQueuedFiles()
-    if !R.isEmpty(queuedFiles)
-      picturesPromise = pictureDropzone.processFiles(queuedFiles)
+    queuedPictures = pictureDropzone.getQueuedFiles()
+    if !R.isEmpty(queuedPictures)
+      picturesPromise = pictureDropzone.processFiles(queuedPictures)
     else
       picturesPromise = new Promise((resolve) -> resolve([]))
     picturesPromise
-      .then((uploadedPictures) ->
+      .catch((error) ->
+        logger.error("Uploading pictures failed: #{error}")
+      )
+    queuedFiles = fileDropzone.getQueuedFiles()
+    if !R.isEmpty(queuedFiles)
+      logger.debug("Processing #{queuedFiles.length} file(s)")
+      filesPromise = fileDropzone.processFiles(queuedFiles)
+    else
+      filesPromise = new Promise((resolve) -> resolve([]))
+    filesPromise
+      .catch((error) ->
+        logger.error("Uploading files failed: #{error}")
+      )
+    Promise.all([picturesPromise, filesPromise])
+      .then(([uploadedPictures, uploadedFiles]) ->
         logger.info("Saving project...")
         transformFiles = R.map(R.pick(['width', 'height', 'size', 'url', 'name', 'type']))
         pictureFiles = R.concat(
           transformFiles(pictureDropzone.getExistingFiles()),
           transformFiles(uploadedPictures)
         )
+        files = R.concat(
+          transformFiles(fileDropzone.getExistingFiles()),
+          transformFiles(uploadedFiles)
+        )
         logger.debug("Picture files:", pictureFiles)
+        logger.debug("Files:", files)
         logger.debug("title: #{title}, description: #{description}, tags: #{tags}")
         Meteor.call('updateProject', owner, projectId, title, description, instructions, tags,
-          pictureFiles, (error) ->
+          pictureFiles, files, (error) ->
             if error?
               logger.error("Updating project on server failed: #{error}")
               notificationService.warn("Saving project to server failed: #{error}")
@@ -175,9 +249,6 @@ Template.project.events({
               Session.set("isEditingProject", false)
               logger.info("Successfully saved project")
         )
-      )
-      .catch((error) ->
-        logger.error("Uploading pictures failed: #{error}")
       )
   'click #cancel-edit': ->
     isModified = Session.get("isProjectModified")
