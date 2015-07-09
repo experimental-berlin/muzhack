@@ -1,0 +1,22 @@
+header
+  nav#menu.pure-menu.pure-menu-open.pure-menu-fixed.pure-menu-horizontal
+    a.pure-menu-heading(href="/")
+      appName
+    ul
+      each menuElements
+        li(attrs)
+          a(href=url)
+            name
+
+    +accountbar
+article#content
+  +yield
+footer
+  p
+    This is an early prototype of MuzHack, intended for soliciting feedback.
+    Made with the excellent
+      a(href="http://meteor.com/")
+        Meteor
+      framework. © 2015 Arve Knudsen
+//- +modals
+//- +contextMenus
