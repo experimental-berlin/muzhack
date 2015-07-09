@@ -46,13 +46,17 @@ Meteor.methods({
     if !project?
       throw new Error("Couldn't find any project '#{owner}/#{id}'")
 
-    removedPictures = R.differenceWith(((a, b) -> a.url == b.url), project.pictures, pictures)
-    for picture in removedPictures
-      picturePath = "u/#{owner}/#{id}/pictures/#{picture.name}"
-      logger.debug("Removing outdated picture '#{picturePath}'")
-      s3Client.deleteObjectSync({
-        Key: picturePath,
-      })
+    removeStaleFiles = (oldFiles, newFiles, fileType) ->
+      removedFiles = R.differenceWith(((a, b) -> a.url == b.url), oldFiles, newFiles)
+      for file in removedFiles
+        filePath = "u/#{owner}/#{id}/#{fileType}s/#{file.name}"
+        logger.debug("Removing outdated #{fileType} '#{filePath}'")
+        s3Client.deleteObjectSync({
+          Key: filePath,
+        })
+
+    removeStaleFiles(project.pictures, pictures, 'picture')
+    removeStaleFiles(project.files, files, 'file')
 
     Projects.update(selector, {$set: {
       title: title,
@@ -60,6 +64,7 @@ Meteor.methods({
       instructions: instructions,
       tags: R.map(S.trim(null), tags.split(',')),
       pictures: pictures,
+      files: files,
     }})
   removeProject: (id) ->
     user = getUser(@)
