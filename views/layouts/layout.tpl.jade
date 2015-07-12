@@ -3,7 +3,7 @@ header
     a.pure-menu-heading(href="/") #{appName}
     ul
       each menuElements
-        li(attrs)
+        li($dyn=attrs)
           a(href=url) #{name}
     +accountbar
 article#content

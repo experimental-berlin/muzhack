@@ -38,8 +38,10 @@ class MenuElement
 
   isSelected: ->
     if !Session.get("currentSection")?
-      return
-    Session.get("currentSection").toLowerCase() == @name.toLowerCase()
+      logger.warn("currentSection not defined in Session")
+      false
+    else
+      Session.get("currentSection").toLowerCase() == @name.toLowerCase()
 
 Template.layout.helpers(
   menuElements: ->
