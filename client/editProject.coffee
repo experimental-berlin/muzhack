@@ -3,32 +3,6 @@ dropzoneLogger = new Logger("dropzone")
 pictureDropzone = null
 fileDropzone = null
 
-monitoredDropzoneEvents = [
-  "addedfile"
-  "addedfiles"
-  "debug"
-  "error"
-  "errormultiple"
-  "processing"
-  "processingmultiple"
-  "removedfile"
-  "thumbnail"
-  "totaluploadprogress"
-  "uploadprogress"
-  "sending"
-  "sendingmultiple"
-  "success"
-  "successmultiple"
-  "canceled"
-  "canceledmultiple"
-  "complete"
-  "completemultiple"
-  "reset"
-  "maxfilesexceeded"
-  "maxfilesreached"
-  "queuecomplete"
-]
-
 b64ToBlob = (b64Data, contentType, sliceSize) ->
   sliceSize = sliceSize || 512
 
@@ -43,9 +17,6 @@ b64ToBlob = (b64Data, contentType, sliceSize) ->
     offset += sliceSize
 
   new Blob(byteArrays, {type: contentType})
-
-logDropzone = (event, args...) =>
-  dropzoneLogger.debug("#{event}:", args)
 
 handleEditorRendered = (editor, text) ->
   # Make sure ace is aware of the fact the things might have changed.
