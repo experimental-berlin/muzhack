@@ -1,4 +1,7 @@
-logger = new Logger('create')
+logger = new Logger("create")
+
+pictureDropzone = null
+fileDropzone = null
 
 Template.create.rendered = ->
   for editor in [descriptionEditor, instructionsEditor,]
@@ -6,7 +9,7 @@ Template.create.rendered = ->
     editor.setMode('ace/mode/markdown')
 
 handleEditorRendered = (editor, text) ->
-  # Make sure ace is aware of the fact the things might have changed.
+  # Make sure Ace is aware of the fact the things might have changed.
   editor.attachAce()
   if text
     editor.setValue(text, 0)
@@ -27,50 +30,70 @@ Template.createInstructions.rendered = ->
   handleEditorRendered(instructionsEditor)
 Template.createPictures.rendered = ->
   logger.debug("Pictures editor rendered")
-  pictureDropzone = DropzoneService.createDropzone(
-    "picture-dropzone", true, null, "pictures")
+  pictureDropzone = DropzoneService.createDropzone("picture-dropzone", true, null, "pictures")
 Template.createFiles.rendered = ->
   logger.debug("Files editor rendered")
   fileDropzone = DropzoneService.createDropzone("file-dropzone", false, null, "files")
 
-Template.project.events({
-  'click #save-project': ->
-    if !Session.get("isEditingProject")
-      return
+getParameters = () ->
+  projectId = $('#id-input').val()
+  title = $('#title-input').val()
+  description = descriptionEditor.value()
+  instructions = instructionsEditor.value()
+  tags = $('#tags-input').val()
+  username = Meteor.user().username
+  tags = S.words(tags)
+  if S.isBlank(projectId) || S.isBlank(title) || R.isEmpty(tags)
+    throw new Error('Fields not correctly filled in')
+  if S.isBlank(description)
+    throw new Error("Description must be filled in")
+  if S.isBlank(instructions)
+    throw new Error("Instructions must be filled in")
+  allPictures = pictureDropzone.getAcceptedFiles()
+  if R.isEmpty(allPictures)
+    throw new Error("There must be at least one picture")
+  queuedPictures = pictureDropzone.getQueuedFiles()
+  queuedFiles = fileDropzone.getQueuedFiles()
+  [projectId, title, description, instructions, tags, username, queuedPictures, queuedFiles]
 
-    owner = @owner
-    projectId = @projectId
-    title = $("#title-input").val()
-    description = descriptionEditor.value()
-    instructions = instructionsEditor.value()
-    tags = $("#tags-input").val()
+Template.create.events({
+  'click #create-project': ->
+    logger.debug("Create button was clicked")
+    button = event.currentTarget
+    logger.debug("Disabling create button")
+    button.disabled = true
+    [projectId, title, description, instructions, tags, username, queuedPictures, queuedFiles] = \
+      getParameters()
 
-    allPictures = pictureDropzone.getAcceptedFiles()
-    if R.isEmpty(allPictures)
-      throw new Error("There must at least be one picture")
+    uploadFiles = () ->
+      if !R.isEmpty(queuedPictures)
+        picturesPromise = pictureDropzone.processFiles(queuedPictures, {
+          owner: username,
+          projectId: projectId,
+        })
+      else
+        picturesPromise = new Promise((resolve) -> resolve([]))
+      picturesPromise
+        .catch((error) ->
+          logger.error("Uploading pictures failed: #{error}")
+        )
+      if !R.isEmpty(queuedFiles)
+        logger.debug("Processing #{queuedFiles.length} file(s)")
+        filesPromise = fileDropzone.processFiles(queuedFiles, {
+          owner: username,
+          projectId: projectId,
+        })
+      else
+        filesPromise = new Promise((resolve) -> resolve([]))
+      filesPromise
+        .catch((error) ->
+          logger.error("Uploading files failed: #{error}")
+        )
+      [picturesPromise, filesPromise]
 
-    queuedPictures = pictureDropzone.getQueuedFiles()
-    if !R.isEmpty(queuedPictures)
-      picturesPromise = pictureDropzone.processFiles(queuedPictures)
-    else
-      picturesPromise = new Promise((resolve) -> resolve([]))
-    picturesPromise
-      .catch((error) ->
-        logger.error("Uploading pictures failed: #{error}")
-      )
-    queuedFiles = fileDropzone.getQueuedFiles()
-    if !R.isEmpty(queuedFiles)
-      logger.debug("Processing #{queuedFiles.length} file(s)")
-      filesPromise = fileDropzone.processFiles(queuedFiles)
-    else
-      filesPromise = new Promise((resolve) -> resolve([]))
-    filesPromise
-      .catch((error) ->
-        logger.error("Uploading files failed: #{error}")
-      )
+    [picturesPromise, filesPromise] = uploadFiles()
     Promise.all([picturesPromise, filesPromise])
       .then(([uploadedPictures, uploadedFiles]) ->
-        logger.info("Saving project...")
         transformFiles = R.map(R.pick(['width', 'height', 'size', 'url', 'name', 'type']))
         pictureFiles = R.concat(
           transformFiles(pictureDropzone.getExistingFiles()),
@@ -80,71 +103,27 @@ Template.project.events({
           transformFiles(fileDropzone.getExistingFiles()),
           transformFiles(uploadedFiles)
         )
+        qualifiedId = "#{username}/#{projectId}"
+        logger.info("Creating project with ID '#{qualifiedId}', title '#{title}' and tag(s) " +
+          "#{tags.join(', ')}")
         logger.debug("Picture files:", pictureFiles)
         logger.debug("Files:", files)
-        logger.debug("title: #{title}, description: #{description}, tags: #{tags}")
-        Meteor.call('updateProject', owner, projectId, title, description, instructions, tags,
+        Meteor.call('createProject', projectId, title, description, instructions, tags,
           pictureFiles, files, (error) ->
+            logger.debug("Re-enabling create button")
+            button.disabled = false
             if error?
-              logger.error("Updating project on server failed: #{error}")
-              notificationService.warn("Saving project to server failed: #{error}")
+              logger.error("Creating project on server failed: #{error}")
+              notificationService.warn("Project Creation Failure",
+                "Failed to create project due to error on server")
             else
-              Session.set("isEditingProject", false)
-              logger.info("Successfully saved project")
+              logger.info("Successfully created project")
+              Router.go("/#{qualifiedId}")
         )
       )
-  'click #cancel-edit': ->
+  'click #cancel-create': ->
     isModified = Session.get("isProjectModified")
     # TODO: Ask user if there have been modifications
-    logger.debug("Canceling editing of project, dirty: #{isModified}")
-    Session.set("isEditingProject", false)
-  'click #remove-project': ->
-    # TODO: Ask user
-    Session.set("isEditingProject", false)
-    logger.info("Removing project...")
-    Meteor.call("removeProject", @projectId, (error) ->
-      if error?
-        logger.error("Removing project on server failed: #{error}")
-        notificationService.warn("Removing project on server failed: #{error}")
-        Session.set("isEditingProject", true)
-      else
-        logger.info("Successfully removed project")
-        Router.go('/')
-    )
+    logger.debug("Canceling creating project, dirty: #{isModified}")
+    logger.debug("TODO")
 })
-Template.editProject.helpers(
-  tagsString: -> @tags.join(',')
-)
-
-
-Template.create.events(
-  'click #create-button': (event) ->
-    id = $('#input-id').val()
-    title = $('#input-title').val()
-    tags = $('#input-tags').val()
-    text = editor.value()
-    logger.debug("Create button was clicked")
-    button = event.currentTarget
-    logger.debug("Disabling create button")
-    button.disabled = true
-
-    tags = S.words(tags)
-    if S.isBlank(id) || S.isBlank(title) || R.isEmpty(tags)
-      throw new Error('Fields not correctly filled in')
-
-    username = Meteor.user().username
-    qualifiedId = "#{username}/#{id}"
-    logger.info("Creating project with ID '#{qualifiedId}', title '#{title}' and tag(s) #{tags.join(', ')}")
-    logger.info("Text: '#{text}'")
-
-    Meteor.call("createProject", id, title, tags, text, (error) ->
-      logger.debug("Re-enabling create button")
-      button.disabled = false
-      if !error?
-        Router.go("/#{qualifiedId}")
-      else
-        logger.warn("Server error when trying to create project:", error)
-        notificationService.warn("Project Creation Failure",
-          "Failed to create project due to error on server")
-    )
-)

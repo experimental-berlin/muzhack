@@ -13,7 +13,7 @@ getSetting = (name) ->
   value
 
 Meteor.methods({
-  createProject: (id, title, tags, text) ->
+  createProject: (id, title, description, instructions, tags, pictures, files) ->
     user = getUser(@)
 
     metadata = {
@@ -21,11 +21,14 @@ Meteor.methods({
       projectId: id,
       title: title,
       tags: tags,
+      pictures: pictures,
+      files: files,
       created: moment().utc().toDate(),
     }
     logger.info("Creating project #{user.username}/#{id}:", metadata)
     data = R.merge(metadata, {
-      text: text,
+      description: description,
+      instructions: instructions,
     })
     Projects.insert(data)
   updateProject: (owner, id, title, description, instructions, tags, pictures, files) ->
@@ -38,7 +41,7 @@ Meteor.methods({
       },
     })
     user = getUser(@)
-    logger.debug("User #{user.username} updating project #{owner}/#{id}")
+    logger.info("User #{user.username} updating project #{owner}/#{id}")
     logger.debug("Pictures:", pictures)
     logger.debug("Files:", files)
     selector = {owner: owner, projectId: id}
@@ -60,7 +63,7 @@ Meteor.methods({
 
     Projects.update(selector, {$set: {
       title: title,
-      text: description,
+      description: description,
       instructions: instructions,
       tags: R.map(S.trim(null), tags.split(',')),
       pictures: pictures,

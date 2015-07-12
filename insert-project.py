@@ -40,7 +40,7 @@ project = {
     'owner': json['owner'],
     'projectId': json['id'],
     'tags': json['tags'],
-    'text': json['description'],
+    'description': json['description'],
     'title': json['title'],
     'instructions': json['instructions'],
     'pictures': json['pictures'],

@@ -25,13 +25,14 @@ monitoredDropzoneEvents = [
 ]
 
 dropzoneLogger = new Logger("dropzone")
+logger = new Logger("DropzoneService")
 
 logDropzone = (event, args...) =>
   dropzoneLogger.debug("#{event}:", args)
 
 class @DropzoneService
   @createDropzone: (cssId, forPictures, existingFiles, destFolder) ->
-    uploadFiles = (files) ->
+    uploadFiles = (files, data) ->
       processedFiles = []
       category = if forPictures then "pictures" else "files"
       uploader = new Slingshot.Upload(category, {
