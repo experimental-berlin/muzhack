@@ -3,21 +3,6 @@ dropzoneLogger = new Logger("dropzone")
 pictureDropzone = null
 fileDropzone = null
 
-b64ToBlob = (b64Data, contentType, sliceSize) ->
-  sliceSize = sliceSize || 512
-
-  byteCharacters = atob(b64Data)
-  byteArrays = []
-  offset = 0
-  while offset < byteCharacters.length
-    slice = byteCharacters.slice(offset, offset + sliceSize)
-    byteNumbers = (slice.charCodeAt(i) for i in [0...slice.length])
-    byteArray = new Uint8Array(byteNumbers)
-    byteArrays.push(byteArray)
-    offset += sliceSize
-
-  new Blob(byteArrays, {type: contentType})
-
 handleEditorRendered = (editor, text) ->
   # Make sure ace is aware of the fact the things might have changed.
   editor.attachAce()
@@ -119,8 +104,6 @@ Template.filesEditor.rendered = ->
       uploadOneFile = (resolve, reject) ->
         file = files.shift()
         logger.debug("Uploading file '#{file.name}'")
-        # blob = b64ToBlob(b64, type)
-        # blob.name = file.name
         uploader.send(file, (error, downloadUrl) ->
           if error?
             logger.warn("Failed to upload file '#{file.name}': '#{error.message}'")

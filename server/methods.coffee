@@ -16,6 +16,9 @@ Meteor.methods({
   createProject: (id, title, description, instructions, tags, pictures, files) ->
     user = getUser(@)
 
+    if Projects.findOne({owner: user.username, projectId: id})?
+      throw new Error("Project '#{user.username}/#{id}' already exists")
+
     metadata = {
       owner: user.username,
       projectId: id,
