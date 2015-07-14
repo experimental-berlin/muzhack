@@ -16,8 +16,6 @@ muzhack-staging:
     - ROOT_URL=https://staging.muzhack.com
     - MONGO_URL
     - METEOR_SETTINGS
-    - S3Bucket=staging.muzhack.com
-    - AWSRegion=eu-central-1
   tags:
     - staging
   autorestart: always
