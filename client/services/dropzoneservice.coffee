@@ -46,11 +46,16 @@ logDropzone = (event, args...) =>
    new Blob(byteArrays, {type: contentType})
 
 class @DropzoneService
-  @createDropzone: (cssId, forPictures, existingFiles, destFolder) ->
+  @createDropzone: (cssId, forPictures, existingFiles) ->
     uploadFiles = (files, data) ->
       processedFiles = []
+      s3Folder = "u/#{data.owner}/#{data.projectId}/files"
+      if !data.owner? or !data.projectId?
+        throw new Error("data is missing owner/projectId")
+        
+      logger.debug("Uploading files to folder '#{s3Folder}'")
       uploader = new Slingshot.Upload("files", {
-        folder: "u/#{data.owner}/#{data.projectId}/#{destFolder}",
+        folder: s3Folder,
       })
 
       uploadOneFile = (resolve, reject) ->
@@ -83,8 +88,13 @@ class @DropzoneService
     uploadPictures = (files, data) ->
       pictureDatas = []
       pictures = []
+      s3Folder = "u/#{data.owner}/#{data.projectId}/pictures"
+      if !data.owner? or !data.projectId?
+        throw new Error("data is missing owner/projectId")
+
+      logger.debug("Uploading pictures to folder '#{s3Folder}'")
       uploader = new Slingshot.Upload("pictures", {
-        folder: "u/#{data.owner}/#{data.projectId}/pictures",
+        folder: s3Folder,
       })
 
       processOnePicture = (resolve, reject) ->

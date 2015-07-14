@@ -30,10 +30,10 @@ Template.createInstructions.rendered = ->
   handleEditorRendered(instructionsEditor)
 Template.createPictures.rendered = ->
   logger.debug("Pictures editor rendered")
-  pictureDropzone = DropzoneService.createDropzone("picture-dropzone", true, null, "pictures")
+  pictureDropzone = DropzoneService.createDropzone("picture-dropzone", true, null)
 Template.createFiles.rendered = ->
   logger.debug("Files editor rendered")
-  fileDropzone = DropzoneService.createDropzone("file-dropzone", false, null, "files")
+  fileDropzone = DropzoneService.createDropzone("file-dropzone", false, null)
 
 getParameters = () ->
   projectId = $('#id-input').val()

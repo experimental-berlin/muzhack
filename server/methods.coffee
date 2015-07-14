@@ -35,16 +35,17 @@ Meteor.methods({
     })
     Projects.insert(data)
   updateProject: (owner, id, title, description, instructions, tags, pictures, files) ->
+    s3Bucket = getSetting('S3Bucket')
     s3Client = new AWS.S3({
       accessKeyId: getSetting('AWSAccessKeyId'),
       secretAccessKey: getSetting('AWSSecretAccessKey'),
       region: getSetting('AWSRegion'),
       params: {
-        Bucket: getSetting('S3Bucket'),
+        Bucket: s3Bucket,
       },
     })
     user = getUser(@)
-    logger.info("User #{user.username} updating project #{owner}/#{id}")
+    logger.info("User #{user.username} updating project #{owner}/#{id}, s3Bucket: '#{s3Bucket}'")
     logger.debug("Pictures:", pictures)
     logger.debug("Files:", files)
     selector = {owner: owner, projectId: id}

@@ -25,12 +25,10 @@ Template.instructionsEditor.rendered = ->
   handleEditorRendered(instructionsEditor, @data.instructions)
 Template.picturesEditor.rendered = ->
   logger.debug("Pictures editor rendered")
-  pictureDropzone = DropzoneService.createDropzone("picture-dropzone", true, @data.pictures,
-    "pictures")
+  pictureDropzone = DropzoneService.createDropzone("picture-dropzone", true, @data.pictures)
 Template.filesEditor.rendered = ->
   logger.debug("Files editor rendered")
-  fileDropzone = DropzoneService.createDropzone("file-dropzone", false, @data.files,
-    "files")
+  fileDropzone = DropzoneService.createDropzone("file-dropzone", false, @data.files)
 Template.project.events({
   'click #save-project': ->
     if !Session.get("isEditingProject")
@@ -42,6 +40,10 @@ Template.project.events({
     description = descriptionEditor.value()
     instructions = instructionsEditor.value()
     tags = $("#tags-input").val()
+    uploadData = {
+      owner: owner,
+      projectId: projectId,
+    }
 
     allPictures = pictureDropzone.getAcceptedFiles()
     if R.isEmpty(allPictures)
@@ -52,7 +54,7 @@ Template.project.events({
 
     uploadFiles = () ->
       if !R.isEmpty(queuedPictures)
-        picturesPromise = pictureDropzone.processFiles(queuedPictures, @)
+        picturesPromise = pictureDropzone.processFiles(queuedPictures, uploadData)
       else
         picturesPromise = new Promise((resolve) -> resolve([]))
       picturesPromise
@@ -61,7 +63,7 @@ Template.project.events({
         )
       if !R.isEmpty(queuedFiles)
         logger.debug("Processing #{queuedFiles.length} file(s)")
-        filesPromise = fileDropzone.processFiles(queuedFiles, @)
+        filesPromise = fileDropzone.processFiles(queuedFiles, uploadData)
       else
         filesPromise = new Promise((resolve) -> resolve([]))
       filesPromise
