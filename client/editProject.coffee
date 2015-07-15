@@ -8,7 +8,6 @@ handleEditorRendered = (editor, text) ->
   editor.attachAce()
   if text
     editor.setValue(text, 0)
-  editor.setFocus()
   editor.ace.on("change", ->
     logger.debug("Project text has changed - setting dirty state")
     Session.set("isProjectModified", true)
@@ -17,6 +16,9 @@ handleEditorRendered = (editor, text) ->
   editor.ace.gotoLine(0, 0)
   editor.ace.session.setUseWrapMode(true)
 
+Template.editProject.rendered = ->
+  logger.debug("Project editing view rendered")
+  document.getElementById("title-input").focus()
 Template.descriptionEditor.rendered = ->
   logger.debug("Description editor rendered, giving Ace focus")
   handleEditorRendered(descriptionEditor, @data.description)
