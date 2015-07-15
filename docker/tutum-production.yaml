@@ -9,7 +9,7 @@ mongo-production:
     - production
   autorestart: always
 muzhack-production:
-  image: quay.io/aknuds1/muzhack:latest
+  image: quay.io/aknuds1/muzhack:release
   links:
     - mongo-production:db
   environment:
