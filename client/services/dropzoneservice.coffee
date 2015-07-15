@@ -52,7 +52,7 @@ class @DropzoneService
       s3Folder = "u/#{data.owner}/#{data.projectId}/files"
       if !data.owner? or !data.projectId?
         throw new Error("data is missing owner/projectId")
-        
+
       logger.debug("Uploading files to folder '#{s3Folder}'")
       uploader = new Slingshot.Upload("files", {
         folder: s3Folder,
@@ -154,11 +154,13 @@ class @DropzoneService
     })
     for event in monitoredDropzoneEvents
       dropzone.on(event, R.partial(logDropzone, event))
-    if existingFiles
-      logger.debug("Adding files to file dropzone: #{R.map(((f) -> f.filename), existingFiles).join(
-        ', ')}")
-      dropzone.addExistingFiles(
-        R.map(((x) -> R.merge(x, {name: x.filename})), existingFiles)
-      )
+    if existingFiles? && !R.isEmpty(existingFiles)
+      description = if forPictures then "picture" else "file"
+      picker = if forPictures then ((x) -> R.merge(x, {name: x.url})) else (
+        (x) -> R.merge(x, {name: x.filename}))
+      fileObjs = R.map(picker, existingFiles)
+      logger.debug("Adding files to #{description} dropzone: #{
+        R.map(((f) -> f.filename), existingFiles).join(', ')}")
+      dropzone.addExistingFiles(fileObjs)
 
     dropzone
