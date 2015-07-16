@@ -48,7 +48,9 @@ extendFile = (file) ->
       project.zipFileSize = if project.zipFile? then getFileSize(project.zipFile.size) else 0
       project.files = R.map(extendFile, project.files || [])
       project.hasFiles = !R.isEmpty(project.files)
-      project.pictures = project.pictures || ['/images/revox-reel-to-reel.jpg']
+      if R.isEmpty(project.pictures || [])
+        logger.debug("Project has no pictures, setting default")
+        project.pictures = [{url: '/images/revox-reel-to-reel.jpg'}]
       # TODO: Default to latest version
       licenseId = project.licenseId or "cc-by-sa-3.0"
       license = Licenses.findOne({licenseId: licenseId})
