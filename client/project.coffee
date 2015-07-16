@@ -15,12 +15,15 @@ getFileSize = (numBytes) ->
 
 extendFile = (file) ->
   sizeStr = getFileSize(file.size)
-  filenameMatch = /^.+\/(.+)$/.exec(file.url)
-  if !filenameMatch?
-    throw new Error("File URL on invalid format: '#{file.url}'")
-  filename = filenameMatch[1]
-  logger.debug("Filename #{filename} from URL #{file.url}")
-  R.merge(file, {filename: filename, sizeStr: sizeStr})
+  if !file.filename?
+    filenameMatch = /^.+\/(.+)$/.exec(file.url)
+    if !filenameMatch?
+      throw new Error("File URL on invalid format: '#{file.url}'")
+    filename = filenameMatch[1]
+    logger.debug("Filename #{filename} from URL #{file.url}")
+    R.merge(file, {filename: filename, sizeStr: sizeStr})
+  else
+    R.merge(file, {sizeStr: sizeStr})
 
 @ProjectController = RouteController.extend({
   action: ->

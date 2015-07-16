@@ -54,6 +54,11 @@ Meteor.methods({
       throw new Error("Couldn't find any project '#{owner}/#{id}'")
 
     removeStaleFiles = (oldFiles, newFiles, fileType) ->
+      if !oldFiles?
+        return
+
+      logger.debug("Removing stale files (type: #{fileType}), old files vs new files:",
+        oldFiles, newFiles)
       removedFiles = R.differenceWith(((a, b) -> a.url == b.url), oldFiles, newFiles)
       for file in removedFiles
         filePath = "u/#{owner}/#{id}/#{fileType}s/#{file.name}"
