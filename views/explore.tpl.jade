@@ -1,0 +1,14 @@
+.pure-g
+  .pure-u-1
+    #explore-pad.airy-padding-sides
+      if isEmpty
+        p No documents have been added yet. Get working!
+      else
+        #isotope-container
+          each projects
+            a(href=projectUrl)
+              .project-item
+                .project-item-header
+                  .project-item-title #{title}
+                  .project-item-author by #{owner}
+                img.project-item-image(src=projectThumbnail)
