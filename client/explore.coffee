@@ -21,27 +21,29 @@ Template.explore.helpers({
 Template.explore.onRendered(->
   logger.debug("Template explore has been rendered")
 
+  # TODO: Sort via Isotope
   projects = Projects.find({}, {sort: [["created", "asc"]]})
-  logger.debug("Configuring Isotope for #{projects.count()} project(s)")
   getThumbnail = (project) ->
     if !R.isEmpty(project.pictures || []) then project.pictures[0].url else \
       '/images/revox-reel-to-reel-resized.jpg'
   $projectElems = R.map(((p) ->
-    $("<a href=\"/#{p.owner}/#{p.projectId}\">
-      <div class=\"project-item\">
+    $("<div class=\"project-item\">
+      <a href=\"/#{p.owner}/#{p.projectId}\">
         <div class=\"project-item-header\">
           <div class=\"project-item-title\">#{p.title}</div>
           <div class=\"project-item-author\">#{p.owner}</div>
         </div>
         <img class=\"project-item-image\" src=\"#{getThumbnail(p)}\" />
-      </div>
-    </a>")
-  ), projects.fetch())
-  $isotopeContainer = $("#isotope-container")
-  $isotopeContainer.isotope({
+      </a>
+    </div>")[0]
+  ), projects)
+
+  logger.debug("Configuring Isotope")
+  $("#isotope-container").isotope({
     itemSelector: ".project-item",
     layoutMode: 'fitRows',
   })
-    .append($projectElems)
-    .isotope("appended", $projectElems)
+    .isotope("insert", $projectElems)
+
+  # TODO: Observe collection and insert/remove correspondingly into/from Isotope
 )
