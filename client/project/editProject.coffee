@@ -3,15 +3,16 @@ dropzoneLogger = new Logger("dropzone")
 pictureDropzone = null
 fileDropzone = null
 
+onChange =  ->
+  logger.debug("Project has changed - setting dirty state")
+  Session.set("isProjectModified", true)
+
 handleEditorRendered = (editor, text) ->
   # Make sure ace is aware of the fact the things might have changed.
   editor.attachAce()
   if text
     editor.setValue(text, 0)
-  editor.ace.on("change", ->
-    logger.debug("Project text has changed - setting dirty state")
-    Session.set("isProjectModified", true)
-  )
+  editor.ace.on("change", onChange)
   editor.ace.clearSelection()
   editor.ace.gotoLine(0, 0)
   editor.ace.session.setUseWrapMode(true)
@@ -37,6 +38,8 @@ Template.filesEditor.onRendered(->
   fileDropzone = DropzoneService.createDropzone("file-dropzone", false, @data.files)
 )
 Template.project.events({
+  'change #title-input': onChange
+  'change #tags-input': onChange
   'click #save-project': ->
     if !Session.get("isEditingProject")
       return

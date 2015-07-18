@@ -11,15 +11,16 @@ Template.create.onRendered(->
     editor.setMode('ace/mode/markdown')
 )
 
+onChange = ->
+  logger.debug("Project has changed - setting dirty state")
+  Session.set("isProjectModified", true)
+
 handleEditorRendered = (editor, text) ->
   # Make sure Ace is aware of the fact the things might have changed.
   editor.attachAce()
   if text
     editor.setValue(text, 0)
-  editor.ace.on("change", ->
-    logger.debug("Project text has changed - setting dirty state")
-    Session.set("isProjectModified", true)
-  )
+  editor.ace.on("change", onChange)
   editor.ace.clearSelection()
   editor.ace.gotoLine(0, 0)
   editor.ace.session.setUseWrapMode(true)
@@ -67,6 +68,9 @@ getParameters = () ->
   [projectId, title, description, instructions, tags, username, queuedPictures, queuedFiles]
 
 Template.create.events({
+  'change #id-input': onChange
+  'change #title-input': onChange
+  'change #tags-input': onChange
   'click #create-project': ->
     logger.debug("Create button was clicked")
     button = event.currentTarget
@@ -132,8 +136,18 @@ Template.create.events({
         )
       )
   'click #cancel-create': ->
+    doCancel = () ->
+      logger.debug("User confirmed canceling create")
+      Router.go("/")
+    dontCancel = () ->
+      logger.debug("User rejected canceling create")
+
     isModified = Session.get("isProjectModified")
-    # TODO: Ask user if there have been modifications
     logger.debug("Canceling creating project, dirty: #{isModified}")
-    Router.go("/")
+    if isModified
+      logger.debug("Asking user whether to cancel creating project or not")
+      notificationService.question("Discard Changes?",
+        "Are you sure you wish to discard your changes?", doCancel, dontCancel)
+    else
+      Router.go("/")
 })
