@@ -1,0 +1,18 @@
+if hasFiles
+  a#download-zip-button.pure-button(href=zipFile.url)
+    #[span.icon-file-zip]&nbsp;Download zip #[span.small (#{zipFileSize})]
+  table#project-files-table
+    thead
+      tr
+        th Filename
+        th Size
+    tbody
+      each files
+        tr
+          td
+            a(href=url)
+              #[span.icon-puzzle4]&nbsp;#{filename}
+          td
+            a(href=url) #{sizeStr}
+else
+  em The project has no files
