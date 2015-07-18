@@ -107,22 +107,40 @@ Template.project.events({
         )
       )
   'click #cancel-edit': ->
+    doCancel = () ->
+      logger.debug("User confirmed canceling edit")
+      Session.set("isEditingProject", false)
+    dontCancel = () ->
+      logger.debug("User rejected canceling edit")
+
     isModified = Session.get("isProjectModified")
     logger.debug("Canceling editing of project, dirty: #{isModified}")
-    Session.set("isEditingProject", false)
+    if isModified
+      logger.debug("Asking user whether to cancel project editing or not")
+      notificationService.question("Discard Changes?",
+        "Are you sure you wish to discard your changes?", doCancel, dontCancel)
+    else
+        Session.set("isEditingProject", false)
   'click #remove-project': ->
-    # TODO: Ask user
-    Session.set("isEditingProject", false)
-    logger.info("Removing project...")
-    Meteor.call("removeProject", @projectId, (error) ->
-      if error?
-        logger.error("Removing project on server failed: #{error}")
-        notificationService.warn("Removing project on server failed: #{error}")
-        Session.set("isEditingProject", true)
-      else
-        logger.info("Successfully removed project")
-        Router.go('/')
-    )
+    doCancel = () =>
+      logger.debug("User confirmed removing project")
+      Session.set("isEditingProject", false)
+      logger.info("Removing project...")
+      Meteor.call("removeProject", @projectId, (error) ->
+        if error?
+          logger.error("Removing project on server failed: #{error}")
+          notificationService.warn("Removing project on server failed: #{error}")
+          Session.set("isEditingProject", true)
+        else
+          logger.info("Successfully removed project")
+          Router.go('/')
+      )
+    dontCancel = () ->
+      logger.debug("User rejected removing project")
+
+    logger.debug("Asking user whether to remove project or not")
+    notificationService.question("Remove project?",
+      "Are you sure you wish remove this project?", doCancel, dontCancel)
 })
 Template.editProject.helpers(
   tagsString: -> @tags.join(',')
