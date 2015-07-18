@@ -63,6 +63,15 @@ extendFile = (file) ->
       logger.debug("Project has files: #{project.hasFiles}")
       logger.debug("Project has pictures: #{!R.isEmpty(project.pictures)}")
     project
+  onBeforeAction: ->
+    data = @data()
+    if data?
+      @next()
+    else
+      logger.debug("@data is not defined, rendering not found page")
+      @render('projectNotFound', {
+        data: {owner: @params.owner, projectId: @params.project},
+      })
   onAfterAction: ->
     data = @data()
     if data?
@@ -72,7 +81,7 @@ extendFile = (file) ->
         title: "#{title}"
       })
     else
-      logger.debug("@data is not defined")
+      logger.debug("@data is not defined, cannot set SEO properties")
   onStop: ->
     logger.debug("Route is stopped")
     if Session.get("isEditingProject")
