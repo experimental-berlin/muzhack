@@ -76,7 +76,7 @@ extendFile = (file) ->
     data = @data()
     if data?
       title = "#{data.owner}/#{data.projectId}"
-      logger.debug("Setting title: #{title}")
+      logger.debug("Setting SEO properties")
       SEO.set({
         author: data.owner,
         title: title,
