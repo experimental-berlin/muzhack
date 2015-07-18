@@ -108,7 +108,6 @@ Template.project.events({
       )
   'click #cancel-edit': ->
     isModified = Session.get("isProjectModified")
-    # TODO: Ask user if there have been modifications
     logger.debug("Canceling editing of project, dirty: #{isModified}")
     Session.set("isEditingProject", false)
   'click #remove-project': ->
