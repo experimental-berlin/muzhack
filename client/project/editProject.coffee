@@ -19,6 +19,7 @@ handleEditorRendered = (editor, text) ->
 
 Template.editProject.onRendered(->
   logger.debug("Project editing view rendered")
+  Session.set("isProjectModified", false)
   document.getElementById("title-input").focus()
 )
 Template.descriptionEditor.onRendered(->
@@ -112,6 +113,7 @@ Template.project.events({
   'click #cancel-edit': ->
     doCancel = () ->
       logger.debug("User confirmed canceling edit")
+      Session.set("isProjectModified", false)
       Session.set("isEditingProject", false)
     dontCancel = () ->
       logger.debug("User rejected canceling edit")
@@ -125,7 +127,7 @@ Template.project.events({
     else
         Session.set("isEditingProject", false)
   'click #remove-project': ->
-    doCancel = () =>
+    doRemove = () =>
       logger.debug("User confirmed removing project")
       Session.set("isEditingProject", false)
       logger.info("Removing project...")
@@ -138,12 +140,12 @@ Template.project.events({
           logger.info("Successfully removed project")
           Router.go('/')
       )
-    dontCancel = () ->
+    dontRemove = () ->
       logger.debug("User rejected removing project")
 
     logger.debug("Asking user whether to remove project or not")
     notificationService.question("Remove project?",
-      "Are you sure you wish remove this project?", doCancel, dontCancel)
+      "Are you sure you wish remove this project?", doRemove, dontRemove)
 })
 Template.editProject.helpers(
   tagsString: -> @tags.join(',')

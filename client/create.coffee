@@ -138,6 +138,7 @@ Template.create.events({
   'click #cancel-create': ->
     doCancel = () ->
       logger.debug("User confirmed canceling create")
+      Session.set("isProjectModified", false)
       Router.go("/")
     dontCancel = () ->
       logger.debug("User rejected canceling create")
