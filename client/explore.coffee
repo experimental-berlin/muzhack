@@ -49,7 +49,7 @@ Template.explore.onRendered(->
         if !projectElem?
           logger.debug("Couldn't find element corresponding to project")
         else
-          logger.debug("Found element corresponding to project", projectElem)
+          logger.debug("Found element corresponding to project, updating it")
       ,
       removed: (project) ->
         qualifiedId = getQualifiedId(project)
@@ -58,7 +58,7 @@ Template.explore.onRendered(->
         if !projectElem?
           logger.debug("Couldn't find element corresponding to project")
         else
-          logger.debug("Found element corresponding to project", projectElem)
+          logger.debug("Found element corresponding to project, removing it")
           getIsotopeContainer().isotope("remove", projectElem).isotope("layout")
       ,
     })
