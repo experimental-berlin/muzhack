@@ -1,0 +1,11 @@
+.modal.fade#messageModal(tabindex="-1", role="dialog", aria-labelledby="messageModalLabel"
+    aria-hidden="true")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+        h4#messageModalLabel.modal-title #{title}
+      .modal-body
+        p #{message}
+      .modal-footer
+        button.btn.btn-default.btn-primary(type="button", data-dismiss="modal") OK
