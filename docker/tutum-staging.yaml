@@ -1,5 +1,5 @@
 mongo-staging:
-  image: mongo:3.0.2
+  image: mongo:3.0.4
   command: --auth
   volumes:
     - /data/db
