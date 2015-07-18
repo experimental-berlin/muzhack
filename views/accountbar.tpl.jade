@@ -1,0 +1,8 @@
+.accountbar.pull-right
+  if isLoggedIn
+    each buttons
+      a.toolbar-btn(href="#" class=klass)
+        span(class="icon-#{icon}")
+  else
+    a#login.toolbar-btn(href="/login")
+      span.icon-enter3
