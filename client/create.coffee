@@ -3,10 +3,13 @@ logger = new Logger("create")
 pictureDropzone = null
 fileDropzone = null
 
-Template.create.rendered = ->
+Template.create.onRendered(->
+  logger.debug("Template create rendered")
+  Session.set("isProjectModified", false)
   for editor in [descriptionEditor, instructionsEditor,]
     editor.setTheme('ace/theme/monokai')
     editor.setMode('ace/mode/markdown')
+)
 
 handleEditorRendered = (editor, text) ->
   # Make sure Ace is aware of the fact the things might have changed.
@@ -21,21 +24,26 @@ handleEditorRendered = (editor, text) ->
   editor.ace.gotoLine(0, 0)
   editor.ace.session.setUseWrapMode(true)
 
-Template.create.rendered = ->
+Template.create.onRendered(->
   logger.debug("Project creation view rendered")
   document.getElementById("id-input").focus()
-Template.createDescription.rendered = ->
+)
+Template.createDescription.onRendered(->
   logger.debug("Description editor rendered, giving Ace focus")
   handleEditorRendered(descriptionEditor)
-Template.createInstructions.rendered = ->
+)
+Template.createInstructions.onRendered(->
   logger.debug("Instructions editor rendered, giving Ace focus")
   handleEditorRendered(instructionsEditor)
-Template.createPictures.rendered = ->
+)
+Template.createPictures.onRendered(->
   logger.debug("Pictures editor rendered")
   pictureDropzone = DropzoneService.createDropzone("picture-dropzone", true, null)
-Template.createFiles.rendered = ->
+)
+Template.createFiles.onRendered(->
   logger.debug("Files editor rendered")
   fileDropzone = DropzoneService.createDropzone("file-dropzone", false, null)
+)
 
 getParameters = () ->
   projectId = $('#id-input').val()
@@ -127,5 +135,5 @@ Template.create.events({
     isModified = Session.get("isProjectModified")
     # TODO: Ask user if there have been modifications
     logger.debug("Canceling creating project, dirty: #{isModified}")
-    logger.debug("TODO")
+    Router.go("/")
 })

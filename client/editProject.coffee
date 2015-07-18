@@ -16,21 +16,26 @@ handleEditorRendered = (editor, text) ->
   editor.ace.gotoLine(0, 0)
   editor.ace.session.setUseWrapMode(true)
 
-Template.editProject.rendered = ->
+Template.editProject.onRendered(->
   logger.debug("Project editing view rendered")
   document.getElementById("title-input").focus()
-Template.descriptionEditor.rendered = ->
+)
+Template.descriptionEditor.onRendered(->
   logger.debug("Description editor rendered, giving Ace focus")
   handleEditorRendered(descriptionEditor, @data.description)
-Template.instructionsEditor.rendered = ->
+)
+Template.instructionsEditor.onRendered(->
   logger.debug("Instructions editor rendered, giving Ace focus")
   handleEditorRendered(instructionsEditor, @data.instructions)
-Template.picturesEditor.rendered = ->
+)
+Template.picturesEditor.onRendered(->
   logger.debug("Pictures editor rendered")
   pictureDropzone = DropzoneService.createDropzone("picture-dropzone", true, @data.pictures)
-Template.filesEditor.rendered = ->
+)
+Template.filesEditor.onRendered(->
   logger.debug("Files editor rendered")
   fileDropzone = DropzoneService.createDropzone("file-dropzone", false, @data.files)
+)
 Template.project.events({
   'click #save-project': ->
     if !Session.get("isEditingProject")
