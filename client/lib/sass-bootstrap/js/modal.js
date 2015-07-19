@@ -60,10 +60,12 @@
     }
 
     this.$element.on('click.dismiss.modal', '[data-dismiss="modal"]', $.proxy(this.hide, this))
-    this.options.callbacks.forEach(function (callback) {
-      that.$element.on('click.' + callback.event + '.modal',
-        '[data-modal="' + callback.event + '"]', $.proxy(invokeCallback, that, callback.callback))
-    })
+    if (this.options.callbacks != null) {
+      this.options.callbacks.forEach(function (callback) {
+        that.$element.on('click.' + callback.event + '.modal',
+          '[data-modal="' + callback.event + '"]', $.proxy(invokeCallback, that, callback.callback))
+      })
+    }   
 
     this.backdrop(function () {
       var transition = $.support.transition && that.$element.hasClass('fade')

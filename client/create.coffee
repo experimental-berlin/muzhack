@@ -55,14 +55,14 @@ getParameters = () ->
   username = Meteor.user().username
   tags = S.words(tags)
   if S.isBlank(projectId) || S.isBlank(title) || R.isEmpty(tags)
-    throw new Error('Fields not correctly filled in')
+    throw new ValidationError('Fields not correctly filled in')
   if S.isBlank(description)
-    throw new Error("Description must be filled in")
+    throw new ValidationError("Description must be filled in")
   if S.isBlank(instructions)
-    throw new Error("Instructions must be filled in")
+    throw new ValidationError("Instructions must be filled in")
   allPictures = pictureDropzone.getAcceptedFiles()
   if R.isEmpty(allPictures)
-    throw new Error("There must be at least one picture")
+    throw new ValidationError("There must be at least one picture")
   queuedPictures = pictureDropzone.getQueuedFiles()
   queuedFiles = fileDropzone.getQueuedFiles()
   [projectId, title, description, instructions, tags, username, queuedPictures, queuedFiles]
@@ -76,8 +76,14 @@ Template.create.events({
     button = event.currentTarget
     logger.debug("Disabling create button")
     button.disabled = true
-    [projectId, title, description, instructions, tags, username, queuedPictures, queuedFiles] = \
-      getParameters()
+    try
+      [projectId, title, description, instructions, tags, username, queuedPictures,
+        queuedFiles] = getParameters()
+    catch error
+      if error instanceof ValidationError
+        notificationService.warn("Validation Failed", "#{error.message}.")
+      else
+        throw error
 
     uploadFiles = () ->
       if !R.isEmpty(queuedPictures)
