@@ -2,6 +2,7 @@ logger = new Logger('routing')
 
 Router.configure(
   layoutTemplate: 'layout'
+  loadingTemplate: 'loading'
 )
 Router.route('/login', ->
   logger.debug("Handling login route")
