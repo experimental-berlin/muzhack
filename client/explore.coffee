@@ -29,12 +29,11 @@ createProjectElement = (project) ->
 Template.explore.onRendered(->
   logger.debug("Template explore has been rendered")
 
-  projectsCursor = Projects.find({}, {sort: [["created", "asc"]]})
-  projects = projectsCursor.fetch()
+  projects = Projects.find({}, {sort: [["created", "asc"]]})
   @autorun(->
     logger.debug("Installing change observer")
     ignore = true
-    projectsCursor.observe({
+    projects.observe({
       added: (project) ->
         if ignore
           return
