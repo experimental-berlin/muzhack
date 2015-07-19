@@ -74,3 +74,9 @@ Template.explore.onRendered(->
   })
     .isotope("insert", $projectElems)
 )
+Template.explore.onDestroyed(->
+  projElems = document.querySelectorAll(".project-item")
+  logger.debug(
+    "Template explore being destroyed, clearing Isotope container of #{projElems.length} item(s)")
+  getIsotopeContainer().isotope("remove", projElems).isotope("destroy")
+)
