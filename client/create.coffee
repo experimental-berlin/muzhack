@@ -82,6 +82,8 @@ Template.create.events({
     catch error
       if error instanceof ValidationError
         notificationService.warn("Validation Failed", "#{error.message}.")
+        logger.debug("Validation failed")
+        return
       else
         throw error
 
