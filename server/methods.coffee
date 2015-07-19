@@ -6,7 +6,7 @@ getUser = (data) ->
 
   Meteor.users.findOne({_id: data.userId})
 
-getSetting = (name) ->
+@getSetting = (name) ->
   value = Meteor.settings[name]
   if !value?
     throw new Error("You must define '#{name}' in Meteor's settings")

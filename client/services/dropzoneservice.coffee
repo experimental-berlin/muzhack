@@ -57,6 +57,9 @@ class @DropzoneService
       uploader = new Slingshot.Upload("files", {
         folder: s3Folder,
       })
+      backupUploader = new Slingshot.Upload("files-backup", {
+        folder: s3Folder,
+      })
 
       uploadOneFile = (resolve, reject) ->
         file = files.shift()
@@ -66,15 +69,21 @@ class @DropzoneService
             logger.warn("Failed to upload file '#{file.name}': '#{error.message}'")
             reject(error.message)
           else
-            logger.debug("Succeeded in uploading file '#{file.name}'")
-            file.url = downloadUrl
-            file.status = Dropzone.SUCCESS
-            processedFiles.push(file)
-            if !R.isEmpty(files)
-              uploadOneFile(resolve, reject)
-            else
-              logger.debug('Finished uploading files:', processedFiles)
-              resolve(processedFiles)
+            backupUploader.send(file, (error) ->
+              if error?
+                logger.warn("Failed to back up file '#{file.name}': '#{error.message}'")
+                reject(error.message)
+              else
+                logger.debug("Succeeded in backing up file '#{file.name}'")
+                file.url = downloadUrl
+                file.status = Dropzone.SUCCESS
+                processedFiles.push(file)
+                if !R.isEmpty(files)
+                  uploadOneFile(resolve, reject)
+                else
+                  logger.debug('Finished uploading files:', processedFiles)
+                  resolve(processedFiles)
+            )
         )
 
       logger.debug('Uploading files...', files)
@@ -94,6 +103,9 @@ class @DropzoneService
 
       logger.debug("Uploading pictures to folder '#{s3Folder}'")
       uploader = new Slingshot.Upload("pictures", {
+        folder: s3Folder,
+      })
+      backupUploader = new Slingshot.Upload("pictures-backup", {
         folder: s3Folder,
       })
 
@@ -120,16 +132,23 @@ class @DropzoneService
         blob.name = file.name
         uploader.send(blob, (error, downloadUrl) ->
           if error?
+            logger.warn("Failed to upload file '#{file.name}': '#{error}'")
             reject(error.message)
           else
-            file.url = downloadUrl
-            file.status = Dropzone.SUCCESS
-            pictures.push(file)
-            if !R.isEmpty(pictureDatas)
-              uploadOnePicture(resolve, reject)
-            else
-              logger.debug('Finished uploading pictures, URLs:', pictures)
-              resolve(pictures)
+            backupUploader.send(blob, (error) ->
+              if error?
+                logger.warn("Failed to back up '#{file.name}': '#{error}'")
+                reject(error.message)
+              else
+                file.url = downloadUrl
+                file.status = Dropzone.SUCCESS
+                pictures.push(file)
+                if !R.isEmpty(pictureDatas)
+                  uploadOnePicture(resolve, reject)
+                else
+                  logger.debug('Finished uploading pictures, URLs:', pictures)
+                  resolve(pictures)
+            )
         )
 
       logger.debug("Processing pictures...")
