@@ -6,8 +6,9 @@ header
         li($dyn=attrs)
           a(href=url) #{name}
     +accountbar
-article#content
-  +yield
+article
+  #content
+    +yield
 footer
   p This is an early prototype of MuzHack, intended for soliciting feedback.
   p © 2015 Arve Knudsen
