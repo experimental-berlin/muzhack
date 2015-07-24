@@ -5,7 +5,6 @@ Meteor.startup(->
   @descriptionEditor = new MandrillAce('description-ace')
   @instructionsEditor = new MandrillAce('instructions-ace')
   for editor in [descriptionEditor, instructionsEditor,]
-    editor.setTheme('ace/theme/monokai')
     editor.setMode('ace/mode/markdown')
 
   @loginService = new LoginService()

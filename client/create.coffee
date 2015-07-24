@@ -7,7 +7,6 @@ Template.create.onRendered(->
   logger.debug("Template create rendered")
   Session.set("isProjectModified", false)
   for editor in [descriptionEditor, instructionsEditor,]
-    editor.setTheme('ace/theme/monokai')
     editor.setMode('ace/mode/markdown')
 )
 
