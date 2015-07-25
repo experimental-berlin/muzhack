@@ -1,6 +1,6 @@
 if hasFiles
-  a#download-zip-button.pure-button(href=zipFile.url)
-    #[span.icon-file-zip]&nbsp;Download zip #[span.small (#{zipFileSize})]
+  a#download-zip-button.pure-button(href=zipFile.url).
+    #[span.icon-file-zip]Download zip #[span.small (#{zipFileSize})]
   table#project-files-table
     thead
       tr
@@ -10,8 +10,7 @@ if hasFiles
       each files
         tr
           td
-            a(href=url)
-              #[span.icon-puzzle4]&nbsp;#{filename}
+            a(href=url) #[span.icon-puzzle4]&nbsp;#{filename}
           td
             a(href=url) #{sizeStr}
 else
