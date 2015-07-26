@@ -32,6 +32,14 @@ Template.displayProject.helpers(
   displayFiles: -> getActiveTab() == 'files'
   mainPicture: -> Session.get("mainPicture")
   tagsString: -> @tags.join(', ')
+  canEdit: ->
+    user = Meteor.user()
+    if !user?
+      logger.debug("User is not logged in - cannot edit project")
+      return false
+    canEdit = user.username == @owner
+    logger.debug("User is logged in as '#{user.username}' - can edit project: #{canEdit}")
+    canEdit
 )
 Template.displayProject.events({
   'click .tabs > li': ->
