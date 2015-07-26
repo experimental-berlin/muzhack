@@ -17,7 +17,7 @@
           .button-group
             input#login-button.pure-button.pure-button-primary(type="submit" value="Sign in")
             a#forgot-password.small(href="/account/forgotpassword") Forgot password?
-      if showSignUp
+      else if showSignUp
         form#signup-form.pure-form.pure-form-stacked(action="action")
           fieldset
             legend Account info
