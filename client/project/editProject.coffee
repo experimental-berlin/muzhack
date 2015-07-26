@@ -104,7 +104,7 @@ Template.project.events({
           pictureFiles, files, (error) ->
             if error?
               logger.error("Updating project on server failed: #{error}")
-              notificationService.warn("Saving project to server failed: #{error}")
+              notificationService.warn("Error", "Saving project to server failed: #{error}.")
             else
               Session.set("isEditingProject", false)
               logger.info("Successfully saved project")
@@ -134,7 +134,7 @@ Template.project.events({
       Meteor.call("removeProject", @projectId, (error) ->
         if error?
           logger.error("Removing project on server failed: #{error}")
-          notificationService.warn("Removing project on server failed: #{error}")
+          notificationService.warn("Error", "Removing project on server failed: #{error}.")
           Session.set("isEditingProject", true)
         else
           logger.info("Successfully removed project")

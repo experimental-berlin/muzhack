@@ -52,6 +52,8 @@ Meteor.methods({
     project = Projects.findOne(selector)
     if !project?
       throw new Error("Couldn't find any project '#{owner}/#{id}'")
+    if project.owner != user.username
+      throw new Meteor.Error("unauthorized", "Only the owner may edit a project")
 
     removeStaleFiles = (oldFiles, newFiles, fileType) ->
       if !oldFiles?

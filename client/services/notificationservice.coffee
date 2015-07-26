@@ -30,8 +30,10 @@ class @NotificationService
     $modal.modal({
       callbacks: callbacks,
     })
+    $(".modal-default").focus()
     # After the modal is hidden, remove the DOM node
     $modal.on('hide.bs.modal', ->
+      logger.debug("Modal is hidden, removing DOM node")
       $(this).remove()
     )
     logger.debug("Modal shown")
