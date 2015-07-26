@@ -1,31 +1,31 @@
 //- TODO: Generalize as layout and re-use for forgot password template
 .pure-g
-.pure-u-1-5
-.pure-u-3-5
-  .login-pad
-    .login-header
-      .login-prompt Welcome to #{appName}
-      .tabs
-        #login-signin-tab.tab(class=signInClass) Sign In
-        #login-signup-tab.tab(class=signUpClass) Sign Up
-    if showSignIn
-      form#signin-form.pure-form.pure-form-stacked(action="action")
-        fieldset
-          legend Account info
-          input#signin-email.account-email(autofocus type="email" placeholder="email")
-          input.account-password(type="password" placeholder="password")
-        .button-group
-          input#login-button.pure-button.pure-button-primary(type="submit" value="Sign in")
-          a#forgot-password.small(href="/account/forgotpassword") Forgot password?
-    if showSignUp
-      form#signup-form.pure-form.pure-form-stacked(action="action")
-        fieldset
-          legend Account info
-          input#signup-username.account-username(autofocus type="text" placeholder="username")
-          input#signup-email.account-email(autofocus type="email" placeholder="email")
-          input#signup-name.account-name(autofocus type="text" placeholder="name")
-          input.account-password(type="password" placeholder="password")
-          input.account-password-confirm(type="password" placeholder="confirm password")
-        .button-group
-          input#signup-button.pure-button.pure-button-primary(type="submit" value="Sign up")
-.pure-u-1-5
+  .pure-u-1-5
+  .pure-u-3-5
+    .login-pad
+      .login-header
+        .login-prompt Welcome to #{appName}
+        .tabs
+          #login-signin-tab.tab(class=signInClass) Sign In
+          #login-signup-tab.tab(class=signUpClass) Sign Up
+      if showSignIn
+        form#signin-form.pure-form.pure-form-stacked(action="action")
+          fieldset
+            legend Account info
+            input#signin-email.account-email(autofocus type="email" placeholder="email")
+            input.account-password(type="password" placeholder="password")
+          .button-group
+            input#login-button.pure-button.pure-button-primary(type="submit" value="Sign in")
+            a#forgot-password.small(href="/account/forgotpassword") Forgot password?
+      if showSignUp
+        form#signup-form.pure-form.pure-form-stacked(action="action")
+          fieldset
+            legend Account info
+            input#signup-username.account-username(autofocus type="text" placeholder="username")
+            input#signup-email.account-email(autofocus type="email" placeholder="email")
+            input#signup-name.account-name(autofocus type="text" placeholder="name")
+            input.account-password(type="password" placeholder="password")
+            input.account-password-confirm(type="password" placeholder="confirm password")
+          .button-group
+            input#signup-button.pure-button.pure-button-primary(type="submit" value="Sign up")
+  .pure-u-1-5
