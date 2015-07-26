@@ -17,6 +17,12 @@ class @LoginService
       showSignUp: ->
         return !!Session.get("isInSignupMode")
       ,
+      signInClass: ->
+        return if !Session.get("isInSignupMode") then "active" else ""
+      ,
+      signUpClass: ->
+        return if Session.get("isInSignupMode") then "active" else ""
+      ,
     })
     Template.login.events({
       "click #login-signin-tab": ->
