@@ -2,7 +2,7 @@ mongo-production:
   image: mongo:3.0.4
   command: --auth
   volumes:
-    - /data/db
+    - /var/data/mongodb:/data/db
   ports:
     - "27017:27017"
   tags:
