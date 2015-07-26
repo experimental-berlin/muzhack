@@ -12,38 +12,72 @@ getUser = (data) ->
     throw new Error("You must define '#{name}' in Meteor's settings")
   value
 
+getS3Objs = ->
+  s3Bucket = getSetting('S3Bucket')
+  s3Client = new AWS.S3({
+    accessKeyId: getSetting('AWSAccessKeyId'),
+    secretAccessKey: getSetting('AWSSecretAccessKey'),
+    region: getSetting('AWSRegion'),
+    params: {
+      Bucket: s3Bucket,
+    },
+  })
+  [s3Bucket, s3Client]
+
 Meteor.methods({
   createProject: (id, title, description, instructions, tags, pictures, files) ->
+    createZip = () ->
+      logger.debug("Generating zip...")
+      zip = new JSZip()
+      for file in files
+        logger.debug("Downloading file '#{file.url}'...")
+        result = Meteor.http.get(file.url)
+        if result.statusCode != 200
+          throw new Error("Couldn't download '#{file.url}', status code: #{result.statusCode}")
+        logger.debug("Adding file '#{file.name}' to zip")
+        zip.file(file.name, result.content)
+      output = zip.generate({
+        type: "nodebuffer",
+        compression: "DEFLATE",
+      })
+      [s3Bucket, s3Client] = getS3Objs()
+      logger.debug("Uploading zip file to S3 (bucket: '#{s3Bucket}')")
+      filePath = "u/#{user.username}/#{id}/#{id}.zip"
+      s3Client.putObjectSync({
+        Key: filePath,
+        ACL: "public-read",
+        Body: output,
+      })
+      ["https://s3.amazonaws.com/#{s3Bucket}/#{filePath}", output.length]
+
     user = getUser(@)
 
     if Projects.findOne({owner: user.username, projectId: id})?
       throw new Error("Project '#{user.username}/#{id}' already exists")
+
+    [zipUrl, zipSize] = createZip()
 
     metadata = {
       owner: user.username,
       projectId: id,
       title: title,
       tags: tags,
-      pictures: pictures,
-      files: files,
       created: moment().utc().toDate(),
     }
     logger.info("Creating project #{user.username}/#{id}:", metadata)
     data = R.merge(metadata, {
       description: description,
       instructions: instructions,
+      pictures: pictures,
+      files: files,
+      zipFile: {
+        url: zipUrl,
+        size: zipSize,
+      },
     })
     Projects.insert(data)
   updateProject: (owner, id, title, description, instructions, tags, pictures, files) ->
-    s3Bucket = getSetting('S3Bucket')
-    s3Client = new AWS.S3({
-      accessKeyId: getSetting('AWSAccessKeyId'),
-      secretAccessKey: getSetting('AWSSecretAccessKey'),
-      region: getSetting('AWSRegion'),
-      params: {
-        Bucket: s3Bucket,
-      },
-    })
+    [s3Bucket, s3Client] = getS3Objs()
     user = getUser(@)
     logger.info("User #{user.username} updating project #{owner}/#{id}, s3Bucket: '#{s3Bucket}'")
     logger.debug("Pictures:", pictures)
@@ -59,9 +93,11 @@ Meteor.methods({
       if !oldFiles?
         return
 
-      logger.debug("Removing stale files (type: #{fileType}), old files vs new files:",
-        oldFiles, newFiles)
       removedFiles = R.differenceWith(((a, b) -> a.url == b.url), oldFiles, newFiles)
+      if !R.isEmpty(removedFiles)
+        logger.debug(
+          "Removing #{removedFiles.length} stale #{fileType}(s) (type: #{fileType}), old " +
+          "files vs new files:", oldFiles, newFiles)
       for file in removedFiles
         filePath = "u/#{owner}/#{id}/#{fileType}s/#{file.name}"
         logger.debug("Removing outdated #{fileType} '#{filePath}'")

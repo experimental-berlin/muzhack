@@ -80,6 +80,7 @@ stoeffel:underscore.string.fp@1.0.4
 stylus@1.0.7
 templating@1.1.1
 tracker@1.0.7
+udondan:jszip@2.4.0_1
 ui@1.0.6
 underscore@1.0.3
 url@1.0.4
