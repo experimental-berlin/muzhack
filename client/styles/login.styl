@@ -5,11 +5,14 @@ pad-margin = 56px
 .login-pad
   pad-base()
 
+  border 0
   margin pad-margin
   margin-bottom 0
 
   form
-    background-color menu-background
+    rounded-corners-bottom()
+
+    background-color body-background
     padding-top 43px
     padding-bottom 43px
     padding-left 120px
@@ -27,6 +30,10 @@ pad-margin = 56px
     text-align right
 
   .login-header
+    rounded-corners-top()
+    
+    background-color menu-background
+    color white
     padding-top 14px
     padding-sides = 14px
     padding-left padding-sides

@@ -7,13 +7,14 @@ grey-background = #E3E6E7
 border-color = #6F6F6F
 action-color = black
 action-hover-color = rgba(0, 0, 0, 0.6)
+blue-color = #0A83DC
 
 body
   background-color body-background
   color black
 
 a
-  color #12A2EC
+  color blue-color
   &:focus
     outline none
 
@@ -150,7 +151,7 @@ footer
 
 .pure-button-primary
   color white
-  background-color #0A83DC
+  background-color blue-color
 
   &:hover
     background-image linear-gradient(transparent,rgba(0,0,0,.05) 40%,rgba(0,0,0,.1))
@@ -162,7 +163,7 @@ footer
   display inline-block
   .tab
     &.active
-      background-color menu-background
+      background-color #111111
     padding 10px
     rounded-corners-top()
     display inline-block
