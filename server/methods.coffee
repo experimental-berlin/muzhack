@@ -24,38 +24,40 @@ getS3Objs = ->
   })
   [s3Bucket, s3Client]
 
+createZip = (files, user, id, s3Bucket, s3Client) ->
+  logger.debug("Generating zip...")
+  zip = new JSZip()
+  for file in files
+    logger.debug("Downloading file '#{file.url}'...")
+    result = Meteor.http.get(file.url)
+    if result.statusCode != 200
+      throw new Error("Couldn't download '#{file.url}', status code: #{result.statusCode}")
+    logger.debug("Adding file '#{file.name}' to zip")
+    zip.file(file.name, result.content)
+  output = zip.generate({
+    type: "nodebuffer",
+    compression: "DEFLATE",
+  })
+  logger.debug("Uploading zip file to S3 (bucket: '#{s3Bucket}')")
+  filePath = "u/#{user.username}/#{id}/#{id}.zip"
+  s3Client.putObjectSync({
+    Key: filePath,
+    ACL: "public-read",
+    Body: output,
+  })
+  region = getSetting('AWSRegion')
+  # TODO: Try to get URL from S3
+  ["https://s3.#{region}.amazonaws.com/#{s3Bucket}/#{filePath}", output.length]
+
 Meteor.methods({
   createProject: (id, title, description, instructions, tags, pictures, files) ->
-    createZip = () ->
-      logger.debug("Generating zip...")
-      zip = new JSZip()
-      for file in files
-        logger.debug("Downloading file '#{file.url}'...")
-        result = Meteor.http.get(file.url)
-        if result.statusCode != 200
-          throw new Error("Couldn't download '#{file.url}', status code: #{result.statusCode}")
-        logger.debug("Adding file '#{file.name}' to zip")
-        zip.file(file.name, result.content)
-      output = zip.generate({
-        type: "nodebuffer",
-        compression: "DEFLATE",
-      })
-      [s3Bucket, s3Client] = getS3Objs()
-      logger.debug("Uploading zip file to S3 (bucket: '#{s3Bucket}')")
-      filePath = "u/#{user.username}/#{id}/#{id}.zip"
-      s3Client.putObjectSync({
-        Key: filePath,
-        ACL: "public-read",
-        Body: output,
-      })
-      ["https://s3.amazonaws.com/#{s3Bucket}/#{filePath}", output.length]
-
     user = getUser(@)
 
     if Projects.findOne({owner: user.username, projectId: id})?
       throw new Error("Project '#{user.username}/#{id}' already exists")
 
-    [zipUrl, zipSize] = createZip()
+    [s3Bucket, s3Client] = getS3Objs()
+    [zipUrl, zipSize] = createZip(files, user, id, s3Bucket, s3Client)
 
     metadata = {
       owner: user.username,
@@ -108,6 +110,8 @@ Meteor.methods({
     removeStaleFiles(project.pictures, pictures, 'picture')
     removeStaleFiles(project.files, files, 'file')
 
+    [zipUrl, zipSize] = createZip(files, user, id, s3Bucket, s3Client)
+
     Projects.update(selector, {$set: {
       title: title,
       description: description,
@@ -115,8 +119,22 @@ Meteor.methods({
       tags: R.map(S.trim(null), tags.split(',')),
       pictures: pictures,
       files: files,
+      zipFile: {
+        url: zipUrl,
+        size: zipSize,
+      },
     }})
   removeProject: (id) ->
+    removeFolder = () ->
+      objects = s3Client.listObjectsSync({Prefix: dirPath})
+      toDelete = R.map(((o) -> {Key: o.Key}), objects.Contents)
+      result = s3Client.deleteObjectsSync({Delete: {Objects: toDelete}})
+      logger.debug("Deleted #{objects.Contents.length} object(s), result:", result)
+      # API will list max 1000 objects
+      if objects.Contents.length == 1000
+        logger.debug("We hit max number of listed objects, deleting recursively")
+        removeFolder()
+
     user = getUser(@)
     project = Projects.findOne({projectId: id})
     if !project?
@@ -124,5 +142,13 @@ Meteor.methods({
     if project.owner != user.username
       throw new Meteor.Error("unauthorized", "Only the owner may remove a project")
 
-    Projects.remove({projectId: id})
+    logger.debug()
+
+    logger.debug("Removing project '#{user.username}/#{id}'")
+    Projects.remove({owner: user.username, projectId: id})
+
+    [s3Bucket, s3Client] = getS3Objs()
+    dirPath = "u/#{user.username}/#{id}"
+    logger.debug("Removing files from S3 bucket '#{s3Bucket}', directory '#{dirPath}'")
+    removeFolder()
 })
