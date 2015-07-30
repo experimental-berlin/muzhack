@@ -1,12 +1,12 @@
-.modal.fade#questionModal(tabindex="-1", role="dialog", aria-labelledby="modal-label"
+.modal.fade#question-modal(tabindex="-1", role="dialog", aria-labelledby="modal-label"
     aria-hidden="true")
   .modal-dialog
     .modal-content
       .modal-header
-        button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+        a#close-modal(href='#' data-dismiss='modal', aria-hidden='true') &times;
         h4#modal-label.modal-title #{title}
       .modal-body
         p#modal-message #{message}
       .modal-footer
         button.modal-default.pure-button.pure-button-primary(type="button", data-modal="yes") Yes
-        button.pure-button.pure-button-primary(type="button", data-modal="no") No
+        button.pure-button(type="button", data-modal="no") No
