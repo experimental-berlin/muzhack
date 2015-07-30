@@ -1,19 +1,22 @@
-#create-project-pad
-  .input-group
-    input#id-input(placeholder="Project ID")
-  .input-group
-    input#title-input(placeholder="Project title")
-  .input-group
-    input#tags-input(placeholder="Project tags")
-    span.icon-tags2
-  #description-editor
-    +createDescription
-  #pictures-editor
-    +createPictures
-  #instructions-editor
-    +createInstructions
-  #files-editor
-    +createFiles
-  #create-buttons.button-group
-    button#create-project.pure-button.pure-button-primary Create
-    button#cancel-create.pure-button Cancel
+unless isCreating
+  #create-project-pad
+    .input-group
+      input#id-input(placeholder="Project ID")
+    .input-group
+      input#title-input(placeholder="Project title")
+    .input-group
+      input#tags-input(placeholder="Project tags")
+      span.icon-tags2
+    #description-editor
+      +createDescription
+    #pictures-editor
+      +createPictures
+    #instructions-editor
+      +createInstructions
+    #files-editor
+      +createFiles
+    #create-buttons.button-group
+      button#create-project.pure-button.pure-button-primary Create
+      button#cancel-create.pure-button Cancel
+else
+  +loading
