@@ -1,18 +1,21 @@
-#edit-project-pad
-  .input-group
-    input#title-input(placeholder="Project title" value="#{title}")
-  .input-group
-    input#tags-input(placeholder="Project tags" value="#{tagsString}")
-    span.icon-tags2
-  #description-editor
-    +descriptionEditor
-  #pictures-editor
-    +picturesEditor
-  #instructions-editor
-    +instructionsEditor
-  #files-editor
-    +filesEditor
-  #edit-buttons
-    button#save-project.pure-button.pure-button-primary Save
-    button#cancel-edit.pure-button Cancel
-    a#remove-project(href="#") Remove this project
+unless isWaiting
+  #edit-project-pad
+    .input-group
+      input#title-input(placeholder="Project title" value="#{title}")
+    .input-group
+      input#tags-input(placeholder="Project tags" value="#{tagsString}")
+      span.icon-tags2
+    #description-editor
+      +descriptionEditor
+    #pictures-editor
+      +picturesEditor
+    #instructions-editor
+      +instructionsEditor
+    #files-editor
+      +filesEditor
+    #edit-buttons
+      button#save-project.pure-button.pure-button-primary Save
+      button#cancel-edit.pure-button Cancel
+      a#remove-project(href="#") Remove this project
+else
+  +loading

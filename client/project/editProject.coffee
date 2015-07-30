@@ -19,6 +19,7 @@ handleEditorRendered = (editor, text) ->
 
 Template.editProject.onRendered(->
   logger.debug("Project editing view rendered")
+  Session.set("isWaiting", false)
   Session.set("isProjectModified", false)
   document.getElementById("title-input").focus()
 )
@@ -129,17 +130,23 @@ Template.project.events({
   'click #remove-project': ->
     doRemove = () =>
       logger.debug("User confirmed removing project")
-      Session.set("isEditingProject", false)
-      logger.info("Removing project...")
-      Meteor.call("removeProject", @projectId, (error) ->
-        if error?
-          logger.error("Removing project on server failed: #{error}")
-          notificationService.warn("Error", "Removing project on server failed: #{error}.")
-          Session.set("isEditingProject", true)
-        else
-          logger.info("Successfully removed project")
-          Router.go('/')
-      )
+      Session.set("isWaiting", true)
+      logger.debug("isWaiting enabled")
+      try
+        logger.info("Removing project...")
+        Meteor.call("removeProject", @projectId, (error) ->
+          Session.set("isWaiting", false)
+          if error?
+            logger.error("Removing project on server failed: #{error}")
+            notificationService.warn("Error", "Removing project on server failed: #{error}.")
+          else
+            logger.info("Successfully removed project")
+            Session.set("isEditingProject", false)
+            Router.go('/')
+        )
+      catch error
+        Session.set("isWaiting", false)
+        throw error
     dontRemove = () ->
       logger.debug("User rejected removing project")
 
@@ -149,4 +156,5 @@ Template.project.events({
 })
 Template.editProject.helpers(
   tagsString: -> @tags.join(',')
+  isWaiting: -> Session.get("isWaiting")
 )

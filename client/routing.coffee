@@ -50,6 +50,8 @@ Router.onBeforeAction(->
   if S.startsWith("/create", @url) and !Meteor.userId()?
     logger.debug('User not logged in, rendering login page')
     @render('login')
+  else if Session.get("isWaiting")
+    @render("loading")
   else
     if S.startsWith('/account', @url)
       curSection = "account"

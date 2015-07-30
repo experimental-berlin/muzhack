@@ -19,14 +19,14 @@ handleEditorRendered = (editor, text) ->
 
 Template.create.onRendered(->
   logger.debug("Project creation view rendered")
-  Session.set("isCreating", false)
+  Session.set("isWaiting", false)
   Session.set("isProjectModified", false)
   for editor in [descriptionEditor, instructionsEditor,]
     editor.setMode('ace/mode/markdown')
   document.getElementById("id-input").focus()
 )
 Template.create.helpers({
-  isCreating: -> Session.get("isCreating")
+  isWaiting: -> Session.get("isWaiting")
 })
 Template.createDescription.onRendered(->
   logger.debug("Description editor rendered, giving Ace focus")
@@ -119,7 +119,7 @@ createProject = () ->
       logger.debug("Files:", files)
       Meteor.call('createProject', projectId, title, description, instructions, tags,
         pictureFiles, files, (error) ->
-          Session.set("isCreating", false)
+          Session.set("isWaiting", false)
           logger.debug("Re-enabling create button")
           button.disabled = false
           if error?
@@ -137,15 +137,14 @@ Template.create.events({
   'change #title-input': onChange
   'change #tags-input': onChange
   'click #create-project': ->
-    Session.set("isCreating", true)
+    Session.set("isWaiting", true)
     try
       createProject()
     catch error
-      Session.set("isCreating", false)
+      Session.set("isWaiting", false)
       if error instanceof ValidationError
         notificationService.warn("Validation Failed", "#{error.message}.")
         logger.debug("Validation failed")
-        return
       else
         throw error
   'click #cancel-create': ->
