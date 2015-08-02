@@ -17,6 +17,76 @@ handleEditorRendered = (editor, text) ->
   editor.ace.gotoLine(0, 0)
   editor.ace.session.setUseWrapMode(true)
 
+saveProject = (owner, projectId) ->
+  title = $("#title-input").val()
+  description = descriptionEditor.value()
+  instructions = instructionsEditor.value()
+  tags = $("#tags-input").val()
+  uploadData = {
+    owner: owner,
+    projectId: projectId,
+  }
+
+  allPictures = pictureDropzone.getAcceptedFiles()
+  if R.isEmpty(allPictures)
+    throw new Error("There must at least be one picture")
+
+  queuedPictures = pictureDropzone.getQueuedFiles()
+  queuedFiles = fileDropzone.getQueuedFiles()
+
+  uploadFiles = () ->
+    if !R.isEmpty(queuedPictures)
+      picturesPromise = pictureDropzone.processFiles(queuedPictures, uploadData)
+    else
+      picturesPromise = new Promise((resolve) -> resolve([]))
+    picturesPromise
+      .catch((error) ->
+        logger.error("Uploading pictures failed: #{error}")
+        notificationService.warn("Uploading pictures failed")
+      )
+    if !R.isEmpty(queuedFiles)
+      logger.debug("Processing #{queuedFiles.length} file(s)")
+      filesPromise = fileDropzone.processFiles(queuedFiles, uploadData)
+    else
+      filesPromise = new Promise((resolve) -> resolve([]))
+    filesPromise
+      .catch((error) ->
+        logger.error("Uploading files failed: #{error}")
+        notificationService.warn("Uploading files failed")
+      )
+
+    [picturesPromise, filesPromise]
+
+  [picturesPromise, filesPromise] = uploadFiles()
+  Promise.all([picturesPromise, filesPromise])
+    .then(([uploadedPictures, uploadedFiles]) ->
+      logger.info("Saving project...")
+      transformFiles = R.map(R.pick(['width', 'height', 'size', 'url', 'name', 'type']))
+      pictureFiles = R.concat(
+        transformFiles(pictureDropzone.getExistingFiles()),
+        transformFiles(uploadedPictures)
+      )
+      files = R.concat(
+        transformFiles(fileDropzone.getExistingFiles()),
+        transformFiles(uploadedFiles)
+      )
+      logger.debug("Picture files:", pictureFiles)
+      logger.debug("Files:", files)
+      logger.debug("title: #{title}, description: #{description}, tags: #{tags}")
+      Meteor.call('updateProject', owner, projectId, title, description, instructions, tags,
+        pictureFiles, files, (error) ->
+          Session.set("isWaiting", false)
+          if error?
+            logger.error("Updating project on server failed: #{error}")
+            notificationService.warn("Error", "Saving project to server failed: #{error}.")
+          else
+            Session.set("isEditingProject", false)
+            logger.info("Successfully saved project")
+      )
+    , (error) ->
+      Session.set("isWaiting", false)
+    )
+
 Template.editProject.onRendered(->
   logger.debug("Project editing view rendered")
   Session.set("isWaiting", false)
@@ -44,73 +114,15 @@ Template.project.events({
   'change #tags-input': onChange
   'click #save-project': ->
     if !Session.get("isEditingProject")
+      logger.debug("Ignoring request to save project, since session var isEditingProject is false")
       return
 
-    owner = @owner
-    projectId = @projectId
-    title = $("#title-input").val()
-    description = descriptionEditor.value()
-    instructions = instructionsEditor.value()
-    tags = $("#tags-input").val()
-    uploadData = {
-      owner: owner,
-      projectId: projectId,
-    }
-
-    allPictures = pictureDropzone.getAcceptedFiles()
-    if R.isEmpty(allPictures)
-      throw new Error("There must at least be one picture")
-
-    queuedPictures = pictureDropzone.getQueuedFiles()
-    queuedFiles = fileDropzone.getQueuedFiles()
-
-    uploadFiles = () ->
-      if !R.isEmpty(queuedPictures)
-        picturesPromise = pictureDropzone.processFiles(queuedPictures, uploadData)
-      else
-        picturesPromise = new Promise((resolve) -> resolve([]))
-      picturesPromise
-        .catch((error) ->
-          logger.error("Uploading pictures failed: #{error}")
-        )
-      if !R.isEmpty(queuedFiles)
-        logger.debug("Processing #{queuedFiles.length} file(s)")
-        filesPromise = fileDropzone.processFiles(queuedFiles, uploadData)
-      else
-        filesPromise = new Promise((resolve) -> resolve([]))
-      filesPromise
-        .catch((error) ->
-          logger.error("Uploading files failed: #{error}")
-        )
-
-      [picturesPromise, filesPromise]
-
-    [picturesPromise, filesPromise] = uploadFiles()
-    Promise.all([picturesPromise, filesPromise])
-      .then(([uploadedPictures, uploadedFiles]) ->
-        logger.info("Saving project...")
-        transformFiles = R.map(R.pick(['width', 'height', 'size', 'url', 'name', 'type']))
-        pictureFiles = R.concat(
-          transformFiles(pictureDropzone.getExistingFiles()),
-          transformFiles(uploadedPictures)
-        )
-        files = R.concat(
-          transformFiles(fileDropzone.getExistingFiles()),
-          transformFiles(uploadedFiles)
-        )
-        logger.debug("Picture files:", pictureFiles)
-        logger.debug("Files:", files)
-        logger.debug("title: #{title}, description: #{description}, tags: #{tags}")
-        Meteor.call('updateProject', owner, projectId, title, description, instructions, tags,
-          pictureFiles, files, (error) ->
-            if error?
-              logger.error("Updating project on server failed: #{error}")
-              notificationService.warn("Error", "Saving project to server failed: #{error}.")
-            else
-              Session.set("isEditingProject", false)
-              logger.info("Successfully saved project")
-        )
-      )
+    Session.set("isWaiting", true)
+    try
+      saveProject(@owner, @projectId)
+    catch error
+      Session.set("isWaiting", false)
+      throw error
   'click #cancel-edit': ->
     doCancel = () ->
       logger.debug("User confirmed canceling edit")
@@ -131,7 +143,6 @@ Template.project.events({
     doRemove = () =>
       logger.debug("User confirmed removing project")
       Session.set("isWaiting", true)
-      logger.debug("isWaiting enabled")
       try
         logger.info("Removing project...")
         Meteor.call("removeProject", @projectId, (error) ->
