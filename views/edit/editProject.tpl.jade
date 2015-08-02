@@ -5,6 +5,10 @@ unless isWaiting
     .input-group
       input#tags-input(placeholder="Project tags" value="#{tagsString}")
       span.icon-tags2
+    .input-group
+      select#license-select(placeholder="License")
+        each licenseOptions
+          option(value=id, selected=isSelected) #{name}
     #description-editor
       +descriptionEditor
     #pictures-editor

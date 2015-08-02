@@ -49,8 +49,12 @@ createZip = (files, user, id, s3Bucket, s3Client) ->
   # TODO: Try to get URL from S3
   ["https://s3.#{region}.amazonaws.com/#{s3Bucket}/#{filePath}", output.length]
 
+verifyLicense = (licenseId) ->
+  if !licenses[licenseId]?
+    throw new Error("Invalid license '#{licenseId}'")
+
 Meteor.methods({
-  createProject: (id, title, description, instructions, tags, pictures, files) ->
+  createProject: (id, title, description, instructions, tags, license, pictures, files) ->
     user = getUser(@)
 
     if Projects.findOne({owner: user.username, projectId: id})?
@@ -58,12 +62,14 @@ Meteor.methods({
 
     [s3Bucket, s3Client] = getS3Objs()
     [zipUrl, zipSize] = createZip(files, user, id, s3Bucket, s3Client)
+    verifyLicense(license)
 
     metadata = {
       owner: user.username,
       projectId: id,
       title: title,
       tags: tags,
+      licenseId: license,
       created: moment().utc().toDate(),
     }
     logger.info("Creating project #{user.username}/#{id}:", metadata)
@@ -78,9 +84,10 @@ Meteor.methods({
       },
     })
     Projects.insert(data)
-  updateProject: (owner, id, title, description, instructions, tags, pictures, files) ->
+  updateProject: (owner, id, title, description, instructions, tags, license, pictures, files) ->
     [s3Bucket, s3Client] = getS3Objs()
     user = getUser(@)
+    verifyLicense(license)
     logger.info("User #{user.username} updating project #{owner}/#{id}, s3Bucket: '#{s3Bucket}'")
     logger.debug("Pictures:", pictures)
     logger.debug("Files:", files)
@@ -116,7 +123,8 @@ Meteor.methods({
       title: title,
       description: description,
       instructions: instructions,
-      tags: R.map(S.trim(null), tags.split(',')),
+      tags: R.map(trimWhitespace, tags.split(',')),
+      licenseId: license,
       pictures: pictures,
       files: files,
       zipFile: {

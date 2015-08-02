@@ -40,6 +40,7 @@ Template.displayProject.helpers(
     canEdit = user.username == @owner
     logger.debug("User is logged in as '#{user.username}' - can edit project: #{canEdit}")
     canEdit
+  license: -> licenses[@licenseId]
 )
 Template.displayProject.events({
   'click .tabs > li': ->

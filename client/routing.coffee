@@ -51,6 +51,7 @@ Router.onBeforeAction(->
     logger.debug('User not logged in, rendering login page')
     @render('login')
   else if Session.get("isWaiting")
+    logger.debug("In waiting mode")
     @render("loading")
   else
     if S.startsWith('/account', @url)

@@ -27,6 +27,7 @@ Template.create.onRendered(->
 )
 Template.create.helpers({
   isWaiting: -> Session.get("isWaiting")
+  licenseOptions: -> ({id: licenseId, name: license.name} for licenseId, license of licenses)
 })
 Template.createDescription.onRendered(->
   logger.debug("Description editor rendered, giving Ace focus")
@@ -46,13 +47,14 @@ Template.createFiles.onRendered(->
 )
 
 getParameters = () ->
-  projectId = $('#id-input').val()
-  title = $('#title-input').val()
+  projectId = trimWhitespace($('#id-input').val())
+  title = trimWhitespace($('#title-input').val())
   description = descriptionEditor.value()
   instructions = instructionsEditor.value()
-  tags = $('#tags-input').val()
+  tags = S.words($('#tags-input').val())
   username = Meteor.user().username
-  tags = S.words(tags)
+  licenseSelect = document.getElementById("license-select")
+  license = licenseSelect.options[licenseSelect.selectedIndex].value
   if S.isBlank(projectId) || S.isBlank(title) || R.isEmpty(tags)
     throw new ValidationError('Fields not correctly filled in')
   if S.isBlank(description)
@@ -64,14 +66,15 @@ getParameters = () ->
     throw new ValidationError("There must be at least one picture")
   queuedPictures = pictureDropzone.getQueuedFiles()
   queuedFiles = fileDropzone.getQueuedFiles()
-  [projectId, title, description, instructions, tags, username, queuedPictures, queuedFiles]
+  [projectId, title, description, instructions, tags, license, username, queuedPictures,
+    queuedFiles,]
 
 createProject = () ->
   logger.debug("Create button was clicked")
   button = event.currentTarget
   logger.debug("Disabling create button")
   button.disabled = true
-  [projectId, title, description, instructions, tags, username, queuedPictures,
+  [projectId, title, description, instructions, tags, license, username, queuedPictures,
     queuedFiles] = getParameters()
 
   uploadFiles = () ->
@@ -85,6 +88,7 @@ createProject = () ->
     picturesPromise
       .catch((error) ->
         logger.error("Uploading pictures failed: #{error}")
+        notificationService.warn("Error", "Uploading pictures failed")
       )
     if !R.isEmpty(queuedFiles)
       logger.debug("Processing #{queuedFiles.length} file(s)")
@@ -97,6 +101,7 @@ createProject = () ->
     filesPromise
       .catch((error) ->
         logger.error("Uploading files failed: #{error}")
+        notificationService.warn("Error", "Uploading files failed")
       )
     [picturesPromise, filesPromise]
 
@@ -118,7 +123,7 @@ createProject = () ->
       logger.debug("Picture files:", pictureFiles)
       logger.debug("Files:", files)
       Meteor.call('createProject', projectId, title, description, instructions, tags,
-        pictureFiles, files, (error) ->
+        license, pictureFiles, files, (error) ->
           Session.set("isWaiting", false)
           logger.debug("Re-enabling create button")
           button.disabled = false
@@ -130,6 +135,8 @@ createProject = () ->
             logger.info("Successfully created project")
             Router.go("/#{qualifiedId}")
       )
+    , (err) ->
+      Session.set("isWaiting", false)
     )
 
 Template.create.events({

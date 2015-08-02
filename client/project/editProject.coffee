@@ -18,10 +18,13 @@ handleEditorRendered = (editor, text) ->
   editor.ace.session.setUseWrapMode(true)
 
 saveProject = (owner, projectId) ->
-  title = $("#title-input").val()
+  title = trimWhitespace($("#title-input").val())
   description = descriptionEditor.value()
   instructions = instructionsEditor.value()
   tags = $("#tags-input").val()
+  licenseSelect = document.getElementById("license-select")
+  license = licenseSelect.options[licenseSelect.selectedIndex].value
+
   uploadData = {
     owner: owner,
     projectId: projectId,
@@ -42,7 +45,7 @@ saveProject = (owner, projectId) ->
     picturesPromise
       .catch((error) ->
         logger.error("Uploading pictures failed: #{error}")
-        notificationService.warn("Uploading pictures failed")
+        notificationService.warn("Error", "Uploading pictures failed")
       )
     if !R.isEmpty(queuedFiles)
       logger.debug("Processing #{queuedFiles.length} file(s)")
@@ -52,7 +55,7 @@ saveProject = (owner, projectId) ->
     filesPromise
       .catch((error) ->
         logger.error("Uploading files failed: #{error}")
-        notificationService.warn("Uploading files failed")
+        notificationService.warn("Error", "Uploading files failed")
       )
 
     [picturesPromise, filesPromise]
@@ -74,7 +77,7 @@ saveProject = (owner, projectId) ->
       logger.debug("Files:", files)
       logger.debug("title: #{title}, description: #{description}, tags: #{tags}")
       Meteor.call('updateProject', owner, projectId, title, description, instructions, tags,
-        pictureFiles, files, (error) ->
+        license, pictureFiles, files, (error) ->
           Session.set("isWaiting", false)
           if error?
             logger.error("Updating project on server failed: #{error}")
@@ -168,4 +171,6 @@ Template.project.events({
 Template.editProject.helpers(
   tagsString: -> @tags.join(',')
   isWaiting: -> Session.get("isWaiting")
+  licenseOptions: ->
+    ({id: id, name: license.name, isSelected: id == @licenseId} for id, license of licenses)
 )
