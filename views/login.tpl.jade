@@ -12,8 +12,8 @@
         form#signin-form.pure-form.pure-form-stacked(action="action")
           fieldset
             legend Account info
-            input#signin-email.account-email(autofocus type="email" placeholder="email")
-            input.account-password(type="password" placeholder="password")
+            input#signin-email.account-email(autofocus type="email" placeholder="email" name="email")
+            input.account-password(type="password" placeholder="password" name="password")
           .button-group
             input#login-button.pure-button.pure-button-primary(type="submit" value="Sign in")
             a#forgot-password.small(href="/account/forgotpassword") Forgot password?

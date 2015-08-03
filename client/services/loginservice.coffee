@@ -3,10 +3,10 @@ idSignIn = "login-signin-tab"
 idSignup = "login-signup-tab"
 
 findEmail = (t) ->
-  return trimWhitespace(null, t.find('.account-email').value)
+  return trimWhitespace(t.find('.account-email').value)
 
 findPassword = (t) ->
-  return trimWhitespace(null, t.find('.account-password').value)
+  return trimWhitespace(t.find('.account-password').value)
 
 class @LoginService
   setupTemplate: ->
@@ -66,17 +66,17 @@ class @LoginService
 
         e.preventDefault()
 
-        username = trimWhitespace(null, t.find(".account-username").value)
+        username = trimWhitespace(t.find(".account-username").value)
         if S.isBlank(username)
           notificationService.warn(errorCaption, "You must supply a username")
           return false
-        name = trimWhitespace(null, t.find(".account-name").value)
+        name = trimWhitespace(t.find(".account-name").value)
         if S.isBlank(name)
           notificationService.warn(errorCaption, "You must supply a name")
           return false
         email = findEmail(t)
         password = findPassword(t)
-        confirmedPassword = trimWhitespace(null, t.find('.account-password-confirm').value)
+        confirmedPassword = trimWhitespace(t.find('.account-password-confirm').value)
         if password != confirmedPassword
           notificationService.warn(errorCaption, "Passwords don't match")
           return false
