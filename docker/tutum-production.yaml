@@ -1,17 +1,5 @@
-mongo-production:
-  image: mongo:3.0.4
-  command: --auth
-  volumes:
-    - /var/data/mongodb:/data/db
-  ports:
-    - "27017:27017"
-  tags:
-    - production
-  autorestart: always
 muzhack-production:
   image: quay.io/aknuds1/muzhack:release
-  links:
-    - mongo-production:db
   environment:
     - ROOT_URL=https://muzhack.com
     - MONGO_URL
