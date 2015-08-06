@@ -77,11 +77,10 @@ extendFile = (file) ->
       title = "#{data.owner}/#{data.projectId}"
       logger.debug("Setting SEO properties")
       SEO.set({
-        author: data.owner,
-        title: title,
-        description: data.description,
-        instructions: data.instructions,
-        tags: S.join(",", data.tags),
+        title: title
+        meta: {
+          description: data.description
+        }
       })
     else
       logger.debug("@data is not defined, cannot set SEO properties")
