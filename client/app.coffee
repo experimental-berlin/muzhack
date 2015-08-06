@@ -16,6 +16,7 @@ Meteor.startup(->
     title: 'MuzHack'
     meta: {
       description: "The hub for discovering and publishing music technology projects"
+      "google-site-verification": "teyDpmp-rLdHUE1J-tWXAgzQ1WgWVAMyPeH6B05-kDE"
     }
   })
 
