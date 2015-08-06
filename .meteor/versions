@@ -36,7 +36,7 @@ iron:middleware-stack@1.0.9
 iron:router@1.0.9
 iron:url@1.0.9
 isotope:isotope@2.1.0_1
-jag:pince@0.0.6
+jag:pince@0.0.9
 jquery@1.11.3_2
 json@1.0.3
 lampe:purecss@0.5.0
@@ -53,7 +53,7 @@ meteor-platform@1.2.2
 minifiers@1.1.5
 minimongo@1.0.8
 mobile-status-bar@1.0.3
-momentjs:moment@2.10.3
+momentjs:moment@2.10.6
 mongo@1.1.0
 mquandalle:jade@0.4.3
 mquandalle:jade-compiler@0.4.3

@@ -15,7 +15,7 @@ Meteor.startup(->
   SEO.config({
     title: 'MuzHack'
     meta: {
-      'description': 'The hub for finding and publishing music technology projects',
+      'description': 'The hub for discovering and publishing music technology projects',
     }
   })
 
