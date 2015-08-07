@@ -20,7 +20,6 @@ markdown
 isotope:isotope
 reactive-var
 mquandalle:jade
-manuelschoebel:ms-seo
 stoeffel:underscore.string.fp
 aknudsen:dropzone
 ccorcos:clientside-image-manipulation
@@ -31,4 +30,5 @@ peerlibrary:aws-sdk
 yogiben:spinkit
 udondan:jszip
 http
-reywood:iron-router-ga
+aknudsen:iron-router-ga
+manuelschoebel:ms-seo

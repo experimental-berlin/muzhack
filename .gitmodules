@@ -4,3 +4,9 @@
 [submodule "packages/aknudsen:dropzone"]
 	path = packages/aknudsen:dropzone
 	url = git@github.com:aknuds1/dropzone.git
+[submodule "packages/ms-seo"]
+	path = packages/ms-seo
+	url = git@github.com:DerMambo/ms-seo.git
+[submodule "packages/aknudsen:iron-router-ga"]
+	path = packages/aknudsen:iron-router-ga
+	url = git@github.com:aknuds1/meteor-iron-router-ga.git
