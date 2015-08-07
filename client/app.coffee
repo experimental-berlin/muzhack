@@ -37,7 +37,7 @@ class MenuElement
 
   isSelected: ->
     if !Session.get("currentSection")?
-      logger.warn("currentSection not defined in Session")
+      logger.debug("currentSection not defined in Session")
       false
     else
       Session.get("currentSection").toLowerCase() == @name.toLowerCase()
