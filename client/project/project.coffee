@@ -47,7 +47,7 @@ extendFile = (file) ->
         project.ownerName = owner.profile.name
         logger.debug("Project owner's name: #{project.ownerName}")
       else
-        logger.warn('Project has no owner')
+        logger.warn("Project owner '#{@params.owner}' is not in database")
       project.zipFileSize = if project.zipFile? then getFileSize(project.zipFile.size) else 0
       project.files = R.map(extendFile, project.files || [])
       project.hasFiles = !R.isEmpty(project.files)
