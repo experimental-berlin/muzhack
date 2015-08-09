@@ -1,6 +1,8 @@
 logger = new Logger('app')
 
 Meteor.startup(->
+  # Settings are by default undefined on client
+  Meteor.settings = Meteor.settings || {}
   logger.debug("Instantiating editors")
   @descriptionEditor = new MandrillAce('description-ace')
   @instructionsEditor = new MandrillAce('instructions-ace')

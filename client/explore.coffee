@@ -3,7 +3,6 @@ logger = new Logger("explore")
 Template.explore.helpers({
   isEmpty: ->
     !Projects.findOne()?
-  ,
 })
 
 getQualifiedId = (project) ->
