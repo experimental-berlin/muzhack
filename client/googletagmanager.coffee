@@ -2,9 +2,10 @@ logger = new Logger('googletagmanager')
 
 Template.googletagmanager.helpers({
   enableGoogleTagManager: ->
-    if Meteor.settings.enableGoogleTagManager
+    enable = Meteor.settings.public.enableGoogleTagManager
+    if enable
       logger.debug("Enabling Google Tag Manager")
     else
       logger.debug("Not enabling Google Tag Manager")
-    Meteor.settings.enableGoogleTagManager
+    enable
 })

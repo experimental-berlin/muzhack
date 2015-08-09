@@ -6,5 +6,7 @@ Meteor.startup(->
   BrowserPolicy.content.allowImageOrigin(
     "https://*.githubusercontent.com")
   BrowserPolicy.content.allowEval()
+  BrowserPolicy.framing.allowAll()
+  BrowserPolicy.content.allowFrameOrigin("*.googletagmanager.com")
   logger.debug("Configured BrowserPolicy")
 )
