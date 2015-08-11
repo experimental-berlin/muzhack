@@ -1,11 +1,11 @@
 @font-face {
 	font-family: 'icomoon';
-	src:url('fonts/icomoon.eot?-5pfxnu');
-	src:url('fonts/icomoon.eot?#iefix-5pfxnu') format('embedded-opentype'),
-		url('fonts/icomoon.woff2?-5pfxnu') format('woff2'),
-		url('fonts/icomoon.woff?-5pfxnu') format('woff'),
-		url('fonts/icomoon.ttf?-5pfxnu') format('truetype'),
-		url('fonts/icomoon.svg?-5pfxnu#icomoon') format('svg');
+	src:url('fonts/icomoon.eot?-aaw9m2');
+	src:url('fonts/icomoon.eot?#iefix-aaw9m2') format('embedded-opentype'),
+		url('fonts/icomoon.woff2?-aaw9m2') format('woff2'),
+		url('fonts/icomoon.ttf?-aaw9m2') format('truetype'),
+		url('fonts/icomoon.woff?-aaw9m2') format('woff'),
+		url('fonts/icomoon.svg?-aaw9m2#icomoon') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -27,112 +27,87 @@
 .icon-creative-commons-attribution:before {
 	content: "\e601";
 }
-
+.icon-creative-commons-noncommercial-us:before {
+	content: "\e604";
+}
 .icon-creative-commons-sharealike:before {
 	content: "\e602";
 }
-
 .icon-creative-commons:before {
 	content: "\e603";
 }
-
 .icon-file-zip:before {
 	content: "\e9b9";
 }
-
 .icon-file-zip2:before {
 	content: "\e9ba";
 }
-
 .icon-puzzle3:before {
 	content: "\ec1e";
 }
-
 .icon-puzzle4:before {
 	content: "\ec1f";
 }
-
 .icon-cloud-download:before {
 	content: "\ec73";
 }
-
 .icon-cloud-download2:before {
 	content: "\ec77";
 }
-
 .icon-download2:before {
 	content: "\ec7a";
 }
-
 .icon-download3:before {
 	content: "\ec7b";
 }
-
 .icon-file-text:before {
 	content: "\e922";
 }
-
 .icon-pencil2:before {
 	content: "\e90f";
 }
-
 .icon-pencil3:before {
 	content: "\e910";
 }
-
 .icon-book:before {
 	content: "\e990";
 }
-
 .icon-file-text2:before {
 	content: "\e99b";
 }
-
 .icon-tags:before {
 	content: "\e9ef";
 }
-
 .icon-tags2:before {
 	content: "\e9f1";
 }
-
 .icon-undo:before {
 	content: "\eaa2";
 }
-
 .icon-redo:before {
 	content: "\eaa3";
 }
-
 .icon-undo2:before {
 	content: "\eabc";
 }
-
 .icon-redo2:before {
 	content: "\eabd";
 }
-
 .icon-bin:before {
 	content: "\ebfa";
 }
-
 .icon-bin2:before {
 	content: "\ebfb";
 }
-
 .icon-enter3:before {
 	content: "\ed77";
 }
-
 .icon-exit3:before {
 	content: "\ed78";
 }
-
 .icon-pencil:before {
 	content: "\e00d";
 }
-
 .icon-settings:before {
 	content: "\e600";
 }
-
