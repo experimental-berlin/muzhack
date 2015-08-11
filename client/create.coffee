@@ -133,7 +133,7 @@ createProject = () ->
               "Failed to create project due to error on server")
           else
             logger.info("Successfully created project")
-            Router.go("/#{qualifiedId}")
+            Router.go("/u/#{qualifiedId}")
       )
     , (err) ->
       Session.set("isWaiting", false)
