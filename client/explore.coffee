@@ -16,7 +16,7 @@ createProjectElement = (project) ->
       '/images/revox-reel-to-reel-resized.jpg'
 
   $("<div class=\"project-item\" data-id=\"#{getQualifiedId(project)}\">
-    <a href=\"/#{project.owner}/#{project.projectId}\">
+    <a href=\"/u/#{project.owner}/#{project.projectId}\">
       <div class=\"project-item-header\">
         <div class=\"project-item-title\">#{project.title}</div>
         <div class=\"project-item-author\">#{project.owner}</div>

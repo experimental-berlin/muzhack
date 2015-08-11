@@ -21,7 +21,7 @@ Router.route('/login', ->
 Router.route('/', ->
   @render('explore')
 , {
-    name: 'home',
+    name: 'home'
     waitOn: -> Meteor.subscribe("projects")
 })
 Router.route('/account/forgotpassword', ->
@@ -42,12 +42,25 @@ Router.route('/about', ->
 Router.route('/create', ->
   @render('create')
 )
-Router.route('/:owner/:project',
+Router.route('/u/:owner/:project',
   name: "project"
   controller: ProjectController
 )
 
+configureHotCodePush = (url) ->
+  if url in ["/create", "/account/forgotpassword", "/login"]
+    logger.debug("Disallowing hot code push for route '#{url}'")
+    Session.set("hotCodePushAllowed", false)
+  else if url in ["/", "/about", "/account"] or S.startsWith("/u/", url)
+    if !Session.get("isEditingProject")
+      logger.debug("Allowing hot code push for route '#{url}'")
+      Session.set("hotCodePushAllowed", true)
+  else
+    throw new Error("Unrecognized route '#{url}'")
+
 Router.onBeforeAction(->
+  configureHotCodePush(@url)
+
   if S.startsWith("/create", @url) and !Meteor.userId()?
     logger.debug('User not logged in, rendering login page')
     @render('login')

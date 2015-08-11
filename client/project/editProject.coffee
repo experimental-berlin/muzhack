@@ -3,6 +3,9 @@ dropzoneLogger = new Logger("dropzone")
 pictureDropzone = null
 fileDropzone = null
 
+disableProjectEditing = ->
+  Session.set("isEditingProject", false)
+
 onChange =  ->
   logger.debug("Project has changed - setting dirty state")
   Session.set("isProjectModified", true)
@@ -83,7 +86,7 @@ saveProject = (owner, projectId) ->
             logger.error("Updating project on server failed: #{error}")
             notificationService.warn("Error", "Saving project to server failed: #{error}.")
           else
-            Session.set("isEditingProject", false)
+            disableProjectEditing()
             logger.info("Successfully saved project")
       )
     , (error) ->
@@ -130,7 +133,7 @@ Template.project.events({
     doCancel = () ->
       logger.debug("User confirmed canceling edit")
       Session.set("isProjectModified", false)
-      Session.set("isEditingProject", false)
+      disableProjectEditing()
     dontCancel = () ->
       logger.debug("User rejected canceling edit")
 
@@ -141,7 +144,7 @@ Template.project.events({
       notificationService.question("Discard Changes?",
         "Are you sure you wish to discard your changes?", doCancel, dontCancel)
     else
-        Session.set("isEditingProject", false)
+      disableProjectEditing()
   'click #remove-project': ->
     doRemove = () =>
       logger.debug("User confirmed removing project")
@@ -155,7 +158,7 @@ Template.project.events({
             notificationService.warn("Error", "Removing project on server failed: #{error}.")
           else
             logger.info("Successfully removed project")
-            Session.set("isEditingProject", false)
+            disableProjectEditing()
             Router.go('/')
         )
       catch error
