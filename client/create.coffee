@@ -79,6 +79,7 @@ createProject = () ->
 
   uploadFiles = () ->
     if !R.isEmpty(queuedPictures)
+      logger.debug("Processing #{queuedPictures.length} picture(s)")
       picturesPromise = pictureDropzone.processFiles(queuedPictures, {
         owner: username,
         projectId: projectId,
@@ -108,6 +109,7 @@ createProject = () ->
   [picturesPromise, filesPromise] = uploadFiles()
   Promise.all([picturesPromise, filesPromise])
     .then(([uploadedPictures, uploadedFiles]) ->
+      logger.debug("Uploading files/pictures finished successfully")
       transformFiles = R.map(R.pick(['width', 'height', 'size', 'url', 'name', 'type']))
       pictureFiles = R.concat(
         transformFiles(pictureDropzone.getExistingFiles()),
@@ -136,6 +138,7 @@ createProject = () ->
             Router.go("/u/#{qualifiedId}")
       )
     , (err) ->
+      logger.warn("Uploading files and/or pictures failed")
       Session.set("isWaiting", false)
     )
 

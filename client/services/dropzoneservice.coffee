@@ -122,22 +122,23 @@ class @DropzoneService
             if !R.isEmpty(files)
               processOnePicture(resolve, reject)
             else
+              logger.debug("Finished processing pictures successfully")
               resolve()
         )
 
       uploadOnePicture = (resolve, reject) ->
         [file, type, b64] = pictureDatas.shift()
-        logger.debug("Uploading file '#{file.name}', type '#{type}'")
+        logger.debug("Uploading picture '#{file.name}', type '#{type}'")
         blob = b64ToBlob(b64, type)
         blob.name = file.name
         uploader.send(blob, (error, downloadUrl) ->
           if error?
-            logger.warn("Failed to upload file '#{file.name}': '#{error}'")
+            logger.warn("Failed to upload picture '#{file.name}': '#{error}'")
             reject(error.message)
           else
             backupUploader.send(blob, (error) ->
               if error?
-                logger.warn("Failed to back up '#{file.name}': '#{error}'")
+                logger.warn("Failed to back up picture '#{file.name}': '#{error}'")
                 reject(error.message)
               else
                 file.url = downloadUrl
@@ -160,6 +161,7 @@ class @DropzoneService
         .catch((error) ->
           for file in files
             file.status = Dropzone.ERROR
+          logger.error("Failed to upload pictures: #{error}")
           throw new Error("Failed to upload pictures: #{error}")
         )
 
