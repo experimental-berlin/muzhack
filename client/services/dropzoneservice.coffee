@@ -61,30 +61,49 @@ class @DropzoneService
         folder: s3Folder,
       })
 
-      uploadOneFile = (resolve, reject) ->
-        file = files.shift()
-        logger.debug("Uploading file '#{file.name}'")
+      backupFile = (file, downloadUrl, resolve, reject, numTries=0) ->
+        numTries += 1
+        logger.debug("Backing up file '#{file.name}', try ##{numTries}...")
+        backupUploader.send(file, (error) ->
+          if error?
+            logger.warn("Failed to back up file '#{file.name}': '#{error.message}'")
+            if numTries <= 3
+              logger.info("Retrying backup")
+              backupFile(file, downloadUrl, resolve, reject, numTries)
+            else
+              logger.warn("Giving up backup of file since we've already tried #{numTries} times")
+              reject(error.message)
+          else
+            logger.debug("Succeeded in backing up file '#{file.name}'")
+            file.url = downloadUrl
+            file.status = Dropzone.SUCCESS
+            processedFiles.push(file)
+            if !R.isEmpty(files)
+              uploadOneFile(resolve, reject)
+            else
+              logger.debug('Finished uploading files:', processedFiles)
+              resolve(processedFiles)
+        )
+
+      uploadFile = (file, resolve, reject, numTries) ->
+        numTries += 1
+        logger.debug("Uploading file '#{file.name}', try ##{numTries}...")
         uploader.send(file, (error, downloadUrl) ->
           if error?
             logger.warn("Failed to upload file '#{file.name}': '#{error.message}'")
-            reject(error.message)
+            if numTries <= 3
+              logger.info("Retrying upload")
+              uploadFile(file, resolve, reject, numTries)
+            else
+              logger.warn("Giving up since we've already tried #{numTries} times")
+              reject(error.message)
           else
-            backupUploader.send(file, (error) ->
-              if error?
-                logger.warn("Failed to back up file '#{file.name}': '#{error.message}'")
-                reject(error.message)
-              else
-                logger.debug("Succeeded in backing up file '#{file.name}'")
-                file.url = downloadUrl
-                file.status = Dropzone.SUCCESS
-                processedFiles.push(file)
-                if !R.isEmpty(files)
-                  uploadOneFile(resolve, reject)
-                else
-                  logger.debug('Finished uploading files:', processedFiles)
-                  resolve(processedFiles)
-            )
+            backupFile(file, downloadUrl, resolve, reject)
         )
+
+      uploadOneFile = (resolve, reject) ->
+        file = files.shift()
+        uploadFile(file, resolve, reject, 0)
 
       logger.debug('Uploading files...', files)
       new Promise(uploadOneFile)
@@ -116,7 +135,8 @@ class @DropzoneService
           match = /^data:([^;]+);base64,(.+)$/.exec(dataUri)
           if !match?
             reject(
-              "processImage for file '#{file.name}' returned data URI on wrong format: '#{dataUri}'")
+              "processImage for file '#{file.name}' returned data URI on wrong format: '#{dataUri}'"
+            )
           else
             pictureDatas.push([file, match[1], match[2]])
             if !R.isEmpty(files)
@@ -126,31 +146,51 @@ class @DropzoneService
               resolve()
         )
 
-      uploadOnePicture = (resolve, reject) ->
-        [file, type, b64] = pictureDatas.shift()
-        logger.debug("Uploading picture '#{file.name}', type '#{type}'")
-        blob = b64ToBlob(b64, type)
-        blob.name = file.name
+      backupPicture = (blob, file, downloadUrl, resolve, reject, numTries) ->
+        numTries += 1
+        logger.debug("Backing up picture '#{file.name}', try ##{numTries}...")
+        backupUploader.send(blob, (error) ->
+          if error?
+            logger.warn("Failed to back up picture '#{file.name}': '#{error}'")
+            if numTries <= 3
+              logger.info("Retrying backup")
+              backupPicture(blob, file, downloadUrl, resolve, reject, numTries)
+            else
+              logger.warn("Giving up since we've already tried #{numTries} times")
+              reject(error.message)
+          else
+            file.url = downloadUrl
+            file.status = Dropzone.SUCCESS
+            pictures.push(file)
+            if !R.isEmpty(pictureDatas)
+              uploadOnePicture(resolve, reject)
+            else
+              logger.debug('Finished uploading pictures, URLs:', pictures)
+              resolve(pictures)
+        )
+
+      uploadPicture = (blob, file, type, resolve, reject, numTries) ->
+        numTries += 1
+        logger.debug("Uploading picture '#{file.name}', type '#{type}', try ##{numTries}...")
         uploader.send(blob, (error, downloadUrl) ->
           if error?
             logger.warn("Failed to upload picture '#{file.name}': '#{error}'")
-            reject(error.message)
+            if numTries <= 3
+              logger.info("Retrying upload")
+              uploadPicture(blob, file, type, resolve, reject, numTries)
+            else
+              logger.warn("Giving up since we've already tried #{numTries} times")
+              reject(error.message)
           else
-            backupUploader.send(blob, (error) ->
-              if error?
-                logger.warn("Failed to back up picture '#{file.name}': '#{error}'")
-                reject(error.message)
-              else
-                file.url = downloadUrl
-                file.status = Dropzone.SUCCESS
-                pictures.push(file)
-                if !R.isEmpty(pictureDatas)
-                  uploadOnePicture(resolve, reject)
-                else
-                  logger.debug('Finished uploading pictures, URLs:', pictures)
-                  resolve(pictures)
-            )
+            backupPicture(blob, file, downloadUrl, resolve, reject, 0)
         )
+
+      uploadOnePicture = (resolve, reject) ->
+        numTries = 0
+        [file, type, b64] = pictureDatas.shift()
+        blob = b64ToBlob(b64, type)
+        blob.name = file.name
+        uploadPicture(blob, file, type, resolve, reject, 0)
 
       logger.debug("Processing pictures...")
       new Promise(processOnePicture)
