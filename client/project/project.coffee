@@ -6,9 +6,9 @@ getFileSize = (numBytes) ->
   else if numBytes < 1024*1024
     sizeStr = "#{Math.ceil(numBytes / 1024.0)} KB"
   else if numBytes < 1024*1024*1024
-    sizeStr = "#{Math.ceil(numBytes / 1024*1024.0)} MB"
+    sizeStr = "#{Math.ceil(numBytes / (1024*1024.0))} MB"
   else if numBytes < 1024*1024*1024*1024
-    sizeStr = "#{Math.ceil(numBytes / 1024*1024*1024.0)} GB"
+    sizeStr = "#{Math.ceil(numBytes / (1024*1024*1024.0))} GB"
   else
     throw new Error("File size too large: #{numBytes}")
   sizeStr
