@@ -1,20 +1,23 @@
 logger = new Logger("slingshot")
 
+pictureMaxSize = 10 * 1024 * 1024
+fileMaxSize = 100 * 1024 * 1024
+
 Slingshot.fileRestrictions("pictures", {
-  allowedFileTypes: ["image/jpeg", "image/png", "image/gif",],
-  maxSize: 10 * 1024 * 1024, # 10 MB (use null for unlimited)
+  allowedFileTypes: ["image/jpeg", "image/png", "image/gif",]
+  maxSize: pictureMaxSize
 })
 Slingshot.fileRestrictions("files", {
-  allowedFileTypes: null,
-  maxSize: 10 * 1024 * 1024, # 10 MB (use null for unlimited)
+  allowedFileTypes: null
+  maxSize: fileMaxSize
 })
 Slingshot.fileRestrictions("pictures-backup", {
-  allowedFileTypes: ["image/jpeg", "image/png", "image/gif",],
-  maxSize: 10 * 1024 * 1024, # 10 MB (use null for unlimited)
+  allowedFileTypes: ["image/jpeg", "image/png", "image/gif",]
+  maxSize: pictureMaxSize
 })
 Slingshot.fileRestrictions("files-backup", {
   allowedFileTypes: null,
-  maxSize: 10 * 1024 * 1024, # 10 MB (use null for unlimited)
+  maxSize: fileMaxSize
 })
 
 createSlingshotDirective = (name, typeStr, bucket) ->
