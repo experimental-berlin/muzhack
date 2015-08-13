@@ -73,7 +73,7 @@ Template.layout.helpers(
     [
       new MenuElement("Explore", "/"),
       new MenuElement("Create", "/create")
-      new MenuElement("Forums", "http://forums.muzhack.com", newTab=true)
+      new MenuElement("Forums", Meteor.settings.public.discourseUrl, newTab=true)
       new MenuElement("About", "/about")
     ]
 )

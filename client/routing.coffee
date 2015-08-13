@@ -69,7 +69,7 @@ Router.route("/discourse/sso", ->
           logger.info(
             "Server successfully verified Discourse call - redirecting to #{discourseUrl}")
           [respPayload, respSig] = result
-          @redirect("#{discourseUrl}/session/sso_login?sso=#{respPayload}&sig=#{respSig}")
+          window.location = "#{discourseUrl}/session/sso_login?sso=#{respPayload}&sig=#{respSig}"
       )
 )
 
