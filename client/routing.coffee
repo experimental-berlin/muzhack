@@ -66,7 +66,8 @@ Router.route("/discourse/sso", ->
           logger.error("Server failed to verify Discourse call: #{error.reason}")
           renderError(error.reason)
         else
-          logger.info("Server successfully verified Discourse call")
+          logger.info(
+            "Server successfully verified Discourse call - redirecting to #{discourseUrl}")
           [respPayload, respSig] = result
           @redirect("#{discourseUrl}/session/sso_login?sso=#{respPayload}&sig=#{respSig}")
       )
