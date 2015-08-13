@@ -79,14 +79,15 @@ Template.layout.helpers(
 )
 
 class Accountbutton
-  constructor: (icon, name) ->
+  constructor: (icon, name, url="#") ->
     @icon = icon
     @name = name
     @klass = "enabled"
+    @url = url
 
 Template.accountbar.helpers({
   buttons: ->
     return [
-      new Accountbutton('exit3', 'logout')
+      new Accountbutton('exit3', 'logout', '/logout')
     ]
 })

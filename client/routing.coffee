@@ -18,6 +18,12 @@ Router.route('/login', ->
 ,
   }
 )
+Router.route('/logout', ->
+  logger.debug('Logging out')
+  # Meteor.call('logOutOfDiscourse', () ->)
+  Meteor.logout()
+  @redirect('/')
+)
 Router.route('/', ->
   @render('explore')
 , {
@@ -50,24 +56,27 @@ Router.route("/discourse/sso", ->
   renderError = (error) =>
     @render("discourseSsoError", {data: {reason: error}})
 
+  logger.debug("Handling Discourse SSO request")
+
   q = @params.query
-  if S.isBlank(q.payload) or S.isBlank(q.sig)
+  if S.isBlank(q.sso) or S.isBlank(q.sig)
     renderError("Bad parameters from Discourse SSO request")
   else
-    logger.debug("Discourse SSO handler, received payload '#{q.payload} and sig '#{q.sig}'")
+    payload = decodeURIComponent(q.sso)
+    sig = decodeURIComponent(q.sig)
     discourseUrl = Meteor.settings.public.discourseUrl
     if !discourseUrl?
       logger.error("Discourse URL not defined in settings")
       renderError("Internal error")
     else
       logger.debug("Calling server to verify Discourse SSO parameters")
-      Meteor.call("verifyDiscourseSso", q.payload, q.sig, (error, result) =>
+      Meteor.call("verifyDiscourseSso", payload, sig, (error, result) =>
         if error?
           logger.error("Server failed to verify Discourse call: #{error.reason}")
           renderError(error.reason)
         else
           logger.info(
-            "Server successfully verified Discourse call - redirecting to #{discourseUrl}")
+            "Server successfully verified Discourse call - redirecting to '#{discourseUrl}'")
           [respPayload, respSig] = result
           window.location = "#{discourseUrl}/session/sso_login?sso=#{respPayload}&sig=#{respSig}"
       )
@@ -77,7 +86,8 @@ configureHotCodePush = (url) ->
   if url in ["/create", "/account/forgotpassword", "/login"]
     logger.debug("Disallowing hot code push for route '#{url}'")
     Session.set("hotCodePushAllowed", false)
-  else if url in ["/", "/about", "/account", "/discourse/sso",] or S.startsWith("/u/", url)
+  else if url in ["/", "/about", "/account", "/discourse/sso", "/logout"] or \
+      S.startsWith("/u/", url)
     if !Session.get("isEditingProject")
       logger.debug("Allowing hot code push for route '#{url}'")
       Session.set("hotCodePushAllowed", true)

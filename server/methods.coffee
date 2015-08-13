@@ -171,7 +171,7 @@ Meteor.methods({
     gotSig = CryptoJS.HmacSHA256(payload, secret).toString(CryptoJS.enc.Hex)
     logger.debug("Got sig #{gotSig}")
     if gotSig == sig
-      rawPayload = CryptoJS.enc.Base64.parse(payload).toString(CryptoJS.enc.Utf8)
+      rawPayload = new Buffer(payload, 'base64').toString()
       m = /nonce=(.+)/.exec(rawPayload)
       if !m?
         logger.warn("Payload on bad format", rawPayload)
@@ -180,11 +180,22 @@ Meteor.methods({
       rawRespPayload = "nonce=#{nonce}&email=#{user.emails[0].address}&" +
         "external_id=#{user.username}&username=#{user.username}&name=#{user.profile.name}"
       logger.debug("Responding with payload '#{rawRespPayload}'")
-      respPayload = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(rawRespPayload))
+      respPayload = new Buffer(rawRespPayload).toString('base64')
       respSig = CryptoJS.HmacSHA256(respPayload, secret).toString(CryptoJS.enc.Hex)
       [respPayload, respSig]
     else
       msg = "Payload signature isn't as expected"
       logger.warn(msg)
       throw new Meteor.Error("bad-signature", msg)
+  # logOutOfDiscourse: () ->
+  #   user = Meteor.user()
+  #   if !user?
+  #     return
+  #   username = user.username
+  #   if !S.isBlank(Meteor.settings.discourseApiKey) and !S.isBlank(Meteor.settings.discourseUser)
+  #     discourseLogoutUrl = "#{Meteor.settings.public.discourseUrl}/admin/users/#{username}/log_out" +
+  #       "?api_key=#{Meteor.settings.discourseApiKey}&api_username=#{Meteor.settings.discourseUser}"
+  #     HTTP.post(discourseLogoutUrl)
+  #   else
+  #     logger.debug("Not logging user out of Discourse since API key/user not defined")
 })
