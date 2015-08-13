@@ -159,4 +159,32 @@ Meteor.methods({
     dirPath = "u/#{user.username}/#{id}"
     logger.debug("Removing files from S3 bucket '#{s3Bucket}', directory '#{dirPath}'")
     removeFolder()
+  verifyDiscourseSso: (payload, sig) ->
+    logger.debug("Verifying Discourse SSO parameters")
+    user = Meteor.user()
+    if !user?
+      throw new Meteor.Error("unauthorized", "You must be logged in to perform this operation")
+    secret = Meteor.settings.SSO_SECRET
+    if !secret?
+      logger.error("SSO_SECRET not defined in settings")
+      throw new Meteor.Error("internalError", "Internal error")
+    gotSig = CryptoJS.HmacSHA256(payload, secret).toString(CryptoJS.enc.Hex)
+    logger.debug("Got sig #{gotSig}")
+    if gotSig == sig or true
+      rawPayload = CryptoJS.enc.Base64.parse(payload).toString(CryptoJS.enc.Utf8)
+      m = /nonce=(.+)/.exec(rawPayload)
+      if !m?
+        logger.warn("Payload on bad format", rawPayload)
+        throw new Meteor.Error("bad-payload", "Payload is on bad format")
+      nonce = m[1]
+      rawRespPayload = "nonce=#{nonce}&email=#{user.emails[0].address}&" +
+        "external_id=#{user.username}&username=#{user.username}&name=#{user.profile.name}"
+      logger.debug("Responding with payload '#{rawRespPayload}'")
+      respPayload = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(rawRespPayload))
+      respSig = CryptoJS.HmacSHA256(respPayload, secret).toString(CryptoJS.enc.Hex)
+      [respPayload, respSig]
+    else
+      msg = "Payload signature isn't as expected"
+      logger.warn(msg)
+      throw new Meteor.Error("bad-signature", msg)
 })

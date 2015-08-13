@@ -63,6 +63,7 @@ momentjs:moment@2.10.6
 mongo@1.1.0
 mquandalle:jade@0.4.3
 mquandalle:jade-compiler@0.4.3
+mrt:crypto-hmac-sha256-base64@0.0.1
 npm-bcrypt@0.7.8_2
 observe-sequence@1.0.6
 ordered-dict@1.0.3

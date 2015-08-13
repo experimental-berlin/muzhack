@@ -47,17 +47,33 @@ Router.route('/u/:owner/:project',
   controller: ProjectController
 )
 Router.route("/discourse/sso", ->
+  renderError = (error) =>
+    @render("discourseSsoError", {data: {reason: error}})
+
   q = @params.query
   logger.debug("Discourse SSO handler, received payload '#{q.payload} and sig '#{q.sig}'")
-, {
-  where: 'server'
-})
+  discourseUrl = Meteor.settings.public.discourseUrl
+  if !discourseUrl?
+    logger.error("Discourse URL not defined in settings")
+    renderError("Internal error")
+  else
+    logger.debug("Calling server to verify Discourse SSO parameters")
+    Meteor.call("verifyDiscourseSso", q.payload, q.sig, (error, result) =>
+      if error?
+        logger.error("Server failed to verify Discourse call: #{error.reason}")
+        renderError(error.reason)
+      else
+        logger.info("Server successfully verified Discourse call")
+        [respPayload, respSig] = result
+        @redirect("#{discourseUrl}/session/sso_login?sso=#{respPayload}&sig=#{respSig}")
+  )
+)
 
 configureHotCodePush = (url) ->
   if url in ["/create", "/account/forgotpassword", "/login"]
     logger.debug("Disallowing hot code push for route '#{url}'")
     Session.set("hotCodePushAllowed", false)
-  else if url in ["/", "/about", "/account",] or S.startsWith("/u/", url)
+  else if url in ["/", "/about", "/account", "/discourse/sso",] or S.startsWith("/u/", url)
     if !Session.get("isEditingProject")
       logger.debug("Allowing hot code push for route '#{url}'")
       Session.set("hotCodePushAllowed", true)
@@ -67,7 +83,7 @@ configureHotCodePush = (url) ->
 Router.onBeforeAction(->
   configureHotCodePush(@url)
 
-  if S.startsWith("/create", @url) and !Meteor.userId()?
+  if @url in ["/create", "/discourse/sso"] and !Meteor.userId()?
     logger.debug('User not logged in, rendering login page')
     @render('login')
   else if Session.get("isWaiting")
