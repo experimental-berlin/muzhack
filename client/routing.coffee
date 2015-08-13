@@ -51,22 +51,25 @@ Router.route("/discourse/sso", ->
     @render("discourseSsoError", {data: {reason: error}})
 
   q = @params.query
-  logger.debug("Discourse SSO handler, received payload '#{q.payload} and sig '#{q.sig}'")
-  discourseUrl = Meteor.settings.public.discourseUrl
-  if !discourseUrl?
-    logger.error("Discourse URL not defined in settings")
-    renderError("Internal error")
+  if S.isBlank(q.payload) or S.isBlank(q.sig)
+    renderError("Bad parameters from Discourse SSO request")
   else
-    logger.debug("Calling server to verify Discourse SSO parameters")
-    Meteor.call("verifyDiscourseSso", q.payload, q.sig, (error, result) =>
-      if error?
-        logger.error("Server failed to verify Discourse call: #{error.reason}")
-        renderError(error.reason)
-      else
-        logger.info("Server successfully verified Discourse call")
-        [respPayload, respSig] = result
-        @redirect("#{discourseUrl}/session/sso_login?sso=#{respPayload}&sig=#{respSig}")
-  )
+    logger.debug("Discourse SSO handler, received payload '#{q.payload} and sig '#{q.sig}'")
+    discourseUrl = Meteor.settings.public.discourseUrl
+    if !discourseUrl?
+      logger.error("Discourse URL not defined in settings")
+      renderError("Internal error")
+    else
+      logger.debug("Calling server to verify Discourse SSO parameters")
+      Meteor.call("verifyDiscourseSso", q.payload, q.sig, (error, result) =>
+        if error?
+          logger.error("Server failed to verify Discourse call: #{error.reason}")
+          renderError(error.reason)
+        else
+          logger.info("Server successfully verified Discourse call")
+          [respPayload, respSig] = result
+          @redirect("#{discourseUrl}/session/sso_login?sso=#{respPayload}&sig=#{respSig}")
+      )
 )
 
 configureHotCodePush = (url) ->

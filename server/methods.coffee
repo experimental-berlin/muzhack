@@ -170,7 +170,7 @@ Meteor.methods({
       throw new Meteor.Error("internalError", "Internal error")
     gotSig = CryptoJS.HmacSHA256(payload, secret).toString(CryptoJS.enc.Hex)
     logger.debug("Got sig #{gotSig}")
-    if gotSig == sig or true
+    if gotSig == sig
       rawPayload = CryptoJS.enc.Base64.parse(payload).toString(CryptoJS.enc.Utf8)
       m = /nonce=(.+)/.exec(rawPayload)
       if !m?
