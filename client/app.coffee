@@ -45,14 +45,21 @@ Template.registerHelper('appName', -> 'MuzHack')
 Template.registerHelper('isLoggedIn', -> Meteor.userId()?)
 
 class MenuElement
-  constructor: (@name, @url) ->
+  constructor: (@name, @url, @newTab=false) ->
 
   attrs: ->
     classes = ["menu-element"]
     if @isSelected()
       classes.push("pure-menu-selected")
-    class:
-      classes.join(" ")
+    {
+      class: classes.join(" ")
+    }
+
+  linkAttrs: ->
+    attrs = {}
+    if @newTab
+      attrs.target = "_blank"
+    attrs
 
   isSelected: ->
     if !Session.get("currentSection")?
@@ -63,8 +70,12 @@ class MenuElement
 
 Template.layout.helpers(
   menuElements: ->
-    [new MenuElement("Explore", "/"), new MenuElement("Create", "/create"),
-      new MenuElement("About", "/about")]
+    [
+      new MenuElement("Explore", "/"),
+      new MenuElement("Create", "/create")
+      new MenuElement("Forums", "http://forums.muzhack.com", newTab=true)
+      new MenuElement("About", "/about")
+    ]
 )
 
 class Accountbutton

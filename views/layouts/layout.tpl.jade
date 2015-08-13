@@ -5,7 +5,7 @@ header
     ul
       each menuElements
         li($dyn=attrs)
-          a(href=url) #{name}
+          a(href=url $dyn=linkAttrs) #{name}
     +accountbar
 article
   #content
