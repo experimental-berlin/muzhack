@@ -10,3 +10,6 @@
 [submodule "packages/aknudsen:iron-router-ga"]
 	path = packages/aknudsen:iron-router-ga
 	url = git@github.com:aknuds1/meteor-iron-router-ga.git
+[submodule "packages/aknudsen:ms-seo"]
+	path = packages/aknudsen:ms-seo
+	url = git@github.com:aknuds1/ms-seo.git

@@ -4,6 +4,7 @@ accounts-ui@1.1.5
 accounts-ui-unstyled@1.1.7
 aknudsen:dropzone@4.0.0
 aknudsen:iron-router-ga@0.6.1
+aknudsen:ms-seo@0.5.0
 aknudsen:ramda@0.14.0
 autoupdate@1.2.1
 base64@1.0.3
@@ -52,7 +53,6 @@ localstorage@1.0.3
 logging@1.0.7
 lufrai:spiderable2@0.9.1
 mandrill:ace@1.0.2
-manuelschoebel:ms-seo@0.4.1
 markdown@1.0.4
 meteor@1.1.6
 meteor-platform@1.2.2
