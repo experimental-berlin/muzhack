@@ -46,12 +46,18 @@ Router.route('/u/:owner/:project',
   name: "project"
   controller: ProjectController
 )
+Router.route("/discourse/sso", ->
+  q = @params.query
+  logger.debug("Discourse SSO handler, received payload '#{q.payload} and sig '#{q.sig}'")
+, {
+  where: 'server'
+})
 
 configureHotCodePush = (url) ->
   if url in ["/create", "/account/forgotpassword", "/login"]
     logger.debug("Disallowing hot code push for route '#{url}'")
     Session.set("hotCodePushAllowed", false)
-  else if url in ["/", "/about", "/account"] or S.startsWith("/u/", url)
+  else if url in ["/", "/about", "/account",] or S.startsWith("/u/", url)
     if !Session.get("isEditingProject")
       logger.debug("Allowing hot code push for route '#{url}'")
       Session.set("hotCodePushAllowed", true)
