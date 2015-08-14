@@ -28,7 +28,7 @@ createProjectElement = (project) ->
 Template.explore.onRendered(->
   logger.debug("Template explore has been rendered")
 
-  projects = Projects.find({}, {sort: [["created", "asc"]]})
+  projects = Projects.find({}, {sort: [["created", "desc"]]})
   @autorun(->
     logger.debug("Installing change observer")
     ignore = true
