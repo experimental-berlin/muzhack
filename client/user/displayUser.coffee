@@ -35,17 +35,20 @@ Template.user.events({
     modalService.showModal("createPlan", "Create Plan", {}, {
       ok: (inputValues) ->
         logger.debug("User OK-ed creating plan", inputValues)
+        Session.set("isWaiting", true)
         Trello.setKey(Meteor.settings.public.trelloKey)
         Trello.authorize({
           type: "popup"
           name: "MuzHack"
           scope: { read: true, "write": true }
           success: ->
+            Session.set("isWaiting", false)
             logger.info("Trello authorization succeeded")
             token = Trello.token()
             logger.debug("Creating Trello board:", inputValues)
           error: ->
             logger.warn("Trello authorization failed")
+            Session.set("isWaiting", false)
         })
       cancel: ->
         logger.debug("User canceled creating plan")
