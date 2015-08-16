@@ -9,3 +9,28 @@
 
   &>:first-child
     margin-top 0
+
+  // TODO: Consolidate with project
+  .tabs
+    color muted
+    border-bottom 1px solid muted
+
+    li
+      a
+        color muted
+
+    li.active
+      border-left 1px solid muted
+      border-right 1px solid muted
+      border-top 1px solid muted
+
+#user-name
+  ellipsis-overflow()
+
+  font-size 2em
+  font-weight bold
+
+#user-username
+  ellipsis-overflow()
+
+  font-size 1.3em

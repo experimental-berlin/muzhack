@@ -1,3 +1,32 @@
 #user-pad
-  #user-heading
-    h1#user-title TODO
+  .pure-g
+    .pure-u-1-4
+      #user-name #{profile.name}
+      #user-username.muted #{username}
+    .pure-u-3-4
+      ul.tabs(role="tablist")
+        each profileTabs
+          li(class="#{classes}")
+            a(role="tab" href="##{title.toLowerCase}")
+              if icon
+                span(class="icon-#{icon}") &nbsp;
+              = title
+      #tab-contents
+        if displayProjects
+          #projects
+            if hasProjects
+              ul
+                each projects
+                  .project
+                    p TODO
+            else
+              em No projects.
+        if displayPlanned
+          #planned-projects
+            if hasPlannedProjects
+              ul
+                each plannedProjects
+                  .planned-project
+                    p TODO
+            else
+              em No planned projects.
