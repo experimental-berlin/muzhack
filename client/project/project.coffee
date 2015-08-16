@@ -45,6 +45,7 @@ extendFile = (file) ->
     if project?
       if owner?
         project.ownerName = owner.profile.name
+        project.ownerUsername = owner.username
         logger.debug("Project owner's name: #{project.ownerName}")
       else
         logger.warn("Owner of project '#{@params.project}', '#{@params.owner}', is not in database")

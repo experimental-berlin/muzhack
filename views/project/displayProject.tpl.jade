@@ -5,7 +5,7 @@
   #project-heading
     h1#project-title
       = title
-    p#project-creation-date Added #{creationDateString} by #{userFullName}
+    p#project-creation-date Added #{creationDateString} by #[a(href="/u/#{username}") #{userFullName})
   #image-box
     #thumbnails
       each pictures

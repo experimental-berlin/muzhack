@@ -20,8 +20,8 @@ getActiveTab = () ->
 Template.displayProject.helpers(
   creationDateString: ->
     moment(@created).format("MMMM Do YYYY")
-  userFullName: ->
-    @ownerName
+  userFullName: -> @ownerName
+  username: -> @ownerUsername
   projectTabs: -> [
     new ProjectTab('Description', 'file-text')
     new ProjectTab('Instructions', 'book')
