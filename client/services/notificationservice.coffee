@@ -12,23 +12,18 @@ class @NotificationService
       {
         title: title,
         message: message,
-      }, [
-        {
-          event: 'yes',
-          callback: yesCallback,
-        },
-        {
-          event: 'no',
-          callback: noCallback,
-        },
-      ])
+      }, {
+        "yes": yesCallback
+        "no": noCallback
+      }
+    )
 
   # Show a Bootstrap modal based on a template that gets rendered on-the-fly
   _showModal: (templateName, data, callbacks) ->
     html = Blaze.toHTMLWithData(Template[templateName], data)
     $modal = $(html)
     $modal.modal({
-      callbacks: callbacks,
+      callbacks: R.map((([key, value]) -> {"event": key, callback: value}), R.toPairs(callbacks))
     })
     $(".modal-default").focus()
     # After the modal is hidden, remove the DOM node
