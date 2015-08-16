@@ -42,10 +42,19 @@ Template.user.events({
           name: "MuzHack"
           scope: { read: true, "write": true }
           success: ->
-            Session.set("isWaiting", false)
             logger.info("Trello authorization succeeded")
             token = Trello.token()
             logger.debug("Creating Trello board:", inputValues)
+            Meteor.call('createTrelloBoard', inputValues.name, inputValues.desc, inputValues.org,
+              token, (error) ->
+              Session.set("isWaiting", false)
+              if error?
+                logger.warn("Server failed to create Trello board:", error)
+                notificationService.warn("Error",
+                  "Server failed to create Trello board: #{error.message}")
+              else
+                logger.debug("Server was able to successfully create Trello board")
+            )
           error: ->
             logger.warn("Trello authorization failed")
             Session.set("isWaiting", false)

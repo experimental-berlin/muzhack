@@ -187,6 +187,10 @@ Meteor.methods({
       msg = "Payload signature isn't as expected"
       logger.warn(msg)
       throw new Meteor.Error("bad-signature", msg)
+  createTrelloBoard: (name, description, organization, token) ->
+    logger.debug(
+      "Creating Trello board '#{name}', in organization '#{organization}', description: " +
+      "'#{description}'")
   # logOutOfDiscourse: () ->
   #   user = Meteor.user()
   #   if !user?
