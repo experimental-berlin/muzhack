@@ -48,6 +48,36 @@ Router.route('/about', ->
 Router.route('/create', ->
   @render('create')
 )
+Router.route("/u/:user",
+  () -> @render("user")
+, {
+  waitOn: -> Meteor.subscribe("users")
+  data: ->
+    user = Meteor.users.findOne(username: @params.user)
+    user
+  onBeforeAction: ->
+    data = @data()
+    if data?
+      @next()
+    else
+      logger.debug("@data is not defined, rendering not found page")
+      @render('userNotFound', {
+        data: {username: @params.user},
+      })
+  onAfterAction: ->
+    data = @data()
+    if data?
+      logger.debug("Setting SEO properties")
+      SEO.set({
+        title: data.username
+        meta: {
+          description: "Profile page of user #{data.username} (#{data.name})"
+        }
+      })
+    else
+      logger.debug("@data is not defined, cannot set SEO properties")
+  }
+)
 Router.route('/u/:owner/:project',
   name: "project"
   controller: ProjectController
