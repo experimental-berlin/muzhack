@@ -5,13 +5,13 @@ logger = new Logger('UserController')
     data = @data()
     # TODO: Consolidate with ProjectController
     tabNameMatch = /^.+#([^#]+)$/.exec(@url)
-    isLoggedInUser = data.username == Meteor.user()?.username
     defaultTab = "projects"
-    tabNames = R.concat(["projects"], if isLoggedInUser then ["planned"] else [])
+    tabNames = ["projects", "planned"]
     tabName = if tabNameMatch? then tabNameMatch[1] else defaultTab
     if tabName not in tabNames
       tabName = defaultTab
     logger.debug("Current tab name: '#{tabName}'")
+    isLoggedInUser = data.username == Meteor.user()?.username
     logger.debug("Is logged in user: #{isLoggedInUser}")
     @state.set("activeTab", tabName)
     @state.set("isLoggedInUser", isLoggedInUser)

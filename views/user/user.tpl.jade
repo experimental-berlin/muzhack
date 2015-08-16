@@ -23,6 +23,9 @@
               em No projects.
         if displayPlanned
           #planned-projects
+            #plan-buttons.button-group
+              button#create-plan.pure-button Create
+              button#add-plan.pure-button Add
             if hasPlannedProjects
               ul
                 each plannedProjects
