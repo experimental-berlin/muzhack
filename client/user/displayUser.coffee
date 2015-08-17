@@ -23,7 +23,8 @@ Template.user.helpers({
     [new UserTab("Projects"), new UserTab("Planned"),]
   displayProjects: -> isActiveTab("projects")
   displayPlanned: -> isActiveTab("planned")
-  hasProjects: -> false
+  hasProjects: -> Projects.findOne({owner: @username})?
+  projects: -> Projects.find({owner: @username})
   hasPlannedProjects: -> TrelloBoards.findOne({username: @username})?
   plannedProjects: -> TrelloBoards.find({username: @username})
 })
@@ -54,7 +55,7 @@ Template.user.events({
                   notificationService.warn("Error",
                     "Server failed to create Trello board: #{error.reason}.")
                 else
-                  logger.debug("Server was able to successfully create Trello board", result)
+                  logger.debug("Server was able to successfully create Trello board")
             )
           error: ->
             logger.warn("Trello authorization failed")

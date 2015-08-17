@@ -189,7 +189,7 @@ Meteor.methods({
       throw new Meteor.Error("bad-signature", msg)
   createTrelloBoard: (name, description, organization, token) ->
     user = getUser(@)
-    params = R.pickBy(((value, key) ->
+    params = R.pickBy(((value) ->
       value?
     ), {
       name: name

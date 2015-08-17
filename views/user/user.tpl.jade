@@ -15,10 +15,10 @@
         if displayProjects
           #projects
             if hasProjects
-              ul
+              ul#user-projects
                 each projects
-                  .project
-                    p TODO
+                  li
+                    a.user-project(href="/u/#{owner}/#{projectId}") #{projectId}
             else
               em No projects.
         if displayPlanned
