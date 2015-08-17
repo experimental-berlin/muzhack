@@ -31,8 +31,7 @@
               ul#planned-projects
                 each plannedProjects
                   li
-                    span.icon-trello
-                    a.planned-project(href=url, target="_blank") #{name}
+                    a.planned-project(href=url, target="_blank") #[span.icon-trello] #{name}
             else
               em No planned projects.
             hr
