@@ -16,7 +16,8 @@ logger = new Logger('UserController')
     @state.set("activeTab", tabName)
     @state.set("isLoggedInUser", isLoggedInUser)
     @render("user")
-  waitOn: -> Meteor.subscribe("users")
+  waitOn: -> [Meteor.subscribe("users"), Meteor.subscribe("projects"),
+    Meteor.subscribe("trelloBoards"),]
   data: -> Meteor.users.findOne(username: @params.user)
   onBeforeAction: ->
     data = @data()

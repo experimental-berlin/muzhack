@@ -24,7 +24,8 @@ Template.user.helpers({
   displayProjects: -> isActiveTab("projects")
   displayPlanned: -> isActiveTab("planned")
   hasProjects: -> false
-  hasPlannedProjects: -> false
+  hasPlannedProjects: -> TrelloBoards.findOne({username: @username})?
+  plannedProjects: -> TrelloBoards.find({username: @username})
 })
 Template.user.events({
   'click .tabs > li': ->
@@ -46,14 +47,14 @@ Template.user.events({
             token = Trello.token()
             logger.debug("Creating Trello board:", inputValues)
             Meteor.call('createTrelloBoard', inputValues.name, inputValues.desc, inputValues.org,
-              token, (error) ->
-              Session.set("isWaiting", false)
-              if error?
-                logger.warn("Server failed to create Trello board:", error)
-                notificationService.warn("Error",
-                  "Server failed to create Trello board: #{error.message}")
-              else
-                logger.debug("Server was able to successfully create Trello board")
+              token, (error, result) ->
+                Session.set("isWaiting", false)
+                if error?
+                  logger.warn("Server failed to create Trello board:", error)
+                  notificationService.warn("Error",
+                    "Server failed to create Trello board: #{error.reason}.")
+                else
+                  logger.debug("Server was able to successfully create Trello board", result)
             )
           error: ->
             logger.warn("Trello authorization failed")

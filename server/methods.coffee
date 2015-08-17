@@ -188,9 +188,35 @@ Meteor.methods({
       logger.warn(msg)
       throw new Meteor.Error("bad-signature", msg)
   createTrelloBoard: (name, description, organization, token) ->
-    logger.debug(
-      "Creating Trello board '#{name}', in organization '#{organization}', description: " +
-      "'#{description}'")
+    user = getUser(@)
+    params = R.pickBy(((value, key) ->
+      value?
+    ), {
+      name: name
+      desc: description
+      idOrganization: organization
+      prefs_permissionLevel: "public"
+    })
+    logger.debug("Creating Trello board, params:", params)
+    appKey = Meteor.settings.public.trelloKey
+    try
+      result = HTTP.post("https://api.trello.com/1/boards?key=#{appKey}&token=#{token}", {
+        params: params
+      })
+    catch error
+      logger.warn("Failed to create Meteor board with the following parameters:", params)
+      logger.warn("Reason for error: '#{error.message}'")
+      throw new Meteor.Error("trello-create", "Failed to create Trello board '#{params.name}'")
+
+    logger.debug("Created Trello board successfully, inserting into database")
+    data = result.data
+    TrelloBoards.insert({
+      username: user.username
+      name: data.name
+      url: data.url
+      description: data.desc
+      organization: data.idOrganization
+    })
   # logOutOfDiscourse: () ->
   #   user = Meteor.user()
   #   if !user?
