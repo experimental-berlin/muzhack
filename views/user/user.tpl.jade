@@ -13,7 +13,7 @@
               = title
       #tab-contents
         if displayProjects
-          #projects
+          div
             if hasProjects
               ul#user-projects
                 each projects
@@ -22,7 +22,7 @@
             else
               em No projects.
         if displayPlanned
-          #planned-projects
+          div
             #plan-buttons.button-group
               button#create-plan.pure-button New
               button#add-plan.pure-button Existing
