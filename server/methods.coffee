@@ -217,6 +217,10 @@ Meteor.methods({
       description: data.desc
       organization: data.idOrganization
     })
+  removeTrelloBoard: (id) ->
+    if !id?
+      throw new Meteor.Error("argumentError", "id is undefined")
+    logger.debug("Removing board ID #{id}")
   # logOutOfDiscourse: () ->
   #   user = Meteor.user()
   #   if !user?

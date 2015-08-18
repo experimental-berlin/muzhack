@@ -66,4 +66,33 @@ Template.user.events({
     })
   "click #add-plan": ->
     logger.debug("Button for adding project plan clicked")
+  "click .remove-project-plan": ->
+    logger.debug("Removing project plan", @)
+    Session.set("isWaiting", true)
+    invokeTrelloApi("removeTrelloBoard", (error, result) ->
+      if error?
+        logger.warn("Server failed to remove Trello board", error)
+        notificationService.warn("Error", "Server failed to remove Trello board: #{error.reason}.")
+      else
+        logger.debug("Server was able to successfully remove Trello board")
+    , @boardId)
 })
+
+invokeTrelloApi = (methodName, callback, args...) ->
+  Session.set("isWaiting", true)
+  Trello.setKey(Meteor.settings.public.trelloKey)
+  Trello.authorize({
+    type: "popup"
+    name: "MuzHack"
+    scope: { read: true, "write": true }
+    success: ->
+      logger.info("Trello authorization succeeded")
+      token = Trello.token()
+      Meteor.call(methodName, args..., (error, result) ->
+        Session.set("isWaiting", false)
+        callback(error, result)
+      )
+    error: ->
+      logger.warn("Trello authorization failed")
+      Session.set("isWaiting", false)
+  })
