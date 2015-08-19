@@ -209,7 +209,7 @@ Meteor.methods({
       throw new Meteor.Error("trello-create", "Failed to create Trello board '#{params.name}'")
 
     data = result.data
-    logger.debug("Created Trello board successfully (ID: #{data.id}), inserting into database", data)
+    logger.debug("Created Trello board successfully (ID: #{data.id}), inserting into database")
     TrelloBoards.insert({
       id: data.id,
       username: user.username
