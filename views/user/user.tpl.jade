@@ -32,6 +32,8 @@
                 each plannedProjects
                   li
                     a.planned-project(href=url, target="_blank") #[span.icon-trello] #{name}
+                    a.edit-project-plan(href="#")
+                      span.icon-pencil3
                     a.remove-project-plan(href="#")
                       span.icon-bin
             else

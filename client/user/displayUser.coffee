@@ -50,16 +50,19 @@ Template.user.events({
     })
   "click #add-plan": ->
     logger.debug("Button for adding project plan clicked")
+  "click .edit-project-plan": ->
+    logger.debug("Entering edit mode for project plan '#{@name}' (ID #{@id})")
   "click .remove-project-plan": ->
     notificationService.question("Remove Project Plan?",
       "Are you sure you wish to remove the project plan #{@name}?",
-      ->
-        logger.debug("Removing project plan '#{@name}'")
+      =>
+        logger.debug("Removing project plan '#{@name}' (ID #{@id})")
         Session.set("isWaiting", true)
         invokeTrelloApi("removeTrelloBoard", (error, result) ->
           if error?
             logger.warn("Server failed to remove Trello board", error)
-            notificationService.warn("Error", "Server failed to remove Trello board: #{error.reason}.")
+            notificationService.warn("Error",
+              "Server failed to remove Trello board: #{error.reason}.")
           else
             logger.debug("Server was able to successfully remove Trello board")
         , @id)
