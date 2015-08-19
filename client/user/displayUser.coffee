@@ -37,30 +37,14 @@ Template.user.events({
     modalService.showModal("createPlan", "Create Plan", {}, {
       ok: (inputValues) ->
         logger.debug("User OK-ed creating plan", inputValues)
-        Session.set("isWaiting", true)
-        Trello.setKey(Meteor.settings.public.trelloKey)
-        Trello.authorize({
-          type: "popup"
-          name: "MuzHack"
-          scope: { read: true, "write": true }
-          success: ->
-            logger.info("Trello authorization succeeded")
-            token = Trello.token()
-            logger.debug("Creating Trello board:", inputValues)
-            Meteor.call('createTrelloBoard', inputValues.name, inputValues.desc, inputValues.org,
-              token, (error, result) ->
-                Session.set("isWaiting", false)
-                if error?
-                  logger.warn("Server failed to create Trello board:", error)
-                  notificationService.warn("Error",
-                    "Server failed to create Trello board: #{error.reason}.")
-                else
-                  logger.debug("Server was able to successfully create Trello board")
-            )
-          error: ->
-            logger.warn("Trello authorization failed")
-            Session.set("isWaiting", false)
-        })
+        invokeTrelloApi("createTrelloBoard", (error, result) ->
+          if error?
+            logger.warn("Server failed to create Trello board:", error)
+            notificationService.warn("Error",
+              "Server failed to create Trello board: #{error.reason}.")
+          else
+            logger.debug("Server was able to successfully create Trello board")
+        , inputValues.name, inputValues.desc)
       cancel: ->
         logger.debug("User canceled creating plan")
     })
@@ -75,7 +59,7 @@ Template.user.events({
         notificationService.warn("Error", "Server failed to remove Trello board: #{error.reason}.")
       else
         logger.debug("Server was able to successfully remove Trello board")
-    , @boardId)
+    , @id)
 })
 
 invokeTrelloApi = (methodName, callback, args...) ->
@@ -88,7 +72,7 @@ invokeTrelloApi = (methodName, callback, args...) ->
     success: ->
       logger.info("Trello authorization succeeded")
       token = Trello.token()
-      Meteor.call(methodName, args..., (error, result) ->
+      Meteor.call(methodName, token, args..., (error, result) ->
         Session.set("isWaiting", false)
         callback(error, result)
       )

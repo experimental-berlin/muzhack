@@ -187,7 +187,7 @@ Meteor.methods({
       msg = "Payload signature isn't as expected"
       logger.warn(msg)
       throw new Meteor.Error("bad-signature", msg)
-  createTrelloBoard: (name, description, organization, token) ->
+  createTrelloBoard: (token, name, description, organization) ->
     user = getUser(@)
     params = R.pickBy(((value) ->
       value?
@@ -204,23 +204,43 @@ Meteor.methods({
         params: params
       })
     catch error
-      logger.warn("Failed to create Meteor board with the following parameters:", params)
+      logger.warn("Failed to create Trello board with the following parameters:", params)
       logger.warn("Reason for error: '#{error.message}'")
       throw new Meteor.Error("trello-create", "Failed to create Trello board '#{params.name}'")
 
-    logger.debug("Created Trello board successfully, inserting into database")
     data = result.data
+    logger.debug("Created Trello board successfully (ID: #{data.id}), inserting into database", data)
     TrelloBoards.insert({
+      id: data.id,
       username: user.username
       name: data.name
       url: data.url
       description: data.desc
       organization: data.idOrganization
     })
-  removeTrelloBoard: (id) ->
+  removeTrelloBoard: (token, id) ->
     if !id?
+      logger.warn("Client didn't specify ID")
       throw new Meteor.Error("argumentError", "id is undefined")
-    logger.debug("Removing board ID #{id}")
+    if !token?
+      logger.warn("Client didn't specify token")
+      throw new Meteor.Error("argumentError", "token is undefined")
+
+    logger.debug("Removing Trello board ID #{id}")
+
+    user = getUser(@)
+    appKey = Meteor.settings.public.trelloKey
+    try
+      result = HTTP.put("https://api.trello.com/1/boards/#{id}/closed?key=#{appKey}&token=#{token}",
+        {params: {value: true}}
+      )
+    catch error
+      logger.warn("Failed to remove Trello board with ID #{id}:")
+      logger.warn("Reason for error: '#{error.message}'")
+      throw new Meteor.Error("trello-remove", "Failed to remove Trello board with ID #{id}")
+
+    logger.debug("Removed Trello board successfully (ID: #{id}), removing from database")
+    TrelloBoards.remove({ id: id })
   # logOutOfDiscourse: () ->
   #   user = Meteor.user()
   #   if !user?
