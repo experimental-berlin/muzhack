@@ -19,6 +19,7 @@ class @ModalService
       elem.focus()
     for elem in document.getElementsByClassName("modal-input")
       if elem.name?
+        inputValues[elem.name] = elem.value
         elem.addEventListener("change", () ->
           logger.debug("Registering value '#{@value}' for input '#{@name}'")
           inputValues[@name] = @value

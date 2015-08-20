@@ -52,6 +52,7 @@ Template.user.events({
     logger.debug("Button for adding existing project plan clicked")
   "click .edit-project-plan": ->
     logger.debug("Entering edit mode for project plan '#{@name}' (ID #{@id})")
+    id = @id
     modalService.showModal("editPlan", "Edit Project Plan", @, {
       ok: (inputValues) ->
         logger.debug("User OK-ed project plan edit", inputValues)
@@ -62,7 +63,7 @@ Template.user.events({
               "Server failed to edit Trello board: #{error.reason}.")
           else
             logger.debug("Server was able to successfully edit Trello board")
-        , @id, inputValues.name, inputValues.desc, inputValues.organization)
+        , id, inputValues.name, inputValues.desc, inputValues.organization)
       cancel: ->
         logger.debug("User canceled creating plan")
     })
@@ -96,6 +97,7 @@ invokeTrelloApi = (methodName, callback, args...) ->
     success: ->
       logger.info("Trello authorization succeeded")
       token = Trello.token()
+      logger.debug("Calling server method '#{methodName}' with args:", args)
       Meteor.call(methodName, token, args..., (error, result) ->
         Session.set("isWaiting", false)
         callback(error, result)

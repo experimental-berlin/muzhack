@@ -240,7 +240,7 @@ Meteor.methods({
       logger.warn("Reason for error: '#{error.message}'")
       throw new Meteor.Error("trelloEdit", "Failed to edit Trello board with ID #{id}")
 
-    logger.debug("Edit Trello board successfully (ID: #{id}), updating database")
+    logger.debug("Edit Trello board successfully (ID: #{id}), updating database, params:", params)
     TrelloBoards.upsert({id: id}, {$set: params})
   removeTrelloBoard: (token, id) ->
     if !id?
