@@ -218,6 +218,30 @@ Meteor.methods({
       description: data.desc
       organization: data.idOrganization
     })
+  editTrelloBoard: (token, id, name, description, organization) ->
+    user = getUser(@)
+    board = TrelloBoards.findOne({id: id})
+    if board? and board.username != user.username
+      throw new Meteor.Error("unauthorized", "You need to be the board owner")
+
+    params = {
+      name: name || ""
+      desc: description || ""
+      idOrganization: organization || ""
+    }
+    logger.debug("Editing Trello board with ID #{id}, params:", params)
+    appKey = Meteor.settings.public.trelloKey
+    try
+      HTTP.put("https://api.trello.com/1/boards/#{id}?key=#{appKey}&token=#{token}", {
+        params: params
+      })
+    catch error
+      logger.warn("Failed to edit Trello board with ID #{id}")
+      logger.warn("Reason for error: '#{error.message}'")
+      throw new Meteor.Error("trelloEdit", "Failed to edit Trello board with ID #{id}")
+
+    logger.debug("Edit Trello board successfully (ID: #{id}), updating database")
+    TrelloBoards.upsert({id: id}, {$set: params})
   removeTrelloBoard: (token, id) ->
     if !id?
       logger.warn("Client didn't specify ID")
@@ -226,9 +250,13 @@ Meteor.methods({
       logger.warn("Client didn't specify token")
       throw new Meteor.Error("argumentError", "token is undefined")
 
-    logger.debug("Removing Trello board ID #{id}")
+    logger.debug("Asked to remove Trello board ID #{id}")
 
     user = getUser(@)
+    board = TrelloBoards.findOne({id: id})
+    if board? and board.username != user.username
+      throw new Meteor.Error("unauthorized", "You need to be the board owner")
+
     appKey = Meteor.settings.public.trelloKey
     try
       result = HTTP.put("https://api.trello.com/1/boards/#{id}/closed?key=#{appKey}&token=#{token}",

@@ -34,9 +34,9 @@ Template.user.events({
     logger.debug("Set activeTab: #{@name}")
   "click #create-plan": ->
     logger.debug("Button for creating project plan clicked")
-    modalService.showModal("createPlan", "Create Plan", {}, {
+    modalService.showModal("createPlan", "Create Project Plan", {}, {
       ok: (inputValues) ->
-        logger.debug("User OK-ed creating plan", inputValues)
+        logger.debug("User OK-ed creating project plan", inputValues)
         invokeTrelloApi("createTrelloBoard", (error, result) ->
           if error?
             logger.warn("Server failed to create Trello board:", error)
@@ -44,14 +44,28 @@ Template.user.events({
               "Server failed to create Trello board: #{error.reason}.")
           else
             logger.debug("Server was able to successfully create Trello board")
-        , inputValues.name, inputValues.desc)
+        , inputValues.name, inputValues.desc, inputValues.organization)
       cancel: ->
         logger.debug("User canceled creating plan")
     })
   "click #add-plan": ->
-    logger.debug("Button for adding project plan clicked")
+    logger.debug("Button for adding existing project plan clicked")
   "click .edit-project-plan": ->
     logger.debug("Entering edit mode for project plan '#{@name}' (ID #{@id})")
+    modalService.showModal("editPlan", "Edit Project Plan", @, {
+      ok: (inputValues) ->
+        logger.debug("User OK-ed project plan edit", inputValues)
+        invokeTrelloApi("editTrelloBoard", (error, result) ->
+          if error?
+            logger.warn("Server failed to edit Trello board:", error)
+            notificationService.warn("Error",
+              "Server failed to edit Trello board: #{error.reason}.")
+          else
+            logger.debug("Server was able to successfully edit Trello board")
+        , @id, inputValues.name, inputValues.desc, inputValues.organization)
+      cancel: ->
+        logger.debug("User canceled creating plan")
+    })
   "click .remove-project-plan": ->
     notificationService.question("Remove Project Plan?",
       "Are you sure you wish to remove the project plan #{@name}?",
