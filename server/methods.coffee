@@ -219,7 +219,7 @@ Meteor.methods({
 
     params = {
       name: name || ""
-      description: description || ""
+      desc: description || ""
       idOrganization: organization || ""
     }
     logger.debug("Editing Trello board with ID #{id}, params:", params)
@@ -234,7 +234,11 @@ Meteor.methods({
       throw new Meteor.Error("trelloEdit", "Failed to edit Trello board with ID #{id}")
 
     logger.debug("Edit Trello board successfully (ID: #{id}), updating database, params:", params)
-    TrelloBoards.upsert({id: id}, {$set: params})
+    TrelloBoards.upsert({id: id}, {$set: {
+      name: params.name
+      description: params.desc
+      idOrganization: params.idOrganization
+    }})
   removeTrelloBoard: (token, id) ->
     verifyArg(id, 'id')
     verifyArg(token, 'token')
