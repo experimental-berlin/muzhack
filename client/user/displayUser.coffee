@@ -25,8 +25,8 @@ Template.user.helpers({
   displayPlanned: -> isActiveTab("planned")
   hasProjects: -> Projects.findOne({owner: @username})?
   projects: -> Projects.find({owner: @username})
-  hasPlannedProjects: -> TrelloBoards.findOne({username: @username})?
-  plannedProjects: -> TrelloBoards.find({username: @username})
+  hasProjectPlans: -> TrelloBoards.findOne({username: @username})?
+  projectPlans: -> TrelloBoards.find({username: @username})
 })
 Template.user.events({
   'click .tabs > li': ->
@@ -44,12 +44,40 @@ Template.user.events({
               "Server failed to create Trello board: #{error.reason}.")
           else
             logger.debug("Server was able to successfully create Trello board")
-        , inputValues.name, inputValues.desc, inputValues.organization)
+        , inputValues.name, inputValues.description, inputValues.organization)
       cancel: ->
         logger.debug("User canceled creating plan")
     })
-  "click #add-plan": ->
+  "click #add-existing-plan": ->
     logger.debug("Button for adding existing project plan clicked")
+    logger.debug("Getting list of existing Trello boards")
+    username = @username
+    invokeTrelloApi("getExistingTrelloBoards", (error, result) ->
+      if error?
+        logger.warn("Server failed to get existing Trello boards", error)
+        notificationService.warn("Error",
+          "Server failed to fetch list of Trello boards: #{error.reason}.")
+      else
+        allBoardIds = R.map(((board) -> board.id), TrelloBoards.find({username: username}))
+        boards = R.filter(((board) -> board.id not in allBoardIds), result)
+        logger.debug("Server was able to successfully get existing Trello boards:", boards)
+        modalService.showModal("addExistingPlan", "Add Existing Project Plan", {
+          existingBoards: boards
+        }, {
+          ok: (inputValues) ->
+            logger.debug("User OK-ed adding project plan", inputValues)
+            invokeTrelloApi("addExistingTrelloBoard", (error, result) ->
+              if error?
+                logger.warn("Server failed to add existing Trello board:", error)
+                notificationService.warn("Error",
+                  "Server failed to add existing Trello board: #{error.reason}.")
+              else
+                logger.debug("Server was able to successfully add existing Trello board")
+            , inputValues.boardId)
+          cancel: ->
+            logger.debug("User canceled adding existing plan")
+        })
+    )
   "click .edit-project-plan": ->
     logger.debug("Entering edit mode for project plan '#{@name}' (ID #{@id})")
     id = @id
@@ -63,7 +91,7 @@ Template.user.events({
               "Server failed to edit Trello board: #{error.reason}.")
           else
             logger.debug("Server was able to successfully edit Trello board")
-        , id, inputValues.name, inputValues.desc, inputValues.organization)
+        , id, inputValues.name, inputValues.description, inputValues.organization)
       cancel: ->
         logger.debug("User canceled creating plan")
     })
@@ -84,7 +112,6 @@ Template.user.events({
     , ->
       logger.debug("User declined removing project plan")
     )
-
 })
 
 invokeTrelloApi = (methodName, callback, args...) ->

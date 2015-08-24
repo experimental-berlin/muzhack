@@ -25,11 +25,11 @@
           div
             #plan-buttons.button-group
               button#create-plan.pure-button New
-              button#add-plan.pure-button Existing
+              button#add-existing-plan.pure-button Add Existing
             hr
-            if hasPlannedProjects
+            if hasProjectPlans
               ul#planned-projects
-                each plannedProjects
+                each projectPlans
                   li
                     a.planned-project(href=url, target="_blank") #[span.icon-trello] #{name}
                     a.edit-project-plan(href="#")

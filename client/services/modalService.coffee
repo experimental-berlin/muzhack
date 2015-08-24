@@ -8,6 +8,13 @@ class @ModalService
     invokeCallback = (callback) ->
       callback(inputValues)
 
+    listenForInputChange = (elem) ->
+      elem.addEventListener("change", () ->
+        logger.debug("Registering value '#{@value}' for input '#{@name}'")
+        inputValues[elem.name] = @value
+        inputValues[@name] = @value
+      , false)
+
     html = Blaze.toHTMLWithData(Template[templateName], R.merge({title: title}, data))
     $modal = $(html)
     $modal.modal({
@@ -20,10 +27,10 @@ class @ModalService
     for elem in document.getElementsByClassName("modal-input")
       if elem.name?
         inputValues[elem.name] = elem.value
-        elem.addEventListener("change", () ->
-          logger.debug("Registering value '#{@value}' for input '#{@name}'")
-          inputValues[@name] = @value
-        , false)
+        listenForInputChange(elem)
+    for elem in document.getElementsByClassName("modal-select")
+      if elem.name?
+        listenForInputChange(elem)
     # After the modal is hidden, remove the DOM node
     $modal.on('hide.bs.modal', ->
       logger.debug("Modal is hidden, removing DOM node")

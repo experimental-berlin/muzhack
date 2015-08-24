@@ -210,14 +210,7 @@ Meteor.methods({
 
     data = result.data
     logger.debug("Created Trello board successfully (ID: #{data.id}), inserting into database")
-    TrelloBoards.insert({
-      id: data.id,
-      username: user.username
-      name: data.name
-      url: data.url
-      description: data.desc
-      organization: data.idOrganization
-    })
+    insertTrelloBoard(data, user)
   editTrelloBoard: (token, id, name, description, organization) ->
     user = getUser(@)
     board = TrelloBoards.findOne({id: id})
@@ -226,7 +219,7 @@ Meteor.methods({
 
     params = {
       name: name || ""
-      desc: description || ""
+      description: description || ""
       idOrganization: organization || ""
     }
     logger.debug("Editing Trello board with ID #{id}, params:", params)
@@ -243,13 +236,8 @@ Meteor.methods({
     logger.debug("Edit Trello board successfully (ID: #{id}), updating database, params:", params)
     TrelloBoards.upsert({id: id}, {$set: params})
   removeTrelloBoard: (token, id) ->
-    if !id?
-      logger.warn("Client didn't specify ID")
-      throw new Meteor.Error("argumentError", "id is undefined")
-    if !token?
-      logger.warn("Client didn't specify token")
-      throw new Meteor.Error("argumentError", "token is undefined")
-
+    verifyArg(id, 'id')
+    verifyArg(token, 'token')
     logger.debug("Asked to remove Trello board ID #{id}")
 
     user = getUser(@)
@@ -269,6 +257,40 @@ Meteor.methods({
 
     logger.debug("Removed Trello board successfully (ID: #{id}), removing from database")
     TrelloBoards.remove({ id: id })
+  getExistingTrelloBoards: (token) ->
+    verifyArg(token, 'token')
+    user = getUser(@)
+    appKey = Meteor.settings.public.trelloKey
+    try
+      result = HTTP.get(
+        "https://api.trello.com/1/members/me/boards?filter=open&fields=name,id&" +
+          "key=#{appKey}&token=#{token}")
+    catch error
+      logger.warn("Failed to get Trello boards for user '#{user.username}'")
+      logger.warn("Reason for error: '#{error.message}'")
+      throw new Meteor.Error("trelloGetBoards", "Failed to get user's boards")
+    logger.debug("Result:", result.data)
+    R.sortBy(((board) -> board.name), result.data)
+  addExistingTrelloBoard: (token, id) ->
+    verifyArg(id, 'id')
+    verifyArg(token, 'token')
+    logger.debug("Asked to add existing Trello board with ID #{id}")
+
+    user = getUser(@)
+    board = TrelloBoards.findOne({id: id, username: user.username})
+    if board?
+      logger.debug("Board is already registered for user")
+      return
+
+    appKey = Meteor.settings.public.trelloKey
+    try
+      result = HTTP.get("https://api.trello.com/1/boards/#{id}?key=#{appKey}&token=#{token}")
+    catch error
+      logger.warn("Failed to get Trello board with ID #{id}:")
+      logger.warn("Reason for error: '#{error.message}'")
+      throw new Meteor.Error("trelloAddExistingBoard", "Failed to get Trello board with ID #{id}")
+
+    insertTrelloBoard(result.data, user)
   # logOutOfDiscourse: () ->
   #   user = Meteor.user()
   #   if !user?
@@ -281,3 +303,18 @@ Meteor.methods({
   #   else
   #     logger.debug("Not logging user out of Discourse since API key/user not defined")
 })
+
+insertTrelloBoard = (data, user) ->
+  TrelloBoards.upsert({id: data.id}, {$set: {
+    id: data.id
+    username: user.username
+    name: data.name
+    url: data.url
+    description: data.desc
+    organization: data.idOrganization
+  }})
+
+verifyArg = (arg, argName) ->
+  if !arg?
+    logger.warn("Client didn't specify #{argName}")
+    throw new Meteor.Error("argumentError", "#{argName} is undefined")
