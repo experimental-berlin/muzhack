@@ -20,9 +20,9 @@ class UserTab
 Template.user.helpers({
   profileTabs: ->
     logger.debug("Getting profile tabs")
-    [new UserTab("Projects"), new UserTab("Planned"),]
+    [new UserTab("Projects"), new UserTab("Plans"),]
   displayProjects: -> isActiveTab("projects")
-  displayPlanned: -> isActiveTab("planned")
+  displayPlans: -> isActiveTab("plans")
   hasProjects: -> Projects.findOne({owner: @username})?
   projects: -> Projects.find({owner: @username})
   hasProjectPlans: -> TrelloBoards.findOne({username: @username})?

@@ -21,7 +21,7 @@
                     a.user-project(href="/u/#{owner}/#{projectId}") #{projectId}
             else
               em No projects.
-        if displayPlanned
+        if displayPlans
           div
             #plan-buttons.button-group
               button#create-plan.pure-button New
@@ -37,4 +37,4 @@
                     a.remove-project-plan(href="#")
                       span.icon-bin
             else
-              em No planned projects.
+              em No project plans.

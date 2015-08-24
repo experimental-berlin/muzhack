@@ -6,7 +6,7 @@ logger = new Logger('UserController')
     # TODO: Consolidate with ProjectController
     tabNameMatch = /^.+#([^#]+)$/.exec(@url)
     defaultTab = "projects"
-    tabNames = ["projects", "planned"]
+    tabNames = ["projects", "plans"]
     tabName = if tabNameMatch? then tabNameMatch[1] else defaultTab
     if tabName not in tabNames
       tabName = defaultTab
