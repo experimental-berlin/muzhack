@@ -80,7 +80,11 @@ Template.user.events({
             , inputValues.boardId)
           cancel: ->
             logger.debug("User canceled adding existing plan")
-        })
+        }, () ->
+          select = document.getElementById("add-existing-board-select")
+          value = select.options[select.selectedIndex].value
+          !S.isBlank(value)
+        )
     )
   "click .edit-project-plan": ->
     logger.debug("Entering edit mode for project plan '#{@name}' (ID #{@id})")

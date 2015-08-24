@@ -2,8 +2,20 @@ logger = new Logger("ModalService")
 
 class @ModalService
   # Show a Bootstrap modal based on a template that gets rendered on-the-fly
-  showModal: (templateName, title, data, callbacks) ->
+  showModal: (templateName, title, data, callbacks, checkValidCallback=null) ->
     inputValues = {}
+
+    checkValid = () ->
+      if !checkValidCallback?
+        return
+
+      okBtn = document.getElementsByClassName("modal-ok")[0]
+      if checkValidCallback()
+        logger.debug("Modal is confirmed to be in valid state")
+        okBtn.disabled = false
+      else
+        logger.debug("Modal is determined to be in invalid state")
+        okBtn.disabled = true
 
     invokeCallback = (callback) ->
       callback(inputValues)
@@ -13,6 +25,8 @@ class @ModalService
         logger.debug("Registering value '#{@value}' for input '#{@name}'")
         inputValues[elem.name] = @value
         inputValues[@name] = @value
+
+        checkValid()
       , false)
 
     html = Blaze.toHTMLWithData(Template[templateName], R.merge({title: title}, data))
@@ -37,4 +51,5 @@ class @ModalService
       $(this).remove()
     )
     logger.debug("Modal shown")
+    checkValid()
     $modal
