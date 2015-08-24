@@ -15,10 +15,21 @@
         if displayProjects
           div
             if hasProjects
-              ul#user-projects
-                each projects
-                  li
-                    a.user-project(href="/u/#{owner}/#{projectId}") #{projectId}
+              table#user-projects
+                thead
+                  tr
+                    th ID
+                    th Name
+                    th Created
+                tbody
+                  each projects
+                    tr
+                      td
+                        a.user-project(href="/u/#{owner}/#{projectId}") #{projectId}
+                      td
+                        a.user-project(href="/u/#{owner}/#{projectId}") #{title}
+                      td
+                        a.user-project(href="/u/#{owner}/#{projectId}") #{createdStr}
             else
               em No projects.
         if displayPlans

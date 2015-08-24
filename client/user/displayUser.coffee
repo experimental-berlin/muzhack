@@ -24,7 +24,8 @@ Template.user.helpers({
   displayProjects: -> isActiveTab("projects")
   displayPlans: -> isActiveTab("plans")
   hasProjects: -> Projects.findOne({owner: @username})?
-  projects: -> Projects.find({owner: @username})
+  projects: -> R.map(((project) -> R.merge(project, {createdStr: dateService.displayDate(
+    project.created)})), Projects.find({owner: @username}))
   hasProjectPlans: -> TrelloBoards.findOne({username: @username})?
   projectPlans: -> TrelloBoards.find({username: @username})
 })

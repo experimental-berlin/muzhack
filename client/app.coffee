@@ -16,6 +16,7 @@ Meteor.startup(->
   @notificationService = new NotificationService()
   @modalService = new ModalService()
   @accountService = new AccountService()
+  @dateService = new DateService()
 
   SEO.config({
     title: 'MuzHack'
