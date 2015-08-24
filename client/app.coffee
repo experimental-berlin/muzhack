@@ -90,8 +90,11 @@ class Accountbutton
 Template.accountbar.helpers({
   buttons: ->
     user = Meteor.user()
-    return [
-      new Accountbutton('user', 'account', "/u/#{user.username}")
-      new Accountbutton('exit3', 'logout', '/logout')
-    ]
+    if user?
+      [
+        new Accountbutton('user', 'account', "/u/#{user.username}")
+        new Accountbutton('exit3', 'logout', '/logout')
+      ]
+    else
+      []
 })
