@@ -28,6 +28,9 @@ Template.user.helpers({
     project.created)})), Projects.find({owner: @username}))
   hasProjectPlans: -> TrelloBoards.findOne({username: @username})?
   projectPlans: -> TrelloBoards.find({username: @username})
+  isLoggedInUser: ->
+    user = Meteor.user()
+    user?.username == @username
 })
 Template.user.events({
   'click .tabs > li': ->
@@ -125,6 +128,8 @@ invokeTrelloApi = (methodName, callback, args...) ->
     success: ->
       logger.info("Trello authorization succeeded")
       token = Trello.token()
+      if !token?
+        throw new Error("Didn't get authorization token from Trello")
       logger.debug("Calling server method '#{methodName}' with args:", args)
       Meteor.call(methodName, token, args..., (error, result) ->
         Session.set("isWaiting", false)

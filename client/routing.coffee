@@ -7,6 +7,9 @@ Router.configure(
 )
 Router.route('/login', ->
   logger.debug("Handling login route")
+  # Make sure we don't hold on to previous user's token
+  logger.debug("Logging out of Trello")
+  Trello.deauthorize()
   @render('login')
 , {
   onBeforeAction: ->

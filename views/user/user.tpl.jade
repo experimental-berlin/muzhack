@@ -34,18 +34,20 @@
               em No projects.
         if displayPlans
           div
-            #plan-buttons.button-group
-              button#create-plan.pure-button New
-              button#add-existing-plan.pure-button Add Existing
-            hr
+            if isLoggedInUser
+              #plan-buttons.button-group
+                button#create-plan.pure-button New
+                button#add-existing-plan.pure-button Add Existing
+              hr
             if hasProjectPlans
               ul#planned-projects
                 each projectPlans
                   li
                     a.planned-project(href=url, target="_blank") #[span.icon-trello] #{name}
-                    a.edit-project-plan(href="#")
-                      span.icon-pencil3
-                    a.remove-project-plan(href="#")
-                      span.icon-bin
+                    if isLoggedInUser
+                      a.edit-project-plan(href="#")
+                        span.icon-pencil3
+                      a.remove-project-plan(href="#")
+                        span.icon-bin
             else
               em No project plans.
