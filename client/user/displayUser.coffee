@@ -129,9 +129,8 @@ invokeTrelloApi = (methodName, callback, args...) ->
     type: "popup"
     name: "MuzHack"
     scope: { read: true, "write": true }
-    success: ->
+    success: (token) ->
       logger.info("Trello authorization succeeded")
-      token = Trello.token()
       if !token?
         throw new Error("Didn't get authorization token from Trello")
       logger.debug("Calling server method '#{methodName}' with args:", args)
