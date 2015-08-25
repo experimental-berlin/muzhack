@@ -140,5 +140,6 @@ invokeTrelloApi = (methodName, callback, args...) ->
       )
     error: ->
       logger.warn("Trello authorization failed")
+      notificationService.warn("Error", "Trello authorization failed")
       Session.set("isWaiting", false)
   })
