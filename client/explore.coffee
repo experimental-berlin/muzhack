@@ -1,8 +1,24 @@
 logger = new Logger("explore")
 
+searchTimeoutHandle = null
+
 Template.explore.helpers({
   isEmpty: ->
     !Projects.findOne()?
+  searchQuery: ->
+    Router.current().params.query.query
+})
+Template.explore.events({
+  "input #explore-search-input": (event) ->
+    if searchTimeoutHandle?
+      clearTimeout(searchTimeoutHandle)
+
+    searchTimeoutHandle = setTimeout(->
+      searchTimeoutHandle = null
+      query = trimWhitespace(event.target.value)
+      logger.debug("User is searching: '#{query}'")
+      Router.go('home', {}, if !S.isBlank(query) then {query: "query=#{query}"} else {})
+    , 500)
 })
 
 getQualifiedId = (project) ->

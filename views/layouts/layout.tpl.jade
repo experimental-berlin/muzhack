@@ -6,7 +6,9 @@ header
       each menuElements
         li($dyn=attrs)
           a(href=url $dyn=linkAttrs) #{name}
-    +accountbar
+    .pull-right
+      input#navbar-search-input(placeholder="Search")
+      +accountbar
 article
   #content
     +yield
