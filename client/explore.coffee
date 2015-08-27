@@ -12,15 +12,15 @@ Template.explore.helpers({
 })
 Template.explore.events({
   "input #explore-search-input": (event) ->
-    Session.set("explore.searchQuery", event.target.value)
+    Session.set("explore.searchQuery", trimWhitespace(event.target.value))
   "keyup #explore-search-input": (event) ->
     if event.keyCode == 13
       searchService.search(Session.get("explore.searchQuery"))
-  "click .do-search": ->
+  "click #explore-do-search": ->
     searchService.search(Session.get("explore.searchQuery"))
-  "click .clear-search": ->
+  "click #explore-clear-search": ->
     logger.debug("Clearing search")
-    Router.go("home")
+    Session.set("explore.searchQuery", "")
 })
 
 getQualifiedId = (project) ->

@@ -7,7 +7,11 @@ header
         li($dyn=attrs)
           a(href=url $dyn=linkAttrs) #{name}
     .pull-right
-      input#navbar-search-input(placeholder="Search MuzHack")
+      .search-box
+        span#navbar-do-search.search-icon.icon-search.muted
+        input#navbar-search-input(placeholder="Search MuzHack", value=searchQuery)
+        if hasSearchQuery
+          span#navbar-clear-search.clear-icon.icon-cross.muted
       +accountbar
 article
   #content
