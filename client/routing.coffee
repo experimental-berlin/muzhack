@@ -28,11 +28,12 @@ Router.route('/logout', ->
   @redirect('/')
 )
 Router.route('/', ->
+  Session.set("searchQuery", @params.query.query)
   Session.set("explore.searchQuery", @params.query.query)
   @render('explore')
 , {
   name: 'home'
-  waitOn: -> Meteor.subscribe("projects")
+  waitOn: -> Meteor.subscribe("filteredProjects", Session.get("searchQuery"))
 })
 Router.route('/account/forgotpassword', ->
   @render('forgotPassword')
