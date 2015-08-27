@@ -105,7 +105,7 @@ Template.user.events({
     })
   "click .remove-project-plan": ->
     notificationService.question("Remove Project Plan?",
-      "Are you sure you wish to remove the project plan #{@name}?",
+      "Are you sure you wish to remove the project plan #{@name} and close the Trello board?",
       =>
         logger.debug("Removing project plan '#{@name}' (ID #{@id})")
         Session.set("isWaiting", true)
@@ -124,8 +124,7 @@ Template.user.events({
 
 invokeTrelloApi = (methodName, callback, args...) ->
   Session.set("isWaiting", true)
-  Trello.setKey(Meteor.settings.public.trelloKey)
-  Trello.authorize({
+  Trello.authorize(Meteor.settings.public.trelloKey, {
     type: "popup"
     name: "MuzHack"
     scope: { read: true, "write": true }

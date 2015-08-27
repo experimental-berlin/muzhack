@@ -30,8 +30,8 @@ Router.route('/logout', ->
 Router.route('/', ->
   @render('explore')
 , {
-    name: 'home'
-    waitOn: -> Meteor.subscribe("projects")
+  name: 'home'
+  waitOn: -> Meteor.subscribe("projects")
 })
 Router.route('/account/forgotpassword', ->
   @render('forgotPassword')
