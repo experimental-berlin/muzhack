@@ -1,69 +1,22 @@
 (function() {
     "use strict";
 
-    var deferred, ready;
     var token = null;
-    var appKey = null;
+    var authCallbacks = [];
     var authEndpoint = "https://trello.com";
-
-    function writeToken(value) {
-        if (value == null) {
-            delete localStorage.trello_token;
-        } else {
-            localStorage.trello_token = value;
-        }
-    }
 
     function isFunction(obj) {
         return typeof obj === "function";
     }
 
-    function setIsReady() {
-        var deferredCallbacks = deferred.authorized;
-        var e;
-        var isReady = token != null;
-        ready.authorized = isReady;
-        if (deferredCallbacks != null) {
-            delete deferred.authorized;
-            for (e = 0; e < deferredCallbacks.length; ++e) {
-                deferredCallbacks[e](isReady);
-            }
-        }
-    }
-
-    function waitUntilAuthorized(f) {
-        var key = "authorized";
-        if (ready[key] != null) {
-            f(ready[key]);
-        } else {
-            if (deferred[key] == null) {
-                deferred[key] = [];
-            }
-            deferred[key].push(f);
-        }
-    }
-
     function setUpApi() {
         var windowLocation = window.location;
         window.Trello = {
-            key: function() {
-                return appKey;
-            },
-            setKey: function(k) {
-                appKey = k;
-            },
-            token: function() {
-                return token;
-            },
-            authorized: function() {
-                return token != null;
-            },
             deauthorize: function() {
                 token = null;
-                writeToken();
+                delete localStorage.trelloToken;
             },
-            authorize: function(opts) {
-                var k;
+            authorize: function(appKey, opts) {
                 opts = jQuery.extend(true, {
                     scope: {
                         read: true,
@@ -73,7 +26,7 @@
                     expiration: "30days"
                 }, opts);
                 if (token == null) {
-                  token = localStorage.trello_token;
+                  token = localStorage.trelloToken;
                 }
                 if (token != null) {
                     if (isFunction(opts.success)) {
@@ -82,24 +35,10 @@
                     return;
                 }
 
-                var scopeArray = [];
-                for (k in opts.scope) {
-                    if (opts.scope[k]) {
-                      scopeArray.push(k);
-                    }
-                }
-                var scopeStr = scopeArray.join(",");
-                waitUntilAuthorized(function (isReady) {
-                    if (isReady) {
-                        writeToken(token);
-                        if (isFunction(opts.success)) {
-                            opts.success(token);
-                        }
-                    } else {
-                        if (isFunction(opts.error)) {
-                            opts.error();
-                        }
-                    }
+                authCallbacks.push(opts);
+
+                var scopeArray = Object.keys(opts.scope).filter(function (k) {
+                    return opts.scope[k];
                 });
                 var leftCoordinate = window.screenX + (window.innerWidth - 420) / 2;
                 var topCoordinate = window.screenY + (window.innerHeight - 470) / 2;
@@ -110,7 +49,7 @@
                     jQuery.param({
                         "return_url": returnUrl,
                         "callback_method": "postMessage",
-                        scope: scopeStr,
+                        scope: scopeArray.join(","),
                         expiration: opts.expiration,
                         name: opts.name,
                         "response_type": "token",
@@ -127,13 +66,26 @@
                     event.source.close();
                 }
                 token = event.data != null && event.data.length > 4 ? event.data : null;
-                setIsReady();
+                if (token != null) {
+                    localStorage.trelloToken = token;
+                }
+                var authCallback;
+                while (authCallbacks.length > 0) {
+                    authCallback = authCallbacks.shift();
+                    if (token != null) {
+                        if (isFunction(authCallback.success)) {
+                            authCallback.success(token);
+                        }
+                    } else {
+                        if (isFunction(authCallback.error)) {
+                            authCallback.error();
+                        }
+                    }
+                }
             }
         }
         window.addEventListener("message", handleMessage, false);
     }
-    deferred = {};
-    ready = {};
 
     setUpApi();
 })();
