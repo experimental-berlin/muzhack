@@ -1,12 +1,12 @@
 .pure-g
   .pure-u-1
     #explore-pad.airy-padding-sides
+      .search-box
+        span#explore-do-search.search-icon.icon-search.muted
+        input#explore-search-input(placeholder="Search MuzHack", value=searchQuery)
+        if hasSearchQuery
+          span#explore-clear-search.clear-icon.icon-cross.muted
       if isEmpty
         p No projects were found.
       else
-        .search-box
-          span#explore-do-search.search-icon.icon-search.muted
-          input#explore-search-input(placeholder="Search MuzHack", value=searchQuery)
-          if hasSearchQuery
-            span#explore-clear-search.clear-icon.icon-cross.muted
         #isotope-container
