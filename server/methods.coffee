@@ -253,7 +253,7 @@ Meteor.methods({
   closeTrelloBoard: (token, id) ->
     verifyArg(id, 'id')
     verifyArg(token, 'token')
-    logger.debug("Asked to remove Trello board ID #{id}")
+    logger.debug("Asked to remove and close Trello board ID #{id}")
 
     user = getUser(@)
     board = TrelloBoards.findOne({id: id})
@@ -262,15 +262,16 @@ Meteor.methods({
 
     appKey = Meteor.settings.public.trelloKey
     try
+      logger.debug("Closing Trello board...")
       result = HTTP.put("https://api.trello.com/1/boards/#{id}/closed?key=#{appKey}&token=#{token}",
         {params: {value: true}}
       )
     catch error
-      logger.warn("Failed to remove Trello board with ID #{id}:")
+      logger.warn("Failed to close Trello board with ID #{id}:")
       logger.warn("Reason for error: '#{error.message}'")
       throw new Meteor.Error("trello-remove", "Failed to remove Trello board with ID #{id}")
 
-    logger.debug("Removed Trello board successfully (ID: #{id}), removing from database")
+    logger.debug("Closed Trello board successfully (ID: #{id}), removing from database")
     TrelloBoards.remove({id: id})
   getExistingTrelloBoards: (token) ->
     verifyArg(token, 'token')
