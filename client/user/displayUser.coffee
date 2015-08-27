@@ -105,20 +105,38 @@ Template.user.events({
     })
   "click .remove-project-plan": ->
     notificationService.question("Remove Project Plan?",
-      "Are you sure you wish to remove the project plan #{@name} and close the Trello board?",
+      "Are you sure you wish to remove the project plan #{@name}?",
       =>
         logger.debug("Removing project plan '#{@name}' (ID #{@id})")
         Session.set("isWaiting", true)
-        invokeTrelloApi("removeTrelloBoard", (error, result) ->
+        Meteor.call("removeTrelloBoard", @id, (error, result) ->
+          Session.set("isWaiting", false)
           if error?
             logger.warn("Server failed to remove Trello board", error)
             notificationService.warn("Error",
               "Server failed to remove Trello board: #{error.reason}.")
           else
             logger.debug("Server was able to successfully remove Trello board")
+        )
+      , ->
+        logger.debug("User declined removing project plan")
+    )
+  "click .close-project-plan": ->
+    notificationService.question("Remove/Close Project Plan?",
+      "Are you sure you wish to remove the project plan #{@name} and close the Trello board?",
+      =>
+        logger.debug("Removing and closing project plan '#{@name}' (ID #{@id})")
+        Session.set("isWaiting", true)
+        invokeTrelloApi("closeTrelloBoard", (error, result) ->
+          if error?
+            logger.warn("Server failed to remove and close Trello board", error)
+            notificationService.warn("Error",
+              "Server failed to remove and close Trello board: #{error.reason}.")
+          else
+            logger.debug("Server was able to successfully remove and close Trello board")
         , @id)
     , ->
-      logger.debug("User declined removing project plan")
+      logger.debug("User declined removing and closing project plan")
     )
 })
 

@@ -239,7 +239,18 @@ Meteor.methods({
       description: params.desc
       idOrganization: params.idOrganization
     }})
-  removeTrelloBoard: (token, id) ->
+  removeTrelloBoard: (id) ->
+    verifyArg(id, 'id')
+    logger.debug("Asked to remove Trello board ID #{id}")
+
+    user = getUser(@)
+    board = TrelloBoards.findOne({id: id})
+    if board? and board.username != user.username
+      throw new Meteor.Error("unauthorized", "You need to be the board owner")
+
+    TrelloBoards.remove({id: id})
+    logger.debug("Successfully removed Trello board with ID #{id}")
+  closeTrelloBoard: (token, id) ->
     verifyArg(id, 'id')
     verifyArg(token, 'token')
     logger.debug("Asked to remove Trello board ID #{id}")
@@ -260,7 +271,7 @@ Meteor.methods({
       throw new Meteor.Error("trello-remove", "Failed to remove Trello board with ID #{id}")
 
     logger.debug("Removed Trello board successfully (ID: #{id}), removing from database")
-    TrelloBoards.remove({ id: id })
+    TrelloBoards.remove({id: id})
   getExistingTrelloBoards: (token) ->
     verifyArg(token, 'token')
     user = getUser(@)
