@@ -6,19 +6,21 @@ Template.explore.helpers({
   isEmpty: ->
     !Projects.findOne()?
   searchQuery: ->
-    Router.current().params.query.query
+    Session.get("explore.searchQuery")
+  hasSearchQuery: ->
+    !S.isBlank(Session.get("explore.searchQuery"))
 })
 Template.explore.events({
   "input #explore-search-input": (event) ->
-    if searchTimeoutHandle?
-      clearTimeout(searchTimeoutHandle)
-
-    searchTimeoutHandle = setTimeout(->
-      searchTimeoutHandle = null
-      query = trimWhitespace(event.target.value)
-      logger.debug("User is searching: '#{query}'")
-      Router.go('home', {}, if !S.isBlank(query) then {query: "query=#{query}"} else {})
-    , 500)
+    Session.set("explore.searchQuery", event.target.value)
+  "keyup #explore-search-input": (event) ->
+    if event.keyCode == 13
+      searchService.search(Session.get("explore.searchQuery"))
+  "click .do-search": ->
+    searchService.search(Session.get("explore.searchQuery"))
+  "click .clear-search": ->
+    logger.debug("Clearing search")
+    Router.go("home")
 })
 
 getQualifiedId = (project) ->
