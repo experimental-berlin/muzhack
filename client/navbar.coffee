@@ -54,6 +54,7 @@ Template.layout.events({
   "click #navbar-clear-search": ->
     logger.debug("Clearing search")
     Session.set("navbar.searchQuery", "")
+    document.getElementById("navbar-search-input").focus()
 })
 
 Template.accountbar.helpers({

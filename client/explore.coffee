@@ -21,6 +21,7 @@ Template.explore.events({
   "click #explore-clear-search": ->
     logger.debug("Clearing search")
     Session.set("explore.searchQuery", "")
+    document.getElementById("explore-search-input").focus()
 })
 
 getQualifiedId = (project) ->
