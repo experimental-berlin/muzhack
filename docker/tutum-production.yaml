@@ -29,3 +29,4 @@ logspout-production:
   autorestart: always
   volumes:
     - /var/run/docker.sock:/tmp/docker.sock
+  deployment_strategy: every_node
