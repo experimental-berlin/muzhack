@@ -99,5 +99,7 @@ Template.project.helpers(
 Template.project.events({
   'click #edit-action': ->
     logger.debug("Entering edit mode")
+    # Kind of a hack, but stop tooltips from lingering
+    Tooltips.hide()
     Session.set("isEditingProject", true)
 })
