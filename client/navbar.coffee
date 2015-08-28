@@ -26,12 +26,9 @@ class MenuElement
     else
       Session.get("currentSection").toLowerCase() == @name.toLowerCase()
 
-class Accountbutton
-  constructor: (icon, name, url="#") ->
-    @icon = icon
-    @name = name
+class AccountButton
+  constructor: (@icon, @name, @url, @tooltip) ->
     @klass = "enabled"
-    @url = url
 
 Template.layout.helpers(
   menuElements: ->
@@ -64,8 +61,8 @@ Template.accountbar.helpers({
     user = Meteor.user()
     if user?
       [
-        new Accountbutton('user', 'account', "/u/#{user.username}")
-        new Accountbutton('exit3', 'logout', '/logout')
+        new AccountButton('user', 'account', "/u/#{user.username}", "Go to your account")
+        new AccountButton('exit3', 'logout', '/logout', "Log out")
       ]
     else
       []

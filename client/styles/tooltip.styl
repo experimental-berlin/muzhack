@@ -1,0 +1,44 @@
+@require 'common.import'
+
+arrow-size = 5px
+tooltip-color = rgba(#000, 0.8)
+
+.tooltip
+  z-index 1001
+  pointer-events none
+  opacity 0
+  font-weight 500
+  max-width 200px
+  text-align center
+  font-size 13px
+
+  &.hide
+    opacity 0
+
+  &.show
+    opacity 1
+
+  .inner
+    rounded-corners()
+
+    background tooltip-color
+    color white
+    padding 3px 10px
+
+  // CSS arrow
+  .inner::after
+    content ""
+    display block
+    bottom - arrow-size * 2
+    left "calc(50% - %s)" % arrow-size
+    width 0
+    height 0
+    border arrow-size solid
+    border-color tooltip-color transparent transparent
+    position absolute
+
+  &.tooltip--bottom
+    .inner::after
+      top: - arrow-size * 2
+      bottom auto
+      border-color transparent transparent tooltip-color transparent

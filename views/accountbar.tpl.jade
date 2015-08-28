@@ -2,7 +2,7 @@
   if isLoggedIn
     each buttons
       a.toolbar-btn(href=url class=klass)
-        span(class="icon-#{icon}")
+        span(class="icon-#{icon}", data-tooltip=tooltip, data-tooltip-direction="s")
   else
     a#login.toolbar-btn(href="/login")
       span.icon-enter3
