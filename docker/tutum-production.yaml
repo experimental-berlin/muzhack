@@ -21,3 +21,11 @@ nginx-production:
     - /etc/nginx/ssl/private.key:/private.key
   links:
     - muzhack-production:backend
+logspout-production:
+  image: gliderlabs/logspout
+  command: syslog://logs3.papertrailapp.com:19740
+  tags:
+    - production
+  autorestart: always
+  volumes:
+    - /var/run/docker.sock:/tmp/docker.sock

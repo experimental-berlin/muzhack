@@ -33,3 +33,11 @@ nginx-staging:
     - /etc/nginx/ssl/private.key:/private.key
   links:
     - muzhack-staging:backend
+logspout-staging:
+  image: gliderlabs/logspout
+  command: syslog://logs3.papertrailapp.com:19740
+  tags:
+    - staging
+  autorestart: always
+  volumes:
+    - /var/run/docker.sock:/tmp/docker.sock
