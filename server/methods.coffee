@@ -24,16 +24,30 @@ getS3Objs = ->
   })
   [s3Bucket, s3Client]
 
+downloadFile = (url) ->
+  logger.debug("Downloading file '#{file.url}'...")
+  numTries = 0
+  while true
+    numTries += 1
+    try
+      result = HTTP.get(file.url)
+      if result.statusCode != 200
+        throw new Error("Couldn't download '#{file.url}', status code: #{result.statusCode}")
+      else
+        break
+    catch
+      if numTries >= 3
+        throw
+
+  result.content
+
 createZip = (files, user, id, s3Bucket, s3Client) ->
   logger.debug("Generating zip...")
   zip = new JSZip()
   for file in files
-    logger.debug("Downloading file '#{file.url}'...")
-    result = Meteor.http.get(file.url)
-    if result.statusCode != 200
-      throw new Error("Couldn't download '#{file.url}', status code: #{result.statusCode}")
+    content = downloadFile(file)
     logger.debug("Adding file '#{file.name}' to zip")
-    zip.file(file.name, result.content)
+    zip.file(file.name, content)
   output = zip.generate({
     type: "nodebuffer",
     compression: "DEFLATE",
