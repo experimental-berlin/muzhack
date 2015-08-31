@@ -35,9 +35,9 @@ downloadFile = (url) ->
         throw new Error("Couldn't download '#{file.url}', status code: #{result.statusCode}")
       else
         break
-    catch
+    catch error
       if numTries >= 3
-        throw
+        throw error
 
   result.content
 
