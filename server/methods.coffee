@@ -24,7 +24,7 @@ getS3Objs = ->
   })
   [s3Bucket, s3Client]
 
-downloadFile = (url) ->
+downloadFile = (file) ->
   logger.debug("Downloading file '#{file.url}'...")
   numTries = 0
   while true
