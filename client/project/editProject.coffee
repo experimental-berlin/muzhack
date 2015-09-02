@@ -1,5 +1,4 @@
 logger = new Logger("editProject")
-dropzoneLogger = new Logger("dropzone")
 pictureDropzone = null
 fileDropzone = null
 

@@ -85,7 +85,7 @@ class @DropzoneService
               resolve(processedFiles)
         )
 
-      uploadFile = (file, resolve, reject, numTries) ->
+      realUploadFile = (file, resolve, reject, numTries) ->
         numTries += 1
         logger.debug("Uploading file '#{file.name}', try ##{numTries}...")
         uploader.send(file, (error, downloadUrl) ->
@@ -93,7 +93,7 @@ class @DropzoneService
             logger.warn("Failed to upload file '#{file.name}': '#{error.message}'")
             if numTries <= 3
               logger.info("Retrying upload")
-              uploadFile(file, resolve, reject, numTries)
+              realUploadFile(file, resolve, reject, numTries)
             else
               logger.warn("Giving up since we've already tried #{numTries} times")
               reject(error.message)
@@ -103,7 +103,7 @@ class @DropzoneService
 
       uploadOneFile = (resolve, reject) ->
         file = files.shift()
-        uploadFile(file, resolve, reject, 0)
+        realUploadFile(file, resolve, reject, 0)
 
       logger.debug('Uploading files...', files)
       new Promise(uploadOneFile)
