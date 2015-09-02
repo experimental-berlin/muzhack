@@ -6,4 +6,6 @@ MuzHack
 
 [MuzHack](https://muzhack.com) is a Web application for publishing musical instrument designs.
 
+[![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=muzhack&url=http://github.com/muzhack/muzhack&title=MuzHack&tags=github&category=software)
+
 [![Support via Gratipay](https://cdn.rawgit.com/gratipay/gratipay-badge/2.x.x/dist/gratipay.svg)](https://gratipay.com/~Arve Knudsen/)
