@@ -82,13 +82,13 @@ Template.explore.onRendered(->
     logger.debug("Installed change observer")
   )
 
-  $projectElems = R.map(createProjectElement, projects)
+  projectElems = R.map(createProjectElement, projects)
   logger.debug("Configuring Isotope")
   getIsotopeContainer().isotope({
     itemSelector: ".project-item",
     layoutMode: 'fitRows',
   })
-    .isotope("insert", $projectElems)
+    .isotope("insert", projectElems)
 )
 Template.explore.onDestroyed(->
   projElems = document.querySelectorAll(".project-item")
