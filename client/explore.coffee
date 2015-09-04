@@ -30,8 +30,7 @@ getQualifiedId = (project) ->
 getIsotopeContainer = () -> $("#isotope-container")
 
 createProjectElement = (project) ->
-  getThumbnail = () ->
-    if !R.isEmpty(project.pictures || []) then project.pictures[0].url else \
+  thumbnail = if !R.isEmpty(project.pictures || []) then project.pictures[0].url else \
       '/images/revox-reel-to-reel-resized.jpg'
 
   $("<div class=\"project-item\" data-id=\"#{getQualifiedId(project)}\">
@@ -40,7 +39,7 @@ createProjectElement = (project) ->
         <div class=\"project-item-title\">#{project.title}</div>
         <div class=\"project-item-author\">#{project.owner}</div>
       </div>
-      <img class=\"project-item-image\" src=\"#{getThumbnail()}\" />
+      <img class=\"project-item-image\" src=\"#{thumbnail}\" />
     </a>
   </div>")[0]
 
@@ -56,8 +55,8 @@ Template.explore.onRendered(->
         if ignore
           return
         logger.debug("A project (#{getQualifiedId(project)}) was added, updating Isotope grid")
-        $projElem = createProjectElement(project)
-        getIsotopeContainer().isotope("insert", $projElem)
+        projElem = createProjectElement(project)
+        getIsotopeContainer().isotope("insert", projElem)
       ,
       changed: (project) ->
         qualifiedId = getQualifiedId(project)
