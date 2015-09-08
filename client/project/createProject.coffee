@@ -39,11 +39,11 @@ Template.createInstructions.onRendered(->
 )
 Template.createPictures.onRendered(->
   logger.debug("Pictures editor rendered")
-  pictureDropzone = DropzoneService.createDropzone("picture-dropzone", true, null)
+  pictureDropzone = dropzoneService.createDropzone("picture-dropzone", true, null)
 )
 Template.createFiles.onRendered(->
   logger.debug("Files editor rendered")
-  fileDropzone = DropzoneService.createDropzone("file-dropzone", false, null)
+  fileDropzone = dropzoneService.createDropzone("file-dropzone", false, null)
 )
 
 getParameters = () ->

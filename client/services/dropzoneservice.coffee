@@ -45,8 +45,26 @@ logDropzone = (event, args...) =>
 
    new Blob(byteArrays, {type: contentType})
 
+getDependency = (dropzone) ->
+  if !dropzone._meteorDependency?
+    dropzone._meteorDependency = new Tracker.Dependency()
+  dropzone._meteorDependency
+
 class @DropzoneService
-  @createDropzone: (cssId, forPictures, existingFiles) ->
+  hasFiles: (dropzone) ->
+    if !dropzone?
+      false
+    else
+      dep = getDependency(dropzone)
+      dep.depend()
+      !R.isEmpty(dropzone.files)
+
+  clearDropzone: (dropzone) ->
+    dep = getDependency(dropzone)
+    dropzone.removeAllFiles(true)
+    dep.changed()
+
+  createDropzone: (cssId, forPictures, existingFiles) ->
     uploadFiles = (files, data) ->
       processedFiles = []
       s3Folder = "u/#{data.owner}/#{data.projectId}/files"

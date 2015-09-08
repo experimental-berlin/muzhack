@@ -18,6 +18,7 @@ Meteor.startup(->
   @accountService = new AccountService()
   @dateService = new DateService()
   @searchService = new SearchService()
+  @dropzoneService = new DropzoneService()
 
   SEO.config({
     title: 'MuzHack'

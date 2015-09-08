@@ -50,3 +50,6 @@ Template.displayProject.events({
     logger.debug("Thumbnail clicked: #{@url}")
     Session.set("mainPicture", String(@url))
 })
+Template.projectFiles.helpers({
+  projectHasFiles: -> !R.isEmpty(@files)
+})
