@@ -24,9 +24,9 @@ COPY ./ /app
 WORKDIR /app
 RUN meteor build --directory /tmp/the-app
 WORKDIR /tmp/the-app/bundle/programs/server/
+RUN npm install
 # TODO: Remove after Node 0.12 workaround no longer necessary
 RUN rm -rf ./npm/npm-bcrypt/node_modules/bcrypt && npm install bcrypt
-RUN npm install
 RUN mv /tmp/the-app/bundle /built_app
 WORKDIR /built_app
 
