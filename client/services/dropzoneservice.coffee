@@ -30,6 +30,7 @@ logger = new Logger("DropzoneService")
 handleDropzoneEvent = (event, dropzone, args...) =>
   dropzoneLogger.debug("#{event}:", args)
   if event in ["addedfile", "addedfiles", "removedfile"]
+    logger.debug("Dropzone changed, notifying dependents")
     dep = getDependency(dropzone)
     dep.changed()
 
