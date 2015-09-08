@@ -27,8 +27,11 @@ monitoredDropzoneEvents = [
 dropzoneLogger = new Logger("dropzone")
 logger = new Logger("DropzoneService")
 
-logDropzone = (event, args...) =>
+handleDropzoneEvent = (event, dropzone, args...) =>
   dropzoneLogger.debug("#{event}:", args)
+  if event in ["addedfile", "addedfiles", "removedfile"]
+    dep = getDependency(dropzone)
+    dep.changed()
 
  b64ToBlob = (b64Data, contentType, sliceSize) ->
    sliceSize = sliceSize || 512
@@ -60,9 +63,7 @@ class @DropzoneService
       !R.isEmpty(dropzone.files)
 
   clearDropzone: (dropzone) ->
-    dep = getDependency(dropzone)
     dropzone.removeAllFiles(true)
-    dep.changed()
 
   createDropzone: (cssId, forPictures, existingFiles) ->
     uploadFiles = (files, data) ->
@@ -232,7 +233,7 @@ class @DropzoneService
       createImageThumbnails: forPictures,
     })
     for event in monitoredDropzoneEvents
-      dropzone.on(event, R.partial(logDropzone, event))
+      dropzone.on(event, R.partial(handleDropzoneEvent, event, dropzone))
     if existingFiles? && !R.isEmpty(existingFiles)
       description = if forPictures then "picture" else "file"
       picker = if forPictures then ((x) -> R.merge(x, {name: x.url})) else (
