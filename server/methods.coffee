@@ -46,8 +46,8 @@ createZip = (files, user, id, s3Bucket, s3Client) ->
   zip = new JSZip()
   for file in files
     content = downloadFile(file)
-    logger.debug("Adding file '#{file.name}' to zip")
-    zip.file(file.name, content)
+    logger.debug("Adding file '#{file.fullPath}' to zip")
+    zip.file(file.fullPath, content)
   output = zip.generate({
     type: "nodebuffer",
     compression: "DEFLATE",
@@ -122,7 +122,7 @@ Meteor.methods({
           "Removing #{removedFiles.length} stale #{fileType}(s) (type: #{fileType}), old " +
           "files vs new files:", oldFiles, newFiles)
       for file in removedFiles
-        filePath = "u/#{owner}/#{id}/#{fileType}s/#{file.name}"
+        filePath = "u/#{owner}/#{id}/#{fileType}s/#{file.fullPath}"
         logger.debug("Removing outdated #{fileType} '#{filePath}'")
         s3Client.deleteObjectSync({
           Key: filePath,

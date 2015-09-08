@@ -66,7 +66,7 @@ saveProject = (owner, projectId) ->
   Promise.all([picturesPromise, filesPromise])
     .then(([uploadedPictures, uploadedFiles]) ->
       logger.info("Saving project...")
-      transformFiles = R.map(R.pick(['width', 'height', 'size', 'url', 'name', 'type']))
+      transformFiles = R.map(R.pick(['width', 'height', 'size', 'url', 'name', 'type', 'fullPath']))
       pictureFiles = R.concat(
         transformFiles(pictureDropzone.getExistingFiles()),
         transformFiles(uploadedPictures)

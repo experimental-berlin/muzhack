@@ -54,6 +54,10 @@ getDependency = (dropzone) ->
     dropzone._meteorDependency = new Tracker.Dependency()
   dropzone._meteorDependency
 
+getFolder = (file) ->
+  path = S.wordsDelim(/\//)(file.fullPath)
+  if path.length > 1 then "/" + S.join("/", path[...-1]) else ""
+
 class @DropzoneService
   hasFiles: (dropzone) ->
     if !dropzone?
@@ -74,17 +78,14 @@ class @DropzoneService
         throw new Error("data is missing owner/projectId")
 
       logger.debug("Uploading files to folder '#{s3Folder}'")
-      uploader = new Slingshot.Upload("files", {
-        folder: s3Folder,
-      })
-      backupUploader = new Slingshot.Upload("files-backup", {
-        folder: s3Folder,
-      })
 
       backupFile = (file, downloadUrl, resolve, reject, numTries=0) ->
         numTries += 1
         logger.debug("Backing up file '#{file.name}', try ##{numTries}...")
-        backupUploader.send(file, (error) ->
+        uploader = new Slingshot.Upload("files", {
+          folder: "#{s3Folder}#{getFolder(file)}",
+        })
+        uploader.send(file, (error) ->
           if error?
             logger.warn("Failed to back up file '#{file.name}': '#{error.message}'")
             if numTries <= 3
@@ -107,10 +108,14 @@ class @DropzoneService
 
       realUploadFile = (file, resolve, reject, numTries) ->
         numTries += 1
-        logger.debug("Uploading file '#{file.name}', try ##{numTries}...")
+        folder = "#{s3Folder}#{getFolder(file)}"
+        logger.debug("Uploading file '#{file.fullPath}', try ##{numTries}...")
+        uploader = new Slingshot.Upload("files", {
+          folder: folder,
+        })
         uploader.send(file, (error, downloadUrl) ->
           if error?
-            logger.warn("Failed to upload file '#{file.name}': '#{error.message}'")
+            logger.warn("Failed to upload file '#{file.fullPath}': '#{error.message}'")
             if numTries <= 3
               logger.info("Retrying upload")
               realUploadFile(file, resolve, reject, numTries)
