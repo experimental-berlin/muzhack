@@ -169,6 +169,9 @@ Template.project.events({
     logger.debug("Asking user whether to remove project or not")
     notificationService.question("Remove project?",
       "Are you sure you wish remove this project?", doRemove, dontRemove)
+  "click #remove-all-pictures": ->
+    logger.debug("Removing all pictures")
+    dropzoneService.clearDropzone(pictureDropzone)
   "click #remove-all-files": ->
     logger.debug("Removing all files")
     dropzoneService.clearDropzone(fileDropzone)
@@ -178,6 +181,10 @@ Template.editProject.helpers(
   isWaiting: -> Session.get("isWaiting")
   licenseOptions: ->
     ({id: id, name: license.name, isSelected: id == @licenseId} for id, license of licenses)
+)
+Template.picturesEditor.helpers(
+  projectHasPictures: ->
+    dropzoneService.hasFiles(pictureDropzone)
 )
 Template.filesEditor.helpers(
   projectHasFiles: -> dropzoneService.hasFiles(fileDropzone)

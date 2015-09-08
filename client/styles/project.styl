@@ -2,6 +2,7 @@
 
 margin = 25px
 padding = 20px
+code-background-color = #eee
 
 subtle-shadow()
   box-shadow 2px 2px 13px 1px #0D0D0D
@@ -46,6 +47,18 @@ subtle-shadow()
   &>:first-child
     margin-top 0
     margin-bottom 0
+
+  pre
+    padding 5px
+    background-color code-background-color
+
+  code
+    font-size 14px
+    background-color code-background-color
+
+  p
+    code
+      padding: 1px 5px 1px 5px
 
 #right-column
   box-sizing border-box
