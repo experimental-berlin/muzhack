@@ -23,7 +23,7 @@ saveProject = (owner, projectId) ->
   title = trimWhitespace($("#title-input").val())
   description = descriptionEditor.value()
   instructions = instructionsEditor.value()
-  tags = $("#tags-input").val()
+  tags = R.map(trimWhitespace, S.wordsDelim(/,/, $("#tags-input").val()))
   licenseSelect = document.getElementById("license-select")
   license = licenseSelect.options[licenseSelect.selectedIndex].value
 
@@ -77,7 +77,7 @@ saveProject = (owner, projectId) ->
       )
       logger.debug("Picture files:", pictureFiles)
       logger.debug("Files:", files)
-      logger.debug("title: #{title}, description: #{description}, tags: #{tags}")
+      logger.debug("title: #{title}, description: #{description}, tags: #{S.join(",", tags)}")
       Meteor.call('updateProject', owner, projectId, title, description, instructions, tags,
         license, pictureFiles, files, (error) ->
           Session.set("isWaiting", false)

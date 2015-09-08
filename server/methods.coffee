@@ -82,7 +82,7 @@ Meteor.methods({
       owner: user.username,
       projectId: id,
       title: title,
-      tags: tags,
+      tags: R.map(trimWhitespace, tags),
       licenseId: license,
       created: moment().utc().toDate(),
     }
@@ -137,7 +137,7 @@ Meteor.methods({
       title: title,
       description: description,
       instructions: instructions,
-      tags: R.map(trimWhitespace, tags.split(',')),
+      tags: R.map(trimWhitespace, tags),
       licenseId: license,
       pictures: pictures,
       files: files,
