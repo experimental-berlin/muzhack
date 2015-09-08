@@ -1,4 +1,4 @@
-FROM node:0.12
+FROM node:0.10
 MAINTAINER Arve Knudsen
 
 RUN apt-get update -y && apt-get install -y curl
@@ -25,8 +25,6 @@ WORKDIR /app
 RUN meteor build --directory /tmp/the-app
 WORKDIR /tmp/the-app/bundle/programs/server/
 RUN npm install
-# TODO: Remove after Node 0.12 workaround no longer necessary
-RUN rm -rf ./npm/npm-bcrypt/node_modules/bcrypt && npm install bcrypt
 RUN mv /tmp/the-app/bundle /built_app
 WORKDIR /built_app
 
