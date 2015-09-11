@@ -31,7 +31,8 @@ Template.displayProject.helpers(
   displayInstructions: -> getActiveTab() == 'instructions'
   displayFiles: -> getActiveTab() == 'files'
   mainPicture: -> Session.get("mainPicture")
-  tagsString: -> @tags.join(', ')
+  tagsString: -> S.join(', ', R.map(((tag) -> "<a href=\"/?query=[#{tag}]\">#{tag}</a>"),
+      R.map(escapeHtml, @tags)))
   canEdit: ->
     user = Meteor.user()
     if !user?
