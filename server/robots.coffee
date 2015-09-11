@@ -3,3 +3,5 @@ if process.env.ENVIRONMENT?.toLowerCase() != "production"
   logger.info("Disabling crawling of site")
   robots.addLine('User-agent: *')
   robots.addLine('Disallow: /')
+else
+  logger.info("Crawling of site enabled")
