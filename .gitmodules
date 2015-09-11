@@ -16,3 +16,6 @@
 [submodule "spiderable2"]
 	path = spiderable2
 	url = git@github.com:aknuds1/spiderable2.git
+[submodule "packages/aknudsen:spiderable2"]
+	path = packages/aknudsen:spiderable2
+	url = git@github.com:aknuds1/spiderable2.git
