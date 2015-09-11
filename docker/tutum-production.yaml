@@ -4,6 +4,7 @@ muzhack-production:
     - ROOT_URL=https://muzhack.com
     - MONGO_URL
     - METEOR_SETTINGS
+    - ENVIRONMENT=production
   tags:
     - production
   autorestart: always
