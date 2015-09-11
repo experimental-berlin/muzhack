@@ -13,3 +13,6 @@
 [submodule "packages/aknudsen:ms-seo"]
 	path = packages/aknudsen:ms-seo
 	url = git@github.com:aknuds1/ms-seo.git
+[submodule "spiderable2"]
+	path = spiderable2
+	url = git@github.com:aknuds1/spiderable2.git
