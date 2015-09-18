@@ -51,7 +51,7 @@ extendFile = (file) ->
       logger.debug("Project has license '#{licenseId}':", license)
       project.license = license
       Session.set("mainPicture", project.pictures[0].url)
-      logger.debug("Project has files: #{project.hasFiles}")
+      logger.debug("Project has files: #{!R.isEmpty(project.files)}")
       logger.debug("Project has pictures: #{!R.isEmpty(project.pictures)}")
     project
   onBeforeAction: ->
