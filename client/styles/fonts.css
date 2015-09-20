@@ -1,11 +1,11 @@
 @font-face {
 	font-family: 'icomoon';
-	src:url('fonts/icomoon.eot?gnvm2z');
-	src:url('fonts/icomoon.eot?#iefixgnvm2z') format('embedded-opentype'),
-		url('fonts/icomoon.woff2?gnvm2z') format('woff2'),
-		url('fonts/icomoon.ttf?gnvm2z') format('truetype'),
-		url('fonts/icomoon.woff?gnvm2z') format('woff'),
-		url('fonts/icomoon.svg?gnvm2z#icomoon') format('svg');
+	src:url('fonts/icomoon.eot?-aay7z5');
+	src:url('fonts/icomoon.eot?#iefix-aay7z5') format('embedded-opentype'),
+		url('fonts/icomoon.woff2?-aay7z5') format('woff2'),
+		url('fonts/icomoon.ttf?-aay7z5') format('truetype'),
+		url('fonts/icomoon.woff?-aay7z5') format('woff'),
+		url('fonts/icomoon.svg?-aay7z5#icomoon') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -72,6 +72,9 @@
 .icon-tags2:before {
 	content: "\e9f1";
 }
+.icon-envelop3:before {
+	content: "\ea32";
+}
 .icon-undo:before {
 	content: "\eaa2";
 }
@@ -95,6 +98,9 @@
 }
 .icon-exit3:before {
 	content: "\ed78";
+}
+.icon-twitter:before {
+	content: "\eeed";
 }
 .icon-settings:before {
 	content: "\e600";
