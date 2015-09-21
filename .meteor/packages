@@ -7,7 +7,6 @@
 meteor-platform
 coffeescript
 iron:router
-mandrill:ace
 stylus
 lampe:purecss
 accounts-password
@@ -38,3 +37,5 @@ mrt:crypto-hmac-sha256-base64
 lookback:tooltips
 gadicohen:robots-txt
 aknudsen:spiderable2
+dwatson:meteor-pagedown
+aknudsen:pagedown

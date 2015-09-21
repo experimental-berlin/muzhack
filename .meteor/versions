@@ -5,6 +5,7 @@ accounts-ui-unstyled@1.1.7
 aknudsen:dropzone@4.0.0
 aknudsen:iron-router-ga@0.6.1
 aknudsen:ms-seo@0.5.0
+aknudsen:pagedown@1.1.1
 aknudsen:ramda@0.17.1
 aknudsen:spiderable2@0.9.2
 autoupdate@1.2.1
@@ -24,6 +25,7 @@ codeadventure:es6-promises@0.1.0
 coffeescript@1.0.6
 ddp@1.1.0
 deps@1.0.7
+dwatson:meteor-pagedown@1.1.1
 edgee:slingshot@0.7.1
 ejson@1.0.6
 email@1.0.6
@@ -54,7 +56,6 @@ livedata@1.0.13
 localstorage@1.0.3
 logging@1.0.7
 lookback:tooltips@0.5.1
-mandrill:ace@1.0.2
 markdown@1.0.4
 meteor@1.1.6
 meteor-platform@1.2.2
@@ -83,7 +84,6 @@ sha@1.0.3
 spacebars@1.0.6
 spacebars-compiler@1.0.6
 srp@1.0.3
-standard-app-packages@1.0.5
 stevezhu:sass@2.0.0
 stoeffel:underscore.string.fp@1.0.4
 stylus@1.0.7
