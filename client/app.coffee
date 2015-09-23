@@ -6,10 +6,14 @@ Meteor.startup(->
   # Settings are by default undefined on client
   Meteor.settings = Meteor.settings || {"public": {}}
   logger.debug("Instantiating editors")
-  @descriptionEditor = new MandrillAce('description-ace')
-  @instructionsEditor = new MandrillAce('instructions-ace')
-  for editor in [descriptionEditor, instructionsEditor,]
-    editor.setMode('ace/mode/markdown')
+  converter = Markdown.getSanitizingConverter()
+  # descriptionConverter.hooks.chain("preBlockGamut", function (text, rbg) {
+  #     return text.replace(/^ {0,3}""" *\n((?:.*?\n)+?) {0,3}""" *$/gm, function (whole, inner) {
+  #         return "<blockquote>" + rbg(inner) + "</blockquote>\n";
+  #     });
+  # });
+  @descriptionEditor = new Markdown.Editor(converter)
+  @instructionsEditor = new Markdown.Editor(converter)
 
   @loginService = new LoginService()
   @loginService.setupTemplate()

@@ -10,8 +10,8 @@ onChange =  ->
   Session.set("isProjectModified", true)
 
 handleEditorRendered = (editor, text) ->
-  # Make sure ace is aware of the fact the things might have changed.
-  editor.attachAce()
+  # Attach editor to DOM
+  editor.render()
   if text
     editor.setValue(text, 0)
   editor.ace.on("change", onChange)
