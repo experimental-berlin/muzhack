@@ -12,8 +12,8 @@ Meteor.startup(->
   #         return "<blockquote>" + rbg(inner) + "</blockquote>\n";
   #     });
   # });
-  @descriptionEditor = new Markdown.Editor(converter)
-  @instructionsEditor = new Markdown.Editor(converter)
+  @descriptionEditor = new Markdown.Editor(converter, "-description")
+  @instructionsEditor = new Markdown.Editor(converter, "-instructions")
 
   @loginService = new LoginService()
   @loginService.setupTemplate()
