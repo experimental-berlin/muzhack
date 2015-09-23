@@ -150,7 +150,7 @@ Template.project.events({
       Session.set("isWaiting", true)
       try
         logger.info("Removing project...")
-        Meteor.call("removeProject", @projectId, (error) ->
+        Meteor.call("removeProject", @owner, @projectId, (error) ->
           Session.set("isWaiting", false)
           if error?
             logger.error("Removing project on server failed: #{error}")

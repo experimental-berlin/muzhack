@@ -146,7 +146,7 @@ Meteor.methods({
         size: zipSize,
       },
     }})
-  removeProject: (id) ->
+  removeProject: (owner, id) ->
     removeFolder = () ->
       objects = s3Client.listObjectsSync({Prefix: dirPath})
       toDelete = R.map(((o) -> {Key: o.Key}), objects.Contents)
@@ -158,15 +158,18 @@ Meteor.methods({
         removeFolder()
 
     user = getUser(@)
-    project = Projects.findOne({projectId: id})
-    if !project?
-      return
-    if project.owner != user.username
+    if owner != user.username
+      logger.debug(
+        "Disallowed removing project '#{owner}/#{id}', since user ('#{user.username}') is not owner"
+      )
       throw new Meteor.Error("unauthorized", "Only the owner may remove a project")
 
-    logger.debug()
+    project = Projects.findOne({projectId: id, owner: owner})
+    if !project?
+      logger.debug("Not removing project '#{owner}/#{id}', since not found")
+      return
 
-    logger.debug("Removing project '#{user.username}/#{id}'")
+    logger.debug("Removing project '#{owner}/#{id}'")
     Projects.remove({owner: user.username, projectId: id})
 
     [s3Bucket, s3Client] = getS3Objs()
