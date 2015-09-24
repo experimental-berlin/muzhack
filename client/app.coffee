@@ -7,11 +7,6 @@ Meteor.startup(->
   Meteor.settings = Meteor.settings || {"public": {}}
   logger.debug("Instantiating editors")
   converter = Markdown.getSanitizingConverter()
-  # descriptionConverter.hooks.chain("preBlockGamut", function (text, rbg) {
-  #     return text.replace(/^ {0,3}""" *\n((?:.*?\n)+?) {0,3}""" *$/gm, function (whole, inner) {
-  #         return "<blockquote>" + rbg(inner) + "</blockquote>\n";
-  #     });
-  # });
   @descriptionEditor = new Markdown.Editor(converter, "-description")
   @instructionsEditor = new Markdown.Editor(converter, "-instructions")
 
