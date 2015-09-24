@@ -1,11 +1,11 @@
 @font-face {
 	font-family: 'icomoon';
-	src:url('fonts/icomoon.eot?-49mk84');
-	src:url('fonts/icomoon.eot?#iefix-49mk84') format('embedded-opentype'),
-		url('fonts/icomoon.woff2?-49mk84') format('woff2'),
-		url('fonts/icomoon.ttf?-49mk84') format('truetype'),
-		url('fonts/icomoon.woff?-49mk84') format('woff'),
-		url('fonts/icomoon.svg?-49mk84#icomoon') format('svg');
+	src:url('fonts/icomoon.eot?-q8agpl');
+	src:url('fonts/icomoon.eot?#iefix-q8agpl') format('embedded-opentype'),
+		url('fonts/icomoon.woff2?-q8agpl') format('woff2'),
+		url('fonts/icomoon.ttf?-q8agpl') format('truetype'),
+		url('fonts/icomoon.woff?-q8agpl') format('woff'),
+		url('fonts/icomoon.svg?-q8agpl#icomoon') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -24,6 +24,9 @@
 	-moz-osx-font-smoothing: grayscale;
 }
 
+.icon-header:before {
+	content: "\f1dc";
+}
 .icon-trello:before {
 	content: "\e601";
 }
@@ -63,6 +66,9 @@
 .icon-pencil3:before {
 	content: "\e910";
 }
+.icon-image2:before {
+	content: "\e93c";
+}
 .icon-book:before {
 	content: "\e990";
 }
@@ -84,11 +90,23 @@
 .icon-user:before {
 	content: "\eaf4";
 }
+.icon-quotes-left:before {
+	content: "\eb18";
+}
 .icon-search:before {
 	content: "\eb2d";
 }
 .icon-bin:before {
 	content: "\ebfa";
+}
+.icon-list-numbered:before {
+	content: "\ec55";
+}
+.icon-list2:before {
+	content: "\ec57";
+}
+.icon-link:before {
+	content: "\ec96";
 }
 .icon-cross:before {
 	content: "\ed69";
@@ -98,6 +116,18 @@
 }
 .icon-exit3:before {
 	content: "\ed78";
+}
+.icon-ruler:before {
+	content: "\ee7f";
+}
+.icon-bold:before {
+	content: "\ee94";
+}
+.icon-italic:before {
+	content: "\ee96";
+}
+.icon-code:before {
+	content: "\eece";
 }
 .icon-twitter:before {
 	content: "\eeed";
