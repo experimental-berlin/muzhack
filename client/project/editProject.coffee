@@ -12,11 +12,7 @@ onChange = ->
 handleEditorRendered = (editor, text) ->
   # Attach editor to DOM
   editor.render(text)
-  # if text
-  #   editor.setValue(text, 0)
   editor.hooks.set("onChange", onChange)
-  # editor.ace.clearSelection()
-  # editor.ace.gotoLine(0, 0)
 
 saveProject = (owner, projectId) ->
   title = trimWhitespace($("#title-input").val())
