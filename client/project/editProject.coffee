@@ -5,19 +5,18 @@ fileDropzone = null
 disableProjectEditing = ->
   Session.set("isEditingProject", false)
 
-onChange =  ->
+onChange = ->
   logger.debug("Project has changed - setting dirty state")
   Session.set("isProjectModified", true)
 
 handleEditorRendered = (editor, text) ->
   # Attach editor to DOM
   editor.render()
-  if text
-    editor.setValue(text, 0)
-  editor.ace.on("change", onChange)
-  editor.ace.clearSelection()
-  editor.ace.gotoLine(0, 0)
-  editor.ace.session.setUseWrapMode(true)
+  # if text
+  #   editor.setValue(text, 0)
+  editor.hooks.set("onChange", onChange)
+  # editor.ace.clearSelection()
+  # editor.ace.gotoLine(0, 0)
 
 saveProject = (owner, projectId) ->
   title = trimWhitespace($("#title-input").val())

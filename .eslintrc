@@ -1,0 +1,20 @@
+---
+  env:
+    browser: true
+  globals:
+    Package: false
+    Npm: false
+    exports: false
+    require: false
+    Markdown: true
+  rules:
+    strict:
+      - 2
+      - "global"
+    comma-dangle:
+      - 2
+      - "always"
+    quotes:
+      - 0
+    new-cap: 0
+    camelcase: 0
