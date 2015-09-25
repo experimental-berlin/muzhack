@@ -11,7 +11,7 @@ onChange = ->
 
 handleEditorRendered = (editor, text) ->
   # Attach editor to DOM
-  editor.render()
+  editor.render(text)
   # if text
   #   editor.setValue(text, 0)
   editor.hooks.set("onChange", onChange)
