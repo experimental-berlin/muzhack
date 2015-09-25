@@ -5,6 +5,7 @@ content-background = #FBFBFB
 body-background = #F3F3F3
 blue-color = #0A83DC
 muted = #737373
+code-background-color = #eee
 
 // Screen dimensions from PureCSS
 // >= 568px
@@ -44,6 +45,46 @@ edit-and-create-common()
     box-sizing border-box
     width 300px
 
-ellipsis-overflow
+ellipsis-overflow()
   overflow hidden
   text-overflow ellipsis
+
+rendered-markdown()
+  img
+    max-width 100%
+
+  p
+    margin 0
+    margin-bottom 1em
+
+  code
+    font-size 14px
+    background-color code-background-color
+
+  p
+    code
+      padding: 1px 5px 1px 5px
+
+  hr
+    background-color #ddd
+    color #ddd
+    border 0
+    height 1px
+
+  blockquote
+    margin-bottom 10px
+    padding 10px
+    background-color #fff9e3
+    border-left 2px solid #ffeb8e
+
+    p:last-child
+      margin-bottom: 0
+
+  pre
+    word-wrap normal
+    overflow auto
+    padding 5px
+    width auto
+    max-height 600px
+    background-color code-background-color
+    margin-bottom 1em
