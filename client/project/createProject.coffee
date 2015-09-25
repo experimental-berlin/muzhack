@@ -8,14 +8,9 @@ onChange = ->
   Session.set("isProjectModified", true)
 
 handleEditorRendered = (editor, text) ->
-  # Make sure Ace is aware of the fact the things might have changed.
-  editor.attachAce()
-  if text
-    editor.setValue(text, 0)
-  editor.ace.on("change", onChange)
-  editor.ace.clearSelection()
-  editor.ace.gotoLine(0, 0)
-  editor.ace.session.setUseWrapMode(true)
+  # Attach editor to DOM
+  editor.render(text)
+  editor.hooks.set("onChange", onChange)
 
 Template.create.onRendered(->
   logger.debug("Project creation view rendered")
@@ -49,8 +44,8 @@ Template.createFiles.onRendered(->
 getParameters = () ->
   projectId = trimWhitespace($('#id-input').val())
   title = trimWhitespace($('#title-input').val())
-  description = descriptionEditor.value()
-  instructions = instructionsEditor.value()
+  description = descriptionEditor.getText()
+  instructions = instructionsEditor.getText()
   tags = R.map(trimWhitespace, S.wordsDelim(/,/, $("#tags-input").val()))
   username = Meteor.user().username
   licenseSelect = document.getElementById("license-select")
