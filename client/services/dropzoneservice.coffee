@@ -27,49 +27,29 @@ monitoredDropzoneEvents = [
 dropzoneLogger = new Logger("dropzone")
 logger = new Logger("DropzoneService")
 
-handleDropzoneEvent = (event, dropzone, args...) =>
+handleDropzoneEvent = (event, dropzone, args...) ->
   dropzoneLogger.debug("#{event}:", args)
-  if event in ["addedfile", "addedfiles", "removedfile"]
-    logger.debug("Dropzone changed, notifying dependents")
-    dep = getDependency(dropzone)
-    dep.changed()
 
- b64ToBlob = (b64Data, contentType, sliceSize) ->
-   sliceSize = sliceSize || 512
+b64ToBlob = (b64Data, contentType, sliceSize) ->
+  sliceSize = sliceSize || 512
 
-   byteCharacters = atob(b64Data)
-   byteArrays = []
-   offset = 0
-   while offset < byteCharacters.length
-     slice = byteCharacters.slice(offset, offset + sliceSize)
-     byteNumbers = (slice.charCodeAt(i) for i in [0...slice.length])
-     byteArray = new Uint8Array(byteNumbers)
-     byteArrays.push(byteArray)
-     offset += sliceSize
+  byteCharacters = atob(b64Data)
+  byteArrays = []
+  offset = 0
+  while offset < byteCharacters.length
+    slice = byteCharacters.slice(offset, offset + sliceSize)
+    byteNumbers = (slice.charCodeAt(i) for i in [0...slice.length])
+    byteArray = new Uint8Array(byteNumbers)
+    byteArrays.push(byteArray)
+    offset += sliceSize
 
-   new Blob(byteArrays, {type: contentType})
-
-getDependency = (dropzone) ->
-  if !dropzone._meteorDependency?
-    dropzone._meteorDependency = new Tracker.Dependency()
-  dropzone._meteorDependency
+  new Blob(byteArrays, {type: contentType})
 
 getFolder = (file) ->
   path = S.wordsDelim(/\//)(file.fullPath)
   if path.length > 1 then "/" + S.join("/", path[...-1]) else ""
 
 class @DropzoneService
-  hasFiles: (dropzone) ->
-    if !dropzone?
-      false
-    else
-      dep = getDependency(dropzone)
-      dep.depend()
-      !R.isEmpty(dropzone.files)
-
-  clearDropzone: (dropzone) ->
-    dropzone.removeAllFiles(true)
-
   createDropzone: (cssId, forPictures, existingFiles) ->
     uploadFiles = (files, data) ->
       processedFiles = []
