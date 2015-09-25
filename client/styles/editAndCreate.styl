@@ -94,7 +94,15 @@ editor()
   height 20px
   padding-left 2px
   padding-right 3px
-  cursor pointer
+  cursor default
+  color grey
+
+  &.enabled
+    color black
+    cursor pointer
+
+    &:hover
+      color #0a83dc
 
 .wmd-prompt-background
   background-color Black
