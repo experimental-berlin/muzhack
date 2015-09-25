@@ -108,11 +108,13 @@ Template.instructionsEditor.onRendered(->
 )
 Template.picturesEditor.onRendered(->
   logger.debug("Pictures editor rendered")
-  pictureDropzone = dropzoneService.createDropzone("picture-dropzone", true, @data.pictures)
+  pictureDropzone = dropzoneService.createDropzone("picture-dropzone", true, @data?.pictures)
+  logger.debug("Created picture dropzone")
 )
 Template.filesEditor.onRendered(->
   logger.debug("Files editor rendered")
-  fileDropzone = dropzoneService.createDropzone("file-dropzone", false, @data.files)
+  fileDropzone = dropzoneService.createDropzone("file-dropzone", false, @data?.files)
+  logger.debug("Created file dropzone")
 )
 Template.project.events({
   'change #title-input': onChange
@@ -169,23 +171,10 @@ Template.project.events({
     logger.debug("Asking user whether to remove project or not")
     notificationService.question("Remove project?",
       "Are you sure you wish remove this project?", doRemove, dontRemove)
-  "click #remove-all-pictures": ->
-    logger.debug("Removing all pictures")
-    dropzoneService.clearDropzone(pictureDropzone)
-  "click #remove-all-files": ->
-    logger.debug("Removing all files")
-    dropzoneService.clearDropzone(fileDropzone)
 })
 Template.editProject.helpers(
   tagsString: -> @tags.join(',')
   isWaiting: -> Session.get("isWaiting")
   licenseOptions: ->
     ({id: id, name: license.name, isSelected: id == @licenseId} for id, license of licenses)
-)
-Template.picturesEditor.helpers(
-  projectHasPictures: ->
-    dropzoneService.hasFiles(pictureDropzone)
-)
-Template.filesEditor.helpers(
-  projectHasFiles: -> dropzoneService.hasFiles(fileDropzone)
 )
