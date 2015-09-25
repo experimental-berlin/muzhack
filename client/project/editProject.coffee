@@ -16,8 +16,8 @@ handleEditorRendered = (editor, text) ->
 
 saveProject = (owner, projectId) ->
   title = trimWhitespace($("#title-input").val())
-  description = descriptionEditor.value()
-  instructions = instructionsEditor.value()
+  description = descriptionEditor.getText()
+  instructions = instructionsEditor.getText()
   tags = R.map(trimWhitespace, S.wordsDelim(/,/, $("#tags-input").val()))
   licenseSelect = document.getElementById("license-select")
   license = licenseSelect.options[licenseSelect.selectedIndex].value
