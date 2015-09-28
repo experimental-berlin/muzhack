@@ -31,6 +31,7 @@ Template.user.helpers({
   isLoggedInUser: ->
     user = Meteor.user()
     user?.username == @username
+  email: -> @emails[0].address
 })
 Template.user.events({
   'click .tabs > li': ->

@@ -3,6 +3,8 @@
     .pure-u-1-4
       #user-name #{profile.name}
       #user-username.muted #{username}
+      #user-email
+        a(href="mailto:#{email}" target="_blank") #{email}
     .pure-u-3-4
       ul.tabs(role="tablist")
         each profileTabs

@@ -85,7 +85,8 @@ class @LoginService
           notificationService.warn(errorCaption, "You must supply a password")
           return false
         if password.length < passwordLength
-          notificationService.warn(errorCaption, "The password must consist of at least #{passwordLength} characters")
+          notificationService.warn(errorCaption,
+            "The password must consist of at least #{passwordLength} characters")
           return false
 
         logger.debug("Registering user #{email}")
