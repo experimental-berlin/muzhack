@@ -134,7 +134,7 @@ class @LoginService
             handleRedirect = ->
               if remainingSeconds == 0
                 Session.set("isRedirecting", false)
-                Router.go('/')
+                Router.go('/login')
               else
                 remainingSeconds -= 1
                 Session.set("remainingSeconds", remainingSeconds)
