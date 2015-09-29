@@ -2,11 +2,11 @@ logger = new Logger("loginservice")
 idSignIn = "login-signin-tab"
 idSignup = "login-signup-tab"
 
-findEmail = (t) ->
-  return trimWhitespace(t.find('.account-email').value)
+findEmail = (template) ->
+  return trimWhitespace(template.find('.account-email').value)
 
-findPassword = (t) ->
-  return trimWhitespace(t.find('.account-password').value)
+findPassword = (template) ->
+  return trimWhitespace(template.find('.account-password').value)
 
 class @LoginService
   setupTemplate: ->
