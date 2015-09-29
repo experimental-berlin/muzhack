@@ -45,20 +45,21 @@ class @LoginService
         logger.debug("Showing signup form")
         Session.set("isInSignupMode", true)
       ,
-      'submit #signin-form': (e, t) ->
-        e.preventDefault()
-        # retrieve the input field values
-        email = findEmail(t)
-        password = findPassword(t)
+      'submit #signin-form': (event, template) ->
+        event.preventDefault()
+        # Retrieve the input field values
+        emailOrUsername = findEmail(template)
+        password = findPassword(template)
 
-        Meteor.loginWithPassword(email, password, (err) ->
+        logger.debug("Logging in with email or username '#{emailOrUsername}'")
+        Meteor.loginWithPassword(emailOrUsername, password, (err) ->
           if (err)
             notificationService.warn("Login Error", err.reason)
           else
             # The user has been logged in.
         )
 
-        return false;
+        false
       ,
       'submit #signup-form': (e, t) ->
         errorCaption = "Signup Error"
