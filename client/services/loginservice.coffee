@@ -41,7 +41,7 @@ class @LoginService
 
         $("##{idSignup}").addClass('active')
         $("##{idSignIn}").removeClass('active')
-        $("#signup-email").focus()
+        $("#signup-username").focus()
         logger.debug("Showing signup form")
         Session.set("isInSignupMode", true)
       ,
@@ -126,13 +126,17 @@ class @LoginService
       ,
     })
     Template.forgotPassword.events({
+      "click #cancel-button": (event) ->
+        event.preventDefault()
+        logger.debug("Canceling forgot password form")
+        Router.go("/login")
       'submit #forgotpassword-form': (e, t) ->
         passwordLength = 8
 
         e.preventDefault()
         # Retrieve the input field values
         email = findEmail(t)
-        logger.debug("Handling forgotten password for email #{email}")
+        logger.debug("Handling forgotten password for email '#{email}'")
         Accounts.forgotPassword({
           email: email,
         }, (err) ->
