@@ -2,12 +2,29 @@
 
 pad-margin = 56px
 
+.required
+  white-space nowrap
+
+  input
+    display inline-block!important
+
+  &::after
+    content " *"
+    vertical-align middle
+    color red
+
 .login-pad
   pad-base()
 
   border 0
   margin pad-margin
   margin-bottom 0
+
+  #userhint
+    padding-bottom 24px
+
+    .required-asterisk
+      color red
 
   form
     rounded-corners-bottom()

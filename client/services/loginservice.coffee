@@ -9,7 +9,7 @@ findPassword = (template) ->
   return trimWhitespace(template.find('.account-password').value)
 
 class @LoginService
-  setupTemplate: ->
+  constructor: ->
     Template.login.helpers({
       showSignIn: ->
         return !Session.get("isInSignupMode")
@@ -62,6 +62,7 @@ class @LoginService
         false
       ,
       'submit #signup-form': (e, t) ->
+        logger.debug("User submitted signup form")
         errorCaption = "Signup Error"
         passwordLength = 8
 
@@ -81,6 +82,10 @@ class @LoginService
         if password != confirmedPassword
           notificationService.warn(errorCaption, "Passwords don't match")
           return false
+        website = trimWhitespace(t.find(".account-website").value)
+        if not /^https?:\/\/.+$/.test(website)
+          notificationService.warn(errorCaption, "You must supply a valid URL")
+          return false
 
         if S.isBlank(password)
           notificationService.warn(errorCaption, "You must supply a password")
@@ -90,13 +95,15 @@ class @LoginService
             "The password must consist of at least #{passwordLength} characters")
           return false
 
-        logger.debug("Registering user #{email}")
+        logger.debug("Registering user '#{username}'")
+        # TODO: Implement verification of website URL on server
         Accounts.createUser({
           username: username,
           email: email,
           password: password,
           profile: {
             name: name,
+            website: website,
           },
         }, (err) ->
           if !err?

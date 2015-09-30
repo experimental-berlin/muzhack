@@ -11,7 +11,6 @@ Meteor.startup(->
   @instructionsEditor = new Markdown.Editor(converter, "-instructions")
 
   @loginService = new LoginService()
-  @loginService.setupTemplate()
   @notificationService = new NotificationService()
   @modalService = new ModalService()
   @accountService = new AccountService()

@@ -20,13 +20,22 @@
             a#forgot-password.small(href="/account/forgotpassword") Forgot password?
       else if showSignUp
         form#signup-form.pure-form.pure-form-stacked(action="action")
+          div#userhint #[span.required-asterisk *] indicates a required field
           fieldset
             legend Account info
-            input#signup-username.account-username(autofocus type="text" placeholder="username")
-            input#signup-email.account-email(autofocus type="email" placeholder="email")
-            input#signup-name.account-name(autofocus type="text" placeholder="name")
-            input.account-password(type="password" placeholder="password")
-            input.account-password-confirm(type="password" placeholder="confirm password")
+            div.required
+              input#signup-username.account-username(autofocus type="text" placeholder="username"
+                required)
+            div.required
+              input.account-password(type="password" placeholder="password" required)
+            div.required
+              input.account-password-confirm(type="password" placeholder="confirm password" required)
+            div.required
+              input#signup-email.account-email(autofocus type="email" placeholder="email"
+                required)
+            div.required
+              input#signup-name.account-name(autofocus type="text" placeholder="name" required)
+            input#signup-website.account-website(autofocus type="url" placeholder="website")
           .button-group
             input#signup-button.pure-button.pure-button-primary(type="submit" value="Sign up")
   .pure-u-1-5

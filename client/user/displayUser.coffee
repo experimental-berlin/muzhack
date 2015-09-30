@@ -32,6 +32,7 @@ Template.user.helpers({
     user = Meteor.user()
     user?.username == @username
   email: -> @emails[0].address
+  hasWebsite: -> !S.isBlank(@profile.website)
 })
 Template.user.events({
   'click .tabs > li': ->

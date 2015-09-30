@@ -6,6 +6,9 @@
       hr
       #user-email
         a(href="mailto:#{email}" target="_blank") #{email}
+      if hasWebsite
+        #user-website
+          a(href="#{profile.website}" target="_blank") #{profile.website}
     .pure-u-3-4
       ul.tabs(role="tablist")
         each profileTabs
