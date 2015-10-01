@@ -62,7 +62,8 @@ Template.accountbar.helpers({
     user = Meteor.user()
     if user?
       [
-        new AccountButton('user', 'account', "/u/#{user.username}", "Go to your account")
+        new AccountButton('user', 'account', accountService.getUserProfileUrl(),
+          "Go to your account")
         new AccountButton('exit3', 'logout', '/logout', "Log out")
       ]
     else

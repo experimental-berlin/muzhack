@@ -33,6 +33,12 @@ Template.user.helpers({
     user?.username == @username
   email: -> @emails[0].address
   hasWebsite: -> !S.isBlank(@profile.website)
+  avatar: ->
+    email = @emails[0].address
+    hash = CryptoJS.MD5(email).toString(CryptoJS.enc.Hex)
+    gravatarUrl = "http://www.gravatar.com/avatar/#{hash}?d=identicon&s=230"
+    gravatarUrl
+  userProfileUrl: -> accountService.getUserProfileUrl()
 })
 Template.user.events({
   'click .tabs > li': ->
