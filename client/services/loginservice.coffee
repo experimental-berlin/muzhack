@@ -77,11 +77,9 @@ class @LoginService
           notificationService.warn(errorCaption, "You must supply a name")
           return false
         email = findEmail(t)
-        password = findPassword(t)
-        confirmedPassword = trimWhitespace(t.find('.account-password-confirm').value)
-        if password != confirmedPassword
-          notificationService.warn(errorCaption, "Passwords don't match")
-          return false
+        password = @getPassword(t)
+        if !password?
+          return
         website = trimWhitespace(t.find(".account-website").value)
         if not /^https?:\/\/.+$/.test(website)
           notificationService.warn(errorCaption, "You must supply a valid URL")
@@ -163,3 +161,12 @@ class @LoginService
         return false
       ,
     })
+
+  getPassword: (template) ->
+    password = findPassword(template)
+    confirmedPassword = trimWhitespace(template.find('.account-password-confirm').value)
+    if password != confirmedPassword
+      notificationService.warn("Password Confirmation Error", "Passwords don't match")
+      null
+    else
+      password

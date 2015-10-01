@@ -79,7 +79,7 @@ Router.route("/discourse/sso", ->
       renderError("Internal error")
     else
       logger.debug("Calling server to verify Discourse SSO parameters")
-      Meteor.call("verifyDiscourseSso", payload, sig, (error, result) =>
+      Meteor.call("verifyDiscourseSso", payload, sig, (error, result) ->
         if error?
           logger.error("Server failed to verify Discourse call: #{error.reason}")
           renderError(error.reason)
@@ -90,9 +90,14 @@ Router.route("/discourse/sso", ->
           window.location = "#{discourseUrl}/session/sso_login?sso=#{respPayload}&sig=#{respSig}"
       )
 )
+Router.route("/account/resetpassword/:token", ->
+  @render("resetPassword")
+)
 
 configureHotCodePush = (url) ->
-  if url in ["/create", "/account/forgotpassword", "/login"]
+  if R.any(((pattern) -> new RegExp(pattern).test(url)), [
+    "/create", "/account/forgotpassword", "/login", "/account/resetpassword/.+"
+  ])
     logger.debug("Disallowing hot code push for route '#{url}'")
     Session.set("hotCodePushAllowed", false)
   else if url in ["/", "/about", "/account", "/discourse/sso", "/logout"] or \

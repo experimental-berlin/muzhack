@@ -11,4 +11,6 @@ Meteor.startup(->
   logger.debug("SMTP server URL: '#{loggableUrl}'")
 
   Accounts.emailTemplates.from = "MuzHack <no-reply@muzhack.com>"
+  Accounts.urls.resetPassword = (token) ->
+    Meteor.absoluteUrl("account/resetpassword/#{token}")
 )
