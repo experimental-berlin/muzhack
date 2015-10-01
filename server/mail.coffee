@@ -9,4 +9,6 @@ Meteor.startup(->
   loggableUrl = "smtp://#{encodeURIComponent("musitechub@gmail.com")}:" +
     "SECRET@#{encodeURIComponent("smtp.mandrillapp.com")}:587"
   logger.debug("SMTP server URL: '#{loggableUrl}'")
+
+  Accounts.emailTemplates.from = "MuzHack <no-reply@muzhack.com>"
 )
