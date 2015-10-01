@@ -59,6 +59,7 @@ isotope:isotope@2.1.0_1
 jag:pince@0.0.9
 jparker:crypto-core@0.1.0
 jparker:crypto-md5@0.1.1
+jparker:crypto-sha256@0.1.1
 jquery@1.11.4
 lampe:purecss@0.5.0
 launch-screen@1.0.4
@@ -78,7 +79,6 @@ mongo@1.1.1
 mongo-id@1.0.1
 mquandalle:jade@0.4.3_1
 mquandalle:jade-compiler@0.4.3
-mrt:crypto-hmac-sha256-base64@0.0.1
 npm-bcrypt@0.7.8_2
 npm-mongo@1.4.39_1
 observe-sequence@1.0.7

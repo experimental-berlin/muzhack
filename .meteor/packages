@@ -31,7 +31,6 @@ aknudsen:iron-router-ga
 browser-policy
 browser-policy-content
 aknudsen:ms-seo
-mrt:crypto-hmac-sha256-base64
 lookback:tooltips
 gadicohen:robots-txt
 aknudsen:spiderable2
@@ -51,3 +50,4 @@ ejson
 spacebars
 check
 jparker:crypto-md5
+jparker:crypto-sha256
