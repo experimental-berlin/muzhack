@@ -61,7 +61,7 @@ class @LoginService
 
         false
       ,
-      'submit #signup-form': (e, t) ->
+      'submit #signup-form': (e, t) =>
         logger.debug("User submitted signup form")
         errorCaption = "Signup Error"
         passwordLength = 8
@@ -81,7 +81,7 @@ class @LoginService
         if !password?
           return
         website = trimWhitespace(t.find(".account-website").value)
-        if not /^https?:\/\/.+$/.test(website)
+        if !S.isBlank(website) and not /^https?:\/\/.+$/.test(website)
           notificationService.warn(errorCaption, "You must supply a valid URL")
           return false
 
