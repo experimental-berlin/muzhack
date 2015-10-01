@@ -141,11 +141,11 @@ class @LoginService
           if !err?
             logger.debug("Forgotten password has been handled for email #{email}")
             handleRedirect = ->
+              remainingSeconds -= 1
               if remainingSeconds == 0
                 Session.set("isRedirecting", false)
                 Router.go('/login')
               else
-                remainingSeconds -= 1
                 Session.set("remainingSeconds", remainingSeconds)
                 setTimeout(handleRedirect, 1000)
 
