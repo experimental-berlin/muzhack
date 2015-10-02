@@ -1,7 +1,8 @@
-  Template = Package.templating.Template
-  Blaze = Package.blaze.Blaze
-  HTML = Package.htmljs.HTML
+Template = Package.templating.Template
+Blaze = Package.blaze.Blaze
+HTML = Package.htmljs.HTML
 
+Meteor.startup(->
   Blaze.Template.registerHelper("markdown", new Template("markdown", ->
     view = @
     content = ''
@@ -10,3 +11,4 @@
     converter = Markdown.getSanitizingConverter()
     return HTML.Raw(converter.makeHtml(content))
   ))
+)
