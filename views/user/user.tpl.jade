@@ -57,7 +57,8 @@
             if isLoggedInUser
               #plan-buttons.button-group
                 button#create-plan.pure-button(data-tooltip="Create project plan") New
-                button#add-existing-plan.pure-button(data-tooltip="Add existing project plan") Add Existing
+                button#add-existing-plan.pure-button(
+                  data-tooltip="Add existing project plan") Add Existing
               hr
             if hasProjectPlans
               ul#planned-projects
@@ -69,7 +70,12 @@
                         span.icon-pencil3
                       a.remove-project-plan(href="#", data-tooltip="Remove project plan")
                         span.icon-cross
-                      a.close-project-plan(href="#", data-tooltip="Remove project plan and close Trello board")
+                      a.close-project-plan(href="#", data-tooltip=
+                          "Remove project plan and close Trello board")
                         span.icon-bin
             else
               em No project plans.
+        if displayAbout
+          +markdown
+            #{about}
+            

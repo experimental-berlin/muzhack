@@ -25,6 +25,7 @@ Template.user.helpers({
     [new UserTab("Projects"), new UserTab("Plans"), new UserTab("About", null, aboutEnabled),]
   displayProjects: -> isActiveTab("projects")
   displayPlans: -> isActiveTab("plans")
+  displayAbout: -> isActiveTab("about")
   hasProjects: -> Projects.findOne({owner: @username})?
   projects: -> R.map(((project) -> R.merge(project, {createdStr: dateService.displayDate(
     project.created)})), Projects.find({owner: @username}))
