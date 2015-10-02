@@ -1,21 +1,20 @@
 logger = new Logger('UserController')
 
-@UserController = RouteController.extend({
-  action: ->
-    data = @data()
-    # TODO: Consolidate with ProjectController
-    tabNameMatch = /^.+#([^#]+)$/.exec(@url)
-    defaultTab = "projects"
-    tabNames = ["projects", "plans"]
-    tabName = if tabNameMatch? then tabNameMatch[1] else defaultTab
-    if tabName not in tabNames
-      tabName = defaultTab
-    logger.debug("Current tab name: '#{tabName}'")
-    isLoggedInUser = data.username == Meteor.user()?.username
-    logger.debug("Is logged in user: #{isLoggedInUser}")
-    @state.set("activeTab", tabName)
-    @state.set("isLoggedInUser", isLoggedInUser)
-    @render("user")
+    @UserController = RouteController.extend({
+      action: ->
+        data = @data()
+        # TODO: Consolidate with ProjectController
+        tabName = @params.hash
+        defaultTab = "projects"
+        tabNames = ["projects", "plans", "about"]
+        if tabName not in tabNames
+          tabName = defaultTab
+        logger.debug("Current tab name: '#{tabName}'")
+        isLoggedInUser = data.username == Meteor.user()?.username
+        logger.debug("Is logged in user: #{isLoggedInUser}")
+        @state.set("activeTab", tabName)
+        @state.set("isLoggedInUser", isLoggedInUser)
+        @render("user")
   waitOn: -> [Meteor.subscribe("users"), Meteor.subscribe("projects"),
     Meteor.subscribe("trelloBoards"),]
   data: -> Meteor.users.findOne(username: @params.user)

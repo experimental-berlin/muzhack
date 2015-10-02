@@ -18,6 +18,10 @@
         #user-joined.vcard-detail
           span.icon-calendar
           span Joined #{userJoined}
+        if hasAbout
+          hr
+          #user-about-short.vcard-detail
+            a(href="#about") About Arve
     .pure-u-3-4
       ul.tabs(role="tablist")
         each profileTabs
@@ -77,5 +81,5 @@
               em No project plans.
         if displayAbout
           +markdown
-            #{about}
+            #{aboutUser}
             

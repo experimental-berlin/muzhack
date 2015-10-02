@@ -1,10 +1,7 @@
 logger = new Logger("displayUser")
 
-getActiveTab = ->
-  Iron.controller().state.get("activeTab")
-
 isActiveTab = (tabName) ->
-  getActiveTab() == tabName
+  Iron.controller().state.get("activeTab") == tabName
 
 class UserTab
   constructor: (@title, @icon, @enabled=true) ->
@@ -42,8 +39,9 @@ Template.user.helpers({
     gravatarUrl = "http://www.gravatar.com/avatar/#{hash}?d=identicon&s=230"
     gravatarUrl
   userProfileUrl: -> accountService.getUserProfileUrl()
-  userJoined: ->
-    dateService.displayDateTextual(@createdAt)
+  userJoined: -> dateService.displayDateTextual(@createdAt)
+  aboutUser: -> @profile.about
+  hasAbout: -> !S.isBlank(@profile.about)
 })
 Template.user.events({
   'click .tabs a': ->
