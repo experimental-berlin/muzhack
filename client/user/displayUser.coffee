@@ -39,6 +39,8 @@ Template.user.helpers({
     gravatarUrl = "http://www.gravatar.com/avatar/#{hash}?d=identicon&s=230"
     gravatarUrl
   userProfileUrl: -> accountService.getUserProfileUrl()
+  userJoined: ->
+    dateService.displayDateTextual(@createdAt)
 })
 Template.user.events({
   'click .tabs > li': ->

@@ -19,7 +19,7 @@ getActiveTab = () ->
 
 Template.displayProject.helpers(
   creationDateString: ->
-    moment(@created).format("MMMM Do YYYY")
+    dateService.displayDateTextual(@created)
   userFullName: -> @ownerName
   username: -> @ownerUsername
   projectTabs: -> [

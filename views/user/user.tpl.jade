@@ -8,13 +8,17 @@
         #user-name #{profile.name}
         #user-username.muted #{username}
         hr
-        #user-email
+        #user-email.vcard-detail
           span.icon-envelop3
           a(href="mailto:#{email}" target="_blank") #{email}
         if hasWebsite
-          #user-website
+          #user-website.vcard-detail
             span.icon-link
             a(href="#{profile.website}" target="_blank") #{profile.website}
+        #user-joined.vcard-detail
+          span.icon-calendar
+          span Joined #{userJoined}
+            
     .pure-u-3-4
       ul.tabs(role="tablist")
         each profileTabs
