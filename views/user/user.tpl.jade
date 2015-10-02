@@ -18,15 +18,19 @@
         #user-joined.vcard-detail
           span.icon-calendar
           span Joined #{userJoined}
-            
     .pure-u-3-4
       ul.tabs(role="tablist")
         each profileTabs
-          li(class="#{classes}")
-            a(role="tab" href="##{title.toLowerCase}")
+          li(class=classes)
+            if enabled
+              a(role="tab" href="##{title.toLowerCase}")
+                if icon
+                  span(class="icon-#{icon}") &nbsp;
+                = title
+            else
               if icon
                 span(class="icon-#{icon}") &nbsp;
-              = title
+              span #{title}
       #tab-contents
         if displayProjects
           div

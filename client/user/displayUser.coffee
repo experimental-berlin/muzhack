@@ -7,20 +7,22 @@ isActiveTab = (tabName) ->
   getActiveTab() == tabName
 
 class UserTab
-  constructor: (@title, @icon) ->
+  constructor: (@title, @icon, @enabled=true) ->
     @name = @title.toLowerCase()
 
   classes: ->
     if isActiveTab(@name)
       logger.debug("#{@name} is active tab")
-      "active"
+      classes = ["active"]
     else
-      ""
+      classes = []
+    S.join(" ", R.concat(classes, if !@enabled then ["disabled"] else []))
 
 Template.user.helpers({
   profileTabs: ->
     logger.debug("Getting profile tabs")
-    [new UserTab("Projects"), new UserTab("Plans"),]
+    aboutEnabled = !S.isBlank(@profile.about)
+    [new UserTab("Projects"), new UserTab("Plans"), new UserTab("About", null, aboutEnabled),]
   displayProjects: -> isActiveTab("projects")
   displayPlans: -> isActiveTab("plans")
   hasProjects: -> Projects.findOne({owner: @username})?
@@ -43,7 +45,7 @@ Template.user.helpers({
     dateService.displayDateTextual(@createdAt)
 })
 Template.user.events({
-  'click .tabs > li': ->
+  'click .tabs a': ->
     Iron.controller().state.set('activeTab', @name)
     logger.debug("Set activeTab: #{@name}")
   "click #create-plan": ->

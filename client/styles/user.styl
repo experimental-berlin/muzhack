@@ -1,5 +1,7 @@
 @require 'common.import'
 
+tab-color = #4C4C4C
+
 #user-pad
   pad-base()
 
@@ -21,12 +23,13 @@
 
     li
       a
+        color tab-color
+      &.disabled
         color muted
-
-    li.active
-      border-left 1px solid muted
-      border-right 1px solid muted
-      border-top 1px solid muted
+      &.active
+        border-left 1px solid
+        border-right 1px solid tab-color
+        border-top 1px solid tab-color
 
 #user-name
   ellipsis-overflow()
