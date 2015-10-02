@@ -13,7 +13,6 @@ jag:pince
 stevezhu:sass
 email
 momentjs:moment
-markdown
 isotope:isotope
 reactive-var
 mquandalle:jade
@@ -52,3 +51,4 @@ check
 jparker:crypto-md5
 jparker:crypto-sha256
 jparker:crypto-hmac
+markdown
