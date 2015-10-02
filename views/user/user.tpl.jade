@@ -1,17 +1,20 @@
 #user-pad
   .pure-g
     .pure-u-1-4
-      #user-avatar
-        a(href=userProfileUrl)
-          img(src=avatar)
-      #user-name #{profile.name}
-      #user-username.muted #{username}
-      hr
-      #user-email
-        a(href="mailto:#{email}" target="_blank") #{email}
-      if hasWebsite
-        #user-website
-          a(href="#{profile.website}" target="_blank") #{profile.website}
+      #vcard
+        #user-avatar
+          a(href=userProfileUrl)
+            img(src=avatar)
+        #user-name #{profile.name}
+        #user-username.muted #{username}
+        hr
+        #user-email
+          span.icon-envelop3
+          a(href="mailto:#{email}" target="_blank") #{email}
+        if hasWebsite
+          #user-website
+            span.icon-link
+            a(href="#{profile.website}" target="_blank") #{profile.website}
     .pure-u-3-4
       ul.tabs(role="tablist")
         each profileTabs
