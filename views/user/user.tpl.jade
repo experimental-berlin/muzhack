@@ -21,13 +21,13 @@
         if hasAbout
           hr
           #user-about-short.vcard-detail
-            a(href="#about") About #{userFirstName}
+            a(href=aboutTabUrl) About #{userFirstName}
     .pure-u-3-4
       ul.tabs(role="tablist")
         each profileTabs
           li(class=classes)
             if enabled
-              a(role="tab" href="##{title.toLowerCase}")
+              a(role="tab" href=url)
                 if icon
                   span(class="icon-#{icon}") &nbsp;
                 = title

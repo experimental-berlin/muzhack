@@ -57,6 +57,18 @@ Router.route("/u/:user", {
   name: "user"
   controller: UserController
 })
+Router.route("/u/:user/projects", {
+  name: "user.projects"
+  controller: UserController
+})
+Router.route("/u/:user/plans", {
+  name: "user.plans"
+  controller: UserController
+})
+Router.route("/u/:user/about", {
+  name: "user.about"
+  controller: UserController
+})
 Router.route('/u/:owner/:project',
   name: "project"
   controller: ProjectController
