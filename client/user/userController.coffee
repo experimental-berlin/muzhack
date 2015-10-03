@@ -1,17 +1,14 @@
 logger = new Logger('UserController')
 
-route2tab = {
-  "user": "projects"
-  "user.projects": "projects"
-  "user.plans": "plans"
-  "user.about": "about"
-}
-
 @UserController = RouteController.extend({
   action: ->
     data = @data()
     # TODO: Consolidate with ProjectController
-    tabName = route2tab[@route.getName()]
+    tabName = @getParams().hash
+    defaultTab = "projects"
+    tabNames = ["projects", "plans", "about"]
+    if tabName not in tabNames
+      tabName = defaultTab
     logger.debug("Current tab name: '#{tabName}'")
     isLoggedInUser = data.username == Meteor.user()?.username
     logger.debug("Is logged in user: #{isLoggedInUser}")
