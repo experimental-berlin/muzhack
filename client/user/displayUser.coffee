@@ -42,6 +42,8 @@ Template.user.helpers({
   userJoined: -> dateService.displayDateTextual(@createdAt)
   aboutUser: -> @profile.about
   hasAbout: -> !S.isBlank(@profile.about)
+  userFirstName: -> S.words(@profile.name)[0]
+  userFullName: -> @profile.name
 })
 Template.user.events({
   'click .tabs a': ->

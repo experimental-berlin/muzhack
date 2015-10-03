@@ -21,7 +21,7 @@
         if hasAbout
           hr
           #user-about-short.vcard-detail
-            a(href="#about") About Arve
+            a(href="#about") About #{userFirstName}
     .pure-u-3-4
       ul.tabs(role="tablist")
         each profileTabs
@@ -80,6 +80,7 @@
             else
               em No project plans.
         if displayAbout
+          h1 About #{userFullName}
           +markdown
             #{aboutUser}
             
