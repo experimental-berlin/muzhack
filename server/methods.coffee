@@ -330,8 +330,9 @@ Meteor.methods({
   #     return
   #   username = user.username
   #   if !S.isBlank(Meteor.settings.discourseApiKey) and !S.isBlank(Meteor.settings.discourseUser)
-  #     discourseLogoutUrl = "#{Meteor.settings.public.discourseUrl}/admin/users/#{username}/log_out" +
-  #       "?api_key=#{Meteor.settings.discourseApiKey}&api_username=#{Meteor.settings.discourseUser}"
+  #     discourseLogoutUrl = "#{Meteor.settings.public.discourseUrl}/admin/users/#{username}/" +
+  #       "log_out?api_key=#{Meteor.settings.discourseApiKey}&api_username=" +
+  #       "#{Meteor.settings.discourseUser}"
   #     HTTP.post(discourseLogoutUrl)
   #   else
   #     logger.debug("Not logging user out of Discourse since API key/user not defined")
