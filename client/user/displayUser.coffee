@@ -1,16 +1,12 @@
 logger = new Logger("displayUser")
 
-getTabUrl = (tabName) ->
-  username = Router.current().params.user
-  "/u/#{username}/#{tabName}"
-
 isActiveTab = (tabName) ->
   Iron.controller().state.get("activeTab") == tabName
 
 class UserTab
   constructor: (@title, @icon, @enabled=true) ->
     @name = @title.toLowerCase()
-    @url = getTabUrl(@title.toLowerCase())
+    @url = "##{@title.toLowerCase()}"
 
   classes: ->
     if isActiveTab(@name)
@@ -49,7 +45,6 @@ Template.user.helpers({
   hasAbout: -> !S.isBlank(@profile.about)
   userFirstName: -> S.words(@profile.name)[0]
   userFullName: -> @profile.name
-  aboutTabUrl: -> getTabUrl('about')
 })
 Template.user.events({
   "click #create-plan": ->
