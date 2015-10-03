@@ -16,3 +16,6 @@
 [submodule "packages/aknudsen:pagedown"]
 	path = packages/aknudsen:pagedown
 	url = git@github.com:aknuds1/meteor-pagedown.git
+[submodule "packages/aknudsen:tooltips"]
+	path = packages/aknudsen:tooltips
+	url = git@github.com:aknuds1/meteor-tooltips.git
