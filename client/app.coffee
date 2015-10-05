@@ -8,20 +8,30 @@ isMarkdownHelpEnabled = {
 }
 
 onMarkdownHelp = (suffix) ->
+  onHelpItemClick = (topic, item) ->
+    logger.debug("Help item clicked: #{topic}")
+    item.classList.add("selected")
+    topicHelp = document.createElement("div")
+    topicHelp.id = helpId
+    topicHelp.classList.add("wmd-help")
+    topicHelp.appendChild(document.createTextNode("Content"))
+    buttonBar.appendChild(topicHelp)
+
   logger.debug("Toggling Markdown help for editor with suffix '#{suffix}'")
   isMarkdownHelpEnabled[suffix] = !isMarkdownHelpEnabled[suffix]
   buttonBar = document.getElementById("wmd-button-bar-#{suffix}")
   if !buttonBar?
     throw new Error("wmd-button-bar-#{suffix}")
+  helpRowId = "wmd-help-row-#{suffix}"
   helpId = "wmd-help-#{suffix}"
   if isMarkdownHelpEnabled[suffix]
-    helpElem = document.createElement("div")
-    helpElem.id = helpId
-    helpElem.classList.add("wmd-help")
+    helpRow = document.createElement("div")
+    helpRow.id = helpRowId
+    helpRow.classList.add("wmd-help-row")
     helpList = document.createElement("ul")
     helpList.style.padding = 0
     helpList.style.margin = 0
-    helpElem.appendChild(helpList)
+    helpRow.appendChild(helpList)
     for topic in ["Links", "Images", "Styling/Headers", "Lists", "Blockquotes", "Code", "HTML"]
       helpItem = document.createElement("li")
       helpItem.classList.add("wmd-help-item")
@@ -35,10 +45,12 @@ onMarkdownHelp = (suffix) ->
       helpItemLink.style["text-decoration"] = "none"
       helpItemLink.style.color = "black"
       helpItemLink.appendChild(document.createTextNode(topic))
+      helpItemLink.onclick = R.partial(onHelpItemClick, topic, helpItem)
       helpItem.appendChild(helpItemLink)
       helpList.appendChild(helpItem)
-    buttonBar.appendChild(helpElem)
+    buttonBar.appendChild(helpRow)
   else
+    buttonBar.removeChild(document.getElementById(helpRowId))
     buttonBar.removeChild(document.getElementById(helpId))
 
 Meteor.startup(->
