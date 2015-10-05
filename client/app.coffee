@@ -26,8 +26,9 @@ onMarkdownHelp = (suffix) ->
       helpItem = document.createElement("li")
       helpItem.classList.add("wmd-help-item")
       helpItem.style['list-style'] = "none"
+      helpItem.style.padding = "6px"
       helpItem.style.display = "inline-block"
-      helpItem.style["padding-right"] = "16px"
+      helpItem.style["margin-right"] = "8px"
       helpItemLink = document.createElement("a")
       helpItemLink.setAttribute("href", "#")
       helpItemLink.classList.add("wmd-help-item-link")
