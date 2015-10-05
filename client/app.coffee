@@ -2,16 +2,22 @@ logger = new Logger('app')
 
 enableHotCodePush = -> Session.get("hotCodePushAllowed") and !Session.get("isEditingProject")
 
-isMarkdownHelpEnabled = false
+isMarkdownHelpEnabled = {
+  description: false
+  instructions: false
+}
 
 onMarkdownHelp = (suffix) ->
-  logger.debug("Toggling Markdown help")
-  isMarkdownHelpEnabled = !isMarkdownHelpEnabled
+  logger.debug("Toggling Markdown help for editor with suffix '#{suffix}'")
+  isMarkdownHelpEnabled[suffix] = !isMarkdownHelpEnabled[suffix]
   buttonBar = document.getElementById("wmd-button-bar-#{suffix}")
+  if !buttonBar?
+    throw new Error("wmd-button-bar-#{suffix}")
   helpId = "wmd-help-#{suffix}"
-  if isMarkdownHelpEnabled
+  if isMarkdownHelpEnabled[suffix]
     helpElem = document.createElement("div")
     helpElem.id = helpId
+    helpElem.classList.add("wmd-help")
     helpList = document.createElement("ul")
     helpList.style.padding = 0
     helpList.style.margin = 0
@@ -20,7 +26,7 @@ onMarkdownHelp = (suffix) ->
       helpItem = document.createElement("li")
       helpItem.style['list-style'] = "none"
       helpItem.style.display = "inline-block"
-      helpItem.style["padding-right"] = "8px"
+      helpItem.style["padding-right"] = "16px"
       helpItem.appendChild(document.createTextNode(topic))
       helpList.appendChild(helpItem)
     buttonBar.appendChild(helpElem)
@@ -48,11 +54,10 @@ Meteor.startup(->
       redo: "redo"
       help: "question"
     }
-    helpButton: {handler: onMarkdownHelp}
   }
   @descriptionEditor = new Markdown.Editor(converter, "-description",
     R.merge(markdownOptions, {helpButton: {handler: R.partial(onMarkdownHelp, "description")}}))
-  @instructionsEditor = new Markdown.Editor(converter, "-instructions", markdownOptions,
+  @instructionsEditor = new Markdown.Editor(converter, "-instructions",
     R.merge(markdownOptions, {helpButton: {handler: R.partial(onMarkdownHelp, "instructions")}}))
 
   @loginService = new LoginService()

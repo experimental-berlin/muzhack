@@ -1,5 +1,7 @@
 @require 'common.import'
 
+wmd-border = #ccc
+
 editor()
   margin-top 16px
   h2
@@ -28,10 +30,10 @@ editor()
 
   width 100%
   background-color transparent
-  border 1px solid rgb(204, 204, 204)
+  border 1px solid wmd-border
   box-sizing border-box
   margin 0 0 0 0
-  padding 0 12px
+  padding 0
 
 .wmd-input
   rounded-corners-bottom()
@@ -39,7 +41,7 @@ editor()
   width 100%
   height 200px
   background-color white
-  border 1px solid rgb(204, 204, 204)
+  border 1px solid wmd-border
   padding 10px
   resize none
   box-sizing border-box
@@ -54,8 +56,8 @@ editor()
   margin-top 28px
   margin-bottom 28px
   padding 10px 0
-  border-top 1px dotted #ccc
-  border-bottom 1px dotted #ccc
+  border-top 1px dotted wmd-border
+  border-bottom 1px dotted wmd-border
   width 100%
 
 .wmd-button-row
@@ -63,6 +65,7 @@ editor()
   padding 0
   margin 0
   height 36px
+  padding 0 12px
 
 .wmd-spacer
   width 1px
@@ -111,3 +114,9 @@ editor()
   font-family trebuchet MS, helvetica, sans-serif
   font-size 0.8em
   font-weight bold
+
+.wmd-help
+  padding 12px
+  background-color #fff7e5
+  font-size 14px
+  border-top 1px solid wmd-border
