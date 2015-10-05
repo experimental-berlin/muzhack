@@ -68,7 +68,7 @@ Meteor.startup(->
       image: "image2"
       olist: "list-numbered"
       ulist: "list2"
-      heading: "heading"
+      heading: "header"
       hr: "ruler"
       undo: "undo"
       redo: "redo"
