@@ -24,10 +24,17 @@ onMarkdownHelp = (suffix) ->
     helpElem.appendChild(helpList)
     for topic in ["Links", "Images", "Styling/Headers", "Lists", "Blockquotes", "Code", "HTML"]
       helpItem = document.createElement("li")
+      helpItem.classList.add("wmd-help-item")
       helpItem.style['list-style'] = "none"
       helpItem.style.display = "inline-block"
       helpItem.style["padding-right"] = "16px"
-      helpItem.appendChild(document.createTextNode(topic))
+      helpItemLink = document.createElement("a")
+      helpItemLink.setAttribute("href", "#")
+      helpItemLink.classList.add("wmd-help-item-link")
+      helpItemLink.style["text-decoration"] = "none"
+      helpItemLink.style.color = "black"
+      helpItemLink.appendChild(document.createTextNode(topic))
+      helpItem.appendChild(helpItemLink)
       helpList.appendChild(helpItem)
     buttonBar.appendChild(helpElem)
   else
