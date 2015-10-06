@@ -195,7 +195,9 @@ class Editor
       if @selectedHelpItem?
         logger.debug("Removing previously selected help item")
         @selectedHelpItem.classList.remove("selected")
-        buttonBar.removeChild(document.getElementById(helpId))
+        helpElem = document.getElementById(helpId)
+        if helpElem?
+          buttonBar.removeChild(helpElem)
         if @selectedHelpItem == item
           logger.debug("Just toggling selected help item off")
           @selectedHelpItem = null
@@ -242,6 +244,7 @@ class Editor
       helpElem = document.getElementById(helpId)
       if helpElem?
         buttonBar.removeChild(helpElem)
+      @selectedHelpItem = null
 
 class @MarkdownService
   constructor: ->
