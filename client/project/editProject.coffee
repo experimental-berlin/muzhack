@@ -5,19 +5,10 @@ fileDropzone = null
 disableProjectEditing = ->
   Session.set("isEditingProject", false)
 
-onChange = ->
-  logger.debug("Project has changed - setting dirty state")
-  Session.set("isProjectModified", true)
-
-handleEditorRendered = (editor, text) ->
-  # Attach editor to DOM
-  editor.render(text)
-  editor.hooks.set("onChange", onChange)
-
 saveProject = (owner, projectId) ->
   title = trimWhitespace($("#title-input").val())
-  description = descriptionEditor.getText()
-  instructions = instructionsEditor.getText()
+  description = markdownService.getDescription()
+  instructions = markdownService.getInstructions()
   tags = R.map(trimWhitespace, S.wordsDelim(/,/, $("#tags-input").val()))
   licenseSelect = document.getElementById("license-select")
   license = licenseSelect.options[licenseSelect.selectedIndex].value
@@ -92,14 +83,13 @@ Template.editProject.onRendered(->
   Session.set("isWaiting", false)
   Session.set("isProjectModified", false)
   document.getElementById("title-input").focus()
+  markdownService.reset()
 )
 Template.descriptionEditor.onRendered(->
-  logger.debug("Description editor rendered, giving Ace focus")
-  handleEditorRendered(descriptionEditor, @data.description)
+  markdownService.renderDescriptionEditor(@data.description)
 )
 Template.instructionsEditor.onRendered(->
-  logger.debug("Instructions editor rendered, giving Ace focus")
-  handleEditorRendered(instructionsEditor, @data.instructions)
+  markdownService.renderInstructionsEditor(@data.instructions)
 )
 Template.picturesEditor.onRendered(->
   logger.debug("Pictures editor rendered")
@@ -112,8 +102,8 @@ Template.filesEditor.onRendered(->
   logger.debug("Created file dropzone")
 )
 Template.project.events({
-  'change #title-input': onChange
-  'change #tags-input': onChange
+  'change #title-input': -> EditingService.onChange()
+  'change #tags-input': -> EditingService.onChange()
   'click #save-project': ->
     if !Session.get("isEditingProject")
       logger.debug("Ignoring request to save project, since session var isEditingProject is false")

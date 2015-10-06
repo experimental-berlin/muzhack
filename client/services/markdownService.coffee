@@ -1,13 +1,4 @@
-logger = new Logger("pagedown")
-
-markDownHelpState = {
-  description: {
-    isEnabled: false
-  }
-  instructions: {
-    isEnabled: false
-  }
-}
+logger = new Logger("MarkdownService")
 
 markdownManual = {
   Links: """<p>In most cases, a plain URL will be recognized as such and automatically linked:<p>
@@ -155,85 +146,123 @@ Building synths is &lt;strike&gt;fun&lt;/strike&gt;.
 """
 }
 
-onMarkdownHelp = (suffix) ->
-  onHelpItemClick = (topic, item) ->
-    logger.debug("Help item clicked: #{topic}")
-    if state.selectedItem?
-      state.selectedItem.classList.remove("selected")
-      buttonBar.removeChild(document.getElementById(helpId))
-      if state.selectedItem == item
-        logger.debug("Toggling selected help item off")
-        state.selectedItem = null
-        return
-
-    item.classList.add("selected")
-    topicHelp = document.createElement("div")
-    topicHelp.id = helpId
-    topicHelp.classList.add("wmd-help")
-    topicHelp.innerHTML = markdownManual[topic]
-    state.helpElement = topicHelp
-    buttonBar.appendChild(topicHelp)
-    state.selectedItem = item
-
-  logger.debug("Toggling Markdown help for editor with suffix '#{suffix}'")
-  state = markDownHelpState[suffix]
-  state.isEnabled = !state.isEnabled
-  buttonBar = document.getElementById("wmd-button-bar-#{suffix}")
-  if !buttonBar?
-    throw new Error("wmd-button-bar-#{suffix}")
-  helpRowId = "wmd-help-row-#{suffix}"
-  helpId = "wmd-help-#{suffix}"
-  if state.isEnabled
-    helpRow = document.createElement("div")
-    helpRow.id = helpRowId
-    helpRow.classList.add("wmd-help-row")
-    helpList = document.createElement("ul")
-    helpList.style.padding = 0
-    helpList.style.margin = 0
-    helpRow.appendChild(helpList)
-    for topic in ["Links", "Images", "Styling/Headers", "Lists", "Blockquotes", "Code", "HTML"]
-      helpItem = document.createElement("li")
-      helpItem.classList.add("wmd-help-item")
-      helpItem.style['list-style'] = "none"
-      helpItem.style.padding = "6px"
-      helpItem.style.display = "inline-block"
-      helpItem.style["margin-right"] = "8px"
-      helpItemLink = document.createElement("a")
-      helpItemLink.setAttribute("href", "#")
-      helpItemLink.classList.add("wmd-help-item-link")
-      helpItemLink.style["text-decoration"] = "none"
-      helpItemLink.style.color = "black"
-      helpItemLink.appendChild(document.createTextNode(topic))
-      helpItemLink.onclick = R.partial(onHelpItemClick, topic, helpItem)
-      helpItem.appendChild(helpItemLink)
-      helpList.appendChild(helpItem)
-    buttonBar.appendChild(helpRow)
-  else
-    buttonBar.removeChild(document.getElementById(helpRowId))
-    buttonBar.removeChild(document.getElementById(helpId))
-
-Meteor.startup(->
-  logger.debug("Instantiating editors")
-  converter = Markdown.getSanitizingConverter()
-  markdownOptions = {
-    icons: {
-      bold: "bold"
-      italic: "italic"
-      link: "link"
-      quote: "quotes-left"
-      code: "code"
-      image: "image2"
-      olist: "list-numbered"
-      ulist: "list2"
-      heading: "header"
-      hr: "ruler"
-      undo: "undo"
-      redo: "redo"
-      help: "question"
-    }
+markdownOptions = {
+  icons: {
+    bold: "bold"
+    italic: "italic"
+    link: "link"
+    quote: "quotes-left"
+    code: "code"
+    image: "image2"
+    olist: "list-numbered"
+    ulist: "list2"
+    heading: "header"
+    hr: "ruler"
+    undo: "undo"
+    redo: "redo"
+    help: "question"
   }
-  @descriptionEditor = new Markdown.Editor(converter, "-description",
-    R.merge(markdownOptions, {helpButton: {handler: R.partial(onMarkdownHelp, "description")}}))
-  @instructionsEditor = new Markdown.Editor(converter, "-instructions",
-    R.merge(markdownOptions, {helpButton: {handler: R.partial(onMarkdownHelp, "instructions")}}))
-)
+}
+
+class Editor
+  constructor: (converter, @purpose) ->
+    @markdownEditor = new Markdown.Editor(converter, "-#{@purpose}",
+      R.merge(markdownOptions, {helpButton: {handler: @_toggleMarkdownHelp}}))
+    @reset()
+
+  reset: ->
+    @isHelpEnabled = false
+    @selectedHelpItem = null
+
+  render: (text) ->
+    @markdownEditor.render(text)
+    @markdownEditor.hooks.set("onChange", EditingService.onChange)
+
+  getText: ->
+    @markdownEditor.getText()
+
+  _toggleMarkdownHelp: =>
+    helpRowId = "wmd-help-row-#{@purpose}"
+    helpId = "wmd-help-#{@purpose}"
+    logger.debug("Toggling Markdown help for #{@purpose} editor")
+    @isHelpEnabled = !@isHelpEnabled
+    buttonBar = document.getElementById("wmd-button-bar-#{@purpose}")
+    if !buttonBar?
+      throw new Error("Element with ID 'wmd-button-bar-#{@purpose}' not found")
+
+    toggleHelpItem = (topic, item) =>
+      logger.debug("Help item clicked: #{topic}")
+      if @selectedHelpItem?
+        logger.debug("Removing previously selected help item")
+        @selectedHelpItem.classList.remove("selected")
+        buttonBar.removeChild(document.getElementById(helpId))
+        if @selectedHelpItem == item
+          logger.debug("Just toggling selected help item off")
+          @selectedHelpItem = null
+          return
+      else
+        logger.debug("No previously selected help item")
+
+      item.classList.add("selected")
+      topicHelp = document.createElement("div")
+      topicHelp.id = helpId
+      topicHelp.classList.add("wmd-help")
+      topicHelp.innerHTML = markdownManual[topic]
+      buttonBar.appendChild(topicHelp)
+      @selectedHelpItem = item
+
+    if @isHelpEnabled
+      helpRow = document.createElement("div")
+      helpRow.id = helpRowId
+      helpRow.classList.add("wmd-help-row")
+      helpList = document.createElement("ul")
+      helpList.style.padding = 0
+      helpList.style.margin = 0
+      helpRow.appendChild(helpList)
+
+      for topic in ["Links", "Images", "Styling/Headers", "Lists", "Blockquotes", "Code", "HTML"]
+        helpItem = document.createElement("li")
+        helpItem.classList.add("wmd-help-item")
+        helpItem.style['list-style'] = "none"
+        helpItem.style.padding = "6px"
+        helpItem.style.display = "inline-block"
+        helpItem.style["margin-right"] = "8px"
+        helpItemLink = document.createElement("a")
+        helpItemLink.setAttribute("href", "#")
+        helpItemLink.classList.add("wmd-help-item-link")
+        helpItemLink.style["text-decoration"] = "none"
+        helpItemLink.style.color = "black"
+        helpItemLink.appendChild(document.createTextNode(topic))
+        helpItemLink.onclick = R.partial(toggleHelpItem, topic, helpItem)
+        helpItem.appendChild(helpItemLink)
+        helpList.appendChild(helpItem)
+      buttonBar.appendChild(helpRow)
+    else
+      buttonBar.removeChild(document.getElementById(helpRowId))
+      helpElem = document.getElementById(helpId)
+      if helpElem?
+        buttonBar.removeChild(helpElem)
+
+class @MarkdownService
+  constructor: ->
+    converter = Markdown.getSanitizingConverter()
+    logger.debug("Instantiating editors")
+    @descriptionEditor = new Editor(converter, "description")
+    @instructionsEditor = new Editor(converter, "instructions")
+
+  reset: ->
+    logger.debug("Resetting Markdown editors")
+    @descriptionEditor.reset()
+    @instructionsEditor.reset()
+
+  getDescription: ->
+    @descriptionEditor.getText()
+
+  getInstructions: ->
+    @instructionsEditor.getText()
+
+  renderDescriptionEditor: (text) ->
+    @descriptionEditor.render(text)
+
+  renderInstructionsEditor: (text) ->
+    @instructionsEditor.render(text)

@@ -3,34 +3,22 @@ logger = new Logger("create")
 pictureDropzone = null
 fileDropzone = null
 
-onChange = ->
-  logger.debug("Project has changed - setting dirty state")
-  Session.set("isProjectModified", true)
-
-handleEditorRendered = (editor, text) ->
-  # Attach editor to DOM
-  editor.render(text)
-  editor.hooks.set("onChange", onChange)
-
 Template.create.onRendered(->
   logger.debug("Project creation view rendered")
   Session.set("isWaiting", false)
   Session.set("isProjectModified", false)
-  for editor in [descriptionEditor, instructionsEditor,]
-    editor.setMode('ace/mode/markdown')
   document.getElementById("id-input").focus()
+  markdownService.reset()
 )
 Template.create.helpers({
   isWaiting: -> Session.get("isWaiting")
   licenseOptions: -> ({id: licenseId, name: license.name} for licenseId, license of licenses)
 })
 Template.createDescription.onRendered(->
-  logger.debug("Description editor rendered, giving Ace focus")
-  handleEditorRendered(descriptionEditor)
+  markdownService.renderDescriptionEditor()
 )
 Template.createInstructions.onRendered(->
-  logger.debug("Instructions editor rendered, giving Ace focus")
-  handleEditorRendered(instructionsEditor)
+  markdownService.renderInstructionsEditor()
 )
 Template.createPictures.onRendered(->
   logger.debug("Pictures editor rendered")
@@ -44,8 +32,8 @@ Template.createFiles.onRendered(->
 getParameters = () ->
   projectId = trimWhitespace($('#id-input').val())
   title = trimWhitespace($('#title-input').val())
-  description = descriptionEditor.getText()
-  instructions = instructionsEditor.getText()
+  description = markdownService.getDescription()
+  instructions = markdownService.getInstructions()
   tags = R.map(trimWhitespace, S.wordsDelim(/,/, $("#tags-input").val()))
   username = Meteor.user().username
   licenseSelect = document.getElementById("license-select")
@@ -138,9 +126,9 @@ createProject = () ->
     )
 
 Template.create.events({
-  'change #id-input': onChange
-  'change #title-input': onChange
-  'change #tags-input': onChange
+  'change #id-input': -> EditingService.onChange()
+  'change #title-input': -> EditingService.onChange()
+  'change #tags-input': -> EditingService.onChange()
   'click #create-project': ->
     Session.set("isWaiting", true)
     try
