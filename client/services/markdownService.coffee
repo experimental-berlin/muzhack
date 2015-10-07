@@ -1,5 +1,6 @@
 logger = new Logger("MarkdownService")
 
+# coffeelint: disable=max_line_length
 markdownManual = {
   Links: """<p>In most cases, a plain URL will be recognized as such and automatically linked:<p>
 <pre>Visit https://twitter.com/muzhack/ for the latest news.
@@ -145,6 +146,7 @@ Building synths is &lt;strike&gt;fun&lt;/strike&gt;.
 </pre>
 """
 }
+# coffeelint: enable=max_line_length
 
 markdownOptions = {
   icons: {
@@ -171,80 +173,105 @@ class Editor
     @reset()
 
   reset: ->
-    @isHelpEnabled = false
-    @selectedHelpItem = null
+    @_selectedHelpItem = null
 
   render: (text) ->
+    createHelpContainer = (className) ->
+      container = document.createElement("div")
+      container.classList.add(className)
+      container.style["box-sizing"] = "border-box"
+      container.style.height = "0"
+      container.style.overflow = "hidden"
+      container.style["max-height"] = "9999px"
+      container
+
     @markdownEditor.render(text)
     @markdownEditor.hooks.set("onChange", EditingService.onChange)
 
-  getText: ->
-    @markdownEditor.getText()
-
-  _toggleMarkdownHelp: =>
     helpRowId = "wmd-help-row-#{@purpose}"
     helpId = "wmd-help-#{@purpose}"
-    logger.debug("Toggling Markdown help for #{@purpose} editor")
-    @isHelpEnabled = !@isHelpEnabled
     buttonBar = document.getElementById("wmd-button-bar-#{@purpose}")
     if !buttonBar?
       throw new Error("Element with ID 'wmd-button-bar-#{@purpose}' not found")
 
+    @_helpContainer = createHelpContainer("wmd-help-container")
+    helpRow = document.createElement("div")
+    helpRow.id = helpRowId
+    helpRow.classList.add("wmd-help-row")
+    helpRow.style["box-sizing"] = "border-box"
+    helpList = document.createElement("ul")
+    helpList.style.padding = 0
+    helpList.style.margin = 0
+    helpRow.appendChild(helpList)
+
     toggleHelpItem = (topic, item) =>
-      logger.debug("Help item clicked: #{topic}")
-      if @selectedHelpItem?
-        logger.debug("Removing previously selected help item")
-        @selectedHelpItem.classList.remove("selected")
-        helpElem = document.getElementById(helpId)
-        if helpElem?
-          buttonBar.removeChild(helpElem)
-        if @selectedHelpItem == item
-          logger.debug("Just toggling selected help item off")
-          @selectedHelpItem = null
+      logger.debug("Help item clicked: '#{topic}'")
+      if @_selectedHelpItem?
+        @_selectedHelpItem.classList.remove("selected")
+        if @_selectedHelpItem == item
+          logger.debug("Just closing selected help item")
+          @_helpContentContainer.style.height = 0
+          @_selectedHelpItem = null
+          @_resizeHelp()
           return
       else
         logger.debug("No previously selected help item")
 
       item.classList.add("selected")
-      topicHelp = document.createElement("div")
-      topicHelp.id = helpId
-      topicHelp.classList.add("wmd-help")
-      topicHelp.innerHTML = markdownManual[topic]
-      buttonBar.appendChild(topicHelp)
-      @selectedHelpItem = item
+      @_helpContentContainer.style.height = "auto"
+      @_helpContent.innerHTML = markdownManual[topic]
+      @_selectedHelpItem = item
+      @_resizeHelp()
 
-    if @isHelpEnabled
-      helpRow = document.createElement("div")
-      helpRow.id = helpRowId
-      helpRow.classList.add("wmd-help-row")
-      helpList = document.createElement("ul")
-      helpList.style.padding = 0
-      helpList.style.margin = 0
-      helpRow.appendChild(helpList)
+    for topic in ["Links", "Images", "Styling/Headers", "Lists", "Blockquotes", "Code", "HTML"]
+      helpItem = document.createElement("li")
+      helpItem.classList.add("wmd-help-item")
+      helpItem.style['list-style'] = "none"
+      helpItem.style.padding = "6px"
+      helpItem.style.display = "inline-block"
+      helpItem.style["margin-right"] = "8px"
+      helpItemLink = document.createElement("a")
+      helpItemLink.setAttribute("href", "#")
+      helpItemLink.classList.add("wmd-help-item-link")
+      helpItemLink.style["text-decoration"] = "none"
+      helpItemLink.style.color = "black"
+      helpItemLink.appendChild(document.createTextNode(topic))
+      helpItemLink.onclick = R.partial(toggleHelpItem, topic, helpItem)
+      helpItem.appendChild(helpItemLink)
+      helpList.appendChild(helpItem)
 
-      for topic in ["Links", "Images", "Styling/Headers", "Lists", "Blockquotes", "Code", "HTML"]
-        helpItem = document.createElement("li")
-        helpItem.classList.add("wmd-help-item")
-        helpItem.style['list-style'] = "none"
-        helpItem.style.padding = "6px"
-        helpItem.style.display = "inline-block"
-        helpItem.style["margin-right"] = "8px"
-        helpItemLink = document.createElement("a")
-        helpItemLink.setAttribute("href", "#")
-        helpItemLink.classList.add("wmd-help-item-link")
-        helpItemLink.style["text-decoration"] = "none"
-        helpItemLink.style.color = "black"
-        helpItemLink.appendChild(document.createTextNode(topic))
-        helpItemLink.onclick = R.partial(toggleHelpItem, topic, helpItem)
-        helpItem.appendChild(helpItemLink)
-        helpList.appendChild(helpItem)
-      buttonBar.appendChild(helpRow)
+    @_helpContainer.appendChild(helpRow)
+
+    @_helpContentContainer = createHelpContainer("wmd-help-content-container")
+    @_helpContent = document.createElement("div")
+    @_helpContent.id = helpId
+    @_helpContent.classList.add("wmd-help-content")
+    @_helpContentContainer.appendChild(@_helpContent)
+    @_helpContainer.appendChild(@_helpContentContainer)
+
+    buttonBar.appendChild(@_helpContainer)
+
+  getText: ->
+    @markdownEditor.getText()
+
+  _toggleMarkdownHelp: =>
+    logger.debug("Toggling display of Markdown help")
+    if $(@_helpContainer).height() == 0
+      logger.debug("Showing help")
+      @_resizeHelp()
     else
-      buttonBar.removeChild(document.getElementById(helpRowId))
-      helpElem = document.getElementById(helpId)
-      if helpElem?
-        buttonBar.removeChild(helpElem)
-      @selectedHelpItem = null
+      logger.debug("Hiding help")
+      @_helpContainer.style.height = 0
+      @_helpContentContainer.style.height = 0
+      @_selectedHelpItem = null
+
+  _resizeHelp: =>
+    $clone = $(@_helpContainer).clone()
+      .css({position: 'absolute', visibility: 'hidden', height: 'auto'})
+      .appendTo("body")
+    height = $clone.height()
+    $clone.remove()
+    @_helpContainer.style.height = "#{height}px"
 
 class @MarkdownService
   constructor: ->
