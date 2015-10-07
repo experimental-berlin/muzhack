@@ -15,6 +15,11 @@
           #user-website.vcard-detail
             span.icon-link
             a(href="#{profile.website}" target="_blank") #{profile.website}
+        if hasSoundCloud
+          #user-soundcloud.vcard-detail
+            span.icon-soundcloud
+            a(href="https://soundcloud.com/#{profile.soundCloud.username}" target="_blank").
+              #{profile.soundCloud.name}
         #user-joined.vcard-detail
           span.icon-calendar
           span Joined #{userJoined}
@@ -83,4 +88,7 @@
           h1 About #{userFullName}
           +markdown
             #{aboutUser}
-            
+        if displayMedia
+          if hasSoundCloudUploads
+            h1#soundcloud-header #[span.icon-soundcloud] SoundCloud
+            ul#soundcloud-uploads

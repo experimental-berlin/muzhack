@@ -9,5 +9,6 @@ Meteor.startup(->
   BrowserPolicy.content.allowEval()
   BrowserPolicy.framing.allowAll()
   BrowserPolicy.content.allowFrameOrigin("*.googletagmanager.com")
+  BrowserPolicy.content.allowFrameOrigin("*.soundcloud.com")
   logger.debug("Configured BrowserPolicy")
 )

@@ -6,7 +6,7 @@ logger = new Logger('UserController')
     # TODO: Consolidate with ProjectController
     tabName = @getParams().hash
     defaultTab = "projects"
-    tabNames = ["projects", "plans", "about"]
+    tabNames = ["projects", "plans", "about", "media"]
     if tabName not in tabNames
       tabName = defaultTab
     logger.debug("Current tab name: '#{tabName}'")

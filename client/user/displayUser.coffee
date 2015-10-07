@@ -20,10 +20,15 @@ Template.user.helpers({
   profileTabs: ->
     logger.debug("Getting profile tabs")
     aboutEnabled = !S.isBlank(@profile.about)
-    [new UserTab("Projects"), new UserTab("Plans"), new UserTab("About", null, aboutEnabled),]
+    mediaEnabled = !R.isEmpty(@profile.soundCloudUploads)
+    [
+      new UserTab("Projects"), new UserTab("Plans"), new UserTab("About", null, aboutEnabled),
+      new UserTab("Media", null, mediaEnabled)
+    ]
   displayProjects: -> isActiveTab("projects")
   displayPlans: -> isActiveTab("plans")
   displayAbout: -> isActiveTab("about")
+  displayMedia: -> isActiveTab("media")
   hasProjects: -> Projects.findOne({owner: @username})?
   projects: -> R.map(((project) -> R.merge(project, {createdStr: dateService.displayDate(
     project.created)})), Projects.find({owner: @username}))
@@ -45,6 +50,8 @@ Template.user.helpers({
   hasAbout: -> !S.isBlank(@profile.about)
   userFirstName: -> S.words(@profile.name)[0]
   userFullName: -> @profile.name
+  hasSoundCloud: -> @profile.soundCloud?
+  hasSoundCloudUploads: -> !R.isEmpty(@profile.soundCloud?.uploads || [])
 })
 Template.user.events({
   "click #create-plan": ->
@@ -150,6 +157,24 @@ Template.user.events({
       logger.debug("User declined removing and closing project plan")
     )
 })
+# TODO: Make sure gets rendered after switching tabs
+Template.user.onRendered(->
+  parentElem = @find("#soundcloud-uploads")
+  embeddables = Meteor.call("getSoundCloudEmbeddables", @data.username, (error, result) ->
+    if error?
+      logger.warn("Server get SoundCloud embeddables:", error)
+      notificationService.warn("Error",
+        "Server failed to get SoundCloud embeddables: #{error.reason}.")
+    else
+      logger.debug("Server was able to successfully get SoundCloud embeddables:", result)
+      R.forEach((embeddable) ->
+        logger.debug("Embedding SoundCloud upload, HTML:", embeddable.html)
+        listItemElem = document.createElement("li")
+        listItemElem.innerHTML = embeddable.html
+        parentElem.appendChild(listItemElem)
+      , result)
+  )
+)
 
 invokeTrelloApi = (methodName, callback, args...) ->
   Session.set("isWaiting", true)

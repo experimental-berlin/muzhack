@@ -24,19 +24,20 @@ getS3Objs = ->
   })
   [s3Bucket, s3Client]
 
-downloadFile = (file) ->
-  logger.debug("Downloading file '#{file.url}'...")
+downloadResource = (url) ->
+  logger.debug("Downloading resource '#{url}'...")
   numTries = 0
   while true
     numTries += 1
     try
-      result = HTTP.get(file.url)
+      result = HTTP.get(url)
       if result.statusCode != 200
-        throw new Error("Couldn't download '#{file.url}', status code: #{result.statusCode}")
+        throw new Error("Couldn't download '#{url}', status code: #{result.statusCode}")
       else
         break
     catch error
       if numTries >= 3
+        logger.warn("Couldn't download '#{url}'")
         throw error
 
   result.content
@@ -45,7 +46,7 @@ createZip = (files, user, id, s3Bucket, s3Client) ->
   logger.debug("Generating zip...")
   zip = new JSZip()
   for file in files
-    content = downloadFile(file)
+    content = downloadResource(file.url)
     logger.debug("Adding file '#{file.fullPath}' to zip")
     zip.file(file.fullPath, content)
   output = zip.generate({
@@ -336,6 +337,27 @@ Meteor.methods({
   #     HTTP.post(discourseLogoutUrl)
   #   else
   #     logger.debug("Not logging user out of Discourse since API key/user not defined")
+
+  getSoundCloudEmbeddables: (username) ->
+    logger.debug("Getting SoundCloud embeddables for user '#{username}'")
+    user = Meteor.users.findOne({username: username})
+    if !user?
+      logger.debug("Couldn't find user in database")
+      []
+    else
+      scProfile = user.profile.soundCloud
+      R.filter(((x) -> x?), R.map((upload) ->
+        uploadUrl = "http://soundcloud.com/#{scProfile.username}/#{upload.path}"
+        url = "http://soundcloud.com/oembed?format=json&url=#{uploadUrl}"
+        try
+          content = downloadResource(url)
+        catch error
+          logger.warn("Ignoring upload at '#{uploadUrl}' since we couldn't get its embed data")
+          return null
+
+        logger.debug("Got content:", content)
+        JSON.parse(content)
+      , scProfile.uploads))
 })
 
 insertTrelloBoard = (data, user) ->
