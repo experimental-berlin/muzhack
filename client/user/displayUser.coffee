@@ -40,10 +40,15 @@ Template.user.helpers({
   email: -> @emails[0].address
   hasWebsite: -> !S.isBlank(@profile.website)
   avatar: ->
-    email = @emails[0].address
-    hash = CryptoJS.MD5(email).toString(CryptoJS.enc.Hex)
-    gravatarUrl = "http://www.gravatar.com/avatar/#{hash}?d=identicon&s=230"
-    gravatarUrl
+    if !S.isBlank(@profile.avatarUrl)
+      logger.debug("User has an avatar URL: '#{@profile.avatarUrl}'")
+      @profile.avatarUrl
+    else
+      logger.debug("User has no avatar URL, using Gravatar")
+      email = @emails[0].address
+      hash = CryptoJS.MD5(email).toString(CryptoJS.enc.Hex)
+      gravatarUrl = "http://www.gravatar.com/avatar/#{hash}?d=identicon&s=230"
+      gravatarUrl
   userProfileUrl: -> accountService.getUserProfileUrl()
   userJoined: -> dateService.displayDateTextual(@createdAt)
   aboutUser: -> @profile.about
