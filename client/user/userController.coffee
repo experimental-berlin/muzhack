@@ -2,25 +2,20 @@ logger = new Logger('UserController')
 
 @UserController = RouteController.extend({
   onRun: ->
-    tabName = @params.hash
-    data = @data()
-    if data? and tabName == "media"
-      logger.debug("Loading media data from server")
-      Session.set("isWaiting", true)
-      # TODO: Ensure that this gets called again when user data changes
-      state = @state
-      Meteor.call("getSoundCloudEmbeddables", data.username, (error, result) ->
-        Session.set("isWaiting", false)
-        if error?
-          logger.warn("Server failed to get SoundCloud embeddables:", error)
-          notificationService.warn("Error",
-            "Server failed to get SoundCloud embeddables: #{error.reason}.")
-        else
-          logger.debug("Server was able to successfully get SoundCloud embeddables:", result)
-          Session.set("soundCloudEmbeddables", result)
-      )
-    else
-      logger.debug("Not loading media data from the server:", data, tabName)
+    username = @params.user
+    logger.debug("Loading media data from server")
+    Session.set("isWaiting", true)
+    # TODO: Ensure that this gets called again when user data changes
+    Meteor.call("getSoundCloudEmbeddables", username, (error, result) ->
+      Session.set("isWaiting", false)
+      if error?
+        logger.warn("Server failed to get SoundCloud embeddables:", error)
+        notificationService.warn("Error",
+          "Server failed to get SoundCloud embeddables: #{error.reason}.")
+      else
+        logger.debug("Server was able to successfully get SoundCloud embeddables:", result)
+        Session.set("soundCloudEmbeddables", result)
+    )
   action: ->
     data = @data()
     # TODO: Consolidate with ProjectController
