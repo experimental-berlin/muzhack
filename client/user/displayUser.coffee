@@ -158,7 +158,7 @@ Template.user.events({
 })
 
 Template.soundCloud.helpers({
-  hasSoundCloudUploads: -> !R.isEmpty(@profile.soundCloud?.uploads)
+  hasSoundCloudUploads: -> !R.isEmpty(@profile.soundCloud?.uploads || [])
   firstName: -> S.words(@profile.name)[0]
 })
 Template.soundCloud.onRendered(->

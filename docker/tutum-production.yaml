@@ -8,6 +8,7 @@ muzhack-production:
   tags:
     - production
   autorestart: always
+  deployment_strategy: every_node
 nginx-production:
   image: aknudsen/meteor-frontend-server
   command: /start.sh
@@ -22,6 +23,7 @@ nginx-production:
     - /etc/nginx/ssl/private.key:/private.key
   links:
     - muzhack-production:backend
+  deployment_strategy: every_node
 logspout-production:
   image: gliderlabs/logspout
   command: syslog://logs3.papertrailapp.com:19740

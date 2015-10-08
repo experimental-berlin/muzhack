@@ -25,8 +25,8 @@ logger = new Logger('UserController')
     tabName = @getParams().hash
     defaultTab = "projects"
     aboutEnabled = !S.isBlank(data.profile.about)
-    mediaEnabled = !R.isEmpty(data.profile.soundCloud.uploads || [])
-    logger.debug("User has media files: #{mediaEnabled}", data.profile.soundCloud.uploads)
+    mediaEnabled = !R.isEmpty(data.profile.soundCloud?.uploads || [])
+    logger.debug("User has media files: #{mediaEnabled}")
     tabNames = ["projects", "plans", "about", "media"]
     if tabName not in tabNames
       tabName = defaultTab
