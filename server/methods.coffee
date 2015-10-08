@@ -347,7 +347,7 @@ Meteor.methods({
     else
       scProfile = user.profile.soundCloud
       R.filter(((x) -> x?), R.map((upload) ->
-        uploadUrl = "http://soundcloud.com/#{scProfile.username}/#{upload.path}"
+        uploadUrl = "http://soundcloud.com/#{upload.path}"
         url = "http://soundcloud.com/oembed?format=json&url=#{uploadUrl}"
         try
           content = downloadResource(url)

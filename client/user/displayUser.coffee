@@ -19,11 +19,11 @@ class UserTab
 Template.user.helpers({
   profileTabs: ->
     logger.debug("Getting profile tabs")
-    aboutEnabled = !S.isBlank(@profile.about)
-    mediaEnabled = !R.isEmpty(@profile.soundCloudUploads)
+    state = Iron.controller().state
     [
-      new UserTab("Projects"), new UserTab("Plans"), new UserTab("About", null, aboutEnabled),
-      new UserTab("Media", null, mediaEnabled)
+      new UserTab("Projects"), new UserTab("Plans"), new UserTab("About", null,
+        state.get("isAboutEnabled")),
+      new UserTab("Media", null, state.get("isMediaEnabled"))
     ]
   displayProjects: -> isActiveTab("projects")
   displayPlans: -> isActiveTab("plans")
@@ -51,7 +51,6 @@ Template.user.helpers({
   userFirstName: -> S.words(@profile.name)[0]
   userFullName: -> @profile.name
   hasSoundCloud: -> @profile.soundCloud?
-  hasSoundCloudUploads: -> !R.isEmpty(@profile.soundCloud?.uploads || [])
 })
 Template.user.events({
   "click #create-plan": ->
@@ -157,23 +156,25 @@ Template.user.events({
       logger.debug("User declined removing and closing project plan")
     )
 })
-# TODO: Make sure gets rendered after switching tabs
-Template.user.onRendered(->
-  parentElem = @find("#soundcloud-uploads")
-  embeddables = Meteor.call("getSoundCloudEmbeddables", @data.username, (error, result) ->
-    if error?
-      logger.warn("Server get SoundCloud embeddables:", error)
-      notificationService.warn("Error",
-        "Server failed to get SoundCloud embeddables: #{error.reason}.")
-    else
-      logger.debug("Server was able to successfully get SoundCloud embeddables:", result)
-      R.forEach((embeddable) ->
-        logger.debug("Embedding SoundCloud upload, HTML:", embeddable.html)
-        listItemElem = document.createElement("li")
-        listItemElem.innerHTML = embeddable.html
-        parentElem.appendChild(listItemElem)
-      , result)
-  )
+
+Template.soundCloud.helpers({
+  hasSoundCloudUploads: -> !R.isEmpty(@profile.soundCloud?.uploads)
+  firstName: -> S.words(@profile.name)[0]
+})
+Template.soundCloud.onRendered(->
+  embeddables = Session.get("soundCloudEmbeddables")
+  if not Session.get("isWaiting") && embeddables?
+    logger.debug("Rendering embeddables")
+    parentElem = @find("#soundcloud-uploads")
+    R.forEach((embeddable) ->
+      logger.debug("Embedding SoundCloud upload, HTML:", embeddable.html)
+      listItemElem = document.createElement("li")
+      listItemElem.innerHTML = embeddable.html
+      listItemElem.classList.add("soundcloud-upload")
+      parentElem.appendChild(listItemElem)
+    , embeddables)
+  else
+    logger.debug("No embeddables have been loaded")
 )
 
 invokeTrelloApi = (methodName, callback, args...) ->
