@@ -49,7 +49,7 @@ Template.user.helpers({
       hash = CryptoJS.MD5(email).toString(CryptoJS.enc.Hex)
       gravatarUrl = "http://www.gravatar.com/avatar/#{hash}?d=identicon&s=230"
       gravatarUrl
-  userProfileUrl: -> accountService.getUserProfileUrl()
+  userProfileUrl: -> accountService.getUserProfileUrl(@username)
   userJoined: -> dateService.displayDateTextual(@createdAt)
   aboutUser: -> @profile.about
   hasAbout: -> !S.isBlank(@profile.about)

@@ -5,6 +5,5 @@ class @AccountService
     Template.accountbar.events(
     )
 
-  getUserProfileUrl: ->
-    user = Meteor.user()
-    "/u/#{user.username}"
+  getUserProfileUrl: (username) ->
+    "/u/#{username}"
