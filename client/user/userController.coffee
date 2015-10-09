@@ -16,6 +16,7 @@ logger = new Logger('UserController')
         logger.debug("Server was able to successfully get SoundCloud embeddables:", result)
         Session.set("soundCloudEmbeddables", result)
     )
+    @next()
   action: ->
     data = @data()
     # TODO: Consolidate with ProjectController
