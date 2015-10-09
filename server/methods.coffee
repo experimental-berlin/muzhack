@@ -345,7 +345,7 @@ Meteor.methods({
       logger.debug("Couldn't find user in database")
       []
     else
-      scProfile = user.profile.soundCloud
+      scUploads = user.profile.soundCloud?.uploads || []
       R.filter(((x) -> x?), R.map((upload) ->
         uploadUrl = "http://soundcloud.com/#{upload.path}"
         url = "http://soundcloud.com/oembed?format=json&url=#{uploadUrl}"
@@ -357,7 +357,7 @@ Meteor.methods({
 
         logger.debug("Got content:", content)
         JSON.parse(content)
-      , scProfile.uploads))
+      , scUploads))
 })
 
 insertTrelloBoard = (data, user) ->
