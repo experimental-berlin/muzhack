@@ -5,7 +5,6 @@ aknudsen:iron-router-ga@0.6.1
 aknudsen:ms-seo@0.5.0
 aknudsen:pagedown@1.1.1
 aknudsen:ramda@0.17.1
-aknudsen:spiderable2@0.9.2
 aknudsen:tooltips@0.5.2
 autoupdate@1.2.3
 babel-compiler@5.8.24_1
@@ -33,6 +32,7 @@ ddp-common@1.2.1
 ddp-rate-limiter@1.0.0
 ddp-server@1.2.1
 deps@1.0.9
+dfischer:prerenderio@1.0.5
 diff-sequence@1.0.1
 ecmascript@0.1.5
 ecmascript-collections@0.1.6

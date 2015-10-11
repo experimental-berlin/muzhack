@@ -31,7 +31,6 @@ browser-policy
 browser-policy-content
 aknudsen:ms-seo
 gadicohen:robots-txt
-aknudsen:spiderable2
 aknudsen:pagedown
 standard-minifiers
 meteor-base
@@ -51,3 +50,4 @@ jparker:crypto-md5
 jparker:crypto-sha256
 jparker:crypto-hmac
 aknudsen:tooltips
+dfischer:prerenderio

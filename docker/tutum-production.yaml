@@ -4,6 +4,7 @@ muzhack-production:
     - ROOT_URL=https://muzhack.com
     - MONGO_URL
     - METEOR_SETTINGS
+    - PRERENDER_TOKEN
     - ENVIRONMENT=production
   tags:
     - production
