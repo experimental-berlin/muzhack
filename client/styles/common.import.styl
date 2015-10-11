@@ -29,6 +29,8 @@ rounded-corners-bottom()
 pad-base()
   rounded-corners()
 
+  // Ensure that child margins don't collapse within borderless elements
+  overflow auto
   box-sizing border-box
   background content-background
   border 0
