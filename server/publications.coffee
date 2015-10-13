@@ -5,6 +5,7 @@ Meteor.publish("filteredProjects", (query) ->
   selector = {}
   sort = undefined
   if !S.isBlank(query)
+    logger.debug("Filtering projects according to query:", query)
     reTag = /\[[^\]]*\]/g
     queryWithoutTags = ""
     tags = []
@@ -14,6 +15,7 @@ Meteor.publish("filteredProjects", (query) ->
       if !m?
         break
 
+      logger.debug("Found tag '#{tag}'")
       tag = trimWhitespace(m[0][1...-1])
       tags.push(tag)
       queryWithoutTags += " " + query[offset...m.index]
