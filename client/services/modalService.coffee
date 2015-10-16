@@ -32,8 +32,8 @@ class @ModalService
     html = Blaze.toHTMLWithData(Template[templateName], R.merge({title: title}, data))
     $modal = $(html)
     $modal.modal({
-      callbacks: R.map((([key, value]) ->
-        {"event": key, callback: R.partial(invokeCallback, value)})
+      callbacks: R.map(([key, value]) ->
+        {"event": key, callback: R.partial(invokeCallback, [value])}
       , R.toPairs(callbacks))
     })
     for elem in document.getElementsByClassName("modal-default")

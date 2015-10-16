@@ -219,7 +219,7 @@ class @DropzoneService
       createImageThumbnails: forPictures,
     })
     for event in monitoredDropzoneEvents
-      dropzone.on(event, R.partial(handleDropzoneEvent, event, dropzone))
+      dropzone.on(event, R.partial(handleDropzoneEvent, [event, dropzone]))
     if existingFiles? && !R.isEmpty(existingFiles)
       description = if forPictures then "picture" else "file"
       picker = if forPictures then ((x) -> R.merge(x, {name: x.url})) else (

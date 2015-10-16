@@ -236,7 +236,7 @@ class Editor
       helpItemLink.style["text-decoration"] = "none"
       helpItemLink.style.color = "black"
       helpItemLink.appendChild(document.createTextNode(topic))
-      helpItemLink.onclick = R.partial(toggleHelpItem, topic, helpItem)
+      helpItemLink.onclick = R.partial(toggleHelpItem, [topic, helpItem])
       helpItem.appendChild(helpItemLink)
       helpList.appendChild(helpItem)
 
