@@ -1,5 +1,8 @@
 logger = new Logger("displayUser")
 
+getUserFirstName = (user) ->
+  S.words(user.profile.name)[0]
+
 isActiveTab = (tabName) ->
   Iron.controller().state.get("activeTab") == tabName
 
@@ -23,12 +26,14 @@ Template.user.helpers({
     [
       new UserTab("Projects"), new UserTab("Plans"), new UserTab("About", null,
         state.get("isAboutEnabled")),
-      new UserTab("Media", null, state.get("isMediaEnabled"))
+      new UserTab("Media", null, state.get("isMediaEnabled")), new UserTab("Workshops", null,
+        state.get("isWorkshopsEnabled"))
     ]
   displayProjects: -> isActiveTab("projects")
   displayPlans: -> isActiveTab("plans")
   displayAbout: -> isActiveTab("about")
   displayMedia: -> isActiveTab("media")
+  displayWorkshops: -> isActiveTab("workshops")
   hasProjects: -> Projects.findOne({owner: @username})?
   projects: -> R.map(((project) -> R.merge(project, {createdStr: dateService.displayDate(
     project.created)})), Projects.find({owner: @username}))
@@ -53,9 +58,10 @@ Template.user.helpers({
   userJoined: -> dateService.displayDateTextual(@createdAt)
   aboutUser: -> @profile.about
   hasAbout: -> !S.isBlank(@profile.about)
-  userFirstName: -> S.words(@profile.name)[0]
+  userFirstName: -> getUserFirstName(@)
   userFullName: -> @profile.name
   hasSoundCloud: -> @profile.soundCloud?
+  workshopsInfo: -> @profile.workshopsInfo
 })
 Template.user.events({
   "click #create-plan": ->

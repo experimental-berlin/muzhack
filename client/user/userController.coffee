@@ -25,10 +25,13 @@ logger = new Logger('UserController')
     aboutEnabled = !S.isBlank(data.profile.about)
     mediaEnabled = !R.isEmpty(data.profile.soundCloud?.uploads || [])
     logger.debug("User has media files: #{mediaEnabled}")
-    tabNames = ["projects", "plans", "about", "media"]
+    workshopsEnabled = !S.isBlank(data.profile.workshopsInfo || '')
+    logger.debug("User has workshops info: #{workshopsEnabled}")
+    tabNames = ["projects", "plans", "about", "media", "workshops"]
     if tabName not in tabNames
       tabName = defaultTab
-    if (tabName == "about" && !aboutEnabled) || (tabName == "media" && !mediaEnabled)
+    if (tabName == "about" && !aboutEnabled) || (tabName == "media" && !mediaEnabled) || \
+        (tabName == "workshops" && !workshopsEnabled)
       tabName = defaultTab
     logger.debug("Current tab name: '#{tabName}'")
     isLoggedInUser = data.username == Meteor.user()?.username
@@ -37,6 +40,7 @@ logger = new Logger('UserController')
     @state.set("isLoggedInUser", isLoggedInUser)
     @state.set("isAboutEnabled", aboutEnabled)
     @state.set("isMediaEnabled", mediaEnabled)
+    @state.set("isWorkshopsEnabled", workshopsEnabled)
     @render("user")
   waitOn: -> [Meteor.subscribe("users"), Meteor.subscribe("projects"),
     Meteor.subscribe("trelloBoards"),]
