@@ -23,12 +23,21 @@ monitoredDropzoneEvents = [
   "maxfilesreached"
   "queuecomplete"
 ]
+mutatingDropzoneEvents = [
+  "addedfile"
+  "addedfiles"
+  "removedfile"
+]
 
 dropzoneLogger = new Logger("dropzone")
 logger = new Logger("DropzoneService")
 
 handleDropzoneEvent = (event, dropzone, args...) ->
   dropzoneLogger.debug("#{event}:", args)
+
+handleMutatingDropzoneEvent = (event, dropzone, args...) ->
+  dropzoneLogger.debug("Mutating event occurred: #{event}")
+  EditingService.onChange()
 
 b64ToBlob = (b64Data, contentType, sliceSize) ->
   sliceSize = sliceSize || 512
@@ -220,6 +229,8 @@ class @DropzoneService
     })
     for event in monitoredDropzoneEvents
       dropzone.on(event, R.partial(handleDropzoneEvent, [event, dropzone]))
+    for event in mutatingDropzoneEvents
+      dropzone.on(event, R.partial(handleMutatingDropzoneEvent, [event, dropzone]))
     if existingFiles? && !R.isEmpty(existingFiles)
       description = if forPictures then "picture" else "file"
       picker = if forPictures then ((x) -> R.merge(x, {name: x.url})) else (
