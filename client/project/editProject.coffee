@@ -104,6 +104,7 @@ Template.filesEditor.onRendered(->
 Template.project.events({
   'change #title-input': -> EditingService.onChange()
   'change #tags-input': -> EditingService.onChange()
+  'change #license-select': -> EditingService.onChange()
   'click #save-project': ->
     if !Session.get("isEditingProject")
       logger.debug("Ignoring request to save project, since session var isEditingProject is false")

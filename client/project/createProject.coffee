@@ -129,6 +129,7 @@ Template.create.events({
   'change #id-input': -> EditingService.onChange()
   'change #title-input': -> EditingService.onChange()
   'change #tags-input': -> EditingService.onChange()
+  'change #license-select': -> EditingService.onChange()
   'click #create-project': ->
     Session.set("isWaiting", true)
     try
