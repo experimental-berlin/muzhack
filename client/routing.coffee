@@ -110,6 +110,7 @@ configureHotCodePush = (url) ->
 
 Router.onBeforeAction(->
   configureHotCodePush(@url)
+  Session.set("isProjectModified", false)
 
   if @url in ["/create", "/discourse/sso"] and !Meteor.userId()?
     logger.debug('User not logged in, rendering login page')

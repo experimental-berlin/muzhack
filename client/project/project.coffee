@@ -76,11 +76,22 @@ extendFile = (file) ->
       })
     else
       logger.debug("@data is not defined, cannot set SEO properties")
+
+    window.onbeforeunload = ->
+      logger.debug("Page is unloading")
+      if Session.get("isProjectModified")
+        logger.debug("There are unsaved modifications - asking user to confirm")
+        "You have made changes to the project."
+      else
+        logger.debug("There are no unsaved modifications")
+        null
   onStop: ->
     logger.debug("Route is stopped")
     if Session.get("isEditingProject")
       logger.debug("Exiting editing mode")
       Session.set("isEditingProject", false)
+
+    delete window.onbeforeunload
 })
 
 Template.project.helpers(
