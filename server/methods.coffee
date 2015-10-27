@@ -358,6 +358,33 @@ Meteor.methods({
         logger.debug("Got content:", content)
         JSON.parse(content)
       , scUploads))
+  logError: (message, url, line) ->
+    logger.warn("An uncaught exception was reported by a client, at #{url}:#{line}:\n#{message}")
+    @unblock()
+    html = """An error was detected in a MuzHack client at URL <em>#{url}</em>,
+line <em>#{line}</em>:<br/>
+<pre>#{message}</pre>
+"""
+    from = "no-reply@#{Meteor.settings.appName}"
+    to = Meteor.settings.contactMail
+    subject = "MuzHack - Client Error Detected"
+    logger.debug("Posting notification email to Mandrill")
+    HTTP.post("https://mandrillapp.com/api/1.0/messages/send", {
+      data: {
+        key: Meteor.settings.mandrillSecret
+        message: {
+          html: html
+          subject: subject
+          from_email: from
+          from_name: Meteor.settings.appName
+          to: [{email: to}]
+          headers: {
+            "Reply-To": "no-reply@muzhack.com"
+          }
+        }
+        "async": false,
+      }
+    })
 })
 
 insertTrelloBoard = (data, user) ->
