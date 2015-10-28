@@ -2,7 +2,7 @@
   "name": "muzhack",
   "version": "1.0.0",
   "description": "Open platform for publishing of music hardware projects.",
-  "main": "app/index.js",
+  "main": "app/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -25,9 +25,14 @@
     "webpack-dev-server": "^1.12.1"
   },
   "dependencies": {
+    "falcor-hapi": "0.0.2",
     "hapi": "^11.0.2",
     "immstruct": "^2.0.0",
+    "inert": "^3.2.0",
     "omniscient": "^4.0.0",
-    "react": "^0.14.0"
+    "ramda": "^0.18.0",
+    "react": "^0.14.0",
+    "react-dom": "^0.14.0",
+    "underscore.string.fp": "^1.0.4"
   }
 }

@@ -1,8 +1,9 @@
 'use strict'
 let component = require('omniscient')
 let React = require('react')
-let immstruct = require('immstruct')
 let d = React.DOM
+let immstruct = require('immstruct')
+let ReactDom = require('react-dom')
 
 let structure = immstruct({
   search: '',
@@ -58,7 +59,7 @@ let Search = component('Search', function (cursor) {
 })
 
 let render = () => {
-  React.render(Search(structure.cursor()), document.body)
+  ReactDom.render(Search(structure.cursor()), document.getElementById('container'))
 }
 
 render()
