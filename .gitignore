@@ -1,3 +1,4 @@
 settings.json
 *.env
 docker/deploy-*.sh
+node_modules/

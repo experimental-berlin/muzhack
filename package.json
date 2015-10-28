@@ -1,0 +1,33 @@
+{
+  "name": "muzhack",
+  "version": "1.0.0",
+  "description": "Open platform for publishing of music hardware projects.",
+  "main": "app/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/muzhack/muzhack.git"
+  },
+  "keywords": [
+    "muzhack"
+  ],
+  "author": "Arve Knudsen",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/muzhack/muzhack/issues"
+  },
+  "homepage": "https://github.com/muzhack/muzhack#readme",
+  "devDependencies": {
+    "babel-loader": "^5.3.2",
+    "webpack": "^1.12.2",
+    "webpack-dev-server": "^1.12.1"
+  },
+  "dependencies": {
+    "hapi": "^11.0.2",
+    "immstruct": "^2.0.0",
+    "omniscient": "^4.0.0",
+    "react": "^0.14.0"
+  }
+}
