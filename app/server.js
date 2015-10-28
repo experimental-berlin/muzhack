@@ -3,13 +3,13 @@ let FalcorServer = require('falcor-hapi')
 let Hapi = require('hapi')
 let Router = require('falcor-router')
 let R = require('ramda')
-let Path = require('path')
+let path = require('path')
 
 let server = new Hapi.Server({
   connections: {
     routes: {
       files: {
-        relativeTo: Path.join(__dirname, 'public'),
+        relativeTo: path.join(__dirname, 'public'),
       },
     },
   },
@@ -27,9 +27,15 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
   server.route({
     method: ['GET',],
     path: '/',
-    handler: (request, reply) => {
-      console.log('Reply')
-      reply.file('index.html')
+    handler: {
+      file: 'index.html',
+    },
+  })
+  server.route({
+    method: ['GET',],
+    path: '/bundle.js',
+    handler: {
+      file: path.join(__dirname, '../dist/bundle.js'),
     },
   })
   // server.route({

@@ -5,6 +5,9 @@ let d = React.DOM
 let immstruct = require('immstruct')
 let ReactDom = require('react-dom')
 
+require('./styles/about.styl')
+require('./styles/fonts.css')
+
 let structure = immstruct({
   search: '',
   libs: [
