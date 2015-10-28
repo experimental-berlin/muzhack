@@ -1,4 +1,4 @@
-mongo-staging:
+mongo:
   image: mongo:3
   command: --auth
   volumes:
@@ -7,24 +7,36 @@ mongo-staging:
     - "27017:27017"
   tags:
     - staging
-  autorestart: always
-muzhack-staging:
+  restart: always
+muzhack-green:
   image: quay.io/aknuds1/muzhack:latest
   links:
-    - mongo-staging:db
+    - mongo:db
   environment:
     - ROOT_URL=https://staging.muzhack.com
     - MONGO_URL
     - METEOR_SETTINGS
   tags:
     - staging
-  autorestart: always
-nginx-staging:
-  image: aknudsen/meteor-frontend-server
-  command: /start.sh
+  restart: always
+  deployment_strategy: high_availability
+muzhack-blue:
+  image: quay.io/aknuds1/muzhack:latest
+  links:
+    - mongo:db
+  environment:
+    - ROOT_URL=https://staging.muzhack.com
+    - MONGO_URL
+    - METEOR_SETTINGS
   tags:
     - staging
-  autorestart: always
+  restart: always
+  deployment_strategy: high_availability
+lb:
+  image: tutum/haproxy
+  tags:
+    - staging
+  restart: always
   ports:
     - "443:443"
     - "80:80"
@@ -32,13 +44,15 @@ nginx-staging:
     - /etc/nginx/ssl/bundle.crt:/bundle.crt
     - /etc/nginx/ssl/private.key:/private.key
   links:
-    - muzhack-staging:backend
-logspout-staging:
+    - muzhack-green
+  roles:
+    - global
+logspout:
   image: gliderlabs/logspout
   command: syslog://logs3.papertrailapp.com:19740
   tags:
     - staging
-  autorestart: always
+  restart: always
   volumes:
     - /var/run/docker.sock:/tmp/docker.sock
   deployment_strategy: every_node
