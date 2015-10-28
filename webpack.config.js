@@ -37,4 +37,8 @@ module.exports = {
       'rx$': './node_modules/falcor/node_modules/rx/dist/rx.js',
     },
   },
+  devServer: {
+    contentBase: 'app/public',
+    historyApiFallback: false,
+  },
 }
