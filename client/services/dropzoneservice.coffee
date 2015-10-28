@@ -215,7 +215,7 @@ class @DropzoneService
         .catch((error) ->
           for file in files
             file.status = Dropzone.ERROR
-          logger.error("Failed to upload pictures: #{error}")
+          logError(logger, "Failed to upload pictures: #{error}")
           throw new Error("Failed to upload pictures: #{error}")
         )
 

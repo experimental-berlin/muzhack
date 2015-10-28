@@ -184,7 +184,7 @@ Meteor.methods({
       throw new Meteor.Error("unauthorized", "You must be logged in to perform this operation")
     secret = Meteor.settings.SSO_SECRET
     if !secret?
-      logger.error("SSO_SECRET not defined in settings")
+      logError(logger, "SSO_SECRET not defined in settings")
       throw new Meteor.Error("internalError", "Internal error")
     gotSig = CryptoJS.HmacSHA256(payload, secret).toString(CryptoJS.enc.Hex)
     logger.debug("Got sig #{gotSig}")
@@ -358,14 +358,21 @@ Meteor.methods({
         logger.debug("Got content:", content)
         JSON.parse(content)
       , scUploads))
-  logError: (message, url, line) ->
+  logException: (message, url, line) ->
     logger.warn("An uncaught exception was reported by a client, at #{url}:#{line}:\n#{message}")
     dateTime = moment().utc().format("MMMM Do YYYY, HH:mm:ss")
-    html = """#{dateTime} - An error was detected in a MuzHack client at URL <em>#{url}</em>,
+    html = """#{dateTime} - An exception was detected in a MuzHack client at URL <em>#{url}</em>,
 line <em>#{line}</em>:<br/>
 <pre>#{message}</pre>
 """
-    EmailService.notifyDevelopers(html, "MuzHack - Client Error Detected", @)
+    EmailService.notifyDevelopers(html, "MuzHack - Client Exception Detected", @)
+  logError: (message) ->
+    logger.warn("An error was reported by a client")
+    dateTime = moment().utc().format("MMMM Do YYYY, HH:mm:ss")
+    html = """#{dateTime} - An error was reported in a MuzHack client:
+<pre>#{message}</pre>
+"""
+    EmailService.notifyDevelopers(html, "MuzHack - Client Error Reported", @)
 })
 
 insertTrelloBoard = (data, user) ->

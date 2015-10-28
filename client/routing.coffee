@@ -75,13 +75,13 @@ Router.route("/discourse/sso", ->
     sig = decodeURIComponent(q.sig)
     discourseUrl = Meteor.settings.public.discourseUrl
     if !discourseUrl?
-      logger.error("Discourse URL not defined in settings")
+      logError(logger, "Discourse URL not defined in settings")
       renderError("Internal error")
     else
       logger.debug("Calling server to verify Discourse SSO parameters")
       Meteor.call("verifyDiscourseSso", payload, sig, (error, result) ->
         if error?
-          logger.error("Server failed to verify Discourse call: #{error.reason}")
+          logError(logger, "Server failed to verify Discourse call: #{error.reason}")
           renderError(error.reason)
         else
           logger.info(

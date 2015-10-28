@@ -32,7 +32,7 @@ saveProject = (owner, projectId) ->
       picturesPromise = new Promise((resolve) -> resolve([]))
     picturesPromise
       .catch((error) ->
-        logger.error("Uploading pictures failed: #{error}")
+        logError(logger, "Uploading pictures failed: #{error}")
         notificationService.warn("Error", "Uploading pictures failed")
       )
     if !R.isEmpty(queuedFiles)
@@ -42,7 +42,7 @@ saveProject = (owner, projectId) ->
       filesPromise = new Promise((resolve) -> resolve([]))
     filesPromise
       .catch((error) ->
-        logger.error("Uploading files failed: #{error}")
+        logError(logger, "Uploading files failed: #{error}")
         notificationService.warn("Error", "Uploading files failed")
       )
 
@@ -68,7 +68,7 @@ saveProject = (owner, projectId) ->
         license, pictureFiles, files, (error) ->
           Session.set("isWaiting", false)
           if error?
-            logger.error("Updating project on server failed: #{error}")
+            logError(logger, "Updating project on server failed: #{error}")
             notificationService.warn("Error", "Saving project to server failed: #{error}.")
           else
             disableProjectEditing()
@@ -141,7 +141,7 @@ Template.project.events({
         Meteor.call("removeProject", @owner, @projectId, (error) ->
           Session.set("isWaiting", false)
           if error?
-            logger.error("Removing project on server failed: #{error}")
+            logError(logger, "Removing project on server failed: #{error}")
             notificationService.warn("Error", "Removing project on server failed: #{error}.")
           else
             logger.info("Successfully removed project")

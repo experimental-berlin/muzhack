@@ -2,7 +2,8 @@ logger = new Logger("EmailService")
 
 class @EmailService
   @notifyDevelopers: (html, subject, context) ->
-    context.unblock()
+    if context?
+      context.unblock()
     from = "no-reply@#{Meteor.settings.appName}"
     to = Meteor.settings.contactMail
     logger.info("Posting notification email to Mandrill")

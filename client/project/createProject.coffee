@@ -71,7 +71,7 @@ createProject = () ->
       picturesPromise = new Promise((resolve) -> resolve([]))
     picturesPromise
       .catch((error) ->
-        logger.error("Uploading pictures failed: #{error}")
+        logError(logger, "Uploading pictures failed: #{error}")
         notificationService.warn("Error", "Uploading pictures failed")
       )
     if !R.isEmpty(queuedFiles)
@@ -84,7 +84,7 @@ createProject = () ->
       filesPromise = new Promise((resolve) -> resolve([]))
     filesPromise
       .catch((error) ->
-        logger.error("Uploading files failed: #{error}")
+        logError(logger, "Uploading files failed: #{error}")
         notificationService.warn("Error", "Uploading files failed")
       )
     [picturesPromise, filesPromise]
@@ -113,7 +113,7 @@ createProject = () ->
           logger.debug("Re-enabling create button")
           button.disabled = false
           if error?
-            logger.error("Creating project on server failed: #{error}")
+            logError(logger, "Creating project on server failed: #{error}")
             notificationService.warn("Project Creation Failure",
               "Failed to create project due to error on server")
           else
