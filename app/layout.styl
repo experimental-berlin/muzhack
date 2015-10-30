@@ -1,5 +1,33 @@
+@require './_common'
+
 menu-background = #272F32
 menu-color = #E2E2E2
+border-color = #6F6F6F
+
+body
+  background-color body-background
+  color black
+
+a
+  color blue-color
+  &:focus
+    outline none
+
+article
+  background linear-gradient(to bottom, #d2d2d2, #E8E8E8 40%, body-background)
+
+#content
+  padding-bottom 60px
+
+  // TODO: Make responsive
+  width 1170px
+  margin-left auto
+  margin-right auto
+  border-radius 10px
+  padding-top 36px
+  padding-left 0px
+  padding-right 0px
+
 
 #menu
   z-index 1000
@@ -28,3 +56,30 @@ menu-color = #E2E2E2
         -moz-box-shadow inset 0 3px 8px rgba(0, 0, 0, 0.125)
         box-shadow inset 0 3px 8px rgba(0, 0, 0, 0.125)
         color menu-color
+
+footer
+  border-top 1px solid border-color
+  padding 1em
+  text-align center
+  font-size 80%
+
+a.social-link
+  text-decoration none
+  font-size 3em
+  color black
+
+  [class^="icon-"], div[class*=" icon-"]
+    margin-left 0.15em
+    margin-right 0.15em
+
+.paypal-button
+  background transparent
+  padding 0 4px
+
+  &:focus
+    outline none
+
+#donations
+  display flex
+  align-items center
+  justify-content center

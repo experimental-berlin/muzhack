@@ -3,3 +3,4 @@ settings.json
 docker/deploy-*.sh
 node_modules/
 dist/
+.DS_Store

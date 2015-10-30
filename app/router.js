@@ -60,23 +60,41 @@ let toClassName = (classes) => {
 let renderWithLayout = (cursor, page) => {
   let navItems = cursor.cursor(['router', 'navItems',]).toJS()
   logger.debug('Nav items:', navItems)
-  return d.div({}, d.header({},
-    d.nav({id: 'menu', className: 'pure-menu pure-menu-open pure-menu-fixed pure-menu-horizontal',},
-      d.a({className: 'pure-menu-heading', href: '/',}, 'MuzHack'),
-      d.ul({className: 'pure-menu-list',}, R.addIndex(R.map)((x, i) => {
-        let classes = ['pure-menu-item', x.isSelected ? 'pure-menu-selected' : null,]
-        let extraAttrs = x.isExternal ? {target: '_blank',} : {}
-        return d.li({className: toClassName(classes), key: i,},
-          d.a(R.merge({className: 'pure-menu-link', href: x.path,}, extraAttrs), x.text)
+  return d.div({},
+    d.header({},
+      d.nav({id: 'menu', className: 'pure-menu pure-menu-open pure-menu-fixed pure-menu-horizontal',},
+        d.a({className: 'pure-menu-heading', href: '/',}, 'MuzHack'),
+        d.ul({className: 'pure-menu-list',}, R.addIndex(R.map)((x, i) => {
+          let classes = ['pure-menu-item', x.isSelected ? 'pure-menu-selected' : null,]
+          let extraAttrs = x.isExternal ? {target: '_blank',} : {}
+          return d.li({className: toClassName(classes), key: i,},
+            d.a(R.merge({className: 'pure-menu-link', href: x.path,}, extraAttrs), x.text)
+          )
+        }, navItems))
+      )
+    ),
+    d.div({id: 'content',}, page),
+    d.footer({},
+      d.p({}, 'MuzHack beta, enjoy responsibly.'),
+      d.p({}, '© 2015 ', d.a({href: 'http://arveknudsen.com', target: '_blank',}, 'Arve Knudsen')),
+      d.p({},
+        d.a({className: 'social-link', href: 'https://twitter.com/muzhack', target: '_blank',},
+          d.span({className: 'icon-twitter',})
+        ),
+        d.a({className: 'social-link', href: 'https://github.com/muzhack/muzhack', target: '_blank',},
+          d.span({className: 'icon-github',})
+        ),
+        d.a({className: 'social-link', href: 'mailto:contact@muzhack.com', target: '_blank',},
+          d.span({className: 'icon-envelop3',})
         )
-      }, navItems))
+      )
     )
-  ), page)
+  )
 
 //   +googletagmanager
 // header
 //   nav#menu.pure-menu.pure-menu-open.pure-menu-fixed.pure-menu-horizontal
-//     a.pure-menu-heading(href="/") #{appName}
+//     a.pure-menu-heading(href='/') #{appName}
 //     ul
 //       each menuElements
 //         li($dyn=attrs)
@@ -84,7 +102,7 @@ let renderWithLayout = (cursor, page) => {
 //     .pull-right
 //       .search-box
 //         span#navbar-do-search.search-icon.icon-search.muted
-//         input#navbar-search-input(placeholder="Search MuzHack", value=searchQuery)
+//         input#navbar-search-input(placeholder='Search MuzHack', value=searchQuery)
 //         if hasSearchQuery
 //           span#navbar-clear-search.clear-icon.icon-cross.muted
 //       +accountbar
@@ -95,11 +113,11 @@ let renderWithLayout = (cursor, page) => {
 //   p MuzHack beta, enjoy responsibly.
 //   p © 2015 #[a(href='http://arveknudsen.com' target='_blank') Arve Knudsen]
 //   p
-//     a.social-link(href="https://twitter.com/muzhack", target="_blank")
+//     a.social-link(href='https://twitter.com/muzhack', target='_blank')
 //       span.icon-twitter
-//     a.social-link(href="https://github.com/muzhack/muzhack", target="_blank")
+//     a.social-link(href='', target='_blank')
 //       span.icon-github
-//     a.social-link(href="mailto:contact@muzhack.com", target="_blank")
+//     a.social-link(href='', target='_blank')
 //       span.icon-envelop3
 //   +donations
 //
