@@ -26,7 +26,7 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
 
   server.route({
     method: ['GET',],
-    path: '/',
+    path: '/{path*}',
     handler: {
       file: 'index.html',
     },

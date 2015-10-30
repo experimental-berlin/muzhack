@@ -38,7 +38,9 @@ module.exports = {
     },
   },
   devServer: {
-    contentBase: 'app/public',
     historyApiFallback: false,
+    proxy: {
+      '*': 'http://localhost:8000',
+    },
   },
 }
