@@ -5,9 +5,14 @@ let React = require('react')
 let d = React.DOM
 let ReactDom = require('react-dom')
 let router = require('./router')
+let Logger = require('js-logger')
 
 require('./styles/about.styl')
 require('./styles/fonts.css')
+
+Logger.useDefaults()
+
+let logger = Logger.get('entry')
 
 let Match = component('Match', function (cursor) {
   return d.li({}, d.a({ href: cursor.get('url'), }, cursor.get('title')))
@@ -39,7 +44,17 @@ let SearchBox = component('SearchBox', function (cursor) {
 
 let structure = immstruct('state', {
   search: '',
-  router: router.createState(),
+  router: router.createState({
+    '/': (cursor) => {
+      return d.div({}, SearchBox(cursor.cursor('search')), Matches(cursor))
+    },
+    '/create': (cursor) => {
+      return d.div({}, SearchBox(cursor.cursor('search')), Matches(cursor))
+    },
+    '/about': (cursor) => {
+      return d.div({}, SearchBox(cursor.cursor('search')), Matches(cursor))
+    },
+  }),
   libs: [
     { title: 'Backbone.js', url: 'http://documentcloud.github.io/backbone/', },
     { title: 'AngularJS', url: 'https://angularjs.org/', },
@@ -57,10 +72,6 @@ let structure = immstruct('state', {
     { title: 'Express', url: 'http://expressjs.com/', },
     { title: 'Koa', url: 'http://koajs.com', },
   ],
-})
-
-router.route('/', (cursor) => {
-  return d.div({}, SearchBox(cursor.cursor('search')), Matches(cursor))
 })
 
 let render = () => {
