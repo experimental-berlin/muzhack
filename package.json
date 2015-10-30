@@ -35,6 +35,7 @@
     "immstruct": "^2.0.0",
     "inert": "^3.2.0",
     "js-logger": "^1.2.0",
+    "normalize.css": "^3.0.3",
     "omniscient": "^4.0.0",
     "purecss": "^0.6.0",
     "ramda": "^0.18.0",
