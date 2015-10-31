@@ -16,7 +16,7 @@ let server = new Hapi.Server({
 })
 server.connection({
   host: 'localhost',
-  port: 8000,
+  port: parseInt(process.env.PORT || '8000'),
 })
 
 server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
