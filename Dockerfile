@@ -10,3 +10,4 @@ COPY package.json package.json
 RUN npm install
 
 COPY ./ .
+RUN ./node_modules/.bin/webpack
