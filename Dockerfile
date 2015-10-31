@@ -6,6 +6,7 @@ ENTRYPOINT ["node", "."]
 
 # Cache package.json and node_modules to speed up builds
 COPY package.json package.json
+RUN cat package.json
 RUN npm install
 
 COPY ./ .
