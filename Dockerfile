@@ -3,7 +3,7 @@ MAINTAINER Arve Knudsen
 
 WORKDIR /app
 ENTRYPOINT ["node", "."]
-RUN echo NODE_ENV
+RUN echo $NODE_ENV
 ENV NODE_ENV=debug
 
 # Cache package.json and node_modules to speed up builds
