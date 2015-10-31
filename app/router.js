@@ -31,17 +31,23 @@ let getCurrentPath = () => {
 }
 
 let updateRoute = () => {
+  logger.debug('Updating route')
   let cursor = getState()
-  currentPath = getCurrentPath()
-  cursor.cursor(['router', 'navItems',]).update((x) => {
-    let isSelected = false
-    if (x.path === currentPath) {
-      isSelected = true
-    }
-    logger.debug(`Nav item with path '${x.path}' is selected: ${isSelected}`)
-    return R.merge(x, {isSelected: isSelected,})
+  cursor.cursor('router').update((routerState) => {
+    let currentPath = getCurrentPath()
+    logger.debug('Current path is:', currentPath)
+    return routerState.merge({
+      currentPath,
+      navItems: routerState.get('navItems').map((navItem) => {
+        let path = navItem.get('path')
+        let isSelected = path === currentPath
+        if (isSelected) {
+          logger.debug(`Nav item with path '${path}' is selected`)
+        }
+        return navItem.merge({isSelected: isSelected,})
+      }),
+    })
   })
-  cursor.cursor('router').set('currentPath', currentPath)
 }
 
 // TODO
@@ -50,7 +56,95 @@ window.onpopstate = () => {
   updateRoute()
 }
 
+let handleClick = (e) => {
+  if (getEventWhich(e) !== 1) {
+    return
+  }
+
+  if (e.metaKey || e.ctrlKey || e.shiftKey || e.defaultPrevented) {
+    return
+  }
+
+  // ensure link
+  let el = e.target
+  while (el && 'A' !== el.nodeName) el = el.parentNode
+  if (!el || 'A' !== el.nodeName) {
+    return
+  }
+
+  // Ignore if tag has
+  // 1. "download" attribute
+  // 2. rel="external" attribute
+  if (el.hasAttribute('download') || el.getAttribute('rel') === 'external') {
+    return
+  }
+
+  // ensure non-hash for the same path
+  let link = el.getAttribute('href')
+  if (el.pathname === location.pathname && (el.hash || '#' === link)) {
+    return
+  }
+
+  // Check for mailto: in the href
+  if (link && link.indexOf('mailto:') > -1) {
+    return
+  }
+
+  // check target
+  if (el.target) {
+    return
+  }
+
+  // x-origin
+  if (!sameOrigin(el.href)) {
+    return
+   }
+
+  // rebuild path
+  let path = el.pathname + el.search + (el.hash || '')
+
+  // strip leading "/[drive letter]:" on NW.js on Windows
+  if (typeof process !== 'undefined' && path.match(/^\/[a-zA-Z]:\//)) {
+    path = path.replace(/^\/[a-zA-Z]:\//, '/')
+  }
+
+  // same page
+  let orig = path
+  let basePath = ''
+
+  if (path.indexOf(basePath) === 0) {
+    path = path.substr(basePath.length)
+  }
+
+  if (basePath && orig === path) {
+    return
+  }
+
+  e.preventDefault()
+  logger.debug(`Navigating to '${orig}'`)
+  window.history.pushState({}, 'MuzHackage', orig)
+  updateRoute()
+}
+
+let clickEvent = document != null && document.ontouchstart ? 'touchstart' : 'click'
+document.addEventListener(clickEvent, handleClick, false)
+
+let getEventWhich = (e) => {
+  e = e || window.event
+  return e.which == null ? e.button : e.which
+}
+
+/**
+ * Check if `href` is the same origin.
+ */
+function sameOrigin(href) {
+  let origin = location.protocol + '//' + location.hostname
+  if (location.port) origin += ':' + location.port
+  return (href && (0 === href.indexOf(origin)))
+}
+
 let Router = component('Router', (cursor) => {
+  logger.debug('Router rendering')
   let routes = cursor.cursor(['router', 'routes',]).toJS()
   logger.debug('Current router state:', cursor.cursor(['router', 'currentPath',]).toJS())
   let route = getCurrentRoute(routes)
