@@ -3,15 +3,12 @@ MAINTAINER Arve Knudsen
 
 WORKDIR /app
 ENTRYPOINT ["node", "."]
-RUN echo $NODE_ENV
-ENV NODE_ENV=debug
 
 # Cache package.json and node_modules to speed up builds
 COPY package.json package.json
+# Turn off production mode, as we need to install dev dependencies
+ENV NODE_ENV=
 RUN npm install
 
 COPY ./ .
-RUN pwd
-RUN ls
-RUN ls ./node_modules/.bin
 RUN ./node_modules/.bin/webpack
