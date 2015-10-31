@@ -4,6 +4,7 @@ MAINTAINER Arve Knudsen
 WORKDIR /app
 ENTRYPOINT ["node", "."]
 ENV PORT=80
+EXPOSE 80
 
 # Cache package.json and node_modules to speed up builds
 COPY package.json package.json
