@@ -6,9 +6,11 @@ let d = React.DOM
 let ReactDom = require('react-dom')
 let router = require('./router')
 let Logger = require('js-logger')
-let about = require('./about')
 
-require('./styles/about.styl')
+let about = require('./about')
+let explore = require('./explore')
+
+require('./app.styl')
 require('./styles/fonts.css')
 
 Logger.useDefaults()
@@ -46,9 +48,7 @@ let SearchBox = component('SearchBox', function (cursor) {
 let structure = immstruct('state', {
   search: '',
   router: router.createState({
-    '/': (cursor) => {
-      return d.div({}, SearchBox(cursor.cursor('search')), Matches(cursor))
-    },
+    '/': explore.render,
     '/create': (cursor) => {
       return d.div({}, SearchBox(cursor.cursor('search')), Matches(cursor))
     },
