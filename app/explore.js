@@ -1,17 +1,28 @@
 'use strict'
 let d = require('react').DOM
 let component = require('omniscient')
+let immutable = require('immutable')
 let S = require('underscore.string.fp')
 
 require('./explore.styl')
 
 let IsotopeContainer = component('IsotopeContainer', (cursor) => {
-  let isEmpty = true
-  return isEmpty ? d.p({}, 'No projects were found, please try again.') :
+  let exploreCursor = cursor.cursor('explore')
+  let projectsCursor = exploreCursor.cursor('projects')
+  return projectsCursor.isEmpty() ? d.p({}, 'No projects were found, please try again.') :
     d.div({id: 'isotope-container',})
 })
 
 module.exports = {
+  createState: () => {
+    return immutable.fromJS({
+      projects: [
+        {
+          id: 'aknudsen/test',
+        },
+      ],
+    })
+  },
   render: (cursor) => {
     let searchQuery = ''
     let hasSearchQuery = !S.isBlank(searchQuery)

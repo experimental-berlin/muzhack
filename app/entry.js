@@ -47,6 +47,7 @@ let SearchBox = component('SearchBox', function (cursor) {
 
 let structure = immstruct('state', {
   search: '',
+  explore: explore.createState(),
   router: router.createState({
     '/': explore.render,
     '/create': (cursor) => {

@@ -34,6 +34,7 @@
     "hapi": "^11.0.2",
     "immstruct": "^2.0.0",
     "inert": "^3.2.0",
+    "isotope-layout": "^2.2.2",
     "js-logger": "^1.2.0",
     "normalize.css": "^3.0.3",
     "omniscient": "^4.0.0",
