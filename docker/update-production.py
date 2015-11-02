@@ -31,5 +31,5 @@ subprocess.check_call(['tutum', 'service', 'redeploy', '--sync', link_to], stdou
 
 info('Linking to service \'{}\'...'.format(link_to))
 subprocess.check_call(['tutum', 'service', 'set', '--link-service', '{0}:{0}'.format(link_to),
-    '--sync', 'lb'], stdout=subprocess.PIPE)
+    '--sync', 'lb.muzhack-staging'], stdout=subprocess.PIPE)
 info('Successfully switched production service to {}'.format(link_to))
