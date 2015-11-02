@@ -1,7 +1,7 @@
 muzhack-green:
   image: quay.io/aknuds1/muzhack:omniscient
   tags:
-    - muzhack-staging
+    - muzhack-green
   environment:
     - FORCE_SSL=yes
   restart: always
@@ -9,7 +9,7 @@ muzhack-green:
 muzhack-blue:
   image: quay.io/aknuds1/muzhack:omniscient
   tags:
-    - muzhack-staging
+    - muzhack-blue
   environment:
     - FORCE_SSL=yes
   restart: always
@@ -17,7 +17,7 @@ muzhack-blue:
 lb:
   image: tutum/haproxy
   tags:
-    - muzhack-staging-lb
+    - muzhack-lb
   environment:
     - EXTRA_BIND_SETTINGS=redirect scheme https code 301 if !{ ssl_fc }
     - DEFAULT_SSL_CERT=-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDTSR8CQJpWxsY7\nvBY090AGrfaRGj64JwODo2GMD7Igi3O8wH8P9lucozxaTeCFTGClxkfD3FpMOjBU\nfsxXkUwkIQrVBVD/8lxPbla9KAcVEusPNoEIjqJrujoOdFyawbyAH79EmWtN42HQ\nQDc8VZBtJlIMyO5KIoNbvA1OF46opMN+AWxF9PFNIPkF0PdZwRj39IM9sZ4TWu18\n20my3WjicpU+wa3M3x3aBo6hcloljgiyv66+gZNf1wXmfeqYdzr/aRIWDctT7ojl\naMwLK5jhQCFSDrvzZnwVTcu09nlk1+0zgEhgTFCQfLSMBgoXCSNG9UQMmtQliyzq\nYRypLWMfAgMBAAECggEAM0UYGDTS/uGnMtGWVe31hGlsXpOOyqL08FmSDymz4L/W\nKuRPMPFoE59swsEJDW+WOEPgID/1TXAFUEugjFM+tbmq5jwvBpyqF8A/nhD7fvqj\nPYLNVuU9toRvGBjWa9s9QZ3yjNPpvPHDR4R9os9kh4f3+xA6+pRbacQ9OkjvHi7E\nFCDeaSNBPA3dvI+rvlMu3VEPPNOYwVYwpTVVaALsekRlriYw1Le8sbCSCZlKd9La\nk03QjyYo1K7LONJp5MxJ9K8qujAVpdRSmM5vwIuwRiq38z7F7MHO3mjcIqb2YoPE\nXp1zK5d3Dqa8uLZhSD5GTnsJW5nVBfTJOwUQI53dGQKBgQD1fDT1TuWrxSrle80P\nPbu+jwUPNxPmdatkva1eTYs7hWym+R8MkWOeDudwMqXZDIRqc45RLhQvO/+bc+G4\nnxuTHMxRQWKiqkH0yD2bSad7wAZO/mvZbEuXX16c1Eu68Kfxten8SzQzW41rBj11\nugYIrm7WndDpIbuhhargKAS6wwKBgQDcVejR6pbjSFNp3RafjsQGraQfqQLhmXwu\n4jVEJwB9el7/49xOzE2liRGiLDriZ+kcVjTDp9qU2pZd8jB9pTqkw0CSYitg+TqZ\ny1gX/4RTcgURYa2FzA4qjfwFLTWeBo91hTAlNL94ZdOPpw474YS+uxTD1ZnbTppr\nYOA7fttYdQKBgBnMBqistNf7LUnWW7M5Uoxw7SAvMokqXmuEvz5Eudf0anmVflzM\nvoIyoMGaoPERLq0dHZyMUhSwomjMobDMD5LDGPmE/H+JksrNbCPwdog7oq4UcHL1\nvW/X1tJ2QMsRVSTCcCdSI9ctzMutaTIA7XdmFUG6beTB5bzQlideLTkPAoGAc0NN\n5GKARK3VVRAfgaDB02yK6zUTGMmeOTiE/P4aN4oIoHynB2HBTNODsf7JXx9Ux0oh\nmCj7I9ulxceorlH9d6vc37cTUkuO6F2D3CoDI1QGaq1ahR/WWVSlfl/EKMLt0WC3\nav9JGsbKAeA2hgTX2J8tobTgI+XeykWHiBg4zvECgYAcYXQB48Eg3EbJ10G5gRTd\nUEk9PNx9Q6yAYBAMAn2TUejpIdkhgk/41V10aUbrappkECYdouZisI4jSyZN6Ozl\nzdulxlBpLee2noeXmbPZRHLCau3+B3PGOWJiK53UGOWezXqNnhnbVtVEDdMZ9Myc\nT//hpzwYjqt//1aWGcY8wQ==\n-----END PRIVATE KEY-----\n-----BEGIN CERTIFICATE-----\nMIIDQzCCAiugAwIBAgIJAJ03QpM4fkGAMA0GCSqGSIb3DQEBCwUAMDgxCjAIBgNV\nBAMMASoxHTAbBgNVBAoMFE15IENvbXBhbnkgTmFtZSBMVEQuMQswCQYDVQQGEwJV\nUzAeFw0xNTEwMzExNzUzMjFaFw0xODEwMTUxNzUzMjFaMDgxCjAIBgNVBAMMASox\nHTAbBgNVBAoMFE15IENvbXBhbnkgTmFtZSBMVEQuMQswCQYDVQQGEwJVUzCCASIw\nDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANNJHwJAmlbGxju8FjT3QAat9pEa\nPrgnA4OjYYwPsiCLc7zAfw/2W5yjPFpN4IVMYKXGR8PcWkw6MFR+zFeRTCQhCtUF\nUP/yXE9uVr0oBxUS6w82gQiOomu6Og50XJrBvIAfv0SZa03jYdBANzxVkG0mUgzI\n7koig1u8DU4Xjqikw34BbEX08U0g+QXQ91nBGPf0gz2xnhNa7XzbSbLdaOJylT7B\nrczfHdoGjqFyWiWOCLK/rr6Bk1/XBeZ96ph3Ov9pEhYNy1PuiOVozAsrmOFAIVIO\nu/NmfBVNy7T2eWTX7TOASGBMUJB8tIwGChcJI0b1RAya1CWLLOphHKktYx8CAwEA\nAaNQME4wHQYDVR0OBBYEFDQsXtWF99/qhDh3159LAZFGeqTuMB8GA1UdIwQYMBaA\nFDQsXtWF99/qhDh3159LAZFGeqTuMAwGA1UdEwQFMAMBAf8wDQYJKoZIhvcNAQEL\nBQADggEBABLeTZoFl/bwDUNunZYpJI7gIGCIKqreLq0VGRUgyUn32mQGercrgZi3\nrt55d8IUmIpLFeaqKxI9aofUFM2VIz4RVC0zWEmFfxJ+R14vpd9Si+KcKwKJj1X+\ny6cmEnmhxOAdZXv5/Ec9kEKNaJI4Ud4n7yf2+IeUi6nDMgHAHyhhaPRTj/CDHft7\nqaiBQyfenp06Rypu3/6rw061CyNQaO+ZZUt8gaL2+MxkerROhnrmfSF7iiKX7YA8\n+D67LqzVBFXOq5xf33glksmSJlK+rBc/2AeuxxIXVBfw5ChVu3kg0Ogi2c60iL/J\nmju0N7j13+rpffxcyJ3b91ft9NxxUsg=\n-----END CERTIFICATE-----\n
