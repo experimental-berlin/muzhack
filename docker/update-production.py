@@ -37,7 +37,6 @@ else:
 
 _info('Redeploying service \'{}\'...'.format(link_to))
 _run_tutum(['service', 'redeploy', '--sync', link_to,])
-subprocess.check_call(['tutum', 'service', 'redeploy', '--sync', link_to], stdout=subprocess.PIPE)
 
 _info('Linking to service \'{}\'...'.format(link_to))
 _run_tutum(['service', 'set', '--link-service', '{0}:{0}'.format(link_to),

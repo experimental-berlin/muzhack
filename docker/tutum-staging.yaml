@@ -27,8 +27,6 @@ lb:
     - TCP_PORTS=80,443
     - TIMEOUT=connect 10s, client 1020s, server 1020s
     - VIRTUAL_HOST=https://*
-  volumes:
-    - /etc/haproxy/ssl/cert.pem:/cert.pem
   restart: always
   ports:
     - "443:443"
