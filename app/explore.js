@@ -3,6 +3,7 @@ let d = require('react').DOM
 let component = require('omniscient')
 let immutable = require('immutable')
 let S = require('underscore.string.fp')
+let isotope = require('isotope-layout/js/isotope.js')
 
 require('./explore.styl')
 

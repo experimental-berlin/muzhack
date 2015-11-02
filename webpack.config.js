@@ -30,6 +30,10 @@ module.exports = {
         loader: 'url-loader',
         query: {mimetype: 'image/png',},
       },
+      {
+        test: /(isotope|masonry|outlayer|item|get-size|fizzy-ui-utils\/utils)\.js$/,
+        loader: 'imports?define=>false',
+      },
     ],
   },
   debug: true,

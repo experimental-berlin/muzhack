@@ -23,6 +23,7 @@
     "babel-loader": "^5.3.2",
     "css-loader": "^0.21.0",
     "file-loader": "^0.8.4",
+    "imports-loader": "^0.6.5",
     "style-loader": "^0.13.0",
     "stylus-loader": "^1.4.0",
     "url-loader": "^0.5.6",
@@ -31,6 +32,7 @@
   },
   "dependencies": {
     "falcor-hapi": "0.0.2",
+    "grunt": "^0.4.5",
     "hapi": "^11.0.2",
     "immstruct": "^2.0.0",
     "inert": "^3.2.0",
