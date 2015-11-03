@@ -6,6 +6,7 @@ let d = React.DOM
 let ReactDom = require('react-dom')
 let router = require('./router')
 let Logger = require('js-logger')
+let R = require('ramda')
 
 let about = require('./about')
 let explore = require('./explore')
@@ -73,6 +74,7 @@ let structure = immstruct('state', {
     { title: 'Koa', url: 'http://koajs.com', },
   ],
 })
+setTimeout(R.partial(explore.performSearch, [structure.cursor()]), 0)
 
 let render = () => {
   ReactDom.render(router.Router(structure.cursor()), document.getElementById('container'))

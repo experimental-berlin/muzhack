@@ -9,6 +9,7 @@ let R = require('ramda')
 let h = require('react-hyperscript')
 let ReactDOM = require('react-dom')
 let FocusingInput = require('./focusingInput')
+let ajax = require('./ajax')
 
 require('./explore.styl')
 
@@ -18,15 +19,8 @@ let getQualifiedId = (project) => {
 
 let searchTimeoutHandle = null
 let setSearch = (cursor, text) => {
+  logger.debug(`Setting search to '${text}'`)
   cursor.cursor('explore').set('search', text)
-  if (searchTimeoutHandle != null) {
-    clearTimeout(searchTimeoutHandle)
-    logger.debug('Clearing timeout')
-  }
-  searchTimeoutHandle = setTimeout(() => {
-    cursor.set('search',text)
-    searchTimeoutHandle = null
-  }, 500)
 }
 
 let createProjectElement = (cursor) => {
@@ -45,11 +39,24 @@ let createProjectElement = (cursor) => {
   </div>`)[0]
 }
 
+let Results = component('Results', (cursor) => {
+  if (cursor.get('isSearching')) {
+    return h('p', 'Searching...')
+  } else {
+    let exploreCursor = cursor.cursor('explore')
+    let projectsCursor = exploreCursor.cursor('projects')
+    logger.debug('Have got search results:', projectsCursor.toJS())
+    return projectsCursor.isEmpty() ? h('p', 'No projects were found, please try again.') :
+      IsotopeContainer(cursor)
+  }
+})
+
 let IsotopeContainer = component('IsotopeContainer', {
   componentDidMount: function () {
-    let containerElem = this.refs.container
+    logger.debug(`Isotope container did mount`)
     let projectsCursor = this.cursor.cursor(['explore', 'projects',])
     let projectElems = projectElems = projectsCursor.map(createProjectElement).toJS()
+    let containerElem = this.refs.container
     logger.debug('Got Isotope container element:', containerElem)
     new Isotope(containerElem, {
       itemSelector: '.project-item',
@@ -57,19 +64,46 @@ let IsotopeContainer = component('IsotopeContainer', {
     })
       .insert(projectElems)
   },
-}, (cursor) => {
-  let exploreCursor = cursor.cursor('explore')
-  let projectsCursor = exploreCursor.cursor('projects')
-  return projectsCursor.isEmpty() ? h('p', 'No projects were found, please try again.') :
-    h('#isotope-container', {ref: 'container',})
+}, () => {
+   return h('#isotope-container', {ref: 'container',})
 })
 
 let performSearch = (cursor) => {
-  logger.debug('Performing search')
+  if (cursor.get('isSearching')) {
+    logger.warn(`performSearch invoked while already searching`)
+    return
+  }
+
+  let setSearchResults = (cursor, results) => {
+    cursor.update((state) => {
+      return state.merge({
+        isSearching: false,
+        explore: state.get('explore').merge({
+          projects: immutable.fromJS(results),
+        }),
+       })
+     })
+  }
+
+  cursor.set('isSearching', true)
+  let exploreCursor = cursor.cursor('explore')
+  let query = exploreCursor.get('search')
+  logger.debug(`Performing search: '${query}'`)
+  cursor.set('search', query)
+  ajax.getJson('search', {query: query,})
+    .then((results) => {
+      logger.debug(`Searching succeeded:`, results)
+      setSearchResults(cursor, results)
+    })
+    .catch((reason) => {
+      logger.warn('Searching failed:', reason)
+      setSearchResults(cursor, [])
+    })
 }
 
 let SearchBox = component('SearchBox', function (cursor) {
   let searchQuery = cursor.cursor('explore').get('search')
+  logger.debug(`SearchBox rendering, query: '${searchQuery}'`, cursor.toJS())
   let hasSearchQuery = !S.isBlank(searchQuery)
   return h('.search-box', [
     h('span#explore-do-search.search-icon.icon-search.muted', {
@@ -83,7 +117,7 @@ let SearchBox = component('SearchBox', function (cursor) {
         logger.debug(`Search input detected`)
         setSearch(cursor, text)
       },
-      onEnter: performSearch,
+      onEnter: R.partial(performSearch, [cursor,]),
     }),
     hasSearchQuery ? h('span#explore-clear-search.clear-icon.icon-cross.muted', {
       onClick: () => {
@@ -101,11 +135,6 @@ module.exports = {
     return immutable.fromJS({
       search: '',
       projects: [
-        {
-          projectId: 'test',
-          title: 'Test',
-          owner: 'aknudsen',
-        },
       ],
     })
   },
@@ -114,9 +143,10 @@ module.exports = {
       h('.pure-u-1', [
         h('#explore-pad', [
           SearchBox(cursor),
-          IsotopeContainer(cursor),
+          Results(cursor),
         ]),
       ]),
     ])
   },
+  performSearch,
 }

@@ -1,9 +1,11 @@
 'use strict'
-let FalcorServer = require('falcor-hapi')
 let Hapi = require('hapi')
 let Router = require('falcor-router')
 let R = require('ramda')
 let path = require('path')
+let Logger = require('js-logger')
+Logger.useDefaults()
+let logger = Logger.get('server')
 
 let server = new Hapi.Server({
   connections: {
@@ -38,6 +40,21 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
       file: path.join(__dirname, '../dist/bundle.js'),
     },
   })
+  server.route({
+    method: ['GET',],
+    path: '/api/search',
+    handler: (request, reply) => {
+      logger.info(`Searching for '${request.query.query}'`)
+      let re = new RegExp(request.query.query, 'i')
+      reply(R.filter((x) => {return re.test(x.projectId) || re.test(x.title) || re.test(x.owner)}, [
+        {
+          projectId: 'test',
+          title: 'Test',
+          owner: 'aknudsen',
+        },
+      ]))
+    },
+  })
   // server.route({
   //   method: ['GET', 'POST', ],
   //   path: '/model.json',
@@ -53,6 +70,6 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
   //   }),
   // })
   server.start(() => {
-    console.log('Server running at', server.info.uri);
+    logger.info('Server running at', server.info.uri);
   })
 })
