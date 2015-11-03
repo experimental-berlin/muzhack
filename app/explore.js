@@ -21,11 +21,10 @@ let setSearch = (cursor, text) => {
   cursor.cursor('explore').set('search', text)
   if (searchTimeoutHandle != null) {
     clearTimeout(searchTimeoutHandle)
-    logger.debug('Clearing global timeout')
+    logger.debug('Clearing timeout')
   }
   searchTimeoutHandle = setTimeout(() => {
     cursor.set('search',text)
-    logger.debug('Setting global search variable:', text)
     searchTimeoutHandle = null
   }, 500)
 }
@@ -72,7 +71,6 @@ let performSearch = (cursor) => {
 let SearchBox = component('SearchBox', function (cursor) {
   let searchQuery = cursor.cursor('explore').get('search')
   let hasSearchQuery = !S.isBlank(searchQuery)
-  logger.debug('Has search query:', searchQuery)
   return h('.search-box', [
     h('span#explore-do-search.search-icon.icon-search.muted', {
       onClick: R.partial(performSearch, [cursor,]),
@@ -82,7 +80,7 @@ let SearchBox = component('SearchBox', function (cursor) {
       ref: 'search',
       onChange: (event) => {
         let text = event.currentTarget.value
-        logger.debug(`Search global input detected`)
+        logger.debug(`Search input detected`)
         setSearch(cursor, text)
       },
       onEnter: performSearch,
