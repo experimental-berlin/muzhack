@@ -37,6 +37,7 @@
     "immstruct": "^2.0.0",
     "inert": "^3.2.0",
     "isotope-layout": "^2.2.2",
+    "jquery": "^2.1.4",
     "js-logger": "^1.2.0",
     "normalize.css": "^3.0.3",
     "omniscient": "^4.0.0",
@@ -44,6 +45,7 @@
     "ramda": "^0.18.0",
     "react": "^0.14.0",
     "react-dom": "^0.14.0",
+    "react-hyperscript": "^2.2.0",
     "underscore.string.fp": "^1.0.4"
   }
 }
