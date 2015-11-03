@@ -10,12 +10,18 @@ module.exports = component({
     logger.debug('Giving input focus')
     node.select()
   },
-}, ({id, value, placeholder, ref, onChange,}) => {
+}, ({id, value, placeholder, ref, onChange, onEnter,}) => {
   return h('input', {
     id,
     placeholder,
     value,
-    ref: 'Yoo',
+    ref,
     onChange,
+    onKeyUp: (event) => {
+      if (event.keyCode === 13 && onEnter != null) {
+        logger.debug('Enter pressed')
+        onEnter()
+      }
+    },
   })
 })

@@ -7,6 +7,7 @@ let logger = require('js-logger').get('explore')
 let $ = require('jquery/dist/jquery.js')
 let R = require('ramda')
 let h = require('react-hyperscript')
+let ReactDOM = require('react-dom')
 let FocusingInput = require('./focusingInput')
 
 require('./explore.styl')
@@ -64,12 +65,18 @@ let IsotopeContainer = component('IsotopeContainer', {
     h('#isotope-container', {ref: 'container',})
 })
 
+let performSearch = (cursor) => {
+  logger.debug('Performing search')
+}
+
 let SearchBox = component('SearchBox', function (cursor) {
   let searchQuery = cursor.cursor('explore').get('search')
   let hasSearchQuery = !S.isBlank(searchQuery)
   logger.debug('Has search query:', searchQuery)
   return h('.search-box', [
-    h('span#explore-do-search.search-icon.icon-search.muted'),
+    h('span#explore-do-search.search-icon.icon-search.muted', {
+      onClick: R.partial(performSearch, [cursor,]),
+    }),
     FocusingInput({
       id: 'explore-search-input', value: searchQuery, placeholder: 'Search MuzHack',
       ref: 'search',
@@ -78,13 +85,14 @@ let SearchBox = component('SearchBox', function (cursor) {
         logger.debug(`Search global input detected`)
         setSearch(cursor, text)
       },
+      onEnter: performSearch,
     }),
     hasSearchQuery ? h('span#explore-clear-search.clear-icon.icon-cross.muted', {
       onClick: () => {
         logger.debug('Clear search clicked')
         setSearch(cursor, '')
         logger.debug('Giving focus to search input')
-        this.refs.search.getDOMNode().select()
+        ReactDOM.findDOMNode(this.refs.search).select()
       },
     }) : null,
   ])
