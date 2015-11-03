@@ -196,13 +196,6 @@ module.exports = {
       ]),
     })
   },
-  route: (path, func, cursor) => {
-    let routesCursor = getState().cursor(['router', 'routes',])
-    // Replace :[^/]+ with ([^/]+), f.ex. /persons/:id/resource -> /persons/([^/]+)/resource
-    let route = `^${path.replace(/:\w+/g, '([^/]+)')}$`
-    routesCursor.set(route, func)
-    return module.exports
-  },
   // Navigate to a path
   navigate: (path, data, title) => {
     let currentState = history.state
