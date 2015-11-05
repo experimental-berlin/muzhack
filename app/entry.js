@@ -76,7 +76,7 @@ let structure = immstruct('state', {
     { title: 'Koa', url: 'http://koajs.com', },
   ],
 })
-router.perform(structure.cursor())
+router.perform()
 
 let render = () => {
   ReactDom.render(router.Router(structure.cursor()), document.getElementById('container'))

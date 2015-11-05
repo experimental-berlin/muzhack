@@ -33,51 +33,58 @@ let getCurrentPath = () => {
   return normalizePath(link.pathname)
 }
 
-let updateRoute = () => {
-  logger.debug('Updating route')
-  let cursor = getState()
+let loadData = (cursor) => {
   let routerCursor = cursor.cursor('router')
-  let currentPath = getCurrentPath()
-
   let routes = routerCursor.get('routes').toJS()
   let route = getCurrentRoute(routes)
   let func = routes[route]
-  let isLoading = false
   if (typeof func !== 'function') {
     logger.debug(`Loading route data before rendering`)
-    isLoading = true
-    func.loadData(cursor)
+    let path = getCurrentPath()
+    let routeParamNames = routerCursor.get('routeParamNames').toJS()[route]
+    let match = new RegExp(route).exec(path)
+    let routeParams = match.slice(1)
+    let params = R.fromPairs(R.zip(routeParamNames, routeParams))
+    logger.debug(`Current route parameters:`, params)
+    func.loadData(cursor, params)
       .then((newState) => {
-        logger.debug(`Route data has been loaded, state changes:`, newState)
+        logger.debug(`Route data has been loaded ahead of rendering, new state:`, newState)
         let mergedState = getState().mergeDeep(R.merge(newState, {
           router: {
             isLoading: false,
           },
         }))
-        logger.debug(`Updated state:`, mergedState)
       })
-  }
 
-  logger.debug('Updating router state as part of route update, current path:', currentPath)
-  routerCursor.update((routerState) => {
-    return routerState.merge({
-      isLoading,
-      currentPath,
-      navItems: routerState.get('navItems').map((navItem) => {
-        let path = navItem.get('path')
-        let isSelected = path === currentPath
-        if (isSelected) {
-          logger.debug(`Nav item with path '${path}' is selected`)
-        }
-        return navItem.merge({isSelected: isSelected,})
-      }),
-    })
+    return true
+  } else {
+    return false
+  }
+}
+
+let perform = () => {
+  let cursor = getState()
+  let currentPath = getCurrentPath()
+  logger.debug('Routing, current path:', currentPath)
+  let routerCursor = cursor.cursor('router')
+  let isLoading = loadData(cursor)
+  let updatedState = routerCursor.mergeDeep({
+    isLoading,
+    currentPath,
+    navItems: R.map((navItem) => {
+      let path = navItem.path
+      let isSelected = path === currentPath
+      if (isSelected) {
+        logger.debug(`Nav item with path '${path}' is selected`)
+      }
+      return {isSelected: isSelected,}
+    }, routerCursor.get('navItems').toJS()),
   })
 }
 
 window.onpopstate = () => {
   logger.debug('onpopstate')
-  updateRoute()
+  perform()
 }
 
 let handleClick = (e) => {
@@ -147,7 +154,7 @@ let handleClick = (e) => {
   e.preventDefault()
   logger.debug(`Navigating to '${orig}'`)
   window.history.pushState({}, 'MuzHackage', orig)
-  updateRoute()
+  perform()
 }
 
 let clickEvent = document != null && document.ontouchstart ? 'touchstart' : 'click'
@@ -236,36 +243,7 @@ module.exports = {
       ]),
     })
   },
-  perform: (cursor) => {
-    let routerCursor = cursor.cursor('router')
-    let routes = routerCursor.get('routes').toJS()
-    let route = getCurrentRoute(routes)
-    let path = getCurrentPath()
-    logger.debug(`Performing routing, current path: '${path}'`)
-    logger.debug('Current path:', path)
-    let routeParamNames = routerCursor.get('routeParamNames').toJS()[route]
-    let match = new RegExp(route).exec(path)
-    let routeParams = match.slice(1)
-    let params = R.fromPairs(R.zip(routeParamNames, routeParams))
-    logger.debug(`Current route parameters:`, params)
-
-    let func = routes[route]
-    let isLoading = false
-    if (typeof func !== 'function') {
-      logger.debug(`Loading route data before rendering`)
-      routerCursor.set('isLoading', true)
-      func.loadData(cursor, params)
-        .then((newState) => {
-          logger.debug(`Route data has been loaded ahead of rendering, new state:`, newState)
-          let mergedState = getState().mergeDeep(R.merge(newState, {
-            router: {
-              isLoading: false,
-            },
-          }))
-          logger.debug(`Merged state:`, mergedState.toJS())
-        })
-    }
-  },
+  perform,
   // Navigate to a path
   navigate: (path, data, title) => {
     let currentState = history.state
@@ -290,7 +268,7 @@ module.exports = {
         title !== currentTitle) {
       history.pushState(data, title, path)
     } else {
-      updateRoute()
+      perform()
     }
     return this
   },

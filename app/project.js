@@ -10,7 +10,7 @@ let render = (cursor) => {
   let qualifiedProjectId = `${project.owner}/${project.projectId}`
   let canEdit = false
   let creationDateString = datetime.displayDateTextual(project.created)
-  logger.debug(`Rendering`)
+  logger.debug(`Rendering project`, project)
   return h('.airy-padding-sides', [
     h('h1#project-path', qualifiedProjectId),
     h('#project-top-pad.airy-padding-sides', [
