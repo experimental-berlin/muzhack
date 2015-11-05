@@ -71,7 +71,7 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
         pictures: [],
         license: {
           name: 'Creative Commons',
-          url: 'license.com',
+          url: 'http://creativecommons.org',
           icons: [
             'creative-commons',
             'creative-commons-attribution',
@@ -81,14 +81,14 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
         instructions: `#Instructions`,
         files: [
           {
-            url: '',
+            url: 'example.com',
             fullPath: 'file.txt',
             size: 20,
           },
         ],
         zipFile: {
-          size: 0,
-          url: null,
+          size: 80,
+          url: 'example.com',
         },
       }
       logger.debug(`Returning project:`, project)

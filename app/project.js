@@ -59,7 +59,13 @@ let TopPad = component('TopPad', (project) => {
 
 let RightColumn = component('RightColumn', (project) => {
   let tagElems = R.chain((tag) => {
-    return [h('a.project-tag', {href: '#',}, tag), ', ',]
+    return [h('a.project-tag', {
+      href: '#',
+      onClick: (event) => {
+        logger.debug(`Project tag '${tag}' clicked`)
+        event.preventDefault()
+      },
+    }, tag), ', ',]
   }, project.tags).slice(0, -1)
   return h('#right-column', [
     h('#tag-pad.airy-padding-sides', [
