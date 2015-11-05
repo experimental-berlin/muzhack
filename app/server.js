@@ -72,6 +72,8 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
           name: 'Creative Commons',
           url: 'license.com',
         },
+        description: `#Description`,
+        instructions: `#Instructions`,
       }
       logger.debug(`Returning project:`, project)
       reply(project)

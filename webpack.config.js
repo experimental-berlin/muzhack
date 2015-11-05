@@ -34,6 +34,10 @@ module.exports = {
         test: /(isotope|masonry|outlayer|item|get-size|fizzy-ui-utils\/utils)\.js$/,
         loader: 'imports?define=>false',
       },
+      {
+        test: /\.json$/,
+        loader: 'json-loader',
+      },
     ],
   },
   debug: true,
