@@ -68,6 +68,27 @@ let IsotopeContainer = component('IsotopeContainer', {
    return h('#isotope-container', {ref: 'container',})
 })
 
+let searchAsync = (cursor, query) => {
+  let transformResults = (results) => {
+    let transformedResults = {
+      isSearching: false,
+      explore: {
+        projects: results,
+      },
+    }
+    return transformedResults
+  }
+
+  return ajax.getJson('search', {query: query || '',})
+    .then((results) => {
+      logger.debug(`Searching succeeded:`, results)
+      return transformResults(results)
+    }, (reason) => {
+      logger.warn('Searching failed:', reason)
+      return transformResults([])
+    })
+}
+
 let performSearch = (cursor) => {
   if (cursor.get('isSearching')) {
     logger.warn(`performSearch invoked while already searching`)
@@ -90,15 +111,7 @@ let performSearch = (cursor) => {
   let query = exploreCursor.get('search')
   logger.debug(`Performing search: '${query}'`)
   cursor.set('search', query)
-  ajax.getJson('search', {query: query,})
-    .then((results) => {
-      logger.debug(`Searching succeeded:`, results)
-      setSearchResults(cursor, results)
-    })
-    .catch((reason) => {
-      logger.warn('Searching failed:', reason)
-      setSearchResults(cursor, [])
-    })
+  return searchAsync(cursor, query)
 }
 
 let SearchBox = component('SearchBox', function (cursor) {
@@ -138,15 +151,20 @@ module.exports = {
       ],
     })
   },
-  render: (cursor) => {
-    return h('.pure-g', [
-      h('.pure-u-1', [
-        h('#explore-pad', [
-          SearchBox(cursor),
-          Results(cursor),
+  routeOptions: {
+    loadData: (cursor) => {
+      logger.debug(`Loading projects`)
+      return searchAsync(cursor)
+    },
+    render: (cursor) => {
+      return h('.pure-g', [
+        h('.pure-u-1', [
+          h('#explore-pad', [
+            SearchBox(cursor),
+            Results(cursor),
+          ]),
         ]),
-      ]),
-    ])
+      ])
+    },
   },
-  performSearch,
 }

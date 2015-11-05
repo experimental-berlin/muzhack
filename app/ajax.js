@@ -20,8 +20,14 @@ module.exports = {
         if (request.readyState === XMLHttpRequest.DONE) {
           logger.debug('Received response from server:', request)
           if (request.status === 200) {
-            logger.debug(`Response was successful`)
-            resolve(JSON.parse(request.responseText))
+            logger.debug(`Response was successful:`, request.responseText)
+            try {
+              let result = JSON.parse(request.responseText)
+              resolve(result)
+            } catch (error) {
+              logger.warn(`Received malformed JSON from server:`, request.responseText)
+              reject(`Parsing JSON from server failed: ${error}`)
+            }
           } else {
             logger.debug(`Response was not successful: ${request.status}`)
             reject(request.responseText)

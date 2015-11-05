@@ -7,8 +7,11 @@ let S = require('underscore.string.fp')
 let layout = require('./layout')
 let logger = require('js-logger').get('router')
 
+let Loading = require('./loading')
+let regex = require('./regex')
+
 let getState = () => {
-  return immstruct('state')
+  return immstruct('state').cursor()
 }
 
 let normalizePath = (path) => {
@@ -33,10 +36,32 @@ let getCurrentPath = () => {
 let updateRoute = () => {
   logger.debug('Updating route')
   let cursor = getState()
-  cursor.cursor('router').update((routerState) => {
-    let currentPath = getCurrentPath()
-    logger.debug('Current path is:', currentPath)
+  let routerCursor = cursor.cursor('router')
+  let currentPath = getCurrentPath()
+
+  let routes = routerCursor.get('routes').toJS()
+  let route = getCurrentRoute(routes)
+  let func = routes[route]
+  let isLoading = false
+  if (typeof func !== 'function') {
+    logger.debug(`Loading route data before rendering`)
+    isLoading = true
+    func.loadData(cursor)
+      .then((newState) => {
+        logger.debug(`Route data has been loaded, state changes:`, newState)
+        let mergedState = getState().mergeDeep(R.merge(newState, {
+          router: {
+            isLoading: false,
+          },
+        }))
+        logger.debug(`Updated state:`, mergedState)
+      })
+  }
+
+  logger.debug('Updating router state as part of route update, current path:', currentPath)
+  routerCursor.update((routerState) => {
     return routerState.merge({
+      isLoading,
       currentPath,
       navItems: routerState.get('navItems').map((navItem) => {
         let path = navItem.get('path')
@@ -50,7 +75,6 @@ let updateRoute = () => {
   })
 }
 
-// TODO
 window.onpopstate = () => {
   logger.debug('onpopstate')
   updateRoute()
@@ -146,16 +170,25 @@ function sameOrigin(href) {
 let Router = component('Router', (cursor) => {
   logger.debug('Router rendering')
   let routes = cursor.cursor(['router', 'routes',]).toJS()
-  logger.debug('Current router state:', cursor.cursor(['router', 'currentPath',]).toJS())
+  logger.debug('Current router state:', cursor.cursor('router').toJS())
   let route = getCurrentRoute(routes)
-  let path = cursor.cursor(['router', 'currentPath',]).deref() || getCurrentPath()
+  let path = cursor.cursor('router').get('currentPath')
   logger.debug('Current path:', path)
   let match = new RegExp(route).exec(path)
   // Route arguments correspond to regex groups
   let args = match.slice(1)
-  let func = routes[route]
-  logger.debug('Calling function with args:', args)
-  let page = func.apply(null, [cursor,].concat(args))
+  let page
+  if (cursor.cursor('router').get('isLoading')) {
+    logger.debug(`Route data is loading`)
+    page = Loading()
+  } else {
+    let func = routes[route]
+    if (typeof func !== 'function') {
+      func = func.render
+    }
+    logger.debug('Calling function with args:', args)
+    page = func.apply(null, [cursor,].concat(args))
+  }
   return layout.render(cursor, page)
 })
 
@@ -175,13 +208,20 @@ module.exports = {
   createState: (routes) => {
     let currentPath = getCurrentPath()
     let mappedRoutes = {}
+    let routeParamNames = {}
     R.forEach((route) => {
       // Replace :[^/]+ with ([^/]+), f.ex. /persons/:id/resource -> /persons/([^/]+)/resource
-      mappedRoutes[`^${route.replace(/:\w+/g, '([^/]+)')}$`] = routes[route]
+      let mappedRoute = `^${route.replace(/:\w+/g, '([^/]+)')}$`
+      mappedRoutes[mappedRoute] = routes[route]
+      routeParamNames[mappedRoute] = regex.findAll(':(\\w+)', route)
     }, R.keys(routes))
     logger.debug(`Application routes:`, mappedRoutes)
+
     return immutable.fromJS({
+      currentPath,
+      isLoading: false,
       routes: mappedRoutes,
+      routeParamNames,
       navItems: R.map((x) => {
         let path = !x.isExternal ? normalizePath(x.path) : x.path
         return R.merge(x, {
@@ -195,6 +235,36 @@ module.exports = {
         {path: '/about', text: 'About',},
       ]),
     })
+  },
+  perform: (cursor) => {
+    let routerCursor = cursor.cursor('router')
+    let routes = routerCursor.get('routes').toJS()
+    let route = getCurrentRoute(routes)
+    let path = getCurrentPath()
+    logger.debug(`Performing routing, current path: '${path}'`)
+    logger.debug('Current path:', path)
+    let routeParamNames = routerCursor.get('routeParamNames').toJS()[route]
+    let match = new RegExp(route).exec(path)
+    let routeParams = match.slice(1)
+    let params = R.fromPairs(R.zip(routeParamNames, routeParams))
+    logger.debug(`Current route parameters:`, params)
+
+    let func = routes[route]
+    let isLoading = false
+    if (typeof func !== 'function') {
+      logger.debug(`Loading route data before rendering`)
+      routerCursor.set('isLoading', true)
+      func.loadData(cursor, params)
+        .then((newState) => {
+          logger.debug(`Route data has been loaded ahead of rendering, new state:`, newState)
+          let mergedState = getState().mergeDeep(R.merge(newState, {
+            router: {
+              isLoading: false,
+            },
+          }))
+          logger.debug(`Merged state:`, mergedState.toJS())
+        })
+    }
   },
   // Navigate to a path
   navigate: (path, data, title) => {

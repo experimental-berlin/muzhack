@@ -39,6 +39,7 @@
     "isotope-layout": "^2.2.2",
     "jquery": "^2.1.4",
     "js-logger": "^1.2.0",
+    "moment": "^2.10.6",
     "normalize.css": "^3.0.3",
     "omniscient": "^4.0.0",
     "purecss": "^0.6.0",

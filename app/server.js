@@ -44,7 +44,7 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
     method: ['GET',],
     path: '/api/search',
     handler: (request, reply) => {
-      logger.info(`Searching for '${request.query.query}'`)
+      logger.debug(`Searching for '${request.query.query}'`)
       let re = new RegExp(request.query.query, 'i')
       reply(R.filter((x) => {return re.test(x.projectId) || re.test(x.title) || re.test(x.owner)}, [
         {
@@ -53,6 +53,20 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
           owner: 'aknudsen',
         },
       ]))
+    },
+  })
+  server.route({
+    method: ['GET',],
+    path: '/api/projects/{owner}/{projectId}',
+    handler: (request, reply) => {
+      let {owner, projectId,} = request.params
+      logger.debug(`Getting project '${owner}/${projectId}'`)
+      reply({
+        projectId,
+        owner,
+        title: 'Test',
+        created: '2015.11.04',
+      })
     },
   })
   // server.route({

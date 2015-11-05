@@ -10,6 +10,7 @@ let R = require('ramda')
 
 let about = require('./about')
 let explore = require('./explore')
+let project = require('./project')
 
 require('./app.styl')
 require('./styles/fonts.css')
@@ -50,7 +51,8 @@ let structure = immstruct('state', {
   search: '',
   explore: explore.createState(),
   router: router.createState({
-    '/': explore.render,
+    '/': explore.routeOptions,
+    '/u/:owner/:projectId': project.routeOptions,
     '/create': (cursor) => {
       return d.div({}, SearchBox(cursor.cursor('search')), Matches(cursor))
     },
@@ -74,7 +76,7 @@ let structure = immstruct('state', {
     { title: 'Koa', url: 'http://koajs.com', },
   ],
 })
-setTimeout(R.partial(explore.performSearch, [structure.cursor()]), 0)
+router.perform(structure.cursor())
 
 let render = () => {
   ReactDom.render(router.Router(structure.cursor()), document.getElementById('container'))
