@@ -15,16 +15,17 @@ let {nbsp,} = require('./specialChars')
 require('./displayProject.styl')
 
 let getFileSize = (numBytes) => {
+  let sizeStr
   if (numBytes < 1024) {
-    sizeStr = '#{numBytes} B'
+    sizeStr = `${numBytes} B`
   } else if (numBytes < 1024*1024) {
-    sizeStr = '#{Math.ceil(numBytes / 1024.0)} KB'
+    sizeStr = `${Math.ceil(numBytes / 1024.0)} KB`
   } else if (numBytes < 1024*1024*1024) {
-    sizeStr = '#{Math.ceil(numBytes / (1024*1024.0))} MB'
+    sizeStr = `${Math.ceil(numBytes / (1024*1024.0))} MB`
   } else if (numBytes < 1024*1024*1024*1024) {
-    sizeStr = '#{Math.ceil(numBytes / (1024*1024*1024.0))} GB'
+    sizeStr = `${Math.ceil(numBytes / (1024*1024*1024.0))} GB`
   } else {
-    throw new Error('File size too large: #{numBytes}')
+    throw new Error(`File size too large: ${numBytes}`)
   }
   return sizeStr
 }
@@ -110,16 +111,27 @@ let BottomPad = component('BottomPad', ({cursor, project,}) => {
       convertMarkdown(project.instructions),
     ])
   } else if (activeTab === 'files') {
-    tabContent = ProjectFiles(cursor)
+    tabContent = ProjectFiles(project)
   }
   return h('#project-bottom-pad', [
     h('ul.tabs', {role: 'tablist',}, R.map((projectTab) => {
       return h(`li.${S.join('.', projectTab.getClasses(cursor))}`, [
-        h('a', {role: 'tab', href: project.title.toLowerCase(),}, [
+        h('a', {
+          role: 'tab',
+          href: '#',
+          onClick: (event) => {
+            event.preventDefault()
+
+            if (cursor.cursor(['explore', 'project',]).get('activeTab') !== projectTab.name) {
+              logger.debug(`Switching project tab to '${projectTab.name}'`)
+              cursor.cursor(['explore', 'project',]).set('activeTab', projectTab.name)
+            }
+          },
+        }, [
           projectTab.icon != null ? h(`span.icon-${projectTab.icon}`, nbsp) : null,
           projectTab.title,
-       ]),
-     ])
+        ]),
+      ])
     }, projectTabs)),
     h('#tab-contents', [
       tabContent,
@@ -132,12 +144,11 @@ let ProjectFiles = component('ProjectFiles', (project) => {
     return h('em', 'The project has no files')
   } else {
     let zipFileSize = project.zipFile != null ? getFileSize(project.zipFile.size) : 0
-    return [
+    return h('div', [
       h('a#download-zip-button.pure-button', {href: project.zipFile.url,}, [
-        h('span.icon-file-zip', [
-          'Download zip',
-          h('span.small', `(${zipFileSize})`),
-        ]),
+        h('span.icon-file-zip'),
+        `${nbsp}Download zip`,
+        h('span.small', `${nbsp}(${zipFileSize})`),
       ]),
       h('table#project-files-table', [
         h('thead', [
@@ -147,17 +158,18 @@ let ProjectFiles = component('ProjectFiles', (project) => {
           ]),
         ]),
         h('tbody', R.map((file) => {
+          let sizeStr = getFileSize(file.size)
           return h('tr', [
             h('td', [
-              h('a', {href: url,}, [h('span.icon-puzzle4', `${nbsp}${file.fullPath}`),]),
+              h('a', {href: file.url,}, [h('span.icon-puzzle4', `${nbsp}${file.fullPath}`),]),
             ]),
             h('td', [
-              h('a', {href: url,}, sizeStr),
+              h('a', {href: file.url,}, sizeStr),
             ]),
           ])
         }, project.files)),
       ]),
-    ]
+    ])
   }
 })
 

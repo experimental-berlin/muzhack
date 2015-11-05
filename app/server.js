@@ -79,6 +79,17 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
         },
         description: `#Description`,
         instructions: `#Instructions`,
+        files: [
+          {
+            url: '',
+            fullPath: 'file.txt',
+            size: 20,
+          },
+        ],
+        zipFile: {
+          size: 0,
+          url: null,
+        },
       }
       logger.debug(`Returning project:`, project)
       reply(project)
