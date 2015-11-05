@@ -2,7 +2,7 @@ FROM nodesource/jessie:5
 MAINTAINER Arve Knudsen
 
 WORKDIR /app
-ENTRYPOINT ["node", "."]
+ENTRYPOINT ["node", "--harmony_destructuring", "."]
 ENV PORT=80
 EXPOSE 80
 

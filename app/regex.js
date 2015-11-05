@@ -11,6 +11,6 @@ module.exports.findAll = (pattern, str) => {
     matches.push(match[1])
     str = str.slice(match.index + match[0].length)
   }
-  
+
   return matches
 }
