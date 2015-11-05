@@ -12,6 +12,8 @@ let datetime = require('./datetime')
 let ajax = require('./ajax')
 let {nbsp,} = require('./specialChars')
 
+require('./displayProject.styl')
+
 let getFileSize = (numBytes) => {
   if (numBytes < 1024) {
     sizeStr = '#{numBytes} B'
@@ -55,23 +57,23 @@ let TopPad = component('TopPad', (project) => {
 })
 
 let RightColumn = component('RightColumn', (project) => {
-  let tagsString = ''
+  let tagElems = R.chain((tag) => {
+    return [h('a.project-tag', {href: '#',}, tag), ', ',]
+  }, project.tags).slice(0, -1)
   return h('#right-column', [
     h('#tag-pad.airy-padding-sides', [
       h('h2', [
         h('span.icon-tags2'),
         `${nbsp}Tags`,
       ]),
-      h('#project-tags', [
-        tagsString,
-      ]),
+      h('#project-tags', tagElems),
     ]),
     h('#license-pad.airy-padding-sides', [
       h('h2', 'License'),
       h('#license-icons', [
         h('a', {href: project.license.url, target: '_blank',}, R.map((icon) => {
           return h(`span.icon-${icon}`)
-        })),
+        }, project.license.icons)),
       ]),
       h('p', [
         h('strong', [

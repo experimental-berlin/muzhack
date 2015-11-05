@@ -63,6 +63,7 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
       logger.debug(`Getting project '${owner}/${projectId}'`)
       let project = {
         projectId,
+        tags: ['notam', '3dprint',],
         owner,
         ownerName: 'Arve Knudsen',
         title: 'Test',
@@ -71,6 +72,10 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
         license: {
           name: 'Creative Commons',
           url: 'license.com',
+          icons: [
+            'creative-commons',
+            'creative-commons-attribution',
+          ],
         },
         description: `#Description`,
         instructions: `#Instructions`,
