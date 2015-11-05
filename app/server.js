@@ -67,6 +67,11 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
         ownerName: 'Arve Knudsen',
         title: 'Test',
         created: '2015-11-04',
+        pictures: [],
+        license: {
+          name: 'Creative Commons',
+          url: 'license.com',
+        },
       }
       logger.debug(`Returning project:`, project)
       reply(project)

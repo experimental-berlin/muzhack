@@ -1,6 +1,7 @@
 'use strict'
 let logger = require('js-logger').get('project')
 let h = require('react-hyperscript')
+let R = require('ramda')
 
 let datetime = require('./datetime')
 let ajax = require('./ajax')
@@ -10,25 +11,57 @@ let render = (cursor) => {
   let qualifiedProjectId = `${project.owner}/${project.projectId}`
   let canEdit = false
   let creationDateString = datetime.displayDateTextual(project.created)
+  let mainPicture = null
+  let tagsString = ''
   logger.debug(`Rendering project`, project)
   return h('.airy-padding-sides', [
     h('h1#project-path', qualifiedProjectId),
     h('#project-top-pad.airy-padding-sides', [
-      h('#project-heading'),
-      h('h1#project-title', project.title),
-      h('p#project-creation-date', [
-        `Added ${creationDateString} by `,
-        h('a', {href: `/u/${project.owner}`,}, project.ownerName),
+      h('#project-heading', [
+        h('h1#project-title', project.title),
+        h('p#project-creation-date', [
+          `Added ${creationDateString} by `,
+          h('a', {href: `/u/${project.owner}`,}, project.ownerName),
+        ]),
+      ]),
+      h('#image-box', [
+        h('#thumbnails', R.map((picture) => {
+          return h(a, {href: '#',}, [
+            h('.thumbnail-wrapper', [
+              h('img', {src: picture.url,}),
+            ]),
+          ])
+        }, project.pictures)),
+        h('#displayed-image', [
+          h('img', {src: mainPicture,}),
+        ]),
       ]),
     ]),
-    // #project-top-pad.airy-padding-sides
-    //   if canEdit
-    //     a#edit-action.action.pull-right(href="#", data-tooltip="Edit project")
-    //       span.icon-pencil3
-    //   #project-heading
-    //     h1#project-title
-    //       = title
-    //     p#project-creation-date Added #{creationDateString} by #[a(href="/u/#{username}") #{userFullName})
+    h('#right-column', [
+      h('#tag-pad.airy-padding-sides', [
+        h('h2', [
+          h('span.icon-tags2', '&nbsp;Tags'),
+        ]),
+        h('#project-tags', [
+          tagsString,
+        ]),
+      ]),
+      h('#license-pad.airy-padding-sides', [
+        h('h2', 'License'),
+        h('#license-icons', [
+          h('a', {href: project.license.url, target: '_blank',}, R.map((icon) => {
+            return h(`span.icon-${icon}`)
+          })),
+        ]),
+        h('p', [
+          h('strong', [
+            `${project.title} is licensed under the `,
+            h('a', {href: project.license.url, target: '_blank',}, project.license.name),
+            ' license.',
+          ]),
+        ]),
+      ]),
+    ]),
   ])
 
   // #project-top-pad.airy-padding-sides
