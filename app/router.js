@@ -177,7 +177,7 @@ function sameOrigin(href) {
 let Router = component('Router', (cursor) => {
   logger.debug('Router rendering')
   let routes = cursor.cursor(['router', 'routes',]).toJS()
-  logger.debug('Current router state:', cursor.cursor('router').toJS())
+  logger.debug('Current state:', cursor.toJS())
   let route = getCurrentRoute(routes)
   let path = cursor.cursor('router').get('currentPath')
   logger.debug('Current path:', path)

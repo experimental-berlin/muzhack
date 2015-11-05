@@ -6,7 +6,7 @@ let datetime = require('./datetime')
 let ajax = require('./ajax')
 
 let render = (cursor) => {
-  let project = cursor.cursor('explore').get('currentProject')
+  let project = cursor.cursor('explore').get('currentProject').toJS()
   let qualifiedProjectId = `${project.owner}/${project.projectId}`
   let canEdit = false
   let creationDateString = datetime.displayDateTextual(project.created)
@@ -16,8 +16,10 @@ let render = (cursor) => {
     h('#project-top-pad.airy-padding-sides', [
       h('#project-heading'),
       h('h1#project-title', project.title),
-      h('p#project-creation-date', `Added ${creationDateString} by`),
-      h('a', {href: `/u/${project.owner}`,}, project.ownerName),
+      h('p#project-creation-date', [
+        `Added ${creationDateString} by `,
+        h('a', {href: `/u/${project.owner}`,}, project.ownerName),
+      ]),
     ]),
     // #project-top-pad.airy-padding-sides
     //   if canEdit
@@ -90,16 +92,17 @@ module.exports = {
     render: render,
     loadData: (cursor, params) => {
       logger.debug(`Loading project ${params.owner}/${params.projectId}`)
-      return new Promise((resolve, reject) => {
-        ajax.getJson(`projects/${params.owner}/${params.projectId}`)
-          .then((project) => {
-            logger.debug(`Loading project JSON succeeded:`, project)
-            cursor.cursor('explore').set('currentProject', {})
-            resolve()
-          }, (reason) => {
-            logger.warn(`Loading project JSON failed: '${reason}'`)
-          })
-      })
+      return ajax.getJson(`projects/${params.owner}/${params.projectId}`)
+        .then((project) => {
+          logger.debug(`Loading project JSON succeeded:`, project)
+          return {
+            explore: {
+              currentProject: project,
+            },
+          }
+        }, (reason) => {
+          logger.warn(`Loading project JSON failed: '${reason}'`)
+        })
     },
   },
 }

@@ -61,12 +61,15 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
     handler: (request, reply) => {
       let {owner, projectId,} = request.params
       logger.debug(`Getting project '${owner}/${projectId}'`)
-      reply({
+      let project = {
         projectId,
         owner,
+        ownerName: 'Arve Knudsen',
         title: 'Test',
-        created: '2015.11.04',
-      })
+        created: '2015-11-04',
+      }
+      logger.debug(`Returning project:`, project)
+      reply(project)
     },
   })
   // server.route({
