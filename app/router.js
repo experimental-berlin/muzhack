@@ -68,17 +68,26 @@ let perform = () => {
   logger.debug('Routing, current path:', currentPath)
   let routerCursor = cursor.cursor('router')
   let isLoading = loadData(cursor)
+  let navItems = R.map((navItem) => {
+    let path = navItem.path
+    let isSelected = path === currentPath
+    if (isSelected) {
+      logger.debug(`Nav item with path '${path}' is selected`)
+    }
+    return {
+      isSelected,
+      path,
+    }
+  }, routerCursor.get('navItems').toJS())
+  // Default to root nav item being selected
+  if (!R.any((navItem) => {return navItem.isSelected}, navItems)) {
+    let navItem = R.find((navItem) => {return navItem.path === '/'}, navItems)
+    navItem.isSelected = true
+  }
   let updatedState = routerCursor.mergeDeep({
     isLoading,
     currentPath,
-    navItems: R.map((navItem) => {
-      let path = navItem.path
-      let isSelected = path === currentPath
-      if (isSelected) {
-        logger.debug(`Nav item with path '${path}' is selected`)
-      }
-      return {isSelected: isSelected,}
-    }, routerCursor.get('navItems').toJS()),
+    navItems,
   })
 }
 
@@ -229,9 +238,9 @@ module.exports = {
       isLoading: false,
       routes: mappedRoutes,
       routeParamNames,
-      navItems: R.map((x) => {
-        let path = !x.isExternal ? normalizePath(x.path) : x.path
-        return R.merge(x, {
+      navItems: R.map((navItem) => {
+        let path = !navItem.isExternal ? normalizePath(navItem.path) : navItem.path
+        return R.merge(navItem, {
           path: path,
           isSelected: path === currentPath,
         })

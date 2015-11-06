@@ -21,11 +21,11 @@ let Header = component('Header', (cursor) => {
   return d.header({},
     d.nav({id: 'menu', className: 'pure-menu pure-menu-open pure-menu-fixed pure-menu-horizontal',},
       d.a({className: 'pure-menu-heading', href: '/',}, 'MuzHack'),
-      d.ul({className: 'pure-menu-list',}, R.addIndex(R.map)((x, i) => {
-        let classes = ['pure-menu-item', x.isSelected ? 'pure-menu-selected' : null,]
-        let extraAttrs = x.isExternal ? {target: '_blank',} : {}
+      d.ul({className: 'pure-menu-list',}, R.addIndex(R.map)((navItem, i) => {
+        let classes = ['pure-menu-item', navItem.isSelected ? 'pure-menu-selected' : null,]
+        let extraAttrs = navItem.isExternal ? {target: '_blank',} : {}
         return d.li({className: toClassName(classes), key: i,},
-          d.a(R.merge({className: 'pure-menu-link', href: x.path,}, extraAttrs), x.text)
+          d.a(R.merge({className: 'pure-menu-link', href: navItem.path,}, extraAttrs), navItem.text)
         )
       }, navItems))
     )
