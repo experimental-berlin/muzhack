@@ -1,0 +1,78 @@
+@require '_common'
+
+pad-margin = 56px
+
+.required
+  white-space nowrap
+
+  input
+    display inline-block!important
+
+  &::after
+    content " *"
+    vertical-align middle
+    color red
+
+.login-pad
+  pad-base()
+
+  border 0
+  margin pad-margin
+  margin-bottom 0
+
+  #userhint
+    padding-bottom 24px
+
+    .required-asterisk
+      color red
+
+  form
+    rounded-corners-bottom()
+
+    background-color content-background
+    padding-top 43px
+    padding-bottom 43px
+    padding-left 120px
+    padding-right 120px
+
+    fieldset
+      padding 0
+      input
+        margin-bottom 10px
+        width 100%
+        display block
+
+  .button-group
+    margin-top 20px
+    text-align right
+
+  .login-header
+    rounded-corners-top()
+
+    background-color menu-background
+    color white
+    padding-top 0
+    padding-sides = 14px
+    padding-left padding-sides
+    padding-right padding-sides
+    padding = 10px
+
+    display flex
+
+    .tabs
+      border 0
+      padding-top padding
+
+    .tab
+      padding padding
+
+    .login-prompt
+      padding padding
+      margin-right auto
+      display inline-block
+
+#forgot-password
+  margin-left 4px
+
+#password-reset-page
+  margin pad-margin

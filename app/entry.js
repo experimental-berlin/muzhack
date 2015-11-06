@@ -2,7 +2,6 @@
 let component = require('omniscient')
 let immstruct = require('immstruct')
 let React = require('react')
-let d = React.DOM
 let ReactDom = require('react-dom')
 let router = require('./router')
 let Logger = require('js-logger')
@@ -11,6 +10,8 @@ let R = require('ramda')
 let about = require('./about')
 let explore = require('./explore')
 let project = require('./project')
+let createProject = require('./createProject')
+let login = require('./login')
 
 require('./app.styl')
 require('./styles/fonts.css')
@@ -19,44 +20,15 @@ Logger.useDefaults()
 
 let logger = Logger.get('entry')
 
-let Match = component('Match', function (cursor) {
-  return d.li({}, d.a({ href: cursor.get('url'), }, cursor.get('title')))
-})
-
-let Matches = component('Matches', function (cursor) {
-  let q = cursor.get('search')
-  let libs = cursor.get('libs')
-  let matches = libs.filter((lib) => {
-    return lib.get('title').indexOf(q) !== -1 || lib.get('url').indexOf(q) !== -1
-  })
-  return d.ul({}, matches.toArray().map((lib, i) => {
-    // Add key through first argument
-    return Match(`match-${lib.get('title')}`, lib)
-  }))
-})
-
-let SearchBox = component('SearchBox', function (cursor) {
-  return d.div({}, d.input({
-    placeholder: 'Search...',
-    value: cursor.deref(),
-    onChange: function (e) {
-      cursor.update(() => {
-        return e.currentTarget.value
-      })
-    },
-  }))
-})
-
 let structure = immstruct('state', {
   search: '',
   explore: explore.createState(),
   router: router.createState({
     '/': explore.routeOptions,
     '/u/:owner/:projectId': project.routeOptions,
-    '/create': (cursor) => {
-      return d.div({}, SearchBox(cursor.cursor('search')), Matches(cursor))
-    },
+    '/create': createProject.routeOptions,
     '/about': about.render,
+    '/login': login.render,
   }),
   libs: [
     { title: 'Backbone.js', url: 'http://documentcloud.github.io/backbone/', },

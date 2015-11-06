@@ -62,33 +62,57 @@ let loadData = (cursor) => {
   }
 }
 
+let goTo = (path) => {
+  logger.debug(`Navigating to '${path}'`)
+  window.history.pushState({}, 'MuzHack', path)
+  perform()
+}
+
+let requiresLogin = (cursor) => {
+  let routerCursor = cursor.cursor('router')
+  let routes = routerCursor.get('routes').toJS()
+  let route = getCurrentRoute(routes)
+  let options = routes[route]
+  if (typeof options === 'function' || !options.requiresLogin) {
+    logger.debug(`Route doesn't require login`)
+    return false
+  } else if (!cursor.get('isUserLoggedIn')) {
+    logger.debug(`Route requires user being logged in - redirecting to login page`)
+    return true
+  }
+}
+
 let perform = () => {
   let cursor = getState()
   let currentPath = getCurrentPath()
   logger.debug('Routing, current path:', currentPath)
   let routerCursor = cursor.cursor('router')
-  let isLoading = loadData(cursor)
-  let navItems = R.map((navItem) => {
-    let path = navItem.path
-    let isSelected = path === currentPath
-    if (isSelected) {
-      logger.debug(`Nav item with path '${path}' is selected`)
+  if (requiresLogin(cursor)) {
+    goTo('/login')
+  } else {
+    let isLoading = loadData(cursor)
+    let navItems = R.map((navItem) => {
+      let path = navItem.path
+      let isSelected = path === currentPath
+      if (isSelected) {
+        logger.debug(`Nav item with path '${path}' is selected`)
+      }
+      return {
+        isSelected,
+        path,
+      }
+    }, routerCursor.get('navItems').toJS())
+    // Default to root nav item being selected
+    if (!R.any((navItem) => {return navItem.isSelected}, navItems)) {
+      let navItem = R.find((navItem) => {return navItem.path === '/'}, navItems)
+      navItem.isSelected = true
     }
-    return {
-      isSelected,
-      path,
-    }
-  }, routerCursor.get('navItems').toJS())
-  // Default to root nav item being selected
-  if (!R.any((navItem) => {return navItem.isSelected}, navItems)) {
-    let navItem = R.find((navItem) => {return navItem.path === '/'}, navItems)
-    navItem.isSelected = true
+    routerCursor.mergeDeep({
+      isLoading,
+      currentPath,
+      navItems,
+    })
   }
-  let updatedState = routerCursor.mergeDeep({
-    isLoading,
-    currentPath,
-    navItems,
-  })
 }
 
 window.onpopstate = () => {
@@ -161,9 +185,7 @@ let handleClick = (e) => {
   }
 
   e.preventDefault()
-  logger.debug(`Navigating to '${orig}'`)
-  window.history.pushState({}, 'MuzHackage', orig)
-  perform()
+  goTo(orig)
 }
 
 let clickEvent = document != null && document.ontouchstart ? 'touchstart' : 'click'
