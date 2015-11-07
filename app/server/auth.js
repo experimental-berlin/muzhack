@@ -23,7 +23,7 @@ module.exports.register = (server) => {
     handler: (request, reply) => {
       if (request.auth.isAuthenticated) {
         logger.debug(`User is already logged in`)
-        reply()
+        reply({username: request.payload.username,})
       } else {
         logger.debug(`Logging user in`)
         if (request.payload.username == null || request.payload.password == null) {
