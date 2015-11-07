@@ -18,11 +18,13 @@ let SignInForm = component('SignInForm', () => {
         classes: ['account-email',],
         placeholder: 'email or username',
         name: 'email',
+        required: true,
       }),
       h('input.account-password', {
         type: 'password',
         placeholder: 'password',
         name: 'password',
+        required: true,
       }),
     ]),
     h('.button-group', [

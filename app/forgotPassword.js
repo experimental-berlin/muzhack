@@ -23,7 +23,7 @@ module.exports.render = (cursor) => {
           h('legend', 'Account Info'),
           FocusingInput({
             id: 'account-email', type: 'email', placeholder: 'email',
-            classes: ['account-email',],
+            classes: ['account-email',], required: true,
           }),
         ]),
         h('.button-group', [
