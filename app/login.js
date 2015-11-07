@@ -31,6 +31,10 @@ let SignInForm = component('SignInForm', () => {
       h('input#login-button.pure-button.pure-button-primary', {
         type: 'submit',
         value: 'Sign in',
+        onClick: (event) => {
+          logger.debug(`Signing user in`)
+          event.preventDefault()
+        },
       }),
       h('a#forgot-password.small', {href: '/account/forgotpassword',}, 'Forgot password?'),
     ]),
@@ -51,8 +55,8 @@ let SignUpForm = component('SignUpForm', () => {
         FocusingInput({
           id: 'signup-username',
           classes: ['account-username',],
-          placeholder: 'email or username',
-          name: 'email',
+          placeholder: 'username',
+          name: 'username',
           required: true,
         }),
       ]),
@@ -96,6 +100,10 @@ let SignUpForm = component('SignUpForm', () => {
       h('input#signup-button.pure-button.pure-button-primary', {
         type: 'submit',
         value: 'Sign up',
+        onClick: (event) => {
+          logger.debug(`Signing user up`)
+          event.preventDefault()
+        },
       }),
     ]),
   ])
