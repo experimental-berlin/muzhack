@@ -20,7 +20,7 @@ let ajax = (method, path, params, payload) => {
         logger.debug('Received response from server:', request)
         if (request.status === 200) {
           logger.debug(`Response was successful:`, request.responseText)
-          if (request.responseText != null) {
+          if (!S.isBlank(request.responseText)) {
             try {
               let result = JSON.parse(request.responseText)
               resolve(result)
