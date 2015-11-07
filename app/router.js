@@ -102,11 +102,18 @@ let shouldRedirect = (cursor) => {
   }
 }
 
-let perform = () => {
+let perform = (isInitial=false) => {
   let cursor = getState()
   let currentPath = getCurrentPath()
-  logger.debug('Routing, current path:', currentPath)
+  let currentHash = document.location.hash.slice(1).toLowerCase()
+  logger.debug(`Routing, current path: '${currentPath}', current hash: '${currentHash}'`)
   let routerCursor = cursor.cursor('router')
+  if (!isInitial && currentPath === routerCursor.get('currentPath')) {
+    logger.debug(`Path did not change:`, currentPath)
+    routerCursor.set('currentHash', currentHash)
+    return
+  }
+
   let redirectTo = shouldRedirect(cursor)
   if (redirectTo != null) {
     goTo(redirectTo)
@@ -132,6 +139,7 @@ let perform = () => {
       isLoading,
       currentPath,
       navItems,
+      currentHash,
     })
   }
 }
@@ -164,11 +172,7 @@ let handleClick = (e) => {
     return
   }
 
-  // ensure non-hash for the same path
   let link = el.getAttribute('href')
-  if (el.pathname === location.pathname && (el.hash || '#' === link)) {
-    return
-  }
 
   // Check for mailto: in the href
   if (link && link.indexOf('mailto:') > -1) {
@@ -205,6 +209,7 @@ let handleClick = (e) => {
     return
   }
 
+  logger.debug(`Handling link click`)
   e.preventDefault()
   goTo(orig)
 }
@@ -220,10 +225,12 @@ let getEventWhich = (e) => {
 /**
  * Check if `href` is the same origin.
  */
-function sameOrigin(href) {
+let sameOrigin = (href) => {
   let origin = location.protocol + '//' + location.hostname
-  if (location.port) origin += ':' + location.port
-  return (href && (0 === href.indexOf(origin)))
+  if (location.port) {
+    origin += ':' + location.port
+  }
+  return href != null && (0 === href.indexOf(origin))
 }
 
 let Router = component('Router', (cursor) => {
@@ -301,7 +308,7 @@ module.exports = {
     ajax.getJson('initialData').then((data) => {
       logger.debug(`Received initial data:`, data)
       cursor.set('loggedInUser', data.user)
-      perform()
+      perform(true)
     }, () => {
       logger.warn(`Failed to receive initial data`)
     })

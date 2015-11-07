@@ -40,7 +40,7 @@ module.exports = component('VCard', (user) => {
       !S.isBlank(user.about) ? h('div', [
         h('hr'),
         h('#user-about-short.vcard-detail', [
-          h('a', {href: '#about',}, `About ${userFirstName}`),
+          h('a', {href: '#about',}, `About ${S.words(user.name)[0]}`),
         ]),
       ]) : null,
     ]),

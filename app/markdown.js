@@ -7,5 +7,6 @@ module.exports.convertMarkdown = (markdown) => {
   let converter = getSanitizingConverter()
   let html = converter.makeHtml(markdown)
   let htmlToReactParser = new HtmlToReactParser(React)
-  return htmlToReactParser.parse(html)
+  // Enclose in a div since HtmlToReact can't handle multiple root elements
+  return htmlToReactParser.parse(`<div>${html}</div>`)
 }

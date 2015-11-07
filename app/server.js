@@ -118,6 +118,12 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
         name: 'Arve Knudsen',
         email: 'arve.knudsen@gmail.com',
         projects: [],
+        projectPlans: [],
+        about: 'Arve is one **cool** guy.',
+        soundCloudUploads: [],
+        workshopsInfo: `#Arve Knudsen\'s workshop profile
+
+Arve has no workshops planned at this moment.`,
       }
       logger.debug(`Returning user:`, user)
       reply(user)

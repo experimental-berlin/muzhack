@@ -9,12 +9,13 @@ let logger = require('js-logger').get('userProfile')
 let ajax = require('../../ajax')
 let {nbsp,} = require('../../specialChars')
 let VCard = require('./vcard')
+let {convertMarkdown,} = require('../../markdown')
 
 require('./userProfile.styl')
 
 let About = component('About', (user) => {
   return h('div', [
-    h('h1', `About ${userFullName}`),
+    h('h1', `About ${user.name}`),
     convertMarkdown(user.about),
   ])
 })
@@ -78,11 +79,11 @@ let Plans = component('Plans', ({user, cursor,}) => {
 })
 
 let Media = component('Media', (user) => {
-  return h('div', !R.isEmpty(user.hasSoundCloudUploads) ? [
+  return h('div', !R.isEmpty(user.soundCloudUploads) ? [
     h('h1#soundcloud-header', [
       h('span.icon-soundcloud', 'SoundCloud'),
     ]),
-    h('p', `user.firstName's sounds on SoundCloud`),
+    h('p', `${S.words(user.name)[0]}'s sounds on SoundCloud`),
     h('ul#soundcloud-uploads'),
   ] : null)
 })
@@ -104,9 +105,9 @@ class UserTab {
     this.url = `#${title.toLowerCase()}`
   }
 
-  getClasses(cursor) {
+  getClasses(activeTab) {
     let classes
-    if (isActiveTab(this.name, cursor)) {
+    if (this.name === activeTab) {
       logger.debug(`${this.name} is active tab`)
       classes = ['active',]
     } else {
@@ -139,18 +140,20 @@ module.exports.routeOptions = {
   },
   render: (cursor) => {
     let profileCursor = cursor.cursor('userProfile')
-    let activeTab = profileCursor.get('activeTab')
-
+    let user = profileCursor.get('user').toJS()
+    let currentHash = cursor.cursor('router').get('currentHash')
     let profileTabs = [
       new UserTab('Projects'),
       new UserTab('Plans'),
-      new UserTab('About', null),
-      new UserTab('Media', null),
-      new UserTab('Workshops', null),
+      new UserTab('About'),
+      new UserTab('Media', null, !R.isEmpty(user.soundCloudUploads)),
+      new UserTab('Workshops', null, !S.isBlank(user.workshopsInfo)),
     ]
+    let activeTab = R.contains(currentHash, R.map((tab) => {
+      return tab.name
+    }, profileTabs)) ? currentHash : 'projects'
 
-    let user = profileCursor.get('user').toJS()
-    logger.debug(`Rendering profile of user '${user.username}'`, user)
+    logger.debug(`Rendering profile of user '${user.username}', active tab '${activeTab}':`, user)
     let tabContents
     if (activeTab === 'about') {
       tabContents = About(user)
@@ -171,7 +174,7 @@ module.exports.routeOptions = {
         ]),
         h('.pure-u-3-4', [
           h('ul.tabs', {role: 'tablist',}, R.map((profileTab) => {
-            return h(`li.${S.join('.', profileTab.getClasses(cursor))}`, [
+            return h(`li.${S.join('.', profileTab.getClasses(activeTab))}`, [
               profileTab.enabled ? h('a', {
                 role: 'tab',
                 href: profileTab.url,
