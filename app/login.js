@@ -5,11 +5,12 @@ let immutable = require('immutable')
 let logger = require('js-logger').get('login')
 
 let {nbsp,} = require('./specialChars')
+let ajax = require('./ajax')
 let FocusingInput = require('./focusingInput')
 
 require('./login.styl')
 
-let SignInForm = component('SignInForm', () => {
+let SignInForm = component('SignInForm', (cursor) => {
   return h('form#signin-form.pure-form.pure-form-stacked', {action: 'action',}, [
     h('fieldset', [
       h('legend', 'Account Info'),
@@ -19,12 +20,19 @@ let SignInForm = component('SignInForm', () => {
         placeholder: 'email or username',
         name: 'email',
         required: true,
+        onChange: (event) => {
+          logger.debug('Setting emailOrUsername')
+          cursor.cursor('login').set('emailOrUsername', event.target.value)
+        },
       }),
       h('input.account-password', {
         type: 'password',
         placeholder: 'password',
         name: 'password',
         required: true,
+        onChange: (event) => {
+          cursor.cursor('login').set('password', event.target.value)
+        },
       }),
     ]),
     h('.button-group', [
@@ -34,6 +42,11 @@ let SignInForm = component('SignInForm', () => {
         onClick: (event) => {
           logger.debug(`Signing user in`)
           event.preventDefault()
+          let loginCursor = cursor.cursor('login')
+          ajax.postJson('login', {
+            username: loginCursor.get('emailOrUsername'),
+            password: loginCursor.get('password'),
+          })
         },
       }),
       h('a#forgot-password.small', {href: '/account/forgotpassword',}, 'Forgot password?'),
@@ -58,6 +71,9 @@ let SignUpForm = component('SignUpForm', () => {
           placeholder: 'username',
           name: 'username',
           required: true,
+          onChange: (event) => {
+            cursor.cursor('signup').set('username', event.target.value)
+          },
         }),
       ]),
       h('.required', [
@@ -65,6 +81,9 @@ let SignUpForm = component('SignUpForm', () => {
           type: 'password',
           'placeholder': 'password',
           required: true,
+          onChange: (event) => {
+            cursor.cursor('signup').set('password', event.target.value)
+          },
         }),
       ]),
       h('.required', [
@@ -72,6 +91,9 @@ let SignUpForm = component('SignUpForm', () => {
           type: 'password',
           placeholder: 'confirm password',
           required: true,
+          onChange: (event) => {
+            cursor.cursor('signup').set('confirmPassword', event.target.value)
+          },
         }),
       ]),
       h('.required', [
@@ -80,6 +102,9 @@ let SignUpForm = component('SignUpForm', () => {
           type: 'email',
           placeholder: 'email',
           required: true,
+          onChange: (event) => {
+            cursor.cursor('signup').set('email', event.target.value)
+          },
         }),
       ]),
       h('.required', [
@@ -88,12 +113,18 @@ let SignUpForm = component('SignUpForm', () => {
           type: 'text',
           placeholder: 'name',
           required: true,
+          onChange: (event) => {
+            cursor.cursor('signup').set('name', event.target.value)
+          },
         }),
       ]),
       h('input#signup-website.account-website', {
         autofocus: true,
         type: 'url',
         placeholder: 'website',
+        onChange: (event) => {
+          cursor.cursor('signup').set('website', event.target.value)
+        },
       }),
     ]),
     h('.button-group', [
@@ -140,7 +171,7 @@ module.exports.render = (cursor) => {
             }, 'Sign Up'),
           ]),
         ]),
-        showSignIn ? SignInForm() : SignUpForm(),
+        showSignIn ? SignInForm(cursor) : SignUpForm(cursor),
       ]),
     ]),
     h('.pure-u-1-5'),
