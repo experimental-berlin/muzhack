@@ -5,6 +5,7 @@ let immutable = require('immutable')
 let logger = require('js-logger').get('login')
 
 let {nbsp,} = require('./specialChars')
+let FocusingInput = require('./focusingInput')
 
 require('./login.styl')
 
@@ -12,9 +13,9 @@ let SignInForm = component('SignInForm', () => {
   return h('form#signin-form.pure-form.pure-form-stacked', {action: 'action',}, [
     h('fieldset', [
       h('legend', 'Account Info'),
-      h('input#signin-email.account-email', {
-        autofocus: true,
-        type: 'text',
+      FocusingInput({
+        id: 'signin-email',
+        classes: ['account-email',],
         placeholder: 'email or username',
         name: 'email',
       }),
@@ -45,10 +46,11 @@ let SignUpForm = component('SignUpForm', () => {
     h('fieldset', [
       h('legend', 'Account Info'),
       h('.required', [
-        h('input#signup-username.account-username', {
-          autofocus: true,
-          type: 'text',
-          placeholder: 'username',
+        FocusingInput({
+          id: 'signup-username',
+          classes: ['account-username',],
+          placeholder: 'email or username',
+          name: 'email',
           required: true,
         }),
       ]),

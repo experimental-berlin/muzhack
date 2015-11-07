@@ -11,12 +11,14 @@ module.exports = component({
     logger.debug('Giving focus to input node:', node)
     node.select()
   },
-}, ({id, value, placeholder, ref, classes, type, onChange, onEnter,}) => {
+}, ({id, value, placeholder, ref, classes, type, name, required, onChange, onEnter,}) => {
   return h('input', {
     id,
     className: S.join(' ', classes || []),
-    type,
+    type: type || 'text',
+    name,
     placeholder,
+    required,
     value,
     ref,
     onChange,
