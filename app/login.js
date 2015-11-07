@@ -3,6 +3,7 @@ let h = require('react-hyperscript')
 let component = require('omniscient')
 let immutable = require('immutable')
 let logger = require('js-logger').get('login')
+let R = require('ramda')
 
 let {nbsp,} = require('./specialChars')
 let ajax = require('./ajax')
@@ -142,6 +143,31 @@ let SignUpForm = component('SignUpForm', (cursor) => {
         onClick: (event) => {
           logger.debug(`Signing user up`)
           event.preventDefault()
+          let data = R.pick([
+            'username', 'password', 'email', 'name', 'website',
+          ], cursor.get('signup').toJS())
+          if (cursor.cursor('signup').get('confirmPassword') !== data.password) {
+            throw new Error(`Passwords don't match`)
+          }
+
+          logger.debug(`Signing up new user:`, data)
+          cursor.cursor('router').set('isLoading', true)
+          ajax.postJson('signup', data)
+            .then(() => {
+              logger.debug(`User signup succeeded`)
+              cursor.mergeDeep({
+                loggedInUser: {
+                  username: data.username,
+                },
+                router: {
+                  isLoading: false,
+                },
+              })
+              router.goTo('/')
+            }, (err) => {
+              logger.warn(`User signup failed: '${err}'`)
+              cursor.cursor('router').set('isLoading', false)
+            })
         },
       }),
     ]),
