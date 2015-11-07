@@ -1,6 +1,7 @@
 'use strict'
 let h = require('react-hyperscript')
 let component = require('omniscient')
+let immutable = require('immutable')
 let logger = require('js-logger').get('login')
 
 let {nbsp,} = require('./specialChars')
@@ -98,7 +99,7 @@ let SignUpForm = component('SignUpForm', () => {
 
 module.exports.render = (cursor) => {
   logger.debug(`Login rendering`)
-  let showSignIn = true
+  let showSignIn = cursor.cursor('login').get('activeTab') === 'signIn'
   let signInClass = showSignIn ? '.active' : ''
   let signUpClass = !showSignIn ? '.active' : ''
 
@@ -109,8 +110,22 @@ module.exports.render = (cursor) => {
         h('.login-header', [
           h('.login-prompt', `Welcome to MuzHack`),
           h('.tabs', [
-            h(`#login-signin-tab.tab${signInClass}`, 'Sign In'),
-            h(`#login-signup-tab.tab${signUpClass}`, 'Sign Up'),
+            h(`#login-signin-tab.tab${signInClass}`, {
+              onClick: () => {
+                if (cursor.cursor('login').get('activeTab') !== 'signIn') {
+                  logger.debug(`Switching to sign in tab`)
+                  cursor.cursor('login').set('activeTab', 'signIn')
+                }
+              },
+            }, 'Sign In'),
+            h(`#login-signup-tab.tab${signUpClass}`,{
+              onClick: () => {
+                if (cursor.cursor('login').get('activeTab') !== 'signUp') {
+                  logger.debug(`Switching to sign up tab`)
+                  cursor.cursor('login').set('activeTab', 'signUp')
+                }
+              },
+            }, 'Sign Up'),
           ]),
         ]),
         showSignIn ? SignInForm() : SignUpForm(),
@@ -118,4 +133,10 @@ module.exports.render = (cursor) => {
     ]),
     h('.pure-u-1-5'),
   ])
+}
+
+module.exports.createState = () => {
+  return immutable.fromJS({
+    activeTab: 'signIn',
+  })
 }

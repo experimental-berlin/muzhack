@@ -22,6 +22,7 @@ let logger = Logger.get('entry')
 
 let structure = immstruct('state', {
   search: '',
+  login: login.createState(),
   explore: explore.createState(),
   router: router.createState({
     '/': explore.routeOptions,
