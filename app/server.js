@@ -44,6 +44,16 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
   })
   server.route({
     method: ['GET',],
+    path: '/api/initialData',
+    handler: (request, reply) => {
+      logger.debug(`Getting initial data`)
+      reply({
+        user: auth.getLoggedInUser(request),
+      })
+    },
+  })
+  server.route({
+    method: ['GET',],
     path: '/api/search',
     handler: (request, reply) => {
       logger.debug(`Searching for '${request.query.query}'`)

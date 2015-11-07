@@ -9,6 +9,7 @@ let logger = require('js-logger').get('router')
 
 let Loading = require('./loading')
 let regex = require('./regex')
+let ajax = require('./ajax')
 
 let getState = () => {
   return immstruct('state').cursor()
@@ -274,7 +275,17 @@ module.exports = {
       ]),
     })
   },
-  perform,
+  performInitial: (cursor) => {
+    logger.debug(`Loading initial data...`)
+    cursor.cursor('router').set('isLoading', true)
+    ajax.getJson('initialData').then((data) => {
+      logger.debug(`Received initial data:`, data)
+      cursor.set('loggedInUser', data.user)
+      perform()
+    }, () => {
+      logger.warn(`Failed to receive initial data`)
+    })
+  },
   goTo,
   // Navigate to a path
   navigate: (path, data, title) => {
