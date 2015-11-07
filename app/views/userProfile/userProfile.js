@@ -6,56 +6,16 @@ let h = require('react-hyperscript')
 let immutable = require('immutable')
 let logger = require('js-logger').get('userProfile')
 
-let datetime = require('../../datetime')
 let ajax = require('../../ajax')
 let {nbsp,} = require('../../specialChars')
-let account = require('../../account')
+let VCard = require('./vcard')
 
 require('./userProfile.styl')
-
-let VCard = component('VCard', (user) => {
-  let userProfileUrl = account.getUserProfileUrl(user.username)
-  let userJoined = datetime.displayDateTextual(user.createdAt)
-  return h('#vcard', [
-    h('#user-avatar', [
-      h('a', {href: userProfileUrl,}, [
-        h('img', {src: user.avatar, width: 230, height: 230,}),
-      ]),
-    ]),
-    h('#user-name', user.name),
-    h('#user-username.muted', user.username),
-    h('hr'),
-    h('#user-email.vcard-detail', [
-      h('span.icon-envelop3', nbsp),
-      h('span', user.email),
-      !S.isBlank(user.website) ? h('#user-website.vcard-detail', [
-        h('span.icon-link'),
-        h('a', {href: user.website, target: '_blank',}, user.website),
-      ]) : null,
-      user.soundCloud != null ? h('#user-soundcloud.vcard-detail', [
-        h('span.icon-soundcloud'),
-        h('a', {
-          href: `https://soundcloud.com/${user.soundCloud.username}`, target: '_blank',
-        }, user.soundCloud.name),
-      ]) : null,
-      h('#user-joined.vcard-detail', [
-        h('span.icon-calendar', nbsp),
-        h('span', `Joined ${userJoined}`),
-      ]),
-      !S.isBlank(user.about) ? h('div', [
-        h('hr'),
-        h('#user-about-short.vcard-detail', [
-          h('a', {href: '#about',}, `About ${userFirstName}`),
-        ]),
-      ]) : null,
-    ]),
-  ])
-})
 
 let About = component('About', (user) => {
   return h('div', [
     h('h1', `About ${userFullName}`),
-    convertMarkdown(aboutUser),
+    convertMarkdown(user.about),
   ])
 })
 
@@ -84,7 +44,8 @@ let Projects = component('Projects', (user) => {
   ]) : h('em', 'No projects.')
 })
 
-let Plans = component('Plans', (user) => {
+let Plans = component('Plans', ({user, cursor,}) => {
+  let isLoggedInUser = cursor.get('loggedInUser').username === user.username
   return h('div', [
     isLoggedInUser ? h('#plan-buttons.button-group', [
       h('button#create-plan.pure-button', {'data-tooltip': 'Create project plan',}, 'New'),
@@ -93,10 +54,10 @@ let Plans = component('Plans', (user) => {
       }, 'Add Existing'),
       h('hr'),
     ]) : null,
-    hasProjectPlans ? h('ul#planned-projects', R.map((projectPlan) => {
+    !R.isEmpty(user.projectPlans) ? h('ul#planned-projects', R.map((projectPlan) => {
       return h('li', [
-        h('a.planned-project', {href: url, target: '_blank',}, [
-          h('span.icon-trello', name),
+        h('a.planned-project', {href: projectPlan.url, target: '_blank',}, [
+          h('span.icon-trello', projectPlan.name),
           isLoggedInUser ? h('div', [
             h('a.edit-project-plan', {href: '#', 'data-tooltip': 'Edit project plan',}, [
               h('span.icon-pencil3'),
@@ -117,7 +78,13 @@ let Plans = component('Plans', (user) => {
 })
 
 let Media = component('Media', (user) => {
-  return h('div') //   +soundCloud
+  return h('div', !R.isEmpty(user.hasSoundCloudUploads) ? [
+    h('h1#soundcloud-header', [
+      h('span.icon-soundcloud', 'SoundCloud'),
+    ]),
+    h('p', `user.firstName's sounds on SoundCloud`),
+    h('ul#soundcloud-uploads'),
+  ] : null)
 })
 
 let Workshops = component('Workshops', (user) => {
@@ -190,7 +157,7 @@ module.exports.routeOptions = {
     } else if (activeTab === 'projects') {
       tabContents = Projects(user)
     } else if (activeTab === 'plans') {
-      tabContents = Plans(user)
+      tabContents = Plans({user, cursor,})
     } else if (activeTab === 'media') {
       tabContents = Media(user)
     } else if (activeTab === 'workshops') {
