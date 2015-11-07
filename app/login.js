@@ -148,49 +148,45 @@ let SignUpForm = component('SignUpForm', (cursor) => {
   ])
 })
 
-module.exports.render = (cursor) => {
-  if (cursor.get('loggedInUser') != null) {
-    let redirectTo = '/'
-    logger.debug(`User is already logged in - redirecting to '${redirectTo}'`)
-    router.goTo(redirectTo)
-    return
-  }
+module.exports.routeOptions = {
+  redirectIfLoggedIn: true,
+  render: (cursor) => {
+    logger.debug(`Login rendering`)
+    let showSignIn = cursor.cursor('login').get('activeTab') === 'signIn'
+    let signInClass = showSignIn ? '.active' : ''
+    let signUpClass = !showSignIn ? '.active' : ''
 
-  logger.debug(`Login rendering`)
-  let showSignIn = cursor.cursor('login').get('activeTab') === 'signIn'
-  let signInClass = showSignIn ? '.active' : ''
-  let signUpClass = !showSignIn ? '.active' : ''
-
-  return h('.pure-g', [
-    h('.pure-u-1-5'),
-    h('.pure-u-3-5', [
-      h('.login-pad', [
-        h('.login-header', [
-          h('.login-prompt', `Welcome to MuzHack`),
-          h('.tabs', [
-            h(`#login-signin-tab.tab${signInClass}`, {
-              onClick: () => {
-                if (cursor.cursor('login').get('activeTab') !== 'signIn') {
-                  logger.debug(`Switching to sign in tab`)
-                  cursor.cursor('login').set('activeTab', 'signIn')
-                }
-              },
-            }, 'Sign In'),
-            h(`#login-signup-tab.tab${signUpClass}`,{
-              onClick: () => {
-                if (cursor.cursor('login').get('activeTab') !== 'signUp') {
-                  logger.debug(`Switching to sign up tab`)
-                  cursor.cursor('login').set('activeTab', 'signUp')
-                }
-              },
-            }, 'Sign Up'),
+    return h('.pure-g', [
+      h('.pure-u-1-5'),
+      h('.pure-u-3-5', [
+        h('.login-pad', [
+          h('.login-header', [
+            h('.login-prompt', `Welcome to MuzHack`),
+            h('.tabs', [
+              h(`#login-signin-tab.tab${signInClass}`, {
+                onClick: () => {
+                  if (cursor.cursor('login').get('activeTab') !== 'signIn') {
+                    logger.debug(`Switching to sign in tab`)
+                    cursor.cursor('login').set('activeTab', 'signIn')
+                  }
+                },
+              }, 'Sign In'),
+              h(`#login-signup-tab.tab${signUpClass}`,{
+                onClick: () => {
+                  if (cursor.cursor('login').get('activeTab') !== 'signUp') {
+                    logger.debug(`Switching to sign up tab`)
+                    cursor.cursor('login').set('activeTab', 'signUp')
+                  }
+                },
+              }, 'Sign Up'),
+            ]),
           ]),
+          showSignIn ? SignInForm(cursor) : SignUpForm(cursor),
         ]),
-        showSignIn ? SignInForm(cursor) : SignUpForm(cursor),
       ]),
-    ]),
-    h('.pure-u-1-5'),
-  ])
+      h('.pure-u-1-5'),
+    ])
+  },
 }
 
 module.exports.createState = () => {

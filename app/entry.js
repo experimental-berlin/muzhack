@@ -31,9 +31,9 @@ let structure = immstruct('state', {
     '/u/:owner/:projectId': project.routeOptions,
     '/create': createProject.routeOptions,
     '/about': about.render,
-    '/login': login.render,
+    '/login': login.routeOptions,
     '/logout': logout.render,
-    '/account/forgotpassword': forgotPassword.render,
+    '/account/forgotpassword': forgotPassword.routeOptions,
   }),
 })
 router.performInitial(structure.cursor())

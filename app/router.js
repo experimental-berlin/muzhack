@@ -39,7 +39,7 @@ let loadData = (cursor) => {
   let routes = routerCursor.get('routes').toJS()
   let route = getCurrentRoute(routes)
   let func = routes[route]
-  if (typeof func !== 'function') {
+  if (typeof func !== 'function' && func.loadData != null) {
     logger.debug(`Loading route data before rendering`)
     let path = getCurrentPath()
     let routeParamNames = routerCursor.get('routeParamNames').toJS()[route]
@@ -69,17 +69,36 @@ let goTo = (path) => {
   perform()
 }
 
-let requiresLogin = (cursor) => {
+let shouldRedirect = (cursor) => {
   let routerCursor = cursor.cursor('router')
   let routes = routerCursor.get('routes').toJS()
   let route = getCurrentRoute(routes)
   let options = routes[route]
-  if (typeof options === 'function' || !options.requiresLogin) {
-    logger.debug(`Route doesn't require login`)
-    return false
-  } else if (cursor.get('loggedInUser') == null) {
-    logger.debug(`Route requires user being logged in - redirecting to login page`)
-    return true
+  if (typeof options === 'function') {
+    logger.debug(`Route has no options`)
+    return null
+  }
+
+  let loggedInUser = cursor.get('loggedInUser')
+  if (loggedInUser != null) {
+    logger.debug(`User is logged in`)
+    if (options.redirectIfLoggedIn) {
+      let redirectTo = '/'
+      logger.debug(`Route requires redirect when logged in - redirecting to ${redirectTo}`)
+      return redirectTo
+    } else {
+      logger.debug(`Route doesn't require redirect when logged in`)
+      return null
+    }
+  } else {
+    logger.debug(`User is not logged in`)
+    if (!options.requiresLogin) {
+      logger.debug(`Route doesn't require login`)
+      return null
+    } else {
+      logger.debug(`Route requires user being logged in - redirecting to login page`)
+      return '/login'
+    }
   }
 }
 
@@ -88,8 +107,9 @@ let perform = () => {
   let currentPath = getCurrentPath()
   logger.debug('Routing, current path:', currentPath)
   let routerCursor = cursor.cursor('router')
-  if (requiresLogin(cursor)) {
-    goTo('/login')
+  let redirectTo = shouldRedirect(cursor)
+  if (redirectTo != null) {
+    goTo(redirectTo)
   } else {
     let isLoading = loadData(cursor)
     let navItems = R.map((navItem) => {
