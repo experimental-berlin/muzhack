@@ -76,7 +76,7 @@ let requiresLogin = (cursor) => {
   if (typeof options === 'function' || !options.requiresLogin) {
     logger.debug(`Route doesn't require login`)
     return false
-  } else if (!cursor.get('isUserLoggedIn')) {
+  } else if (cursor.get('loggedInUser') == null) {
     logger.debug(`Route requires user being logged in - redirecting to login page`)
     return true
   }

@@ -3,6 +3,7 @@
 menu-background = #272F32
 menu-color = #E2E2E2
 border-color = #6F6F6F
+search-font-size = 12px
 
 body
   background-color body-background
@@ -86,3 +87,48 @@ a.social-link
   display flex
   align-items center
   justify-content center
+
+.accountbar
+  display inline-block
+  padding-left 20px
+  padding-right 30px
+
+  .toolbar-btn
+    display inline-block
+    padding-left 6px
+    padding-right 6px
+    color action-hover-color
+    &.enabled:hover
+      color action-hover-color
+    &.enabled:active
+      -webkit-box-shadow inset 0 3px 8px rgba(0, 0, 0, 0.125)
+      -moz-box-shadow inset 0 3px 8px rgba(0, 0, 0, 0.125)
+      box-shadow inset 0 3px 8px rgba(0, 0, 0, 0.125)
+      background-color #111111
+    &.disabled
+      color #5F2D5D
+      cursor default
+
+#menu
+  .search-box
+    display inline-block
+
+    .search-icon
+      position absolute
+      top 7px
+      left 7px
+      font-size search-font-size
+
+    .clear-icon
+      position absolute
+      top 7px
+      right 7px
+      font-size search-font-size
+
+#navbar-search-input
+  padding-left 21px
+  padding-right 21px
+  width 250px
+  font-size search-font-size
+  &:focus
+    outline: none
