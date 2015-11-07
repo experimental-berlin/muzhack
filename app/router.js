@@ -275,6 +275,7 @@ module.exports = {
     })
   },
   perform,
+  goTo,
   // Navigate to a path
   navigate: (path, data, title) => {
     let currentState = history.state
@@ -301,14 +302,6 @@ module.exports = {
     } else {
       perform()
     }
-    return this
-  },
-  back: () => {
-    history.back()
-    return this
-  },
-  go: (steps) => {
-    history.go(steps)
     return this
   },
 }

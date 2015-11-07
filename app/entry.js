@@ -12,6 +12,7 @@ let explore = require('./explore')
 let project = require('./project')
 let createProject = require('./createProject')
 let login = require('./login')
+let forgotPassword = require('./forgotPassword')
 
 require('./app.styl')
 require('./styles/fonts.css')
@@ -30,6 +31,7 @@ let structure = immstruct('state', {
     '/create': createProject.routeOptions,
     '/about': about.render,
     '/login': login.render,
+    '/account/forgotpassword': forgotPassword.render,
   }),
   libs: [
     { title: 'Backbone.js', url: 'http://documentcloud.github.io/backbone/', },

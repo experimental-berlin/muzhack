@@ -23,3 +23,29 @@ input[type="button"],input[type="image"]
 
 .pull-right
   float right
+
+.button-group
+  .pure-button + .pure-button
+    margin-left 4px
+
+.pure-button
+  rounded-corners()
+
+  color black
+  background-color #DEDEDE
+
+  &:hover
+    background-image linear-gradient(transparent, rgba(0,0,0,.05) 40%, rgba(0,0,0,.1))
+  &:active
+    box-shadow 0 0 0 1px rgba(0,0,0,.15) inset, 0 0 6px rgba(0,0,0,.2) inset
+    box-shadow 0 0 0 1px rgba(0,0,0,.15) inset,0 0 6px rgba(0, 0, 0,.2) inset
+
+.pure-button-primary
+  color white
+  background-color blue-color
+
+  &:hover
+    background-image linear-gradient(transparent,rgba(0,0,0,.05) 40%,rgba(0,0,0,.1))
+  &:active
+    box-shadow 0 0 0 1px rgba(0,0,0,.15) inset, 0 0 6px rgba(0,0,0,.2) inset
+    box-shadow 0 0 0 1px rgba(0,0,0,.25) inset, 0 0 6px rgba(0,0,0,.3) inset
