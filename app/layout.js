@@ -8,6 +8,7 @@ require('purecss/build/pure.css')
 require('normalize.css/normalize.css')
 require('./layout.styl')
 require('./bitcoinate.styl')
+let flattrImage = require('./images/flattr-badge-large.png')
 
 let logger = require('js-logger').get('layout')
 
@@ -104,9 +105,7 @@ let Footer = component('Footer', () => {
         href: 'https://flattr.com/submit/auto?user_id=muzhack&url=https://github.com/muzhack/muzhack&title=MuzHack&description=MuzHack&tags=muzhack,programming&category=text',
         target: '_blank',
       }, [
-        h('img', {
-          src: 'https://api.flattr.com/button/flattr-badge-large.png', alt: 'Flattr MuzHack',
-        }),
+        h('img', {src: flattrImage, alt: 'Flattr MuzHack',}),
       ]),
       h('button.bitcoinate', {
         'data-size': '20',

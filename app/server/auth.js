@@ -7,7 +7,7 @@ let logger = require('js-logger').get('auth')
 let users = {
   aknudsen: {
     password: bcrypt.hashSync('password', bcrypt.genSaltSync()),
-    name: 'John Doe',
+    name: 'Arve Knudsen',
     projects: [],
   },
 }
