@@ -7,6 +7,8 @@ let Logger = require('js-logger')
 Logger.useDefaults()
 let logger = Logger.get('server')
 
+let auth = require('./server/auth')
+
 let server = new Hapi.Server({
   connections: {
     routes: {
@@ -113,3 +115,4 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
     logger.info('Server running at', server.info.uri);
   })
 })
+auth.register(server)
