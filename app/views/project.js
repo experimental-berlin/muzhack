@@ -5,12 +5,11 @@ let R = require('ramda')
 let S = require('underscore.string.fp')
 let component = require('omniscient')
 let React = require('react')
-let HtmlToReactParser = require('html-to-react/lib/parser')
-let {getSanitizingConverter,} = require('../pagedown/Markdown.Sanitizer')
 
 let datetime = require('../datetime')
 let ajax = require('../ajax')
 let {nbsp,} = require('../specialChars')
+let {convertMarkdown,} = require('../markdown')
 
 require('./displayProject.styl')
 
@@ -92,13 +91,6 @@ let RightColumn = component('RightColumn', (project) => {
     ]),
   ])
 })
-
-let convertMarkdown = (markdown) => {
-  let converter = getSanitizingConverter()
-  let html = converter.makeHtml(markdown)
-  let htmlToReactParser = new HtmlToReactParser(React)
-  return htmlToReactParser.parse(html)
-}
 
 let BottomPad = component('BottomPad', ({cursor, project,}) => {
   let projectTabs = [

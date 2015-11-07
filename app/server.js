@@ -107,6 +107,22 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
       reply(project)
     },
   })
+  server.route({
+    method: ['GET',],
+    path: '/api/users/{username}',
+    handler: (request, reply) => {
+      let {username,} = request.params
+      logger.debug(`Getting user '${username}'`)
+      let user = {
+        username,
+        name: 'Arve Knudsen',
+        email: 'arve.knudsen@gmail.com',
+        projects: [],
+      }
+      logger.debug(`Returning user:`, user)
+      reply(user)
+    },
+  })
   // server.route({
   //   method: ['GET', 'POST', ],
   //   path: '/model.json',

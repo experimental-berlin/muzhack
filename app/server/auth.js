@@ -8,6 +8,7 @@ let users = {
   aknudsen: {
     password: bcrypt.hashSync('password', bcrypt.genSaltSync()),
     name: 'John Doe',
+    projects: [],
   },
 }
 

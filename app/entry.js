@@ -14,6 +14,7 @@ let createProject = require('./views/createProject')
 let login = require('./views/login')
 let logout = require('./views/logout')
 let forgotPassword = require('./views/forgotPassword')
+let userProfile = require('./views/userProfile/userProfile')
 
 require('./app.styl')
 require('./styles/fonts.css')
@@ -26,8 +27,10 @@ let structure = immstruct('state', {
   search: '',
   login: login.createState(),
   explore: explore.createState(),
+  userProfile: userProfile.createState(),
   router: router.createState({
     '/': explore.routeOptions,
+    '/u/:user': userProfile.routeOptions,
     '/u/:owner/:projectId': project.routeOptions,
     '/create': createProject.routeOptions,
     '/about': about.render,
