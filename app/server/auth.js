@@ -11,7 +11,7 @@ const users = {
 }
 module.exports.register = (server) => {
   server.register(require('hapi-auth-cookie'), (err) => {
-    server.auth.strategy('session', 'cookie', {
+    server.auth.strategy('session', 'cookie', 'try', {
       password: process.env.HAPI_IRON_PASSWORD,
       isSecure: false,
     })
@@ -40,9 +40,12 @@ module.exports.register = (server) => {
                 logger.debug(`Password not valid`)
                 reply(Boom.badRequest('Invalid username or password'))
               } else {
-                logger.debug(`User successfully logged in`)
+                let result = {
+                  username: request.payload.username,
+                }
+                logger.debug(`User successfully logged in - replying with:`, result)
                 request.auth.session.set(account)
-                reply()
+                reply(result)
               }
             })
           }

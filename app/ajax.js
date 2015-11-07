@@ -42,7 +42,11 @@ let ajax = (method, path, params, payload) => {
     request.open(method.toUpperCase(), `${url}${queryPart}`)
     request.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
     let payloadJson = payload != null ? JSON.stringify(payload) : null
-    logger.debug(`Sending JSON: '${payloadJson}'`)
+    if (payloadJson != null) {
+      logger.debug(`Sending JSON: '${payloadJson}'`)
+    } else {
+      logger.debug(`Not sending JSON`)
+    }
     request.send(payloadJson)
   })
 }

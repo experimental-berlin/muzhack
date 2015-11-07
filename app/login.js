@@ -7,6 +7,7 @@ let logger = require('js-logger').get('login')
 let {nbsp,} = require('./specialChars')
 let ajax = require('./ajax')
 let FocusingInput = require('./focusingInput')
+let router = require('./router')
 
 require('./login.styl')
 
@@ -46,6 +47,13 @@ let SignInForm = component('SignInForm', (cursor) => {
           ajax.postJson('login', {
             username: loginCursor.get('emailOrUsername'),
             password: loginCursor.get('password'),
+          }).then((user) => {
+            let redirectTo = '/'
+            logger.info(`User successfully logged in - redirecting to '${redirectTo}'`)
+            cursor.set('loggedInUser', user)
+            router.goTo(redirectTo)
+          }, () => {
+            logger.warn(`Logging user in failed`)
           })
         },
       }),
@@ -141,6 +149,13 @@ let SignUpForm = component('SignUpForm', (cursor) => {
 })
 
 module.exports.render = (cursor) => {
+  if (cursor.get('loggedInUser') != null) {
+    let redirectTo = '/'
+    logger.debug(`User is already logged in - redirecting to '${redirectTo}'`)
+    router.goTo(redirectTo)
+    return
+  }
+
   logger.debug(`Login rendering`)
   let showSignIn = cursor.cursor('login').get('activeTab') === 'signIn'
   let signInClass = showSignIn ? '.active' : ''

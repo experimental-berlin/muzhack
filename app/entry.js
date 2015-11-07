@@ -12,6 +12,7 @@ let explore = require('./explore')
 let project = require('./project')
 let createProject = require('./createProject')
 let login = require('./login')
+let logout = require('./logout')
 let forgotPassword = require('./forgotPassword')
 
 require('./app.styl')
@@ -31,6 +32,7 @@ let structure = immstruct('state', {
     '/create': createProject.routeOptions,
     '/about': about.render,
     '/login': login.render,
+    '/logout': logout.render,
     '/account/forgotpassword': forgotPassword.render,
   }),
   libs: [
