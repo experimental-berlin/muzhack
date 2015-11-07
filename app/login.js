@@ -54,7 +54,7 @@ let SignInForm = component('SignInForm', (cursor) => {
   ])
 })
 
-let SignUpForm = component('SignUpForm', () => {
+let SignUpForm = component('SignUpForm', (cursor) => {
   return h('form#signup-form.pure-form.pure-form-stacked', {
     action: 'action',
   }, [
