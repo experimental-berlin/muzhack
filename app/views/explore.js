@@ -8,8 +8,9 @@ let $ = require('jquery/dist/jquery.js')
 let R = require('ramda')
 let h = require('react-hyperscript')
 let ReactDOM = require('react-dom')
+
 let FocusingInput = require('./focusingInput')
-let ajax = require('./ajax')
+let ajax = require('../ajax')
 
 require('./explore.styl')
 

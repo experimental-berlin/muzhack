@@ -1,7 +1,6 @@
 'use strict'
 let d = require('react').DOM
 require('./about.styl')
-require('./bitcoinate.styl')
 
 module.exports = {
   render: (cursor) => {

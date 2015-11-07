@@ -3,7 +3,7 @@ let h = require('react-hyperscript')
 let logger = require('js-logger').get('forgotPassword')
 
 let FocusingInput = require('./focusingInput')
-let router = require('./router')
+let router = require('../router')
 
 require('./login.styl')
 

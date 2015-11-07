@@ -6,11 +6,11 @@ let S = require('underscore.string.fp')
 let component = require('omniscient')
 let React = require('react')
 let HtmlToReactParser = require('html-to-react/lib/parser')
-let {getSanitizingConverter,} = require('./pagedown/Markdown.Sanitizer')
+let {getSanitizingConverter,} = require('../pagedown/Markdown.Sanitizer')
 
-let datetime = require('./datetime')
-let ajax = require('./ajax')
-let {nbsp,} = require('./specialChars')
+let datetime = require('../datetime')
+let ajax = require('../ajax')
+let {nbsp,} = require('../specialChars')
 
 require('./displayProject.styl')
 

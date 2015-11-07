@@ -1,8 +1,8 @@
 'use strict'
 let logger = require('js-logger').get('logout')
 
-let ajax = require('./ajax')
-let router = require('./router')
+let ajax = require('../ajax')
+let router = require('../router')
 
 module.exports.render = (cursor) => {
   logger.debug('Logging out...')

@@ -5,10 +5,10 @@ let immutable = require('immutable')
 let logger = require('js-logger').get('login')
 let R = require('ramda')
 
-let {nbsp,} = require('./specialChars')
-let ajax = require('./ajax')
+let {nbsp,} = require('../specialChars')
+let ajax = require('../ajax')
 let FocusingInput = require('./focusingInput')
-let router = require('./router')
+let router = require('../router')
 
 require('./login.styl')
 

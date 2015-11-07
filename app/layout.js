@@ -7,6 +7,7 @@ let component = require('omniscient')
 require('purecss/build/pure.css')
 require('normalize.css/normalize.css')
 require('./layout.styl')
+require('./bitcoinate.styl')
 
 let logger = require('js-logger').get('layout')
 

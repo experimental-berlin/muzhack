@@ -7,7 +7,7 @@ let S = require('underscore.string.fp')
 let layout = require('./layout')
 let logger = require('js-logger').get('router')
 
-let Loading = require('./loading')
+let Loading = require('./views/loading')
 let regex = require('./regex')
 let ajax = require('./ajax')
 
