@@ -6,6 +6,7 @@ tabs-base()
   padding 0
   border-bottom 1px solid black
   margin 0
+  display inline-block
 
   li
     padding 10px 25px
@@ -31,3 +32,13 @@ tabs-base()
 
       a
         color black
+
+  .tab
+    rounded-corners-top()
+
+    padding 10px
+    display inline-block
+    cursor pointer
+
+    &.active
+      background-color #111111

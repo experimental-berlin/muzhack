@@ -3,6 +3,8 @@ let h = require('react-hyperscript')
 let component = require('omniscient')
 let logger = require('js-logger').get('login')
 
+let {nbsp,} = require('./specialChars')
+
 require('./login.styl')
 
 let SignInForm = component('SignInForm', () => {
@@ -36,7 +38,7 @@ let SignUpForm = component('SignUpForm', () => {
     action: 'action',
   }, [
     h('#userhint', [
-      h('span.required-asterisk', '*'),
+      h('span.required-asterisk', `*${nbsp}`),
       'indicates a required field',
     ]),
     h('fieldset', [
@@ -96,9 +98,9 @@ let SignUpForm = component('SignUpForm', () => {
 
 module.exports.render = (cursor) => {
   logger.debug(`Login rendering`)
-  let signInClass = ''
-  let signUpClass = ''
-  let showSignIn = false
+  let showSignIn = true
+  let signInClass = showSignIn ? '.active' : ''
+  let signUpClass = !showSignIn ? '.active' : ''
 
   return h('.pure-g', [
     h('.pure-u-1-5'),
