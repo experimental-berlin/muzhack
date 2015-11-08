@@ -41,7 +41,12 @@ module.exports = {
       {
         test: /\.coffee$/,
         loader: 'coffee-loader',
-        exclude: /node_modules|packages/,
+        exclude: /node_modules/,
+      },
+      {
+        test: /\.scss$/,
+        loader: 'style!css!sass',
+        exclude: /node_modules/,
       },
     ],
   },

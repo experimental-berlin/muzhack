@@ -12,6 +12,7 @@ let dropzoneService = require('../dropzoneService')
 
 require('./createProject.styl')
 require('./editAndCreate.styl')
+require('./dropzone.scss')
 require('./dropzone.styl')
 
 let CreateDescription = component('CreateDescription', {

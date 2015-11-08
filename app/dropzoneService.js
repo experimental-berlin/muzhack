@@ -1,4 +1,5 @@
 'use strict'
+let R = require('ramda')
 let Dropzone = require('./dropzone.coffee')
 
 let monitoredDropzoneEvents = [
