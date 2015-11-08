@@ -8,10 +8,11 @@ let licenses = require('../licenses')
 let FocusingInput = require('./focusingInput')
 let {nbsp,} = require('../specialChars')
 let {markdownService,} = require('../markdown')
-let {dropzoneService,} = require('../dropzone')
+let dropzoneService = require('../dropzoneService')
 
 require('./createProject.styl')
 require('./editAndCreate.styl')
+require('./dropzone.styl')
 
 let CreateDescription = component('CreateDescription', {
   componentDidMount: () => {

@@ -1,0 +1,1 @@
+../packages/aknudsen:dropzone/src/dropzone.coffee

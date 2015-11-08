@@ -38,6 +38,11 @@ module.exports = {
         test: /\.json$/,
         loader: 'json-loader',
       },
+      {
+        test: /\.coffee$/,
+        loader: 'coffee-loader',
+        exclude: /node_modules|packages/,
+      },
     ],
   },
   debug: true,

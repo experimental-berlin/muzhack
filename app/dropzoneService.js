@@ -1,4 +1,6 @@
 'use strict'
+let Dropzone = require('./dropzone.coffee')
+
 let monitoredDropzoneEvents = [
   'addedfile',
   'addedfiles',
@@ -283,4 +285,4 @@ class DropzoneService {
   }
 }
 
-module.exports.dropzoneService = new DropzoneService()
+module.exports = new DropzoneService()
