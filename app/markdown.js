@@ -185,7 +185,20 @@ class Editor {
   constructor(converter, purpose) {
     this.purpose = purpose
     this.markdownEditor = new MarkdownEditor(converter, `-${purpose}`,
-      R.merge(markdownOptions, {helpButton: {handler: this._toggleMarkdownHelp,},}))
+      R.merge(markdownOptions, {helpButton: {
+        handler: () => {
+          logger.debug('Toggling display of Markdown help')
+          if ($(this._helpContainer).height() === 0) {
+            logger.debug('Showing help')
+            this._resizeHelp()
+          } else {
+            logger.debug('Hiding help')
+            this._helpContainer.style.height = 0
+            this._helpContentContainer.style.height = 0
+            this._selectedHelpItem = null
+          }
+        },
+      },}))
   }
 
   render(text) {
@@ -274,19 +287,6 @@ class Editor {
 
   getText() {
     return this.markdownEditor.getText()
-  }
-
-  _toggleMarkdownHelp() {
-    logger.debug('Toggling display of Markdown help')
-    if ($(this._helpContainer).height() === 0) {
-      logger.debug('Showing help')
-      this._resizeHelp()
-    } else {
-      logger.debug('Hiding help')
-      this._helpContainer.style.height = 0
-      this._helpContentContainer.style.height = 0
-      this._selectedHelpItem = null
-    }
   }
 
   _resizeHelp() {
