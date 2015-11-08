@@ -23,6 +23,11 @@ Logger.useDefaults()
 
 let logger = Logger.get('entry')
 
+window.onerror = (message, url, line) => {
+  logger.error(`Uncaught exception, at ${url}:${line}:\n${message}`)
+  // Meteor.call("logException", message, url, line)
+}
+
 let structure = immstruct('state', {
   search: '',
   login: login.createState(),

@@ -273,7 +273,7 @@ class Editor {
   }
 
   getText() {
-    this.markdownEditor.getText()
+    return this.markdownEditor.getText()
   }
 
   _toggleMarkdownHelp() {
@@ -308,11 +308,11 @@ class MarkdownService {
   }
 
   getDescription() {
-    this.descriptionEditor.getText()
+    return this.descriptionEditor.getText()
   }
 
   getInstructions() {
-    this.instructionsEditor.getText()
+    return this.instructionsEditor.getText()
   }
 
   renderDescriptionEditor(text) {
