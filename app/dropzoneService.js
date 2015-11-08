@@ -1,6 +1,9 @@
 'use strict'
 let R = require('ramda')
 let Dropzone = require('./dropzone.coffee')
+let S = require('underscore.string.fp')
+
+let editing = require('./editing')
 
 let monitoredDropzoneEvents = [
   'addedfile',
