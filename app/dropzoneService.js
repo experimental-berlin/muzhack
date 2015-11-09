@@ -77,7 +77,7 @@ class DropzoneService {
   createDropzone(cssId, forPictures, existingFiles) {
     let uploadFiles = (files, data) => {
       let processedFiles = []
-      let s3Folder = `u/${data.owner}/${data.projectId}/files`
+      let s3Folder = `/${data.projectId}/files`
       if (data.owner == null || data.projectId == null) {
         throw new Error('data is missing owner/projectId')
       }
@@ -155,7 +155,7 @@ class DropzoneService {
     let uploadPictures = (files, data) => {
       let pictureDatas = []
       let pictures = []
-      let s3Folder = `u/${data.owner}/${data.projectId}/pictures`
+      let s3Folder = `/${data.projectId}/pictures`
       if (data.owner == null || data.projectId == null) {
         throw new Error('data is missing owner/projectId')
       }

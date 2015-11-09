@@ -12,10 +12,18 @@ let users = {
   },
 }
 
+let logUserIn = (request, user) => {
+  request.auth.session.set({username: request.payload.username, name: user.name,})
+}
+
 module.exports.getLoggedInUser = (request) => {
-  return request.auth.isAuthenticated ? {
-    username: request.auth.credentials.name,
-  } : null
+  if (request.auth.isAuthenticated) {
+    return {
+      username: request.auth.credentials.username,
+    }
+  } else {
+    return null
+  }
 }
 
 let validateSignUp = (request, reply) => {
@@ -71,9 +79,9 @@ module.exports.register = (server) => {
                 logger.debug(`Password not valid`)
                 reply(Boom.badRequest('Invalid username or password'))
               } else {
+                logUserIn(request, account)
                 let result = {username: request.payload.username,}
                 logger.debug(`User successfully logged in - replying with:`, result)
-                request.auth.session.set(account)
                 reply(result)
               }
             })
@@ -108,7 +116,7 @@ module.exports.register = (server) => {
             website: payload.website,
           }
           users[payload.username] = user
-          request.auth.session.set(user)
+          logUserIn(request, user)
           reply()
         }
       })

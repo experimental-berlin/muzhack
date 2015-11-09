@@ -28,7 +28,8 @@ let getParameters = (cursor) => {
   logger.debug(`Description:`, description)
   let instructions = markdownService.getInstructions()
   let tags = R.map(trimWhitespace, S.wordsDelim(/,/, $('#tags-input').val()))
-  let username = cursor.get('loggedInUser').username
+  let user = cursor.get('loggedInUser')
+  let username = user.username
   let licenseSelect = document.getElementById('license-select')
   let license = licenseSelect.options[licenseSelect.selectedIndex].value
   if (S.isBlank(projectId) || S.isBlank(title) || R.isEmpty(tags)) {

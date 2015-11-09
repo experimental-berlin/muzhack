@@ -156,7 +156,7 @@ Arve has no workshops planned at this moment.`,
           secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
           region: process.env.S3_REGION,
           bucket,
-          // keyPrefix: `u/${request.auth.credentials.name}`,
+          keyPrefix: `u/${request.auth.credentials.username}`,
         })
         let formData = s3Form.create(key)
         reply({
