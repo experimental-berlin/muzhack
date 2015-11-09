@@ -5,7 +5,7 @@ let immutable = require('immutable')
 let R = require('ramda')
 let S = require('underscore.string.fp')
 let layout = require('./layout')
-let logger = require('js-logger').get('router')
+let logger = require('js-logger-aknudsen').get('router')
 
 let Loading = require('./views/loading')
 let regex = require('./regex')

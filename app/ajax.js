@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger').get('ajax')
+let logger = require('js-logger-aknudsen').get('ajax')
 let R = require('ramda')
 let S = require('underscore.string.fp')
 

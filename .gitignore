@@ -4,3 +4,4 @@ docker/deploy-*.sh
 node_modules/
 dist/
 .DS_Store
+run-server.sh

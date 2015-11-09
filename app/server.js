@@ -3,11 +3,19 @@ let Hapi = require('hapi')
 let Router = require('falcor-router')
 let R = require('ramda')
 let path = require('path')
-let Logger = require('js-logger')
+let Logger = require('js-logger-aknudsen')
 Logger.useDefaults()
 let logger = Logger.get('server')
+let s3Policy = require('s3-policy')
 
 let auth = require('./server/auth')
+
+let s3Directives = {
+  pictures: {},
+  'pictures-backup': {},
+  files: {},
+  'files-backup': {},
+}
 
 let server = new Hapi.Server({
   connections: {
@@ -127,6 +135,42 @@ Arve has no workshops planned at this moment.`,
       }
       logger.debug(`Returning user:`, user)
       reply(user)
+    },
+  })
+  server.route({
+    method: ['GET',],
+    path: '/api/s3Settings/{directive}',
+    handler: (request, reply) => {
+      let {directive,} = request.params
+      let {key,} = request.query
+      logger.debug(`Getting S3 settings for directive '${directive}'`)
+
+      let bucket = process.env.S3_BUCKET
+      let {policy, signature,} = s3Policy({
+        secret: process.env.AWS_SECRET_ACCESS_KEY,
+        length: 5*1024*104,
+        bucket,
+        key,
+        expires: new Date(Date.now() + 60000),
+        // acl: 'public-read',
+      })
+      let settings = {
+        bucket,
+        awsAccessKey: process.env.AWS_ACCESS_KEY,
+        policy,
+        signature,
+      }
+      logger.debug(`Returning settings:`, settings)
+      reply(settings)
+    },
+  })
+  server.route({
+    method: ['POST',],
+    path: '/api/logError',
+    handler: (request, reply) => {
+      let error = request.payload.error
+      logger.warn(`An error was logged on a client: ${error}`)
+      reply()
     },
   })
   // server.route({

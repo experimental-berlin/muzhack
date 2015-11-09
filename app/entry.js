@@ -4,7 +4,7 @@ let immstruct = require('immstruct')
 let React = require('react')
 let ReactDom = require('react-dom')
 let router = require('./router')
-let Logger = require('js-logger')
+let Logger = require('js-logger-aknudsen')
 let R = require('ramda')
 
 let about = require('./views/about')
@@ -15,11 +15,21 @@ let login = require('./views/login')
 let logout = require('./views/logout')
 let forgotPassword = require('./views/forgotPassword')
 let userProfile = require('./views/userProfile/userProfile')
+let ajax = require('./ajax')
 
 require('./app.styl')
 require('./styles/fonts.css')
 
 Logger.useDefaults()
+Logger.setHandler((messages, context) => {
+  if (context.level === Logger.ERROR) {
+    ajax.postJson('logError', {
+      error: messages[0],
+    })
+  }
+
+  Logger.getDefaultHandler()(messages, context)
+})
 
 let logger = Logger.get('entry')
 

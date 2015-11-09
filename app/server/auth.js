@@ -2,7 +2,7 @@
 let bcrypt = require('bcrypt')
 let Boom = require('boom')
 let S = require('underscore.string.fp')
-let logger = require('js-logger').get('auth')
+let logger = require('js-logger-aknudsen').get('auth')
 
 let users = {
   aknudsen: {

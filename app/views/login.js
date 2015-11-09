@@ -2,7 +2,7 @@
 let h = require('react-hyperscript')
 let component = require('omniscient')
 let immutable = require('immutable')
-let logger = require('js-logger').get('login')
+let logger = require('js-logger-aknudsen').get('login')
 let R = require('ramda')
 
 let {nbsp,} = require('../specialChars')

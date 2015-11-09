@@ -1,6 +1,6 @@
 'use strict'
 let h = require('react-hyperscript')
-let logger = require('js-logger').get('forgotPassword')
+let logger = require('js-logger-aknudsen').get('forgotPassword')
 
 let FocusingInput = require('./focusingInput')
 let router = require('../router')

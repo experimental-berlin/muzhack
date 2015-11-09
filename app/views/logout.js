@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger').get('logout')
+let logger = require('js-logger-aknudsen').get('logout')
 
 let ajax = require('../ajax')
 let router = require('../router')

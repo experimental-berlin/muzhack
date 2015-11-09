@@ -3,7 +3,7 @@ let HtmlToReactParser = require('html-to-react/lib/parser')
 let React = require('react')
 let {getSanitizingConverter,} = require('./pagedown/Markdown.Sanitizer')
 let MarkdownEditor = require('./pagedown/Markdown.Editor').Editor
-let logger = require('js-logger').get('markdown')
+let logger = require('js-logger-aknudsen').get('markdown')
 let $ = require('jquery')
 let R = require('ramda')
 

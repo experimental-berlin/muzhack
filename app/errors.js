@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger').get('errors')
+let logger = require('js-logger-aknudsen').get('errors')
 
 class ValidationError  extends Error {
   constructor(message) {
@@ -10,8 +10,4 @@ class ValidationError  extends Error {
 
 module.exports = {
   ValidationError,
-  logError: (logger, message, ...args) => {
-    logger.error(message, ...args)
-    // Meteor.call("logError", message)
-  },
 }

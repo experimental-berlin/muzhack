@@ -1,7 +1,7 @@
 'use strict'
 let component = require('omniscient')
 let h = require('react-hyperscript')
-let logger = require('js-logger').get('userProfile')
+let logger = require('js-logger-aknudsen').get('userProfile')
 let S = require('underscore.string.fp')
 
 let account = require('../../account')

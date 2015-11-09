@@ -10,7 +10,7 @@ require('./layout.styl')
 require('./bitcoinate.styl')
 let flattrImage = require('./images/flattr-badge-large.png')
 
-let logger = require('js-logger').get('layout')
+let logger = require('js-logger-aknudsen').get('layout')
 
 let toClassName = (classes) => {
   return S.join(' ', R.filter((x) => {return x != null}, classes))
