@@ -1,30 +1,28 @@
 'use strict'
 let logger = require('js-logger-aknudsen').get('S3Uploader')
+let R = require('ramda')
 
 let ajax = require('./ajax')
 
 module.exports = class S3Uploader {
-  constructor(directive, {folder,}) {
+  constructor(directive, {folder, isBackup,}) {
     this.directive = directive
     this.folder = folder
+    this.isBackup = isBackup
   }
 
   send(file) {
     logger.debug(`Sending data...`)
     logger.debug(`Getting S3 upload settings from server...`)
     let key = `${this.folder}/${file.name}`
-    return ajax.getJson(`s3Settings/${this.directive}`, {key,})
+    return ajax.getJson(`s3Settings/${this.directive}`, {key, isBackup: this.isBackup,})
       .then((s3Settings) => {
         logger.debug(`Received S3 settings from server`, s3Settings)
         let formData = new FormData()
-        formData.append('bucket', s3Settings.bucket)
-        formData.append('key', key)
-        formData.append('AWSAccessKeyId', s3Settings.AwsAccessKey)
-        // formData.append('acl', 'public')
-        formData.append('policy', s3Settings.policy)
-        formData.append('signature', s3Settings.signature)
-        formData.append('Content-Type', file.type)
-        formData.append('file', file)
+        R.forEach(([key, value,]) => {
+          formData.append(key, value)
+          formData.append('file', file)
+        }, R.toPairs(s3Settings.fields))
 
         return new Promise((resolve, reject) => {
           let request = new XMLHttpRequest()
@@ -41,7 +39,9 @@ module.exports = class S3Uploader {
             }
           }
 
-          request.open('POST', s3Settings.url, true);
+          let url = `http://${s3Settings.bucket}.s3.amazonaws.com`
+          logger.debug(`Posting to ${url}`, formData)
+          request.open('POST', url, true)
           request.send(formData)
         })
       }, (error) => {

@@ -6,7 +6,8 @@ let path = require('path')
 let Logger = require('js-logger-aknudsen')
 Logger.useDefaults()
 let logger = Logger.get('server')
-let s3Policy = require('s3-policy')
+let moment = require('moment')
+let AwsS3Form = require('aws-s3-form')
 
 let auth = require('./server/auth')
 
@@ -30,6 +31,8 @@ server.connection({
   host: '0.0.0.0',
   port: parseInt(process.env.PORT || '8000'),
 })
+
+auth.register(server)
 
 server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
   if (err != null) {
@@ -140,28 +143,27 @@ Arve has no workshops planned at this moment.`,
   server.route({
     method: ['GET',],
     path: '/api/s3Settings/{directive}',
-    handler: (request, reply) => {
-      let {directive,} = request.params
-      let {key,} = request.query
-      logger.debug(`Getting S3 settings for directive '${directive}'`)
+    config: {
+      auth: 'session',
+      handler: (request, reply) => {
+        let {directive,} = request.params
+        let {key, isBackup,} = request.query
+        logger.debug(`Getting S3 form data for directive '${directive}'`)
 
-      let bucket = process.env.S3_BUCKET
-      let {policy, signature,} = s3Policy({
-        secret: process.env.AWS_SECRET_ACCESS_KEY,
-        length: 5*1024*104,
-        bucket,
-        key,
-        expires: new Date(Date.now() + 60000),
-        // acl: 'public-read',
-      })
-      let settings = {
-        bucket,
-        awsAccessKey: process.env.AWS_ACCESS_KEY,
-        policy,
-        signature,
-      }
-      logger.debug(`Returning settings:`, settings)
-      reply(settings)
+        let bucket = !isBackup ? process.env.S3_BUCKET : `backup.${process.env.S3_BUCKET}`
+        let s3Form = new AwsS3Form({
+          accessKeyId: process.env.AWS_ACCESS_KEY,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+          region: process.env.S3_REGION,
+          bucket,
+          // keyPrefix: `u/${request.auth.credentials.name}`,
+        })
+        let formData = s3Form.create(key)
+        reply({
+          bucket,
+          fields: formData.fields,
+        })
+      },
     },
   })
   server.route({
@@ -191,4 +193,3 @@ Arve has no workshops planned at this moment.`,
     logger.info('Server running at', server.info.uri);
   })
 })
-auth.register(server)

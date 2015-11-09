@@ -89,6 +89,7 @@ class DropzoneService {
         logger.debug(`Backing up file '${file.name}', try #${numTries}...`)
         let uploader = new S3Uploader('files', {
           folder: '${s3Folder}${getFolder(file)}',
+          isBackup: true,
         })
         uploader.send(file)
           .then(() => {
@@ -165,6 +166,7 @@ class DropzoneService {
       })
       let backupUploader = new S3Uploader('pictures-backup', {
         folder: s3Folder,
+        isBackup: true,
       })
 
       let processImage = (file, width, height) => {
