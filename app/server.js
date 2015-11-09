@@ -157,6 +157,7 @@ Arve has no workshops planned at this moment.`,
           region: process.env.S3_REGION,
           bucket,
           keyPrefix: `u/${request.auth.credentials.username}`,
+          successActionStatus: 200,
         })
         let formData = s3Form.create(key)
         reply({

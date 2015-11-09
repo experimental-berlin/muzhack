@@ -21,8 +21,8 @@ module.exports = class S3Uploader {
         let formData = new FormData()
         R.forEach(([key, value,]) => {
           formData.append(key, value)
-          formData.append('file', file)
         }, R.toPairs(s3Settings.fields))
+        formData.append('file', file)
 
         return new Promise((resolve, reject) => {
           let request = new XMLHttpRequest()
