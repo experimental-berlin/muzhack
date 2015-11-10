@@ -15,6 +15,7 @@ let router = require('../router')
 let {trimWhitespace,} = require('../stringUtils')
 let {ValidationError,} = require('../errors')
 let notification = require('./notification')
+let ajax = require('../ajax')
 
 require('./createProject.styl')
 require('./editAndCreate.styl')
@@ -172,32 +173,37 @@ let createProject = (parameters, cursor) => {
         ${tags.join(', ')}`)
       logger.debug(`Picture files:`, pictureFiles)
       logger.debug('Files:', files)
-      cursor.cursor('createProject').set('isWaiting', false)
-    //   Meteor.call('createProject', projectId, title, description, instructions, tags,
-    //     license, pictureFiles, files, (error) ->
-    //       Session.set('isWaiting', false)
-    //       logger.debug('Re-enabling create button')
-    //       button.disabled = false
-    //       if error?
-    //         logger.error('Creating project on server failed: ${error}')
-    //         notification.warn('Project Creation Failure',
-    //           'Failed to create project due to error on server')
-    //       else
-    //         logger.info('Successfully created project')
-    //         Router.go('/u/${qualifiedId}')
-    //   )
-    // , (err) ->
-    //   logger.warn('Uploading files and/or pictures failed')
-    //   Session.set('isWaiting', false)
-    // )
-  }, (error) => {
-    logger.debug(`Creating project failed, exiting waiting state`)
-    cursor.mergeDeep({
-      createProject: {
-        isWaiting: false,
-      },
+      ajax.postJson('projects', {projectId, title, description, instructions, tags,
+          license, pictureFiles, files,})
+        .then(() => {
+          cursor.mergeDeep({
+            createProject: {
+              isWaiting: false,
+              disableButtons: false,
+            },
+          })
+          logger.info('Successfully created project')
+          router.goTo(`/u/${qualifiedId}`)
+        }, (error) => {
+          cursor.mergeDeep({
+            createProject: {
+              isWaiting: false,
+              disableButtons: false,
+            },
+          })
+          logger.error(`Creating project on server failed: ${error}`)
+          notification.warn('Project Creation Failure',
+            'Failed to create project due to error on server')
+        })
+    }, (error) => {
+      cursor.mergeDeep({
+        createProject: {
+          isWaiting: false,
+          disableButtons: false,
+        },
+      })
+      logger.warn(`Uploading files and/or pictures failed: ${error}`)
     })
-  })
 }
 
 let CreateProjectPad = component('CreateProjectPad', (cursor) => {

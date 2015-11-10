@@ -176,20 +176,20 @@ Arve has no workshops planned at this moment.`,
       reply()
     },
   })
-  // server.route({
-  //   method: ['GET', 'POST', ],
-  //   path: '/model.json',
-  //   handler: FalcorServer.dataSourceRoute((req, res) => {
-  //     return new Router([
-  //       {
-  //         route: 'greeting',
-  //         get: () => {
-  //           return {path: ['greeting', ], value: 'Hello World', }
-  //         },
-  //       },
-  //     ])
-  //   }),
-  // })
+  server.route({
+    method: ['POST',],
+    path: '/api/projects',
+    config: {
+      auth: 'session',
+      handler: (request, reply) => {
+        let projectParams = request.payload
+        logger.debug(`Received request to create project:`, projectParams)
+        // TODO
+        reply()
+      },
+    },
+  })
+
   server.start(() => {
     logger.info('Server running at', server.info.uri);
   })
