@@ -173,8 +173,16 @@ let createProject = (parameters, cursor) => {
         ${tags.join(', ')}`)
       logger.debug(`Picture files:`, pictureFiles)
       logger.debug('Files:', files)
-      ajax.postJson('projects', {projectId, title, description, instructions, tags,
-          license, pictureFiles, files,})
+      ajax.postJson('projects', {
+        id: projectId,
+        title,
+        description,
+        instructions,
+        tags,
+        license,
+        pictures: pictureFiles,
+        files,
+      })
         .then(() => {
           cursor.mergeDeep({
             createProject: {

@@ -43,7 +43,7 @@ let TopPad = component('TopPad', (project) => {
     ]),
     h('#image-box', [
       h('#thumbnails', R.map((picture) => {
-        return h(a, {href: '#',}, [
+        return h('a', {href: '#',}, [
           h('.thumbnail-wrapper', [
             h('img', {src: picture.url,}),
           ]),

@@ -18,6 +18,61 @@ let s3Directives = {
   'files-backup': {},
 }
 
+let licenses = {
+  'cc-by-4.0': {
+    name: 'Creative Commons',
+    url: 'http://creativecommons.org',
+    icons: [
+      'creative-commons',
+      'creative-commons-attribution',
+    ],
+  },
+}
+
+class Project {
+  constructor({projectId, tags, owner, ownerName, title, created, pictures, license,
+      description, instructions, files, zipFile,}) {
+    this.projectId = projectId
+    this.tags = tags
+    this.owner = owner
+    this.ownerName = ownerName
+    this.title = title
+    this.created = created
+    this.pictures = pictures
+    this.license = license
+    this.description = description
+    this.instructions = instructions
+    this.files = files
+    this.zipFile = zipFile
+  }
+}
+
+let projects = {
+  'aknudsen/test': new Project({
+   projectId: 'test',
+   tags: ['notam', '3dprint',],
+   owner: 'aknudsen',
+   ownerName: 'Arve Knudsen',
+   title: 'Test',
+   created: '2015-11-04',
+   pictures: [],
+   license: licenses['cc-by-4.0'],
+   description: `#Description`,
+   instructions: `#Instructions`,
+   files: [
+     {
+       url: 'example.com',
+       fullPath: 'file.txt',
+       size: 20,
+     },
+   ],
+   zipFile: {
+     size: 80,
+     url: 'example.com',
+   },
+ }),
+}
+
 let server = new Hapi.Server({
   connections: {
     routes: {
@@ -83,37 +138,9 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
     path: '/api/projects/{owner}/{projectId}',
     handler: (request, reply) => {
       let {owner, projectId,} = request.params
-      logger.debug(`Getting project '${owner}/${projectId}'`)
-      let project = {
-        projectId,
-        tags: ['notam', '3dprint',],
-        owner,
-        ownerName: 'Arve Knudsen',
-        title: 'Test',
-        created: '2015-11-04',
-        pictures: [],
-        license: {
-          name: 'Creative Commons',
-          url: 'http://creativecommons.org',
-          icons: [
-            'creative-commons',
-            'creative-commons-attribution',
-          ],
-        },
-        description: `#Description`,
-        instructions: `#Instructions`,
-        files: [
-          {
-            url: 'example.com',
-            fullPath: 'file.txt',
-            size: 20,
-          },
-        ],
-        zipFile: {
-          size: 80,
-          url: 'example.com',
-        },
-      }
+      let qualifiedProjectId = `${owner}/${projectId}`
+      logger.debug(`Getting project '${qualifiedProjectId}'`)
+      let project = projects[qualifiedProjectId]
       logger.debug(`Returning project:`, project)
       reply(project)
     },
@@ -184,7 +211,16 @@ Arve has no workshops planned at this moment.`,
       handler: (request, reply) => {
         let projectParams = request.payload
         logger.debug(`Received request to create project:`, projectParams)
-        // TODO
+        let qualifiedProjectId = `${request.auth.credentials.username}/${projectParams.id}`
+        projectParams.projectId = projectParams.id
+        projectParams.license = licenses[projectParams.license]
+        projects[qualifiedProjectId] = new Project(R.merge(projectParams, {
+          owner: request.auth.credentials.username,
+          ownerName: request.auth.credentials.name,
+          zipFile: 'TODO',
+          created: moment.utc().format(),
+        }))
+        logger.debug('Projects:', projects)
         reply()
       },
     },
