@@ -1,5 +1,8 @@
 @require './views/_common'
 
+action-color = black
+action-hover-color = rgba(0, 0, 0, 0.6)
+
 input
   rounded-corners()
 
@@ -49,3 +52,10 @@ input[type="button"],input[type="image"]
   &:active
     box-shadow 0 0 0 1px rgba(0,0,0,.15) inset, 0 0 6px rgba(0,0,0,.2) inset
     box-shadow 0 0 0 1px rgba(0,0,0,.25) inset, 0 0 6px rgba(0,0,0,.3) inset
+
+a.action
+  color action-color
+  text-decoration: none
+
+  &:hover
+    color action-hover-color

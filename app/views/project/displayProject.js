@@ -10,6 +10,7 @@ let datetime = require('../../datetime')
 let ajax = require('../../ajax')
 let {nbsp,} = require('../../specialChars')
 let {convertMarkdown,} = require('../../markdown')
+let EditProject = require('./editProject')
 
 require('./displayProject.styl')
 
@@ -29,12 +30,22 @@ let getFileSize = (numBytes) => {
   return sizeStr
 }
 
-let TopPad = component('TopPad', (projectCursor) => {
+let TopPad = component('TopPad', (cursor) => {
+  let projectCursor = cursor.cursor(['explore', 'currentProject',])
   let project = projectCursor.toJS()
-  let canEdit = false
   let creationDateString = datetime.displayDateTextual(project.created)
   let mainPicture = project.chosenPicture || project.pictures[0]
+  let canEdit = cursor.get('loggedInUser').username === project.owner
   return h('#project-top-pad.airy-padding-sides', [
+    canEdit ? h('a#edit-action.action.pull-right', {
+      href: '#', 'data-tooltip': 'Edit project',
+      onClick: (event) => {
+        event.preventDefault()
+        logger.debug(`Edit project clicked`)
+        projectCursor.set('isEditing', true)
+      },
+    }, [
+        h('span.icon-pencil3'),]) : null,
     h('#project-heading', [
       h('h1#project-title', project.title),
       h('p#project-creation-date', [
@@ -200,14 +211,20 @@ class ProjectTab {
 let render = (cursor) => {
   let projectCursor = cursor.cursor(['explore', 'currentProject',])
   let project = projectCursor.toJS()
-  logger.debug(`Rendering project`, project)
-  let qualifiedProjectId = `${project.owner}/${project.projectId}`
-  return h('.airy-padding-sides', [
-    h('h1#project-path', qualifiedProjectId),
-    TopPad(projectCursor),
-    RightColumn(project),
-    BottomPad({cursor, project,}),
- ])
+
+  if (!projectCursor.get('isEditing')) {
+    logger.debug(`Rendering display of project:`, project)
+    let qualifiedProjectId = `${project.owner}/${project.projectId}`
+    return h('.airy-padding-sides', [
+      h('h1#project-path', qualifiedProjectId),
+      TopPad(cursor),
+      RightColumn(project),
+      BottomPad({cursor, project,}),
+    ])
+  } else {
+    logger.debug(`Rendering editing form of project:`, project)
+    return EditProject(cursor)
+  }
 }
 
 module.exports = {
