@@ -6,10 +6,10 @@ let S = require('underscore.string.fp')
 let component = require('omniscient')
 let React = require('react')
 
-let datetime = require('../datetime')
-let ajax = require('../ajax')
-let {nbsp,} = require('../specialChars')
-let {convertMarkdown,} = require('../markdown')
+let datetime = require('../../datetime')
+let ajax = require('../../ajax')
+let {nbsp,} = require('../../specialChars')
+let {convertMarkdown,} = require('../../markdown')
 
 require('./displayProject.styl')
 
