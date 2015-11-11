@@ -59,34 +59,26 @@ let IsotopeContainer = component('IsotopeContainer', {
     let projectElems = projectElems = projectsCursor.map(createProjectElement).toJS()
     let containerElem = this.refs.container
     logger.debug('Got Isotope container element:', containerElem)
-    new Isotope(containerElem, {
+    let iso = new Isotope(containerElem, {
       itemSelector: '.project-item',
       layoutMode: 'fitRows',
     })
-      .insert(projectElems)
+    let elements = iso.getItemElements()
+    iso.remove(elements)
+    iso.insert(projectElems)
   },
 }, () => {
    return h('#isotope-container', {ref: 'container',})
 })
 
 let searchAsync = (cursor, query) => {
-  let transformResults = (results) => {
-    let transformedResults = {
-      isSearching: false,
-      explore: {
-        projects: results,
-      },
-    }
-    return transformedResults
-  }
-
   return ajax.getJson('search', {query: query || '',})
-    .then((results) => {
-      logger.debug(`Searching succeeded:`, results)
-      return transformResults(results)
+    .then((projects) => {
+      logger.debug(`Searching succeeded:`, projects)
+      return projects
     }, (reason) => {
       logger.warn('Searching failed:', reason)
-      return transformResults([])
+      return []
     })
 }
 
@@ -107,12 +99,20 @@ let performSearch = (cursor) => {
      })
   }
 
-  cursor.set('isSearching', true)
   let exploreCursor = cursor.cursor('explore')
   let query = exploreCursor.get('search')
   logger.debug(`Performing search: '${query}'`)
-  cursor.set('search', query)
+  cursor = cursor.mergeDeep({
+    isSearching: true,
+    search: query,
+  })
   return searchAsync(cursor, query)
+    .then((projects) => {
+      cursor = cursor.update((current) => {
+        current = current.setIn(['explore', 'projects',], immutable.fromJS(projects))
+        return current.set('isSearching', false)
+      })
+    })
 }
 
 let SearchBox = component('SearchBox', function (cursor) {
@@ -156,6 +156,14 @@ module.exports = {
     loadData: (cursor) => {
       logger.debug(`Loading projects`)
       return searchAsync(cursor)
+        .then((projects) => {
+          return {
+            isSearching: false,
+            explore: {
+              projects,
+            },
+          }
+        })
     },
     render: (cursor) => {
       return h('.pure-g', [
