@@ -178,17 +178,22 @@ Arve has no workshops planned at this moment.`,
         logger.debug(`Getting S3 form data for directive '${directive}'`)
 
         let bucket = !isBackup ? process.env.S3_BUCKET : `backup.${process.env.S3_BUCKET}`
+        let keyPrefix = `u/${request.auth.credentials.username}/`
+        let region = process.env.S3_REGION
         let s3Form = new AwsS3Form({
           accessKeyId: process.env.AWS_ACCESS_KEY,
           secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-          region: process.env.S3_REGION,
+          region,
           bucket,
-          keyPrefix: `u/${request.auth.credentials.username}`,
+          keyPrefix,
           successActionStatus: 200,
         })
+        let url = `https://s3.${region}.amazonaws.com/${bucket}/${keyPrefix}${key}`
+        logger.debug(`S3 URL to file:`, url)
         let formData = s3Form.create(key)
         reply({
           bucket,
+          url,
           fields: formData.fields,
         })
       },

@@ -28,12 +28,12 @@ module.exports = class S3Uploader {
           let request = new XMLHttpRequest()
           request.onreadystatechange = () => {
             if (request.readyState === XMLHttpRequest.DONE) {
-              logger.debug('Received response from server:', request)
+              logger.debug('Received S3 upload response from server:', request)
               if (request.status === 200) {
-                logger.debug(`Response was successful:`, request.responseText)
-                resolve()
+                logger.debug(`S3 upload was successful:`, request.responseText)
+                resolve(s3Settings.url)
               } else {
-                logger.debug(`Response was not successful: ${request.status}`)
+                logger.debug(`S3 upload was not successful: ${request.status}`)
                 reject(request.responseText)
               }
             }

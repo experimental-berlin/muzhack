@@ -29,10 +29,11 @@ let getFileSize = (numBytes) => {
   return sizeStr
 }
 
-let TopPad = component('TopPad', (project) => {
+let TopPad = component('TopPad', (projectCursor) => {
+  let project = projectCursor.toJS()
   let canEdit = false
   let creationDateString = datetime.displayDateTextual(project.created)
-  let mainPicture = null
+  let mainPicture = project.chosenPicture || project.pictures[0]
   return h('#project-top-pad.airy-padding-sides', [
     h('#project-heading', [
       h('h1#project-title', project.title),
@@ -43,14 +44,21 @@ let TopPad = component('TopPad', (project) => {
     ]),
     h('#image-box', [
       h('#thumbnails', R.map((picture) => {
-        return h('a', {href: '#',}, [
+        return h('a', {
+          href: '#',
+          onClick: (event) => {
+            event.preventDefault()
+            logger.debug(`Thumbnail clicked:`, picture)
+            projectCursor.set('chosenPicture', picture)
+          },
+        }, [
           h('.thumbnail-wrapper', [
             h('img', {src: picture.url,}),
           ]),
         ])
       }, project.pictures)),
       h('#displayed-image', [
-        h('img', {src: mainPicture,}),
+        h('img', {src: mainPicture.url,}),
       ]),
     ]),
   ])
@@ -190,12 +198,13 @@ class ProjectTab {
 }
 
 let render = (cursor) => {
-  let project = cursor.cursor('explore').get('currentProject').toJS()
+  let projectCursor = cursor.cursor(['explore', 'currentProject',])
+  let project = projectCursor.toJS()
   logger.debug(`Rendering project`, project)
   let qualifiedProjectId = `${project.owner}/${project.projectId}`
   return h('.airy-padding-sides', [
     h('h1#project-path', qualifiedProjectId),
-    TopPad(project),
+    TopPad(projectCursor),
     RightColumn(project),
     BottomPad({cursor, project,}),
  ])
