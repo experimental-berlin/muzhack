@@ -20,6 +20,7 @@ let s3Directives = {
 
 let licenses = {
   'cc-by-4.0': {
+    id: 'cc-by-4.0',
     name: 'Creative Commons',
     url: 'http://creativecommons.org',
     icons: [

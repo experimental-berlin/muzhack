@@ -1,6 +1,7 @@
 'use strict'
 let component = require('omniscient')
 let R = require('ramda')
+let S = require('underscore.string.fp')
 let logger = require('js-logger-aknudsen').get('editProject')
 let h = require('react-hyperscript')
 
@@ -10,38 +11,57 @@ let licenses = require('../../licenses')
 let {nbsp,} = require('../../specialChars')
 let {DescriptionEditor, InstructionsEditor, PicturesEditor,
   FilesEditor,} = require('./editors')
-let loadData = require('./loadData')
 let router = require('../../router')
+let ajax = require('../../ajax')
+let {trimWhitespace,} = require('../../stringUtils')
 
 require('./editProject.styl')
 
 let EditProjectPad = component('EditProjectPad', (cursor) => {
   let editCursor = cursor.cursor('editProject')
+  let projectCursor = editCursor.cursor('project')
+  let project = projectCursor.toJS()
   return h('#edit-project-pad', [
     h('.input-group', [
-      FocusingInput({id: 'id-input', placeholder: 'Project ID',}),
+      h('input#title-input', {
+        placeholder: 'Project title', value: project.title,
+        onChange: (event) => {
+          logger.debug(`Project title changed:`, event.target.value)
+          projectCursor = projectCursor.set('title', event.target.value)
+          logger.debug(`Project state after:`, projectCursor.toJS())
+        },
+      }),
     ]),
     h('.input-group', [
-      h('input#title-input', {placeholder: 'Project title',}),
-    ]),
-    h('.input-group', [
-      h('input#tags-input', {placeholder: 'Project tags',}),
+      h('input#tags-input', {
+        placeholder: 'Project tags', value: project.tagsString,
+        onChange: (event) => {
+          logger.debug(`Project tags changed:`, event.target.value)
+          projectCursor.set('tagsString', event.target.value)
+        },
+      }),
       nbsp,
       h('span.icon-tags2'),
     ]),
     h('.input-group', [
-      h('select#license-select', {placeholder: 'License',}, R.map(([id, license,]) => {
-        return h('option', {value: id,}, license.name)
-      }, R.toPairs(licenses))),
+      h('select#license-select', {
+        placeholder: 'License',
+        value: project.license.id,
+        onChange: (event) => {
+          logger.debug(`Project license selected:`, event.target.value)
+        },
+      }, R.map((license) => {
+        return h('option', {value: license.id,}, license.name)
+      }, R.values(licenses))),
     ]),
     h('#description-editor', [
-      DescriptionEditor(),
+      DescriptionEditor(projectCursor),
     ]),
     h('#pictures-editor', [
       PicturesEditor(),
     ]),
     h('#instructions-editor', [
-      InstructionsEditor(),
+      InstructionsEditor(projectCursor),
     ]),
     h('#files-editor', [
       FilesEditor(),
@@ -88,9 +108,10 @@ let EditProjectPad = component('EditProjectPad', (cursor) => {
 
 module.exports = {
   routeOptions: {
+    requiresLogin: true,
     render: (cursor) => {
       logger.debug(`Rendering`)
-      let projectCursor = cursor.cursor(['explore', 'currentProject',])
+      let projectCursor = cursor.cursor(['editProject', 'project',])
       let project = projectCursor.toJS()
       let qualifiedProjectId = `${project.owner}/${project.projectId}`
       if (!cursor.cursor('editProject').get('isWaiting')) {
@@ -99,6 +120,26 @@ module.exports = {
         return Loading()
       }
     },
-    loadData,
+    loadData: (cursor, params) => {
+      let loggedInUser = cursor.get('loggedInUser')
+      if (loggedInUser.username !== params.owner) {
+        router.goTo(`${params.owner}/${params.projectId}`)
+      } else {
+        logger.debug(`Loading project ${params.owner}/${params.projectId}`)
+        return ajax.getJson(`projects/${params.owner}/${params.projectId}`)
+          .then((project) => {
+            logger.debug(`Loading project JSON succeeded:`, project)
+            return {
+              editProject: {
+                project: R.merge(project, {
+                  tagsString: S.join(',', project.tags),
+                }),
+              },
+            }
+          }, (reason) => {
+            logger.warn(`Loading project JSON failed: '${reason}'`)
+          })
+        }
+      },
   },
 }

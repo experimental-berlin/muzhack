@@ -11,9 +11,9 @@ require('../dropzone.scss')
 require('../dropzone.styl')
 
 let DescriptionEditor = component('DescriptionEditor', {
-  componentDidMount: () => {
+  componentDidMount: function () {
     logger.debug(`DescriptionEditor did mount`)
-    markdownService.renderDescriptionEditor()
+    markdownService.renderDescriptionEditor(this.cursor.get('description'))
   },
 }, () => {
   return h('div', [
@@ -29,9 +29,9 @@ let DescriptionEditor = component('DescriptionEditor', {
 })
 
 let InstructionsEditor = component('InstructionsEditor', {
-  componentDidMount: () => {
+  componentDidMount: function () {
     logger.debug(`InstructionsEditor did mount`)
-    markdownService.renderInstructionsEditor()
+    markdownService.renderInstructionsEditor(this.cursor.get('instructions'))
   },
 }, () => {
   return h('div', [

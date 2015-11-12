@@ -7,10 +7,9 @@ let component = require('omniscient')
 let React = require('react')
 
 let datetime = require('../../datetime')
-let ajax = require('../../ajax')
 let {nbsp,} = require('../../specialChars')
 let {convertMarkdown,} = require('../../markdown')
-let loadData = require('./loadData')
+let ajax = require('../../ajax')
 
 require('./displayProject.styl')
 
@@ -220,6 +219,22 @@ let render = (cursor) => {
 module.exports = {
   routeOptions: {
     render: render,
-    loadData,
+    loadData: (cursor, params) => {
+      logger.debug(`Loading project ${params.owner}/${params.projectId}`)
+      return ajax.getJson(`projects/${params.owner}/${params.projectId}`)
+        .then((project) => {
+          logger.debug(`Loading project JSON succeeded:`, project)
+          return {
+            explore: {
+              currentProject: project,
+              project: {
+                activeTab: 'description',
+              },
+            },
+          }
+        }, (reason) => {
+          logger.warn(`Loading project JSON failed: '${reason}'`)
+        })
+      },
   },
 }
