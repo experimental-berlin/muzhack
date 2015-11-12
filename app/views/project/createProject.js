@@ -16,6 +16,9 @@ let {trimWhitespace,} = require('../../stringUtils')
 let {ValidationError,} = require('../../errors')
 let notification = require('../notification')
 let ajax = require('../../ajax')
+let Loading = require('./loading')
+let {DescriptionEditor, InstructionsEditor, PicturesEditor,
+  FilesEditor,} = require('./editors')
 
 require('./createProject.styl')
 require('./editAndCreate.styl')
@@ -52,168 +55,6 @@ let getParameters = (cursor) => {
     queuedFiles,]
 }
 
-let CreateDescription = component('CreateDescription', {
-  componentDidMount: () => {
-    logger.debug(`CreateDescription did mount`)
-    markdownService.renderDescriptionEditor()
-  },
-}, () => {
-  return h('div', [
-    h('h2', 'Description'),
-    h('.editor-container', [
-      h('.wmd-panel', [
-        h('#wmd-button-bar-description.wmd-button-bar'),
-        h('textarea#wmd-input-description.wmd-input'),
-        h('#wmd-preview-description.wmd-preview.wmd-panel'),
-      ]),
-    ]),
-  ])
-})
-
-let pictureDropzone = null
-
-let CreatePictures = component('CreatePictures', {
-  componentDidMount: () => {
-    logger.debug('CreatePictures did mount')
-    pictureDropzone = dropzoneService.createDropzone('picture-dropzone', true, null)
-  },
-}, () => {
-  return h('div', [
-    h('h2', 'Pictures'),
-    h('#picture-dropzone.dropzone'),
-  ])
-})
-
-let CreateInstructions = component('CreateInstructions', {
-  componentDidMount: () => {
-    logger.debug(`CreateInstructions did mount`)
-    markdownService.renderInstructionsEditor()
-  },
-}, () => {
-  return h('div', [
-    h('h2', 'Instructions'),
-    h('.editor-container', [
-      h('.wmd-panel', [
-        h('#wmd-button-bar-instructions.wmd-button-bar'),
-        h('textarea#wmd-input-instructions.wmd-input'),
-        h('#wmd-preview-instructions.wmd-preview.wmd-panel'),
-      ]),
-    ]),
-  ])
-})
-
-let fileDropzone = null
-
-let CreateFiles = component('CreateFiles', {
-  componentDidMount: () => {
-    logger.debug('CreateFiles did mount')
-    fileDropzone = dropzoneService.createDropzone('file-dropzone', false, null)
-  },
-}, () => {
-  return h('div', [
-    h('h2', 'Files'),
-    h('#file-dropzone.dropzone'),
-  ])
-})
-
-let createProject = (parameters, cursor) => {
-  let [projectId, title, description, instructions, tags, license, username,
-    queuedPictures, queuedFiles,] = parameters
-
-  let uploadFiles = () => {
-    let picturesPromise
-    if (!R.isEmpty(queuedPictures)) {
-      logger.debug(`Processing ${queuedPictures.length} picture(s)`)
-      picturesPromise = pictureDropzone.processFiles(queuedPictures, {
-        owner: username,
-        projectId: projectId,
-      })
-    } else {
-      picturesPromise = new Promise((resolve) => {resolve([])})
-    }
-    picturesPromise
-      .catch((error) => {
-        logger.error(`Uploading pictures failed: ${error}`)
-        notification.warn('Error', 'Uploading pictures failed')
-      })
-    if (!R.isEmpty(queuedFiles)) {
-      logger.debug(`Processing ${queuedFiles.length} file(s)`)
-      filesPromise = fileDropzone.processFiles(queuedFiles, {
-        owner: username,
-        projectId: projectId,
-      })
-    } else {
-      filesPromise = new Promise((resolve) => {resolve([])})
-    }
-    filesPromise
-      .catch((error) => {
-        logger.error(`Uploading files failed: ${error}`)
-        notification.warn('Error', 'Uploading files failed')
-      })
-
-    return [picturesPromise, filesPromise,]
-  }
-
-  let [picturesPromise, filesPromise,] = uploadFiles()
-  Promise.all([picturesPromise, filesPromise,])
-    .then(([uploadedPictures, uploadedFiles,]) => {
-      logger.debug('Uploading files/pictures finished successfully')
-      let transformFiles = R.map(R.pick(['width', 'height', 'size', 'url', 'name', 'type',
-        'fullPath',]))
-      let pictureFiles = R.concat(
-        transformFiles(pictureDropzone.getExistingFiles()),
-        transformFiles(uploadedPictures)
-      )
-      let files = R.concat(
-        transformFiles(fileDropzone.getExistingFiles()),
-        transformFiles(uploadedFiles)
-      )
-      let qualifiedId = `${username}/${projectId}`
-      logger.info(`Creating project with ID '${qualifiedId}', title '${title}' and tag(s)
-        ${tags.join(', ')}`)
-      logger.debug(`Picture files:`, pictureFiles)
-      logger.debug('Files:', files)
-      ajax.postJson('projects', {
-        id: projectId,
-        title,
-        description,
-        instructions,
-        tags,
-        license,
-        pictures: pictureFiles,
-        files,
-      })
-        .then(() => {
-          cursor.mergeDeep({
-            createProject: {
-              isWaiting: false,
-              disableButtons: false,
-            },
-          })
-          logger.info('Successfully created project')
-          router.goTo(`/u/${qualifiedId}`)
-        }, (error) => {
-          cursor.mergeDeep({
-            createProject: {
-              isWaiting: false,
-              disableButtons: false,
-            },
-          })
-          logger.error(`Creating project on server failed: ${error}`)
-          notification.warn('Project Creation Failure',
-            'Failed to create project due to error on server')
-        })
-    }, (error) => {
-      cursor.mergeDeep({
-        createProject: {
-          isWaiting: false,
-          disableButtons: false,
-        },
-      })
-      logger.warn(`Uploading files and/or pictures failed: ${error}`)
-    })
-}
-
 let CreateProjectPad = component('CreateProjectPad', (cursor) => {
   let createCursor = cursor.cursor('createProject')
   return h('#create-project-pad', [
@@ -234,16 +75,16 @@ let CreateProjectPad = component('CreateProjectPad', (cursor) => {
       }, R.toPairs(licenses))),
     ]),
     h('#description-editor', [
-      CreateDescription(),
+      DescriptionEditor(),
     ]),
     h('#pictures-editor', [
-      CreatePictures(),
+      PicturesEditor(),
     ]),
     h('#instructions-editor', [
-      CreateInstructions(),
+      InstructionsEditor(),
     ]),
     h('#files-editor', [
-      CreateFiles(),
+      FilesEditor(),
     ]),
     h('#create-buttons.button-group', [
       h('button#create-project.pure-button.pure-button-primary', {
@@ -282,10 +123,6 @@ let CreateProjectPad = component('CreateProjectPad', (cursor) => {
       }, 'Cancel'),
     ]),
   ])
-})
-
-let Loading = component('Loading', () => {
-  return h('div', 'Loading...')
 })
 
 module.exports.routeOptions = {

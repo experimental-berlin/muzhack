@@ -10,6 +10,7 @@ let R = require('ramda')
 let about = require('./views/about')
 let explore = require('./views/explore')
 let displayProject = require('./views/project/displayProject')
+let editProject = require('./views/project/editProject')
 let createProject = require('./views/project/createProject')
 let login = require('./views/login')
 let logout = require('./views/logout')
@@ -47,6 +48,7 @@ let structure = immstruct('state', {
     '/': explore.routeOptions,
     '/u/:user': userProfile.routeOptions,
     '/u/:owner/:projectId': displayProject.routeOptions,
+    '/u/:owner/:projectId/edit': editProject.routeOptions,
     '/create': createProject.routeOptions,
     '/about': about.render,
     '/login': login.routeOptions,

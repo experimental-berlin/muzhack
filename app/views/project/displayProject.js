@@ -10,7 +10,7 @@ let datetime = require('../../datetime')
 let ajax = require('../../ajax')
 let {nbsp,} = require('../../specialChars')
 let {convertMarkdown,} = require('../../markdown')
-let EditProject = require('./editProject')
+let loadData = require('./loadData')
 
 require('./displayProject.styl')
 
@@ -38,12 +38,7 @@ let TopPad = component('TopPad', (cursor) => {
   let canEdit = cursor.get('loggedInUser').username === project.owner
   return h('#project-top-pad.airy-padding-sides', [
     canEdit ? h('a#edit-action.action.pull-right', {
-      href: '#', 'data-tooltip': 'Edit project',
-      onClick: (event) => {
-        event.preventDefault()
-        logger.debug(`Edit project clicked`)
-        projectCursor.set('isEditing', true)
-      },
+      href: `/u/${project.owner}/${project.projectId}/edit`, 'data-tooltip': 'Edit project',
     }, [
         h('span.icon-pencil3'),]) : null,
     h('#project-heading', [
@@ -212,40 +207,19 @@ let render = (cursor) => {
   let projectCursor = cursor.cursor(['explore', 'currentProject',])
   let project = projectCursor.toJS()
 
-  if (!projectCursor.get('isEditing')) {
-    logger.debug(`Rendering display of project:`, project)
-    let qualifiedProjectId = `${project.owner}/${project.projectId}`
-    return h('.airy-padding-sides', [
-      h('h1#project-path', qualifiedProjectId),
-      TopPad(cursor),
-      RightColumn(project),
-      BottomPad({cursor, project,}),
-    ])
-  } else {
-    logger.debug(`Rendering editing form of project:`, project)
-    return EditProject(cursor)
-  }
+  logger.debug(`Rendering display of project:`, project)
+  let qualifiedProjectId = `${project.owner}/${project.projectId}`
+  return h('.airy-padding-sides', [
+    h('h1#project-path', qualifiedProjectId),
+    TopPad(cursor),
+    RightColumn(project),
+    BottomPad({cursor, project,}),
+  ])
 }
 
 module.exports = {
   routeOptions: {
     render: render,
-    loadData: (cursor, params) => {
-      logger.debug(`Loading project ${params.owner}/${params.projectId}`)
-      return ajax.getJson(`projects/${params.owner}/${params.projectId}`)
-        .then((project) => {
-          logger.debug(`Loading project JSON succeeded:`, project)
-          return {
-            explore: {
-              currentProject: project,
-              project: {
-                activeTab: 'description',
-              },
-            },
-          }
-        }, (reason) => {
-          logger.warn(`Loading project JSON failed: '${reason}'`)
-        })
-    },
+    loadData,
   },
 }
