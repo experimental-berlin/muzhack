@@ -4,6 +4,11 @@ muzhack-green:
     - muzhack-green
   environment:
     - FORCE_SSL=yes
+    - HAPI_IRON_PASSWORD
+    - AWS_ACCESS_KEY
+    - AWS_SECRET_ACCESS_KEY
+    - S3_BUCKET=staging.muzhack.com
+    - S3_REGION=eu-central-1
   restart: always
   deployment_strategy: high_availability
 muzhack-blue:
@@ -12,6 +17,11 @@ muzhack-blue:
     - muzhack-blue
   environment:
     - FORCE_SSL=yes
+    - HAPI_IRON_PASSWORD
+    - AWS_ACCESS_KEY
+    - AWS_SECRET_ACCESS_KEY
+    - S3_BUCKET=staging.muzhack.com
+    - S3_REGION=eu-central-1
   restart: always
   deployment_strategy: high_availability
 lb:
