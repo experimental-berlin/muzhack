@@ -49,9 +49,10 @@ let InstructionsEditor = component('InstructionsEditor', {
 let pictureDropzone = null
 
 let PicturesEditor = component('PicturesEditor', {
-  componentDidMount: () => {
-    logger.debug('PicturesEditor did mount')
-    pictureDropzone = dropzoneService.createDropzone('picture-dropzone', true, null)
+  componentDidMount: function () {
+    let pictures = this.cursor.cursor('pictures').toJS()
+    logger.debug('PicturesEditor did mount, pictures:', pictures)
+    pictureDropzone = dropzoneService.createDropzone('picture-dropzone', true, pictures)
   },
 }, () => {
   return h('div', [
@@ -63,9 +64,10 @@ let PicturesEditor = component('PicturesEditor', {
 let fileDropzone = null
 
 let FilesEditor = component('FilesEditor', {
-  componentDidMount: () => {
-    logger.debug('FilesEditor did mount')
-    fileDropzone = dropzoneService.createDropzone('file-dropzone', false, null)
+  componentDidMount: function () {
+    let files = this.cursor.cursor('files').toArray()
+    logger.debug('FilesEditor did mount, files:', files)
+    fileDropzone = dropzoneService.createDropzone('file-dropzone', false, files)
   },
 }, () => {
   return h('div', [

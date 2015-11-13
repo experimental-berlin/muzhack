@@ -58,13 +58,13 @@ let EditProjectPad = component('EditProjectPad', (cursor) => {
       DescriptionEditor(projectCursor),
     ]),
     h('#pictures-editor', [
-      PicturesEditor(),
+      PicturesEditor(projectCursor),
     ]),
     h('#instructions-editor', [
       InstructionsEditor(projectCursor),
     ]),
     h('#files-editor', [
-      FilesEditor(),
+      FilesEditor(projectCursor),
     ]),
     h('#create-buttons.button-group', [
       h('button#create-project.pure-button.pure-button-primary', {
