@@ -2,9 +2,13 @@
 let component = require('omniscient')
 let h = require('react-hyperscript')
 let logger = require('js-logger-aknudsen').get('project.editors')
+let R = require('ramda')
+let S = require('underscore.string.fp')
 
 let {markdownService,} = require('../../markdown')
 let dropzoneService = require('../../dropzoneService')
+let {trimWhitespace,} = require('../../stringUtils')
+let {ValidationError,} = require('../../errors')
 
 require('./editAndCreate.styl')
 require('../dropzone.scss')
@@ -76,9 +80,44 @@ let FilesEditor = component('FilesEditor', {
   ])
 })
 
+let getParameters = (input, cursor) => {
+  logger.debug(`Getting parameters from input`, input)
+  let title = trimWhitespace(input.title)
+  let description = markdownService.getDescription()
+  let instructions = markdownService.getInstructions()
+  let tags = R.map(trimWhitespace, S.wordsDelim(/,/, input.tagsString))
+  let user = cursor.get('loggedInUser')
+  let username = user.username
+  let licenseSelect = document.getElementById('license-select')
+  let licenseId = input.licenseId
+  if (licenseId == null) {
+    throw new Error(`licenseId is null`)
+  }
+  if (S.isBlank(title) || R.isEmpty(tags)) {
+    throw new ValidationError('Fields not correctly filled in')
+  }
+  if (S.isBlank(description)) {
+    throw new ValidationError('Description must be filled in')
+  }
+  if (S.isBlank(instructions)) {
+    throw new ValidationError('Instructions must be filled in')
+  }
+  let allPictures = pictureDropzone.getAcceptedFiles()
+  if (R.isEmpty(allPictures)) {
+    throw new ValidationError('There must be at least one picture')
+  }
+  let queuedPictures = pictureDropzone.getQueuedFiles()
+  let queuedFiles = fileDropzone.getQueuedFiles()
+  return [title, description, instructions, tags, licenseId, username, queuedPictures,
+    queuedFiles,]
+}
+
 module.exports = {
   DescriptionEditor,
   InstructionsEditor,
   PicturesEditor,
   FilesEditor,
+  getParameters,
+  getPictureDropzone: () => {return pictureDropzone},
+  getFileDropzone: () => {return fileDropzone},
 }

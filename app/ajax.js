@@ -58,4 +58,7 @@ module.exports = {
   postJson: (path, payload) => {
     return ajax('post', path, null, payload)
   },
+  putJson: (path, payload) => {
+    return ajax('put', path, null, payload)
+  },
 }

@@ -10,6 +10,7 @@ let datetime = require('../../datetime')
 let {nbsp,} = require('../../specialChars')
 let {convertMarkdown,} = require('../../markdown')
 let ajax = require('../../ajax')
+let licenses = require('../../licenses')
 
 require('./displayProject.styl')
 
@@ -63,7 +64,9 @@ let TopPad = component('TopPad', (cursor) => {
         ])
       }, project.pictures)),
       h('#displayed-image', [
-        h('img', {src: mainPicture.url,}),
+        h('img', {
+          src: mainPicture != null ? mainPicture.url : null
+        ,}),
       ]),
     ]),
   ])
@@ -224,9 +227,12 @@ module.exports = {
       return ajax.getJson(`projects/${params.owner}/${params.projectId}`)
         .then((project) => {
           logger.debug(`Loading project JSON succeeded:`, project)
+          logger.debug(`License:`, project.licenseId, licenses)
           return {
             explore: {
-              currentProject: project,
+              currentProject: R.merge(project, {
+                license: licenses[project.licenseId],
+              }),
               project: {
                 activeTab: 'description',
               },

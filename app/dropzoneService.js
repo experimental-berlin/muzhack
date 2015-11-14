@@ -45,7 +45,7 @@ let handleDropzoneEvent = (event, dropzone, ...args) => {
 }
 
 let handleMutatingDropzoneEvent = (event, dropzone, ...args) => {
-  dropzoneLogger.debug('Mutating event occurred: ${event}')
+  dropzoneLogger.debug(`Mutating event occurred: ${event}`)
   editing.onChange()
 }
 

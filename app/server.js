@@ -31,7 +31,7 @@ let licenses = {
 }
 
 class Project {
-  constructor({projectId, tags, owner, ownerName, title, created, pictures, license,
+  constructor({projectId, tags, owner, ownerName, title, created, pictures, licenseId,
       description, instructions, files, zipFile,}) {
     this.projectId = projectId
     this.tags = tags
@@ -40,7 +40,7 @@ class Project {
     this.title = title
     this.created = created
     this.pictures = pictures
-    this.license = license
+    this.licenseId = licenseId
     this.description = description
     this.instructions = instructions
     this.files = files
@@ -57,16 +57,10 @@ let projects = {
    title: 'Test',
    created: '2015-11-04',
    pictures: [],
-   license: licenses['cc-by-4.0'],
+   licenseId: 'cc-by-4.0',
    description: `#Description`,
    instructions: `#Instructions`,
-   files: [
-     {
-       url: 'example.com',
-       fullPath: 'file.txt',
-       size: 20,
-     },
-   ],
+   files: [],
    zipFile: {
      size: 80,
      url: 'example.com',
@@ -211,23 +205,53 @@ Arve has no workshops planned at this moment.`,
   })
   server.route({
     method: ['POST',],
-    path: '/api/projects',
+    path: '/api/projects/{owner}',
     config: {
       auth: 'session',
       handler: (request, reply) => {
-        let projectParams = request.payload
-        logger.debug(`Received request to create project:`, projectParams)
-        let qualifiedProjectId = `${request.auth.credentials.username}/${projectParams.id}`
-        projectParams.projectId = projectParams.id
-        projectParams.license = licenses[projectParams.license]
-        projects[qualifiedProjectId] = new Project(R.merge(projectParams, {
-          owner: request.auth.credentials.username,
-          ownerName: request.auth.credentials.name,
-          zipFile: 'TODO',
-          created: moment.utc().format(),
-        }))
-        logger.debug('Projects:', projects)
-        reply()
+        let owner = request.params.owner
+        if (owner !== request.auth.credentials.username) {
+          reply(Boom.unauthorized(
+            `You are not allowed to create projects for others than your own user`))
+        } else {
+          let projectParams = request.payload
+          logger.debug(`Received request to create project:`, projectParams)
+          let qualifiedProjectId = `${owner}/${projectParams.id}`
+          projectParams.projectId = projectParams.id
+          projects[qualifiedProjectId] = new Project(R.merge(projectParams, {
+            owner: request.auth.credentials.username,
+            ownerName: request.auth.credentials.name,
+            created: moment.utc().format(),
+          }))
+          logger.debug('Projects:', projects)
+          reply()
+        }
+      },
+    },
+  })
+  server.route({
+    method: ['PUT',],
+    path: '/api/projects/{owner}/{id}',
+    config: {
+      auth: 'session',
+      handler: (request, reply) => {
+        let owner = request.params.owner
+        if (owner !== request.auth.credentials.username) {
+          reply(Boom.unauthorized(
+            `You are not allowed to update projects for others than your own user`))
+        } else {
+          let projectParams = request.payload
+          logger.debug(`Received request to update project:`, projectParams)
+          let qualifiedProjectId = `${owner}/${request.params.id}`
+          projects[qualifiedProjectId] = new Project(R.merge(projectParams, {
+            owner: request.auth.credentials.username,
+            projectId: request.params.id,
+            ownerName: request.auth.credentials.name,
+            created: moment.utc().format(), // TODO
+          }))
+          logger.debug('Projects:', projects)
+          reply()
+        }
       },
     },
   })
