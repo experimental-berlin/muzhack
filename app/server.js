@@ -8,6 +8,7 @@ Logger.useDefaults()
 let logger = Logger.get('server')
 let moment = require('moment')
 let AwsS3Form = require('aws-s3-form')
+let Boom = require('boom')
 
 let auth = require('./server/auth')
 
@@ -117,15 +118,11 @@ server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
     method: ['GET',],
     path: '/api/search',
     handler: (request, reply) => {
-      logger.debug(`Searching for '${request.query.query}'`)
+      logger.debug(`Searching for '${request.query.query}' among`, projects)
       let re = new RegExp(request.query.query, 'i')
-      reply(R.filter((x) => {return re.test(x.projectId) || re.test(x.title) || re.test(x.owner)}, [
-        {
-          projectId: 'test',
-          title: 'Test',
-          owner: 'aknudsen',
-        },
-      ]))
+      reply(R.filter((x) => {
+        return re.test(x.projectId) || re.test(x.title) || re.test(x.owner)
+      }, R.values(projects)))
     },
   })
   server.route({
@@ -209,20 +206,23 @@ Arve has no workshops planned at this moment.`,
     config: {
       auth: 'session',
       handler: (request, reply) => {
+        let projectParams = request.payload
+        logger.debug(`Received request to create project:`, projectParams)
         let owner = request.params.owner
         if (owner !== request.auth.credentials.username) {
+          logger.debug(`User tried to create project for other user`)
           reply(Boom.unauthorized(
             `You are not allowed to create projects for others than your own user`))
         } else {
-          let projectParams = request.payload
-          logger.debug(`Received request to create project:`, projectParams)
           let qualifiedProjectId = `${owner}/${projectParams.id}`
           projectParams.projectId = projectParams.id
-          projects[qualifiedProjectId] = new Project(R.merge(projectParams, {
+          let project = new Project(R.merge(projectParams, {
             owner: request.auth.credentials.username,
             ownerName: request.auth.credentials.name,
             created: moment.utc().format(),
           }))
+          logger.debug(`Creating project '${qualifiedProjectId}':`, project)
+          projects[qualifiedProjectId] = project
           logger.debug('Projects:', projects)
           reply()
         }

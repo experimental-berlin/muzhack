@@ -9,26 +9,66 @@ let S = require('underscore.string.fp')
 let licenses = require('../../licenses')
 let FocusingInput = require('../focusingInput')
 let {nbsp,} = require('../../specialChars')
-let {markdownService,} = require('../../markdown')
-let dropzoneService = require('../../dropzoneService')
 let router = require('../../router')
-let notification = require('../notification')
 let ajax = require('../../ajax')
 let Loading = require('./loading')
 let {DescriptionEditor, InstructionsEditor, PicturesEditor,
-  FilesEditor, getParameters,} = require('./editors')
+  FilesEditor,} = require('./editors')
+let uploadProject = require('./uploadProject')
 
 require('./createProject.styl')
 require('./editAndCreate.styl')
 require('../dropzone.scss')
 require('../dropzone.styl')
 
+let createProject = (cursor) => {
+  let input = cursor.cursor('createProject').toJS()
+  let username = cursor.get('loggedInUser').username
+  let inputExtended = R.merge(input, {
+    projectId: input.id,
+    owner: username,
+  })
+  uploadProject(inputExtended, cursor)
+    .then(({title, description, instructions, tags, licenseId, username, pictureFiles, files,}) => {
+      logger.debug(`Picture files:`, pictureFiles)
+      logger.debug(`Files:`, files)
+      logger.debug(`title: ${title}, description: ${description}, tags: ${S.join(`,`, tags)}`)
+      let qualifiedProjectId = `${username}/${input.id}`
+      let data = {
+        id: input.id,
+        title,
+        description,
+        instructions,
+        tags,
+        licenseId,
+        pictures: pictureFiles,
+        files,
+      }
+      logger.debug(`Creating project '${qualifiedProjectId}'...:`, data)
+      ajax.postJson(`projects/${username}`, data)
+        .then(() => {
+          logger.info(`Successfully created project '${qualifiedProjectId}' on server`)
+          router.goTo(`/u/${qualifiedProjectId}`)
+        }, (error) => {
+          cursor.cursor('createProject').set('isWaiting', false)
+          logger.warn(`Failed to create project '${qualifiedProjectId}' on server: ${error}`,
+            error.stack)
+        })
+      }, (error) => {
+        logger.warn(`Uploading files/pictures failed: ${error}`, error.stack)
+        cursor.cursor('createProject').set('isWaiting', false)
+      })
+
+}
+
 let CreateProjectPad = component('CreateProjectPad', (cursor) => {
   let createCursor = cursor.cursor('createProject')
+  let input = createCursor.toJS()
   return h('#create-project-pad', [
     h('.input-group', [
       FocusingInput({
         id: 'id-input', placeholder: 'Project ID',
+        value: input.id,
         onChange: (event) => {
           logger.debug(`Project ID changed: '${event.target.value}'`)
           createCursor.set('id', event.target.value)
@@ -38,6 +78,7 @@ let CreateProjectPad = component('CreateProjectPad', (cursor) => {
     h('.input-group', [
       h('input#title-input', {
         placeholder: 'Project title',
+        value: input.title,
         onChange: (event) => {
           logger.debug(`Project title changed: '${event.target.value}'`)
           createCursor.set('title', event.target.value)
@@ -47,6 +88,7 @@ let CreateProjectPad = component('CreateProjectPad', (cursor) => {
     h('.input-group', [
       h('input#tags-input', {
         placeholder: 'Project tags',
+        value: input.tagsString,
         onChange: (event) => {
           logger.debug(`Project tags changed: '${event.target.value}'`)
           createCursor.set('tagsString', event.target.value)
@@ -58,6 +100,7 @@ let CreateProjectPad = component('CreateProjectPad', (cursor) => {
     h('.input-group', [
       h('select#license-select', {
         placeholder: 'License',
+        value: input.licenseId,
         onChange: (event) => {
           logger.debug(`Project license changed: '${event.target.value}'`)
           createCursor.set('licenseId', event.target.value)
@@ -67,46 +110,31 @@ let CreateProjectPad = component('CreateProjectPad', (cursor) => {
       }, R.toPairs(licenses))),
     ]),
     h('#description-editor', [
-      DescriptionEditor(),
+      DescriptionEditor(createCursor),
     ]),
     h('#pictures-editor', [
-      PicturesEditor(),
+      PicturesEditor(createCursor),
     ]),
     h('#instructions-editor', [
-      InstructionsEditor(),
+      InstructionsEditor(createCursor),
     ]),
     h('#files-editor', [
-      FilesEditor(),
+      FilesEditor(createCursor),
     ]),
     h('#create-buttons.button-group', [
       h('button#create-project.pure-button.pure-button-primary', {
-        disabled: !!createCursor.get('disableButtons'),
         onClick: () => {
-          logger.debug(`Create button clicked`)
-          createCursor = createCursor.set('disableButtons', true)
-          let parameters
+          logger.debug(`Create button clicked`, createCursor)
+          createCursor = createCursor.set('isWaiting', true)
           try {
-            parameters = getParameters(cursor)
-          } catch (err) {
-            createCursor.set('disableButtons', false)
-            throw err
-          }
-          createCursor = createCursor.mergeDeep({
-            isWaiting: true,
-          })
-          try {
-            createProject(parameters, cursor)
+            createProject(cursor)
           } catch (error) {
-            createCursor.mergeDeep({
-              disableButtons: false,
-              isWaiting: false,
-            })
+            createCursor.set('isWaiting', false)
             throw error
           }
         },
       }, 'Create'),
       h('button#cancel-create.pure-button', {
-        disabled: !!createCursor.get('disableButtons'),
         onClick: () => {
           logger.debug(`Cancel button clicked`)
           // TODO: Ask user if there are modifications
@@ -125,6 +153,21 @@ module.exports.routeOptions = {
       return CreateProjectPad(cursor)
     } else {
       return Loading()
+    }
+  },
+  loadData: (cursor) => {
+    return {
+      createProject: {
+        isWaiting: false,
+        id: null,
+        title: null,
+        tagsString: null,
+        licenseId: 'cc-by-4.0',
+        instructions: null,
+        description: null,
+        pictures: null,
+        files: null,
+      },
     }
   },
 }

@@ -69,7 +69,7 @@ let fileDropzone = null
 
 let FilesEditor = component('FilesEditor', {
   componentDidMount: function () {
-    let files = this.cursor.cursor('files').toArray()
+    let files = this.cursor.cursor('files').toJS()
     logger.debug('FilesEditor did mount, files:', files)
     fileDropzone = dropzoneService.createDropzone('file-dropzone', false, files)
   },

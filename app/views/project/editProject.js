@@ -10,67 +10,17 @@ let Loading = require('./loading')
 let licenses = require('../../licenses')
 let {nbsp,} = require('../../specialChars')
 let {DescriptionEditor, InstructionsEditor, PicturesEditor,
-  FilesEditor, getParameters, getPictureDropzone, getFileDropzone,} = require('./editors')
+  FilesEditor,} = require('./editors')
 let router = require('../../router')
 let ajax = require('../../ajax')
+let uploadProject = require('./uploadProject')
 
 require('./editProject.styl')
 
-let saveProject = (cursor) => {
+let editProject = (cursor) => {
   let editProject = cursor.cursor('editProject').toJS()
-  let [title, description, instructions, tags, licenseId, username, queuedPictures,
-    queuedFiles,] = getParameters(editProject.project, cursor)
-
-  let uploadData = {
-    owner: editProject.owner,
-    projectId: editProject.projectId,
-  }
-
-  let uploadFiles = () => {
-    let picturesPromise
-    let pictureDropzone = getPictureDropzone()
-    let fileDropzone = getFileDropzone()
-    if (!R.isEmpty(queuedPictures)) {
-      picturesPromise = pictureDropzone.processFiles(queuedPictures, uploadData)
-    } else {
-      picturesPromise = new Promise((resolve) => resolve([]))
-    }
-    picturesPromise
-      .catch((error) => {
-        logError(logger, `Uploading pictures failed: ${error}`)
-        notificationService.warn(`Error`, `Uploading pictures failed`)
-      })
-    if (!R.isEmpty(queuedFiles)) {
-      logger.debug(`Processing ${queuedFiles.length} file(s)`)
-      filesPromise = fileDropzone.processFiles(queuedFiles, uploadData)
-    } else {
-      filesPromise = new Promise((resolve) => resolve([]))
-    }
-    filesPromise
-      .catch((error) => {
-        logError(logger, `Uploading files failed: ${error}`)
-        notificationService.warn(`Error`, `Uploading files failed`)
-      })
-
-    return [picturesPromise, filesPromise,]
-  }
-
-  let [picturesPromise, filesPromise,] = uploadFiles()
-  Promise.all([picturesPromise, filesPromise,])
-    .then(([uploadedPictures, uploadedFiles,]) => {
-      logger.info(`Saving project...`)
-      let pictureDropzone = getPictureDropzone()
-      let fileDropzone = getFileDropzone()
-      let transformFiles = R.map(R.pick(['width', 'height', 'size', 'url', 'name', 'type',
-        'fullPath',]))
-      let pictureFiles = R.concat(
-        transformFiles(pictureDropzone.getExistingFiles()),
-        transformFiles(uploadedPictures)
-      )
-      let files = R.concat(
-        transformFiles(fileDropzone.getExistingFiles()),
-        transformFiles(uploadedFiles)
-      )
+  uploadProject(editProject.project, cursor)
+    .then(({title, description, instructions, tags, licenseId, username, pictureFiles, files,}) => {
       logger.debug(`Picture files:`, pictureFiles)
       logger.debug(`Files:`, files)
       logger.debug(`title: ${title}, description: ${description}, tags: ${S.join(`,`, tags)}`)
@@ -85,19 +35,18 @@ let saveProject = (cursor) => {
         files,
       }
       logger.debug(`Updating project '${qualifiedProjectId}'...:`, data)
-      ajax.putJson(`projects/${qualifiedProjectId}`, data).then(() => {
-        logger.info(`Successfully updated project '${qualifiedProjectId}' on server`)
-        router.goTo(`/u/${qualifiedProjectId}`)
+      ajax.putJson(`projects/${qualifiedProjectId}`, data)
+        .then(() => {
+          logger.info(`Successfully updated project '${qualifiedProjectId}' on server`)
+          router.goTo(`/u/${qualifiedProjectId}`)
+        }, (error) => {
+          cursor.cursor('editProject').set('isWaiting', false)
+          logger.warn(`Failed to update project '${qualifiedProjectId}' on server: ${reason}`)
+        })
       }, (error) => {
+        logger.warn(`Uploading files/pictures failed: ${error}`, error.stack)
         cursor.cursor('editProject').set('isWaiting', false)
-        logger.warn(`Failed to update project '${qualifiedProjectId}' on server: ${reason}`)
       })
-    }
-    , (error) => {
-      logger.warn(`Uploading files/pictures failed: ${error}`)
-      cursor.cursor('editProject').set('isWaiting', false)
-    })
-
 }
 
 let EditProjectPad = component('EditProjectPad', (cursor) => {
@@ -135,7 +84,6 @@ let EditProjectPad = component('EditProjectPad', (cursor) => {
           cursor.cursor(['editProject', 'project',]).set('licenseId', event.target.value)
         },
       }, R.map(([licenseId, license,]) => {
-        logger.debug(`License ID: '${licenseId}'`)
         return h('option', {value: licenseId,}, license.name)
       }, R.toPairs(licenses))),
     ]),
@@ -159,7 +107,7 @@ let EditProjectPad = component('EditProjectPad', (cursor) => {
             isWaiting: true,
           })
           try {
-            saveProject(cursor)
+            editProject(cursor)
           } catch (error) {
             editCursor.mergeDeep({
               isWaiting: false,
@@ -171,7 +119,7 @@ let EditProjectPad = component('EditProjectPad', (cursor) => {
       h('button#cancel-edit.pure-button', {
         onClick: () => {
           logger.debug(`Cancel button clicked`)
-          let project = cursor.cursor(['explore', 'currentProject',]).toJS()
+          let project = cursor.cursor(['editProject', 'project',]).toJS()
           // TODO: Ask user if there are modifications
           router.goTo(`/u/${project.owner}/${project.projectId}`)
         },

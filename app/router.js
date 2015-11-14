@@ -47,7 +47,11 @@ let loadData = (cursor) => {
     let routeParams = match.slice(1)
     let params = R.fromPairs(R.zip(routeParamNames, routeParams))
     logger.debug(`Current route parameters:`, params)
-    func.loadData(cursor, params)
+    let promise = func.loadData(cursor, params)
+    if (promise.then == null) {
+      promise = Promise.resolve(promise)
+    }
+    promise
       .then((newState) => {
         logger.debug(`Route data has been loaded ahead of rendering, new state:`, newState)
         let mergedState = getState().mergeDeep(R.merge(newState, {
