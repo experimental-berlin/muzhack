@@ -159,14 +159,7 @@ module.exports.routeOptions = {
     return {
       createProject: {
         isWaiting: false,
-        id: null,
-        title: null,
-        tagsString: null,
         licenseId: 'cc-by-4.0',
-        instructions: null,
-        description: null,
-        pictures: null,
-        files: null,
       },
     }
   },

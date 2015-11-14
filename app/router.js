@@ -54,11 +54,19 @@ let loadData = (cursor) => {
     promise
       .then((newState) => {
         logger.debug(`Route data has been loaded ahead of rendering, new state:`, newState)
-        let mergedState = getState().mergeDeep(R.merge(newState, {
-          router: {
-            isLoading: false,
-          },
-        }))
+        let updatedCursor = getState().update((toUpdate) => {
+          toUpdate = toUpdate.mergeDeep({
+            router: {
+              isLoading: false,
+            },
+          })
+          R.forEach(([key, value,]) => {
+            toUpdate = toUpdate.set(key, immutable.fromJS(value))
+          }, R.toPairs(newState))
+
+          return toUpdate
+        })
+        logger.debug(`Updated state:`, updatedCursor.toJS())
       })
 
     return true

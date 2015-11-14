@@ -31,7 +31,7 @@ let getFileSize = (numBytes) => {
 }
 
 let TopPad = component('TopPad', (cursor) => {
-  let projectCursor = cursor.cursor(['explore', 'currentProject',])
+  let projectCursor = cursor.cursor(['displayProject', 'project',])
   let project = projectCursor.toJS()
   let creationDateString = datetime.displayDateTextual(project.created)
   let mainPicture = project.chosenPicture || project.pictures[0]
@@ -114,7 +114,7 @@ let BottomPad = component('BottomPad', ({cursor, project,}) => {
     new ProjectTab('Instructions', 'book'),
     new ProjectTab('Files', 'puzzle4'),
   ]
-  let activeTab = cursor.cursor(['explore', 'project',]).get('activeTab')
+  let activeTab = cursor.cursor(['displayProject',]).get('activeTab')
   let tabContent
   if (activeTab === 'description') {
     tabContent = h('#description', [
@@ -136,9 +136,9 @@ let BottomPad = component('BottomPad', ({cursor, project,}) => {
           onClick: (event) => {
             event.preventDefault()
 
-            if (cursor.cursor(['explore', 'project',]).get('activeTab') !== projectTab.name) {
+            if (cursor.cursor(['displayProject',]).get('activeTab') !== projectTab.name) {
               logger.debug(`Switching project tab to '${projectTab.name}'`)
-              cursor.cursor(['explore', 'project',]).set('activeTab', projectTab.name)
+              cursor.cursor(['displayProject',]).set('activeTab', projectTab.name)
             }
           },
         }, [
@@ -195,7 +195,7 @@ class ProjectTab {
   }
 
   getClasses(cursor) {
-    let activeTab = cursor.cursor(['explore', 'project',]).get('activeTab')
+    let activeTab = cursor.cursor(['displayProject',]).get('activeTab')
     if (activeTab === this.name) {
       logger.debug(`${this.name} is active tab`)
       return ['active',]
@@ -206,7 +206,7 @@ class ProjectTab {
 }
 
 let render = (cursor) => {
-  let projectCursor = cursor.cursor(['explore', 'currentProject',])
+  let projectCursor = cursor.cursor(['displayProject', 'project',])
   let project = projectCursor.toJS()
 
   logger.debug(`Rendering display of project:`, project)
@@ -227,15 +227,12 @@ module.exports = {
       return ajax.getJson(`projects/${params.owner}/${params.projectId}`)
         .then((project) => {
           logger.debug(`Loading project JSON succeeded:`, project)
-          logger.debug(`License:`, project.licenseId, licenses)
           return {
-            explore: {
-              currentProject: R.merge(project, {
+            displayProject: {
+              activeTab: 'description',
+              project: R.merge(project, {
                 license: licenses[project.licenseId],
               }),
-              project: {
-                activeTab: 'description',
-              },
             },
           }
         }, (reason) => {
