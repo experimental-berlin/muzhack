@@ -7,28 +7,7 @@ let moment = require('moment')
 let r = require('rethinkdb')
 
 let auth = require('./auth')
-
-let withDb = (reply, callback) => {
-  r.connect({
-    host: process.env.RETHINKDB_HOST || 'localhost',
-    authKey: process.env.RETHINKDB_AUTH_KEY,
-    db: 'muzhack',
-  }).then((conn) => {
-    logger.debug(`Successfully connected to RethinkDB`)
-    logger.debug(`Invoking callback`)
-    callback(conn).
-      then(() => {
-        conn.close()
-      }, (error) => {
-        conn.close()
-        logger.warn(`There was an error in the callback of withDb: '${error}'`)
-        reply(Boom.badImplementation())
-      })
-  }, (error) => {
-    logger.warn(`Failed to connect to RethinkDB: '${err}'`)
-    reply(Boom.badImplementation())
-  })
-}
+let {withDb,} = require('./db')
 
 class Project {
   constructor({projectId, tags, owner, ownerName, title, created, pictures, licenseId,
@@ -67,6 +46,7 @@ module.exports.register = (server) => {
       let re = new RegExp(request.query.query, 'i')
       withDb(reply, (conn) => {
         return r.table('projects').filter((x) => {
+          // TODO Fix
           return re.test(x.projectId) || re.test(x.title) || re.test(x.owner)
         }).run(conn)
           .then((projects) => {
@@ -101,21 +81,19 @@ module.exports.register = (server) => {
     path: '/api/users/{username}',
     handler: (request, reply) => {
       let {username,} = request.params
-      logger.debug(`Getting user '${username}'`)
-      let user = {
-        username,
-        name: 'Arve Knudsen',
-        email: 'arve.knudsen@gmail.com',
-        projects: [],
-        projectPlans: [],
-        about: 'Arve is one **cool** guy.',
-        soundCloudUploads: [],
-        workshopsInfo: `#Arve Knudsen\'s workshop profile
-
-Arve has no workshops planned at this moment.`,
-      }
-      logger.debug(`Returning user:`, user)
-      reply(user)
+      withDb(reply, (conn) => {
+        logger.debug(`Getting user '${username}'`)
+        return r.table('users').get(username).run(conn)
+          .then((user) => {
+            if (user != null) {
+              logger.debug(`Found user '${username}':`, user)
+              reply(user)
+            } else {
+              logger.debug(`Could not find user '${username}'`)
+              reply(Boom.notFound())
+            }
+          })
+      })
     },
   })
   server.route({

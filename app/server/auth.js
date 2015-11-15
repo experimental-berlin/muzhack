@@ -3,14 +3,9 @@ let bcrypt = require('bcrypt')
 let Boom = require('boom')
 let S = require('underscore.string.fp')
 let logger = require('js-logger-aknudsen').get('auth')
-
-let users = {
-  aknudsen: {
-    password: bcrypt.hashSync('password', bcrypt.genSaltSync()),
-    name: 'Arve Knudsen',
-    projects: [],
-  },
-}
+let {withDb,} = require('./db')
+let r = require('rethinkdb')
+let R = require('ramda')
 
 let logUserIn = (request, user) => {
   request.auth.session.set({username: request.payload.username, name: user.name,})
@@ -64,29 +59,43 @@ module.exports.register = (server) => {
         logger.debug(`Username or password is missing`)
         reply(Boom.badRequest('Missing username or password'))
       } else {
-        let account = users[request.payload.username]
-        if (account == null) {
-          logger.debug('User not found')
-          reply(Boom.badRequest('Invalid username or password'))
-        } else {
-          if (request.auth.isAuthenticated) {
-            logger.debug(`User is already logged in`)
-            reply({username: request.payload.username,})
-          } else {
-            logger.debug(`Logging user in`)
-            bcrypt.compare(request.payload.password, account.password, (err, isValid) => {
-              if (!isValid) {
-                logger.debug(`Password not valid`)
-                reply(Boom.badRequest('Invalid username or password'))
-              } else {
-                logUserIn(request, account)
-                let result = {username: request.payload.username,}
-                logger.debug(`User successfully logged in - replying with:`, result)
-                reply(result)
-              }
+        withDb(reply, (conn) => {
+          let usernameOrEmail = request.payload.username
+          return r.table('users')
+            .filter((user) => {
+              return user('id').eq(usernameOrEmail) || user('email').eq(usernameOrEmail)
+            }).run(conn)
+            .then((cursor) => {
+              cursor.toArray()
+                .then((users) => {
+                  if (R.isEmpty(users)) {
+                    logger.debug(
+                      `Could not find user with username or email '${usernameOrEmail}'`)
+                    reply(Boom.badRequest('Invalid username or password'))
+                  } else {
+                    let user = users[0]
+                    logger.debug(`Users:`, users)
+                    if (request.auth.isAuthenticated) {
+                      logger.debug(`User is already logged in`)
+                      reply({username: user.username,})
+                    } else {
+                      logger.debug(`Logging user in`)
+                      bcrypt.compare(request.payload.password, user.password, (err, isValid) => {
+                        if (!isValid) {
+                          logger.debug(`Password not valid`)
+                          reply(Boom.badRequest('Invalid username or password'))
+                        } else {
+                          logUserIn(request, user)
+                          let result = {username: user.username,}
+                          logger.debug(`User successfully logged in - replying with:`, result)
+                          reply(result)
+                        }
+                      })
+                    }
+                  }
+                })
             })
-          }
-        }
+        })
       }
     },
   })
@@ -109,15 +118,26 @@ module.exports.register = (server) => {
         } else {
           logger.debug(`Successfully registered user '${payload.username}'`)
           let user = {
+            id: payload.username,
             username: payload.username,
-            email: payload.username,
+            email: payload.email,
             name: payload.name,
             password: hash,
-            website: payload.website,
+            website: payload.website || null,
+            projects: [],
+            projectPlans: [],
+            about: 'Nada',
           }
-          users[payload.username] = user
-          logUserIn(request, user)
-          reply()
+          withDb(reply, (conn) => {
+            return r.table('users')
+              .get(user.username)
+              .replace(user)
+              .run(conn)
+              .then(() => {
+                logUserIn(request, user)
+                reply()
+              })
+          })
         }
       })
     },

@@ -17,8 +17,9 @@ let toClassName = (classes) => {
 }
 
 let AccountBar = component('AccountBar', (cursor) => {
-  let user = cursor.get('loggedInUser')
-  let links = user != null ? [
+  let user = cursor.cursor('loggedInUser').toJS()
+  logger.debug(`AccountBar: logged in user:`, user)
+  let links = !R.isEmpty(user) ? [
     h('a.toolbar-btn.enabled.pure-menu-link', {href: `/u/${user.username}`,}, [
       h('span.icon-user', {
         'data-tooltip': 'Go to your account',

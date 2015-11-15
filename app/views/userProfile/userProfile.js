@@ -134,8 +134,9 @@ module.exports.routeOptions = {
             activeTab: 'projects',
           },
         }
-      }, (reason) => {
-        logger.warn(`Loading user JSON failed: '${reason}'`)
+      }, (error) => {
+        logger.warn(`Loading user JSON failed: '${error}'`)
+        throw new Error(error)
       })
   },
   render: (cursor) => {

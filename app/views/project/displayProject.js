@@ -35,7 +35,8 @@ let TopPad = component('TopPad', (cursor) => {
   let project = projectCursor.toJS()
   let creationDateString = datetime.displayDateTextual(project.created)
   let mainPicture = project.chosenPicture || project.pictures[0]
-  let canEdit = cursor.get('loggedInUser').username === project.owner
+  let loggedInUser = cursor.get('loggedInUser')
+  let canEdit = loggedInUser == null || loggedInUser.username === project.owner
   return h('#project-top-pad.airy-padding-sides', [
     canEdit ? h('a#edit-action.action.pull-right', {
       href: `/u/${project.owner}/${project.projectId}/edit`, 'data-tooltip': 'Edit project',
