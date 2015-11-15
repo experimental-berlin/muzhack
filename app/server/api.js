@@ -349,6 +349,7 @@ module.exports.register = (server) => {
         let keyPrefix = `u/${request.auth.credentials.username}/`
         let region = process.env.S3_REGION
         let s3Form = new AwsS3Form({
+          secure: true,
           accessKeyId: process.env.AWS_ACCESS_KEY,
           secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
           region,
@@ -361,6 +362,7 @@ module.exports.register = (server) => {
         let formData = s3Form.create(key)
         reply({
           bucket,
+          region,
           url,
           fields: formData.fields,
         })
