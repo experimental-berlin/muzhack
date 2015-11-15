@@ -71,8 +71,8 @@ rethinkdb-tunnel:
   environment:
     - RETHINKDB_SSH_HOST
   command: -v -T -N -L *:28015:localhost:28015 root@188.166.16.45
-  ports:
-    - "28015:28015"
+  expose:
+    - "28015"
   volumes:
     - /root/.ssh:/root/.ssh:ro
   restart: always

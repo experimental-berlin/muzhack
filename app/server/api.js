@@ -282,11 +282,11 @@ module.exports.register = (server) => {
     path: '/api/search',
     handler: (request, reply) => {
       logger.debug(`Searching for '${request.query.query}'`)
-      let re = new RegExp(request.query.query, 'i')
       withDb(reply, (conn) => {
-        return r.table('projects').filter((x) => {
-          // TODO Fix
-          return re.test(x.projectId) || re.test(x.title) || re.test(x.owner)
+        let regex = `(?i)${request.query.query}`
+        return r.table('projects').filter((project) => {
+          return project('projectId').match(regex).or(project('title').match(regex)).or(
+            project('owner').match(regex))
         }).run(conn)
           .then((projectsCursor) => {
             projectsCursor.toArray()
