@@ -23,7 +23,7 @@ module.exports.getLoggedInUser = (request) => {
   }
 }
 
-let validateSignUp = (request, reply) => {
+let validateSignup = (request, reply) => {
   let {username, password, email, name, website,} = request.payload
   let message
   if (S.isBlank(username)) {
@@ -106,7 +106,7 @@ module.exports.register = (server) => {
     path: '/api/signup',
     handler: (request, reply) => {
       logger.debug(`Handling request to sign user up`)
-      if (!validateSignUp(request, reply)) {
+      if (!validateSignup(request, reply)) {
         return
       }
 
@@ -132,12 +132,25 @@ module.exports.register = (server) => {
           }
           withDb(reply, (conn) => {
             return r.table('users')
-              .get(user.username)
-              .replace(user)
+              .insert(user, {
+                conflict: 'error',
+              })
               .run(conn)
-              .then(() => {
-                logUserIn(request, user)
-                reply()
+              .then((result) => {
+                if (result.errors > 0) {
+                  if (result.first_error.startsWith('Duplicate primary key')) {
+                    logger.debug(
+                      `User's requested username is already taken: '${payload.username}'`)
+                    reply(Boom.badRequest('Username is taken'))
+                  } else {
+                    logger.debug(
+                      `An error was encountered while adding new user: '${result.first_error}'`)
+                    reply(Boom.badImplementation())
+                  }
+                } else {
+                  logUserIn(request, user)
+                  reply()
+                }
               })
           })
         }
