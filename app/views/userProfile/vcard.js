@@ -40,7 +40,7 @@ module.exports = component('VCard', (user) => {
       h('span.icon-envelop3', nbsp),
       h('span', user.email),
       !S.isBlank(user.website) ? h('#user-website.vcard-detail', [
-        h('span.icon-link'),
+        h('span.icon-link', nbsp),
         h('a', {href: user.website, target: '_blank',}, user.website),
       ]) : null,
       user.soundCloud != null ? h('#user-soundcloud.vcard-detail', [

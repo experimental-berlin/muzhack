@@ -149,7 +149,7 @@ module.exports.routeOptions = {
       new UserTab('Projects'),
       new UserTab('Plans'),
       new UserTab('About'),
-      new UserTab('Media', null, !R.isEmpty(user.soundCloudUploads)),
+      new UserTab('Media', null, !R.isEmpty(user.soundCloudUploads || [])),
       new UserTab('Workshops', null, !S.isBlank(user.workshopsInfo)),
     ]
     let activeTab = R.contains(currentHash, R.map((tab) => {
