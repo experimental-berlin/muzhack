@@ -294,8 +294,61 @@ module.exports.register = (server) => {
     config: {
       auth: 'session',
       handler: (request, reply) => {
+        let removeFolder = () => {
+          logger.debug(`Removing folder '${dirPath}'...`)
+          logger.debug(`Listing folder contents...`)
+          return new Promise((resolve, reject) => {
+            s3Client.listObjects({Prefix: dirPath}, (error, data) => {
+              if (error == null) {
+                resolve(data.Contents)
+              } else {
+                logger.warn(`Failed to list folder '${dirPath}': '${error}'`)
+                reject(error)
+              }
+            })
+          })
+            .then((objects) => {
+              logger.debug(`Successfully listed folder contents:`, objects)
+              if (R.isEmpty(objects)) {
+                logger.debug(`Nothing to remove`)
+                return Promise.resolve()
+              }
+
+              let toDelete = R.map((o) => {
+                return {Key: o.Key,}
+              }, objects)
+              logger.debug(`Deleting folder contents...`)
+              return new Promise((resolve, reject) => {
+                s3Client.deleteObjects({
+                  Delete: {
+                    Objects: toDelete,
+                  },
+                }, (error, data) => {
+                  if (error == null) {
+                    resolve(data)
+                  } else {
+                    reject(error)
+                  }
+                })
+              })
+                .then(() => {
+                  logger.debug(`Successfully removed ${objects.length} object(s)`)
+                  // API will list max 1000 objects
+                  if (objects.length === 1000) {
+                    logger.debug("We hit max number of listed objects, deleting recursively")
+                    return removeFolder()
+                  }
+                }, (error) => {
+                  logger.warn(`Failed to remove ${objects.length} object(s): '${error}'`)
+                })
+              })
+        }
+
+        let s3Client = getS3Client()
         let owner = request.params.owner
         let qualifiedProjectId = `${owner}/${request.params.id}`
+        let dirPath = `u/${owner}/${request.params.id}`
+
         logger.debug(`Received request to delete project '${qualifiedProjectId}'`)
         if (owner !== request.auth.credentials.username) {
           reply(Boom.unauthorized(
@@ -304,8 +357,11 @@ module.exports.register = (server) => {
           withDb(reply, (conn) => {
             return r.table('projects').get(qualifiedProjectId).delete().run(conn)
               .then(() => {
-                logger.debug(`Project '${qualifiedProjectId}' successfully deleted`)
-                reply()
+                return removeFolder()
+                  .then(() => {
+                    logger.debug(`Project '${qualifiedProjectId}' successfully deleted`)
+                    reply()
+                  })
               })
           })
         }
