@@ -12,6 +12,7 @@ let request = require('request')
 
 let licenses = require('../licenses')
 let auth = require('./auth')
+let {trimWhitespace,} = require('../stringUtils')
 let {withDb,} = require('./db')
 
 class Project {
@@ -266,6 +267,62 @@ let updateProject = (request, reply) => {
   }
 }
 
+let search = (request, reply) => {
+  logger.debug(`Searching for '${request.query.query}'`)
+  withDb(reply, (conn) => {
+    let reTag = /\[[^\]]*\]/g
+    let queryWithoutTags = ''
+    let tags = []
+    let offset = 0
+    let query = request.query.query
+    while (true) {
+      let m = reTag.exec(query)
+      if (m == null) {
+        break
+      }
+
+      let tag = trimWhitespace(m[0].slice(1, -1))
+      logger.debug(`Found tag '${tag}'`)
+      tags.push(tag)
+      queryWithoutTags += ' ' + query.slice(offset, m.index)
+      offset = reTag.lastIndex
+    }
+
+    queryWithoutTags += ' ' + query.slice(offset)
+    queryWithoutTags = trimWhitespace(queryWithoutTags.replace(/\s+/g, ' '))
+
+    if (!S.isBlank(queryWithoutTags)) {
+      logger.debug(`Tag-less query: '${queryWithoutTags}'`)
+    } else {
+      logger.debug(`Tag-less query is empty`)
+    }
+    if (!R.isEmpty(tags)) {
+      logger.debug(`Tags:`, tags)
+    } else {
+      logger.debug(`No tags`)
+    }
+    let regex = `(?i)${queryWithoutTags}`
+    return r.table('projects').filter((project) => {
+      let pred = project('projectId').match(regex).or(project('title').match(regex))
+        .or(project('owner').match(regex))
+      R.forEach((tag) => {
+        pred = pred.and(project('tags').contains(tag))
+      }, tags)
+      return pred
+    }).run(conn)
+      .then((projectsCursor) => {
+        projectsCursor.toArray()
+          .then((projects) => {
+            logger.debug(`Found ${projects.length} project(s):`, projects)
+            reply(projects)
+          }, (error) => {
+            logger.warn(`Failed to iterate projects: '${error}'`, error.stack)
+            reply(boom.badImplementation())
+          })
+      })
+  })
+}
+
 module.exports.register = (server) => {
   server.route({
     method: ['GET',],
@@ -280,26 +337,7 @@ module.exports.register = (server) => {
   server.route({
     method: ['GET',],
     path: '/api/search',
-    handler: (request, reply) => {
-      logger.debug(`Searching for '${request.query.query}'`)
-      withDb(reply, (conn) => {
-        let regex = `(?i)${request.query.query}`
-        return r.table('projects').filter((project) => {
-          return project('projectId').match(regex).or(project('title').match(regex)).or(
-            project('owner').match(regex))
-        }).run(conn)
-          .then((projectsCursor) => {
-            projectsCursor.toArray()
-              .then((projects) => {
-                logger.debug(`Found ${projects.length} project(s):`, projects)
-                reply(projects)
-              }, (error) => {
-                logger.warn(`Failed to iterate projects: '${error}'`, error.stack)
-                reply(boom.badImplementation())
-              })
-          })
-      })
-    },
+    handler: search,
   })
   server.route({
     method: ['GET',],
