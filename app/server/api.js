@@ -51,13 +51,14 @@ let getS3Client = () => {
   })
 }
 
-let downloadResource = (url) => {
+let downloadResource = (url, options) => {
   logger.debug(`Downloading resource '${url}'...`)
+  let {encoding,} = options || {}
   return new Promise((resolve, reject) => {
     let performRequest = (numTries) => {
       logger.debug(`Attempt #${numTries}`)
       request.get(url, {
-        encoding: null,
+        encoding: encoding,
       }, (error, response, body) => {
         if (error == null && response.statusCode === 200) {
           logger.debug(`Downloaded '${url}' successfully`)
@@ -371,6 +372,51 @@ let search = (request, reply) => {
   })
 }
 
+let getUser = (request, reply) => {
+  let {username,} = request.params
+  withDb(reply, (conn) => {
+    logger.debug(`Getting user '${username}'`)
+    return r.table('users').get(username).run(conn)
+      .then((user) => {
+        if (user != null) {
+          logger.debug(`Found user '${username}':`, user)
+          let soundCloud = user.soundCloud || {}
+          let scUploads = soundCloud.uploads || []
+          if (!R.isEmpty(scUploads)) {
+            logger.debug(`Getting SoundCloud embeddables for user...`)
+          }
+          let scPromises = R.map((upload) => {
+            let uploadUrl = `http://soundcloud.com/${upload.path}`
+            let url = `http://soundcloud.com/oembed?format=json&url=${uploadUrl}`
+            return downloadResource(url, {encoding: 'utf-8',})
+              .then((content) => {
+                return JSON.parse(content)
+              }, (error) => {
+                logger.warn("Ignoring upload at '${uploadUrl}' since we couldn't get its embed data")
+                return null
+              })
+          }, scUploads)
+          return Promise.all(scPromises)
+            .then((embeddables) => {
+              let extendedUser = R.merge(user, {
+                soundCloud: {
+                  uploads: R.filter((x) => x != null, embeddables),
+                },
+              })
+              logger.debug(`Returning user:`, extendedUser)
+              reply(extendedUser)
+            }, (error) => {
+              logger.error(`An error occurred:`, error)
+              reply(Boom.badImplementation())
+            })
+        } else {
+          logger.debug(`Could not find user '${username}'`)
+          reply(Boom.notFound())
+        }
+      })
+  })
+}
+
 module.exports.register = (server) => {
   server.route({
     method: ['GET',],
@@ -411,22 +457,7 @@ module.exports.register = (server) => {
   server.route({
     method: ['GET',],
     path: '/api/users/{username}',
-    handler: (request, reply) => {
-      let {username,} = request.params
-      withDb(reply, (conn) => {
-        logger.debug(`Getting user '${username}'`)
-        return r.table('users').get(username).run(conn)
-          .then((user) => {
-            if (user != null) {
-              logger.debug(`Found user '${username}':`, user)
-              reply(user)
-            } else {
-              logger.debug(`Could not find user '${username}'`)
-              reply(Boom.notFound())
-            }
-          })
-      })
-    },
+    handler: getUser,
   })
   server.route({
     method: ['GET',],

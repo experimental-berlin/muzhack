@@ -80,13 +80,28 @@ let Plans = component('Plans', ({user, cursor,}) => {
   ])
 })
 
+let SoundCloudUpload = component('SoundCloudUpload', {
+  componentDidMount: function () {
+    let upload = this.props.upload
+    logger.debug(`SoundCloud upload did mount`, upload)
+    let uploadElem = this.refs.soundCloudUpload
+    logger.debug('Got SoundCloud upload element:', uploadElem)
+    uploadElem.innerHTML = upload.html
+  },
+}, () => {
+   return h('.soundcloud-upload', {ref: `soundCloudUpload`,})
+})
+
 let Media = component('Media', (user) => {
+  let soundCloud = user.soundCloud || {}
   return h('div', !R.isEmpty(user.soundCloudUploads) ? [
     h('h1#soundcloud-header', [
       h('span.icon-soundcloud', 'SoundCloud'),
     ]),
     h('p', `${S.words(user.name)[0]}'s sounds on SoundCloud`),
-    h('ul#soundcloud-uploads'),
+    h('ul#soundcloud-uploads', R.map((upload) => {
+      return h('li', [SoundCloudUpload({upload,}),])
+    }, soundCloud.uploads)),
   ] : null)
 })
 
@@ -145,11 +160,12 @@ module.exports.routeOptions = {
     let profileCursor = cursor.cursor('userProfile')
     let user = profileCursor.get('user').toJS()
     let currentHash = cursor.cursor('router').get('currentHash')
+    let soundCloud = user.soundCloud || {}
     let profileTabs = [
       new UserTab('Projects'),
       new UserTab('Plans'),
       new UserTab('About'),
-      new UserTab('Media', null, !R.isEmpty(user.soundCloudUploads || [])),
+      new UserTab('Media', null, !R.isEmpty(soundCloud.uploads || [])),
       new UserTab('Workshops', null, !S.isBlank(user.workshopsInfo)),
     ]
     let activeTab = R.contains(currentHash, R.map((tab) => {
