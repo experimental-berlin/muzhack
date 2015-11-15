@@ -4,12 +4,13 @@ let Boom = require('boom')
 let r = require('rethinkdb')
 
 module.exports.withDb = (reply, callback) => {
+  let host = process.env.RETHINKDB_HOST || 'localhost'
   r.connect({
-    host: process.env.RETHINKDB_HOST || 'localhost',
+    host,
     authKey: process.env.RETHINKDB_AUTH_KEY,
     db: 'muzhack',
   }).then((conn) => {
-    logger.debug(`Successfully connected to RethinkDB`)
+    logger.debug(`Successfully connected to RethinkDB host '${host}'`)
     logger.debug(`Invoking callback`)
     callback(conn).
       then(() => {
