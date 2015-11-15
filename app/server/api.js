@@ -1,10 +1,12 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('server.apis')
+let logger = require('js-logger-aknudsen').get('server.api')
 let AwsS3Form = require('aws-s3-form')
 let Boom = require('boom')
 let R = require('ramda')
+let S = require('underscore.string.fp')
 let moment = require('moment')
 let r = require('rethinkdb')
+let Aws = require('aws-sdk')
 
 let auth = require('./auth')
 let {withDb,} = require('./db')
@@ -25,6 +27,17 @@ class Project {
     this.files = files
     this.zipFile = zipFile
   }
+}
+
+let getS3Client = () => {
+  return new Aws.S3({
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    region: process.env.S3_REGION,
+    params: {
+      Bucket: process.env.S3_BUCKET,
+    },
+  })
 }
 
 module.exports.register = (server) => {
@@ -191,22 +204,85 @@ module.exports.register = (server) => {
         } else {
           let projectParams = request.payload
           logger.debug(`Received request to update project:`, projectParams)
-          let qualifiedProjectId = `${owner}/${request.params.id}`
-          withDb(reply, (conn) => {
-            return r.table('projects').get(qualifiedProjectId).replace(R.merge(projectParams, {
-              id: qualifiedProjectId,
-              owner: request.auth.credentials.username,
-              projectId: request.params.id,
-              ownerName: request.auth.credentials.name,
-              created: moment.utc().format(), // TODO
-              // TODO
-              zipFile: {
-                size: 0,
-              },
-            })).run(conn)
-              .then(() => {
-                reply()
+          let projectId = request.params.id
+          let qualifiedProjectId = `${owner}/${projectId}`
+          let s3Client = getS3Client()
+
+          let removeStaleFiles = (oldFiles, newFiles, fileType) => {
+            if (oldFiles == null) {
+              logger.debug(`Project has no old ${fileType}s - nothing to remove`)
+              return
+            }
+
+            let removedFiles = R.differenceWith(((a, b) => {
+              return a.url === b.url
+            }), oldFiles, newFiles)
+            if (!R.isEmpty(removedFiles)) {
+              logger.debug(
+                `Removing ${removedFiles.length} stale ${fileType}(s) (type: ${fileType}), old
+                files vs new files:`, oldFiles, newFiles)
+            } else {
+              logger.debug(`No ${fileType}s to remove`)
+              return
+            }
+
+            let filePaths = R.map((file) => {
+              let filePath = `u/${owner}/${projectId}/${fileType}s/${file.fullPath}`
+              return filePath
+            }, removedFiles)
+            let filePathsStr = S.join(', ', filePaths)
+            logger.debug(`Removing outdated ${fileType}s ${filePathsStr}`)
+            return new Promise((resolve, reject) => {
+              s3Client.deleteObjects({
+                Delete: {
+                  Objects: R.map((filePath) => {
+                    return {
+                      Key: filePath,
+                    }
+                  }, filePaths),
+                },
+              }, (error, data) => {
+                if (error == null) {
+                  resolve(data)
+                } else {
+                  reject(error)
+                }
               })
+            })
+              .then(() => {
+                logger.debug(`Successfully removed ${fileType}(s) ${filePathsStr}`)
+              }, (error) => {
+                logger.warn(`Failed to remove ${fileType}(s) ${filePathsStr}: '${error}'`)
+              })
+          }
+
+          withDb(reply, (conn) => {
+            return r.table('projects').get(qualifiedProjectId).run(conn)
+              .then((project) => {
+                let removeStalePromises = [
+                  removeStaleFiles(project.pictures, projectParams.pictures, 'picture'),
+                  removeStaleFiles(project.files, projectParams.files, 'file'),
+                ]
+                return Promise.all(removeStalePromises)
+                  .then(() => {
+                    logger.debug(`Updating project in database`)
+                    return r.table('projects').get(qualifiedProjectId).replace(R.merge(projectParams, {
+                      id: qualifiedProjectId,
+                      owner: request.auth.credentials.username,
+                      projectId: request.params.id,
+                      ownerName: request.auth.credentials.name,
+                      created: moment.utc().format(), // TODO
+                      // TODO
+                      zipFile: {
+                        size: 0,
+                      },
+                    })).run(conn)
+                      .then(() => {
+                        logger.debug(`Project successfully updated in database`)
+                        reply()
+                      })
+                  })
+            })
           })
         }
       },

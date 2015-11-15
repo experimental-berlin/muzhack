@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "aws-s3-form": "^0.3.2",
+    "aws-sdk": "^2.2.17",
     "bcrypt": "^0.8.5",
     "falcor-hapi": "0.0.2",
     "grunt": "^0.4.5",
