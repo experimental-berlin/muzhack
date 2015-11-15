@@ -21,7 +21,7 @@ module.exports.withDb = (reply, callback) => {
         reply(Boom.badImplementation())
       })
   }, (error) => {
-    logger.warn(`Failed to connect to RethinkDB: '${err}'`)
+    logger.warn(`Failed to connect to RethinkDB: '${error}'`)
     reply(Boom.badImplementation())
   })
 }
