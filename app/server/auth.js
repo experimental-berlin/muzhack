@@ -8,7 +8,9 @@ let r = require('rethinkdb')
 let R = require('ramda')
 
 let logUserIn = (request, user) => {
-  request.auth.session.set({username: request.payload.username, name: user.name,})
+  let username = request.payload.username
+  request.auth.session.set({username: username, name: user.name,})
+  logger.debug(`Successfully logged user '${username}' in`)
 }
 
 module.exports.getLoggedInUser = (request) => {
