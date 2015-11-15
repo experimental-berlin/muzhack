@@ -68,7 +68,12 @@ let downloadResource = (url) => {
   })
 }
 
-let createZip = (owner, projectParams) => {
+let createZip = (owner, projectId, projectParams) => {
+  if (R.isEmpty(projectParams.files)) {
+    logger.debug(`There are no files, not generating zip`)
+    return Promise.resolve(null)
+  }
+
   logger.debug('Generating zip...')
   let s3Client = getS3Client()
   // TODO: Async
@@ -91,7 +96,7 @@ let createZip = (owner, projectParams) => {
       })
 
       logger.debug(`Uploading zip file to S3...`)
-      let filePath = `u/${owner}/${projectParams.id}/${projectParams.id}.zip`
+      let filePath = `u/${owner}/${projectId}/${projectId}.zip`
       return new Promise((resolve, reject) => {
         s3Client.putObject({
           Key: filePath,
@@ -102,8 +107,12 @@ let createZip = (owner, projectParams) => {
             //  TODO: Try to get URL from S3
             let region = process.env.S3_REGION
             let bucket = process.env.S3_BUCKET
-            logger.debug(`Uploaded zip file successfully`)
-            resolve([`https://s3.${region}.amazonaws.com/${bucket}/${filePath}`, output.length,])
+            let zipUrl = `https://s3.${region}.amazonaws.com/${bucket}/${filePath}`
+            logger.debug(`Uploaded zip file successfully to '${zipUrl}'`)
+            resolve({
+              url: zipUrl,
+              size: output.length,
+            })
           } else {
             logger.warn(`Failed to upload zip file: '${error}':`, error.stack)
             reject(error)
@@ -127,19 +136,15 @@ let createProject = (request, reply) => {
   } else {
     let qualifiedProjectId = `${owner}/${projectParams.id}`
     projectParams.projectId = projectParams.id
+    // verifyLicense(projectParams)
 
-    createZip(owner, projectParams)
-      .then(([zipUrl, zipSize]) => {
-        // verifyLicense(license)
-
+    createZip(owner, projectParams.id, projectParams)
+      .then((zipFile) => {
         let project = new Project(R.merge(projectParams, {
           owner: request.auth.credentials.username,
           ownerName: request.auth.credentials.name,
           created: moment.utc().format(),
-          zipFile: {
-            url: zipUrl,
-            size: zipSize,
-          },
+          zipFile,
         }))
         withDb(reply, (conn) => {
           logger.debug(`Creating project '${qualifiedProjectId}':`, project)
@@ -157,6 +162,100 @@ let createProject = (request, reply) => {
         logger.warn(`Failed to generate zip: ${error}:`, error.stack)
         throw new Error(error)
       })
+  }
+}
+
+let updateProject = (request, reply) => {
+  let owner = request.params.owner
+  if (owner !== request.auth.credentials.username) {
+    reply(Boom.unauthorized(
+      `You are not allowed to update projects for others than your own user`))
+  } else {
+    let projectParams = request.payload
+    // verifyLicense(projectParams)
+    let projectId = request.params.id
+    let qualifiedProjectId = `${owner}/${projectId}`
+    logger.debug(`Received request to update project '${qualifiedProjectId}':`, projectParams)
+    let s3Client = getS3Client()
+
+    let removeStaleFiles = (oldFiles, newFiles, fileType) => {
+      if (oldFiles == null) {
+        logger.debug(`Project has no old ${fileType}s - nothing to remove`)
+        return
+      }
+
+      let removedFiles = R.differenceWith(((a, b) => {
+        return a.url === b.url
+      }), oldFiles, newFiles)
+      if (!R.isEmpty(removedFiles)) {
+        logger.debug(
+          `Removing ${removedFiles.length} stale ${fileType}(s) (type: ${fileType}), old
+          files vs new files:`, oldFiles, newFiles)
+      } else {
+        logger.debug(`No ${fileType}s to remove`)
+        return
+      }
+
+      let filePaths = R.map((file) => {
+        let filePath = `u/${owner}/${projectId}/${fileType}s/${file.fullPath}`
+        return filePath
+      }, removedFiles)
+      let filePathsStr = S.join(', ', filePaths)
+      logger.debug(`Removing outdated ${fileType}s ${filePathsStr}`)
+      return new Promise((resolve, reject) => {
+        s3Client.deleteObjects({
+          Delete: {
+            Objects: R.map((filePath) => {
+              return {
+                Key: filePath,
+              }
+            }, filePaths),
+          },
+        }, (error, data) => {
+          if (error == null) {
+            resolve(data)
+          } else {
+            reject(error)
+          }
+        })
+      })
+        .then(() => {
+          logger.debug(`Successfully removed ${fileType}(s) ${filePathsStr}`)
+        }, (error) => {
+          logger.warn(`Failed to remove ${fileType}(s) ${filePathsStr}: '${error}':`,
+            error.stack)
+        })
+    }
+
+    createZip(owner, projectId, projectParams)
+      .then((zipFile) => {
+        withDb(reply, (conn) => {
+          return r.table('projects').get(qualifiedProjectId).run(conn)
+            .then((project) => {
+              let removeStalePromises = [
+                removeStaleFiles(project.pictures, projectParams.pictures, 'picture'),
+                removeStaleFiles(project.files, projectParams.files, 'file'),
+              ]
+              return Promise.all(removeStalePromises)
+                .then(() => {
+                  logger.debug(`Updating project in database`)
+                  return r.table('projects').get(qualifiedProjectId)
+                    .replace(R.merge(projectParams, {
+                      id: qualifiedProjectId,
+                      owner: request.auth.credentials.username,
+                      projectId: request.params.id,
+                      ownerName: request.auth.credentials.name,
+                      created: moment.utc().format(), // TODO
+                      zipFile,
+                    })).run(conn)
+                      .then(() => {
+                        logger.debug(`Project successfully updated in database`)
+                        reply()
+                      })
+                })
+          })
+        })
+    })
   }
 }
 
@@ -283,97 +382,7 @@ module.exports.register = (server) => {
     path: '/api/projects/{owner}/{id}',
     config: {
       auth: 'session',
-      handler: (request, reply) => {
-        let owner = request.params.owner
-        if (owner !== request.auth.credentials.username) {
-          reply(Boom.unauthorized(
-            `You are not allowed to update projects for others than your own user`))
-        } else {
-          let projectParams = request.payload
-          logger.debug(`Received request to update project:`, projectParams)
-          let projectId = request.params.id
-          let qualifiedProjectId = `${owner}/${projectId}`
-          let s3Client = getS3Client()
-
-          let removeStaleFiles = (oldFiles, newFiles, fileType) => {
-            if (oldFiles == null) {
-              logger.debug(`Project has no old ${fileType}s - nothing to remove`)
-              return
-            }
-
-            let removedFiles = R.differenceWith(((a, b) => {
-              return a.url === b.url
-            }), oldFiles, newFiles)
-            if (!R.isEmpty(removedFiles)) {
-              logger.debug(
-                `Removing ${removedFiles.length} stale ${fileType}(s) (type: ${fileType}), old
-                files vs new files:`, oldFiles, newFiles)
-            } else {
-              logger.debug(`No ${fileType}s to remove`)
-              return
-            }
-
-            let filePaths = R.map((file) => {
-              let filePath = `u/${owner}/${projectId}/${fileType}s/${file.fullPath}`
-              return filePath
-            }, removedFiles)
-            let filePathsStr = S.join(', ', filePaths)
-            logger.debug(`Removing outdated ${fileType}s ${filePathsStr}`)
-            return new Promise((resolve, reject) => {
-              s3Client.deleteObjects({
-                Delete: {
-                  Objects: R.map((filePath) => {
-                    return {
-                      Key: filePath,
-                    }
-                  }, filePaths),
-                },
-              }, (error, data) => {
-                if (error == null) {
-                  resolve(data)
-                } else {
-                  reject(error)
-                }
-              })
-            })
-              .then(() => {
-                logger.debug(`Successfully removed ${fileType}(s) ${filePathsStr}`)
-              }, (error) => {
-                logger.warn(`Failed to remove ${fileType}(s) ${filePathsStr}: '${error}':`,
-                  error.stack)
-              })
-          }
-
-          withDb(reply, (conn) => {
-            return r.table('projects').get(qualifiedProjectId).run(conn)
-              .then((project) => {
-                let removeStalePromises = [
-                  removeStaleFiles(project.pictures, projectParams.pictures, 'picture'),
-                  removeStaleFiles(project.files, projectParams.files, 'file'),
-                ]
-                return Promise.all(removeStalePromises)
-                  .then(() => {
-                    logger.debug(`Updating project in database`)
-                    return r.table('projects').get(qualifiedProjectId).replace(R.merge(projectParams, {
-                      id: qualifiedProjectId,
-                      owner: request.auth.credentials.username,
-                      projectId: request.params.id,
-                      ownerName: request.auth.credentials.name,
-                      created: moment.utc().format(), // TODO
-                      // TODO
-                      zipFile: {
-                        size: 0,
-                      },
-                    })).run(conn)
-                      .then(() => {
-                        logger.debug(`Project successfully updated in database`)
-                        reply()
-                      })
-                  })
-            })
-          })
-        }
-      },
+      handler: updateProject,
     },
   })
   server.route({
