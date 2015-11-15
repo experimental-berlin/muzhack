@@ -105,7 +105,7 @@ let EditProjectPad = component('EditProjectPad', (cursor) => {
         onClick: () => {
           logger.debug(`Save button clicked`)
           editCursor = editCursor.mergeDeep({
-            isWaiting: true,
+            isWaiting: 'Saving project...',
           })
           try {
             editProject(cursor)
@@ -131,7 +131,7 @@ let EditProjectPad = component('EditProjectPad', (cursor) => {
           logger.debug(`Asked to remove project`)
           // TODO: Ask user for confirmation
           let project = cursor.cursor(['editProject', 'project',]).toJS()
-          editCursor = editCursor.set('isWaiting', true)
+          editCursor = editCursor.set('isWaiting', 'Removing project...')
           let qualifiedProjectId = `${project.owner}/${project.projectId}`
           ajax.delete(`projects/${project.owner}/${project.projectId}`)
             .then(() => {

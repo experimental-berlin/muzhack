@@ -21,44 +21,54 @@ module.exports = (project, specificCursor, cursor) => {
       picturesPromise = pictureDropzone.processFiles(queuedPictures, {
         metadata: fileMetadata,
         progressCallback: (path) => {
-          logger.debug(`progressCallback for pictures invoked:`, arguments)
+          logger.debug(`progressCallback for pictures invoked: '${path}'`)
           specificCursor = specificCursor.set('isWaiting', `Uploading picture ${path}...`)
         },
       })
     } else {
       picturesPromise = new Promise((resolve) => resolve([]))
     }
-    picturesPromise
-      .catch((error) => {
-        logger.error(logger, `Uploading pictures failed: ${error}`)
-        notificationService.warn(`Error`, `Uploading pictures failed`)
-      })
-    if (!R.isEmpty(queuedFiles)) {
-      logger.debug(`Processing ${queuedFiles.length} file(s)`)
-      let fileDropzone = getFileDropzone()
-      filesPromise = fileDropzone.processFiles(queuedFiles, {
-        metadata: fileMetadata,
-        progressCallback: (path) => {
-          logger.debug(`progressCallback for files invoked:`, arguments)
-          specificCursor.set('isWaiting', `Uploading file ${path}...`)
-        },
-      })
-    } else {
-      filesPromise = new Promise((resolve) => resolve([]))
-    }
-    filesPromise
-      .catch((error) => {
-        logger.error(logger, `Uploading files failed: ${error}`)
-        notificationService.warn(`Error`, `Uploading files failed`)
+    return picturesPromise
+      .then((uploadedPictures) => {
+        logger.debug(`Finished uploading pictures - moving on to files:`, uploadedPictures)
+        let filesPromise
+        if (!R.isEmpty(queuedFiles)) {
+          logger.debug(`Processing ${queuedFiles.length} file(s)`)
+          let fileDropzone = getFileDropzone()
+          filesPromise = fileDropzone.processFiles(queuedFiles, {
+            metadata: fileMetadata,
+            progressCallback: (path) => {
+              logger.debug(`progressCallback for files invoked: '${path}'`)
+              specificCursor.set('isWaiting', `Uploading file ${path}...`)
+            },
+          })
+        } else {
+          logger.debug(`No files to upload`)
+          filesPromise = new Promise((resolve) => resolve([]))
+        }
+        return filesPromise
+          .then((uploadedFiles) => {
+            logger.debug(`Finished uploading files:`, uploadedFiles)
+            return [uploadedPictures, uploadedFiles,]
+          }, (error) => {
+            logger.error(logger, `Uploading files failed: ${error}:`, error.stack)
+            // notificationService.warn(`Error`, `Uploading files failed`)
+          })
+          .then((args) => {
+            logger.debug(`Args of filesPromise`, args)
+            return args
+          })
+      }, (error) => {
+        logger.error(logger, `Uploading pictures failed: ${error}:`, error.stack)
+        // notificationService.warn(`Error`, `Uploading pictures failed`)
       })
 
-    return [picturesPromise, filesPromise,]
+    return picturesPromise
   }
 
   let [title, description, instructions, tags, licenseId, username, queuedPictures,
     queuedFiles,] = getParameters(project, cursor)
-  let [picturesPromise, filesPromise,] = uploadFiles()
-  return Promise.all([picturesPromise, filesPromise,])
+  return uploadFiles()
     .then(([uploadedPictures, uploadedFiles,]) => {
       logger.info(`Saving project to server...`)
       let transformFiles = R.map(R.pick(['width', 'height', 'size', 'url', 'name', 'type',
