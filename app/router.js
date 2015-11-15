@@ -327,7 +327,9 @@ module.exports = {
     })
     ajax.getJson('initialData').then((data) => {
       logger.debug(`Received initial data:`, data)
-      cursor.set('loggedInUser', data.user)
+      cursor.mergeDeep({
+        loggedInUser: data.user,
+      })
       perform(true)
     }, () => {
       logger.warn(`Failed to receive initial data`)
