@@ -10,6 +10,7 @@ let Aws = require('aws-sdk')
 let JSZip = require('jszip')
 let request = require('request')
 
+let licenses = require('../licenses')
 let auth = require('./auth')
 let {withDb,} = require('./db')
 
@@ -28,6 +29,12 @@ class Project {
     this.instructions = instructions
     this.files = files
     this.zipFile = zipFile
+  }
+}
+
+let verifyLicense = (projectParams) => {
+  if (licenses[projectParams.licenseId] == null) {
+    throw new Error(`Invalid license '${projectParams.licenseId}'`)
   }
 }
 
@@ -136,7 +143,7 @@ let createProject = (request, reply) => {
   } else {
     let qualifiedProjectId = `${owner}/${projectParams.id}`
     projectParams.projectId = projectParams.id
-    // verifyLicense(projectParams)
+    verifyLicense(projectParams)
 
     createZip(owner, projectParams.id, projectParams)
       .then((zipFile) => {
@@ -172,7 +179,7 @@ let updateProject = (request, reply) => {
       `You are not allowed to update projects for others than your own user`))
   } else {
     let projectParams = request.payload
-    // verifyLicense(projectParams)
+    verifyLicense(projectParams)
     let projectId = request.params.id
     let qualifiedProjectId = `${owner}/${projectId}`
     logger.debug(`Received request to update project '${qualifiedProjectId}':`, projectParams)
