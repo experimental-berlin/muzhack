@@ -22,13 +22,14 @@ require('../dropzone.scss')
 require('../dropzone.styl')
 
 let createProject = (cursor) => {
-  let input = cursor.cursor('createProject').toJS()
+  let createCursor = cursor.cursor('createProject')
+  let input = createCursor.toJS()
   let username = cursor.get('loggedInUser').username
   let inputExtended = R.merge(input, {
     projectId: input.id,
     owner: username,
   })
-  uploadProject(inputExtended, cursor)
+  uploadProject(inputExtended, createCursor, cursor)
     .then(({title, description, instructions, tags, licenseId, username, pictureFiles, files,}) => {
       logger.debug(`Picture files:`, pictureFiles)
       logger.debug(`Files:`, files)
@@ -45,6 +46,7 @@ let createProject = (cursor) => {
         files,
       }
       logger.debug(`Creating project '${qualifiedProjectId}'...:`, data)
+      cursor.cursor('createProject').set('isWaiting', 'Saving project...')
       ajax.postJson(`projects/${username}`, data)
         .then(() => {
           logger.info(`Successfully created project '${qualifiedProjectId}' on server`)
@@ -125,7 +127,7 @@ let CreateProjectPad = component('CreateProjectPad', (cursor) => {
       h('button#create-project.pure-button.pure-button-primary', {
         onClick: () => {
           logger.debug(`Create button clicked`, createCursor)
-          createCursor = createCursor.set('isWaiting', true)
+          createCursor = createCursor.set('isWaiting', 'Creating project...')
           try {
             createProject(cursor)
           } catch (error) {
@@ -152,7 +154,7 @@ module.exports.routeOptions = {
     if (!createCursor.get('isWaiting')) {
       return CreateProjectPad(cursor)
     } else {
-      return Loading()
+      return Loading(createCursor)
     }
   },
   loadData: (cursor) => {

@@ -75,10 +75,10 @@ let getFolder = (file) => {
 
 class DropzoneService {
   createDropzone(cssId, forPictures, existingFiles) {
-    let uploadFiles = (files, data) => {
+    let uploadFiles = (files, {metadata, progressCallback,}) => {
       let processedFiles = []
-      let s3Folder = `${data.projectId}/files`
-      if (data.owner == null || data.projectId == null) {
+      let s3Folder = `${metadata.projectId}/files`
+      if (metadata.owner == null || metadata.projectId == null) {
         throw new Error('data is missing owner/projectId')
       }
 
@@ -139,6 +139,8 @@ class DropzoneService {
 
       let uploadOneFile = (resolve, reject) => {
         let file = files.shift()
+        logger.debug(`Uploading file:`, file)
+        progressCallback(file.fullPath)
         realUploadFile(file, resolve, reject, 0)
       }
 
@@ -152,11 +154,11 @@ class DropzoneService {
         })
     }
 
-    let uploadPictures = (files, data) => {
+    let uploadPictures = (files, {metadata, progressCallback,}) => {
       let pictureDatas = []
       let pictures = []
-      let s3Folder = `${data.projectId}/pictures`
-      if (data.owner == null || data.projectId == null) {
+      let s3Folder = `${metadata.projectId}/pictures`
+      if (metadata.owner == null || metadata.projectId == null) {
         throw new Error('data is missing owner/projectId')
       }
 
@@ -255,6 +257,7 @@ class DropzoneService {
         let [file, type, b64,] = pictureDatas.shift()
         let blob = b64ToBlob(b64, type)
         blob.name = file.name
+        progressCallback(file.fullPath)
         uploadPicture(blob, file, type, resolve, reject, 0)
       }
 

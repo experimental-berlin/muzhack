@@ -5,7 +5,7 @@ let S = require('underscore.string.fp')
 
 let {getParameters, getPictureDropzone, getFileDropzone,} = require('./editors')
 
-module.exports = (project, cursor) => {
+module.exports = (project, specificCursor, cursor) => {
   let uploadFiles = () => {
     if (project.owner == null || project.projectId == null) {
       throw new Error(`project.owner and/or project.projectId are null`)
@@ -16,10 +16,15 @@ module.exports = (project, cursor) => {
     }
 
     let picturesPromise
-    let pictureDropzone = getPictureDropzone()
-    let fileDropzone = getFileDropzone()
     if (!R.isEmpty(queuedPictures)) {
-      picturesPromise = pictureDropzone.processFiles(queuedPictures, fileMetadata)
+      let pictureDropzone = getPictureDropzone()
+      picturesPromise = pictureDropzone.processFiles(queuedPictures, {
+        metadata: fileMetadata,
+        progressCallback: (path) => {
+          logger.debug(`progressCallback for pictures invoked:`, arguments)
+          specificCursor = specificCursor.set('isWaiting', `Uploading picture ${path}...`)
+        },
+      })
     } else {
       picturesPromise = new Promise((resolve) => resolve([]))
     }
@@ -30,7 +35,14 @@ module.exports = (project, cursor) => {
       })
     if (!R.isEmpty(queuedFiles)) {
       logger.debug(`Processing ${queuedFiles.length} file(s)`)
-      filesPromise = fileDropzone.processFiles(queuedFiles, fileMetadata)
+      let fileDropzone = getFileDropzone()
+      filesPromise = fileDropzone.processFiles(queuedFiles, {
+        metadata: fileMetadata,
+        progressCallback: (path) => {
+          logger.debug(`progressCallback for files invoked:`, arguments)
+          specificCursor.set('isWaiting', `Uploading file ${path}...`)
+        },
+      })
     } else {
       filesPromise = new Promise((resolve) => resolve([]))
     }
@@ -49,14 +61,14 @@ module.exports = (project, cursor) => {
   return Promise.all([picturesPromise, filesPromise,])
     .then(([uploadedPictures, uploadedFiles,]) => {
       logger.info(`Saving project to server...`)
-      let pictureDropzone = getPictureDropzone()
-      let fileDropzone = getFileDropzone()
       let transformFiles = R.map(R.pick(['width', 'height', 'size', 'url', 'name', 'type',
         'fullPath',]))
+      let pictureDropzone = getPictureDropzone()
       let pictureFiles = R.concat(
         transformFiles(pictureDropzone.getExistingFiles()),
         transformFiles(uploadedPictures)
       )
+      let fileDropzone = getFileDropzone()
       let files = R.concat(
         transformFiles(fileDropzone.getExistingFiles()),
         transformFiles(uploadedFiles)
