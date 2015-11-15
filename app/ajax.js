@@ -61,4 +61,7 @@ module.exports = {
   putJson: (path, payload) => {
     return ajax('put', path, null, payload)
   },
+  delete: (path) => {
+    return ajax('delete', path)
+  },
 }

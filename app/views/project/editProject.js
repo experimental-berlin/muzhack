@@ -124,6 +124,25 @@ let EditProjectPad = component('EditProjectPad', (cursor) => {
           router.goTo(`/u/${project.owner}/${project.projectId}`)
         },
       }, 'Cancel'),
+      h('a#remove-project', {
+        href: '#',
+        onClick: () => {
+          logger.debug(`Asked to remove project`)
+          // TODO: Ask user for confirmation
+          let project = cursor.cursor(['editProject', 'project',]).toJS()
+          editCursor = editCursor.set('isWaiting', true)
+          let qualifiedProjectId = `${project.owner}/${project.projectId}`
+          ajax.delete(`projects/${project.owner}/${project.projectId}`)
+            .then(() => {
+              logger.debug(`Project successfully deleted '${qualifiedProjectId}'`)
+              router.goTo('/')
+            }, (error) => {
+              logger.warn(`Failed to delete project '${qualifiedProjectId}': ${error}`)
+              // TODO Notify
+              editCursor.set('isWaiting', false)
+            })
+        },
+      }, 'Remove this project'),
     ]),
   ])
 })

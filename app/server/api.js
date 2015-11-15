@@ -4,8 +4,31 @@ let AwsS3Form = require('aws-s3-form')
 let Boom = require('boom')
 let R = require('ramda')
 let moment = require('moment')
+let r = require('rethinkdb')
 
 let auth = require('./auth')
+
+let withDb = (reply, callback) => {
+  r.connect({
+    host: process.env.RETHINKDB_HOST || 'localhost',
+    authKey: process.env.RETHINKDB_AUTH_KEY,
+    db: 'muzhack',
+  }).then((conn) => {
+    logger.debug(`Successfully connected to RethinkDB`)
+    logger.debug(`Invoking callback`)
+    callback(conn).
+      then(() => {
+        conn.close()
+      }, (error) => {
+        conn.close()
+        logger.warn(`There was an error in the callback of withDb: '${error}'`)
+        reply(Boom.badImplementation())
+      })
+  }, (error) => {
+    logger.warn(`Failed to connect to RethinkDB: '${err}'`)
+    reply(Boom.badImplementation())
+  })
+}
 
 class Project {
   constructor({projectId, tags, owner, ownerName, title, created, pictures, licenseId,
@@ -25,26 +48,6 @@ class Project {
   }
 }
 
-let projects = {
-  'aknudsen/test': new Project({
-   projectId: 'test',
-   tags: ['notam', '3dprint',],
-   owner: 'aknudsen',
-   ownerName: 'Arve Knudsen',
-   title: 'Test',
-   created: '2015-11-04',
-   pictures: [],
-   licenseId: 'cc-by-4.0',
-   description: `#Description`,
-   instructions: `#Instructions`,
-   files: [],
-   zipFile: {
-     size: 80,
-     url: 'example.com',
-   },
- }),
-}
-
 module.exports.register = (server) => {
   server.route({
     method: ['GET',],
@@ -60,11 +63,16 @@ module.exports.register = (server) => {
     method: ['GET',],
     path: '/api/search',
     handler: (request, reply) => {
-      logger.debug(`Searching for '${request.query.query}' among`, projects)
+      logger.debug(`Searching for '${request.query.query}'`)
       let re = new RegExp(request.query.query, 'i')
-      reply(R.filter((x) => {
-        return re.test(x.projectId) || re.test(x.title) || re.test(x.owner)
-      }, R.values(projects)))
+      withDb(reply, (conn) => {
+        return r.table('projects').filter((x) => {
+          return re.test(x.projectId) || re.test(x.title) || re.test(x.owner)
+        }).run(conn)
+          .then((projects) => {
+            reply(projects.toArray())
+          })
+      })
     },
   })
   server.route({
@@ -74,9 +82,18 @@ module.exports.register = (server) => {
       let {owner, projectId,} = request.params
       let qualifiedProjectId = `${owner}/${projectId}`
       logger.debug(`Getting project '${qualifiedProjectId}'`)
-      let project = projects[qualifiedProjectId]
-      logger.debug(`Returning project:`, project)
-      reply(project)
+      withDb(reply, (conn) => {
+        return r.table('projects').get(qualifiedProjectId).run(conn)
+          .then((project) => {
+            if (project != null) {
+              logger.debug(`Found project '${qualifiedProjectId}':`, project)
+              reply(project)
+            } else {
+              logger.debug(`Could not find project '${qualifiedProjectId}'`)
+              reply(Boom.notFound())
+            }
+          })
+      })
     },
   })
   server.route({
@@ -162,11 +179,23 @@ Arve has no workshops planned at this moment.`,
             owner: request.auth.credentials.username,
             ownerName: request.auth.credentials.name,
             created: moment.utc().format(),
+            // TODO
+            zipFile: {
+              size: 0,
+            },
           }))
-          logger.debug(`Creating project '${qualifiedProjectId}':`, project)
-          projects[qualifiedProjectId] = project
-          logger.debug('Projects:', projects)
-          reply()
+          withDb(reply, (conn) => {
+            logger.debug(`Creating project '${qualifiedProjectId}':`, project)
+            return r.table('projects')
+              .get(qualifiedProjectId)
+              .replace(R.merge(project, {
+                id: qualifiedProjectId,
+              }))
+              .run(conn)
+              .then(() => {
+                reply()
+              })
+          })
         }
       },
     },
@@ -185,17 +214,48 @@ Arve has no workshops planned at this moment.`,
           let projectParams = request.payload
           logger.debug(`Received request to update project:`, projectParams)
           let qualifiedProjectId = `${owner}/${request.params.id}`
-          projects[qualifiedProjectId] = new Project(R.merge(projectParams, {
-            owner: request.auth.credentials.username,
-            projectId: request.params.id,
-            ownerName: request.auth.credentials.name,
-            created: moment.utc().format(), // TODO
-          }))
-          logger.debug('Projects:', projects)
-          reply()
+          withDb(reply, (conn) => {
+            return r.table('projects').get(qualifiedProjectId).replace(R.merge(projectParams, {
+              id: qualifiedProjectId,
+              owner: request.auth.credentials.username,
+              projectId: request.params.id,
+              ownerName: request.auth.credentials.name,
+              created: moment.utc().format(), // TODO
+              // TODO
+              zipFile: {
+                size: 0,
+              },
+            })).run(conn)
+              .then(() => {
+                reply()
+              })
+          })
         }
       },
     },
   })
-
+  server.route({
+    method: ['DELETE',],
+    path: '/api/projects/{owner}/{id}',
+    config: {
+      auth: 'session',
+      handler: (request, reply) => {
+        let owner = request.params.owner
+        let qualifiedProjectId = `${owner}/${request.params.id}`
+        logger.debug(`Received request to delete project '${qualifiedProjectId}'`)
+        if (owner !== request.auth.credentials.username) {
+          reply(Boom.unauthorized(
+            `You are not allowed to delete projects for others than your own user`))
+        } else {
+          withDb(reply, (conn) => {
+            return r.table('projects').get(qualifiedProjectId).delete().run(conn)
+              .then(() => {
+                logger.debug(`Project '${qualifiedProjectId}' successfully deleted`)
+                reply()
+              })
+          })
+        }
+      },
+    },
+  })
 }
