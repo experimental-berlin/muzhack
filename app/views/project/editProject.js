@@ -18,8 +18,9 @@ let uploadProject = require('./uploadProject')
 require('./editProject.styl')
 
 let editProject = (cursor) => {
-  let editProject = cursor.cursor('editProject').toJS()
-  uploadProject(editProject.project, cursor)
+  let editCursor = cursor.cursor('editProject')
+  let editProject = editCursor.toJS()
+  uploadProject(editProject.project, editCursor, cursor)
     .then(({title, description, instructions, tags, licenseId, username, pictureFiles, files,}) => {
       logger.debug(`Picture files:`, pictureFiles)
       logger.debug(`Files:`, files)
@@ -40,12 +41,12 @@ let editProject = (cursor) => {
           logger.info(`Successfully updated project '${qualifiedProjectId}' on server`)
           router.goTo(`/u/${qualifiedProjectId}`)
         }, (error) => {
-          cursor.cursor('editProject').set('isWaiting', false)
+          editCursor = editCursor.set('isWaiting', false)
           logger.warn(`Failed to update project '${qualifiedProjectId}' on server: ${reason}`)
         })
       }, (error) => {
         logger.warn(`Uploading files/pictures failed: ${error}`, error.stack)
-        cursor.cursor('editProject').set('isWaiting', false)
+        editCursor = editCursor.set('isWaiting', false)
       })
 }
 
@@ -158,7 +159,7 @@ module.exports = {
       if (!cursor.cursor('editProject').get('isWaiting')) {
         return EditProjectPad(cursor)
       } else {
-        return Loading()
+        return Loading(cursor.cursor('editProject'))
       }
     },
     loadData: (cursor, params) => {
