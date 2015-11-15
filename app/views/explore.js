@@ -26,9 +26,8 @@ let setSearch = (cursor, text) => {
 
 let createProjectElement = (cursor) => {
   let project = cursor.toJS()
-  // let thumbnail = if !R.isEmpty(project.pictures || []) then project.pictures[0].url else \
-  //     '/images/revox-reel-to-reel-resized.jpg'
-  let thumbnail = 'https://s3-eu-central-1.amazonaws.com/muzhack.com/u/aknudsen/bowsense/pictures/bowsense1.png'
+  let thumbnail = !R.isEmpty(project.pictures || []) ? project.pictures[0].url :
+    '/images/revox-reel-to-reel-resized.jpg'
   return $(`<div class=\"project-item\" data-id=\"${getQualifiedId(project)}\">
     <a href=\"/u/${project.owner}/${project.projectId}\">
       <div class=\"project-item-header\">
