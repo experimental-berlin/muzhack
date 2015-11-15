@@ -288,8 +288,15 @@ module.exports.register = (server) => {
           // TODO Fix
           return re.test(x.projectId) || re.test(x.title) || re.test(x.owner)
         }).run(conn)
-          .then((projects) => {
-            reply(projects.toArray())
+          .then((projectsCursor) => {
+            projectsCursor.toArray()
+              .then((projects) => {
+                logger.debug(`Found ${projects.length} project(s):`, projects)
+                reply(projects)
+              }, (error) => {
+                logger.warn(`Failed to iterate projects: '${error}'`, error.stack)
+                reply(boom.badImplementation())
+              })
           })
       })
     },

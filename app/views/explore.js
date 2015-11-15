@@ -18,7 +18,6 @@ let getQualifiedId = (project) => {
   return `${project.owner}/${project.projectId}`
 }
 
-let searchTimeoutHandle = null
 let setSearch = (cursor, text) => {
   logger.debug(`Setting search to '${text}'`)
   cursor.cursor('explore').set('search', text)
@@ -159,6 +158,7 @@ module.exports = {
           return {
             isSearching: false,
             explore: {
+              search: '',
               projects,
             },
           }

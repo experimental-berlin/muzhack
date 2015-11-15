@@ -54,7 +54,7 @@ lb:
   roles:
     - global
   deployment_strategy: high_availability
-logspout:
+logspout-muzhack-staging:
   image: gliderlabs/logspout
   command: syslog://logs3.papertrailapp.com:19740
   tags:
@@ -67,11 +67,12 @@ rethinkdb-tunnel:
   image: aknudsen/ssh
   tags:
     - muzhack-rethinkdb-tunnel
+  target_num_containers: 2
   environment:
     - RETHINKDB_SSH_HOST
   command: -v -T -N -L *:28015:localhost:28015 root@188.166.16.45
-  expose:
-    - "28015"
+  ports:
+    - "28015:28015"
   volumes:
     - /root/.ssh:/root/.ssh:ro
   restart: always
