@@ -128,7 +128,7 @@ module.exports.register = (server) => {
             website: payload.website || null,
             projects: [],
             projectPlans: [],
-            about: payload.about,
+            about: payload.about || null,
           }
           withDb(reply, (conn) => {
             return r.table('users')
