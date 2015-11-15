@@ -401,10 +401,11 @@ module.exports.register = (server) => {
       auth: 'session',
       handler: (request, reply) => {
         let removeFolder = () => {
+          let dirPath = `u/${owner}/${request.params.id}`
           logger.debug(`Removing folder '${dirPath}'...`)
           logger.debug(`Listing folder contents...`)
           return new Promise((resolve, reject) => {
-            s3Client.listObjects({Prefix: dirPath}, (error, data) => {
+            s3Client.listObjects({Prefix: `${dirPath}/`}, (error, data) => {
               if (error == null) {
                 resolve(data.Contents)
               } else {
@@ -454,7 +455,6 @@ module.exports.register = (server) => {
         let s3Client = getS3Client()
         let owner = request.params.owner
         let qualifiedProjectId = `${owner}/${request.params.id}`
-        let dirPath = `u/${owner}/${request.params.id}`
 
         logger.debug(`Received request to delete project '${qualifiedProjectId}'`)
         if (owner !== request.auth.credentials.username) {
