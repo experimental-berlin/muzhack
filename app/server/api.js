@@ -9,6 +9,7 @@ let r = require('rethinkdb')
 let Aws = require('aws-sdk')
 let JSZip = require('jszip')
 let request = require('request')
+let CryptoJs = require('crypto-js')
 
 let licenses = require('../licenses')
 let auth = require('./auth')
@@ -267,6 +268,53 @@ let updateProject = (request, reply) => {
   }
 }
 
+let verifyDiscourseSso = (request, reply) => {
+  let {payload, sig,} = request.payload
+  logger.debug(`Verifying Discourse SSO parameters`)
+  let user = request.auth.credentials
+  let envParams = {}
+  try {
+    R.forEach((key) => {
+      let value = process.env[key]
+      if (value == null) {
+        throw new Error(`${key} not defined in settings`)
+      } else {
+        envParams[key] = value
+      }
+    }, ['SSO_SECRET', 'DISCOURSE_URL',])
+  } catch (error) {
+    logger.error(error)
+    reply(Boom.badImplementation())
+    return
+  }
+
+  let secret = envParams.SSO_SECRET
+  let discourseUrl = envParams.DISCOURSE_URL
+  logger.debug(`Calling Hmac:`, {payload, secret,})
+  let gotSig = CryptoJs.HmacSHA256(payload, secret).toString(CryptoJs.enc.Hex)
+  logger.debug(`Got sig ${gotSig}`)
+  if (gotSig === sig) {
+    let rawPayload = new Buffer(payload, 'base64').toString()
+    let m = /nonce=(.+)/.exec(rawPayload)
+    if (m == null) {
+      logger.warn(`Payload on bad format`, rawPayload)
+      reply(boom.badRequest(`Payload on bad format`))
+    } else {
+      let nonce = m[1]
+      let rawRespPayload = `nonce=${nonce}&email=${user.email}&
+external_id=${user.username}&username=${user.username}&name=${user.name}`
+      logger.debug(`Responding with payload '${rawRespPayload}'`)
+      let respPayload = new Buffer(rawRespPayload).toString('base64')
+      let respSig = CryptoJs.HmacSHA256(respPayload, secret).toString(CryptoJs.enc.Hex)
+      reply([respPayload, respSig, discourseUrl,])
+    }
+  } else {
+    let msg = `Payload signature isn't as expected`
+    logger.warn(msg)
+    reply(Boom.badRequest(msg))
+  }
+}
+
 let search = (request, reply) => {
   logger.debug(`Searching for '${request.query.query}'`)
   withDb(reply, (conn) => {
@@ -518,6 +566,14 @@ module.exports.register = (server) => {
           })
         }
       },
+    },
+  })
+  server.route({
+    method: ['POST',],
+    path: '/api/verifyDiscourseSso',
+    config: {
+      auth: 'session',
+      handler: verifyDiscourseSso,
     },
   })
 }

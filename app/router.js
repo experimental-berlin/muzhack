@@ -26,11 +26,6 @@ let normalizePath = (path) => {
   return path
 }
 
-// Make URL relative
-let getRelativeUrl = (url) => {
-  return url.replace(/^(?:\/\/|[^\/]+)*\/?/, '')
-}
-
 // Get path component of the current URL
 let getCurrentPath = () => {
   let link = document.createElement('a')
@@ -51,7 +46,12 @@ let loadData = (cursor) => {
     let routeParams = match.slice(1)
     let params = R.fromPairs(R.zip(routeParamNames, routeParams))
     logger.debug(`Current route parameters:`, params)
-    let promise = func.loadData(cursor, params)
+    let searchString = location.search.startsWith('?') ? location.search.slice(1) : ''
+    let queryParams = R.fromPairs(R.map((elem) => {
+      return S.wordsDelim(/=/, elem)
+    }, S.wordsDelim(/&/, searchString)))
+    logger.debug(`Current route query parameters:`, queryParams)
+    let promise = func.loadData(cursor, params, queryParams)
     if (promise.then == null) {
       promise = Promise.resolve(promise)
     }
@@ -336,32 +336,4 @@ module.exports = {
     })
   },
   goTo,
-  // Navigate to a path
-  navigate: (path, data, title) => {
-    let currentState = history.state
-    let currentUrl = currentState.url
-    let currentData = currentState.data
-    let currentTitle = currentState.title || undefined
-    // Normalize these as undefined if they're empty, different
-    // browsers may return different values
-    if (R.isEmpty(R.keys(currentData))) {
-      currentData = undefined
-    }
-    if (path[0] !== '/') {
-      let currentPath = getCurrentPath()
-      // Make absolute path
-      if (currentPath.slice(-1)[0] !== '/') {
-        currentPath += '/'
-      }
-      path = currentPath + path
-    }
-
-    if (path !== normalizePath(getRelativeUrl(currentUrl)) || data !== currentData ||
-        title !== currentTitle) {
-      history.pushState(data, title, path)
-    } else {
-      perform()
-    }
-    return this
-  },
 }

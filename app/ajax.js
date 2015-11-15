@@ -33,7 +33,8 @@ let ajax = (method, path, params, payload) => {
           }
         } else {
           logger.debug(`Response was not successful: ${request.status}`)
-          reject(request.responseText)
+          let result = !S.isBlank(request.responseText) ? JSON.parse(request.responseText) : ''
+          reject(result)
         }
       }
     }

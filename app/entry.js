@@ -17,6 +17,7 @@ let logout = require('./views/logout')
 let forgotPassword = require('./views/forgotPassword')
 let userProfile = require('./views/userProfile/userProfile')
 let ajax = require('./ajax')
+let discourse = require('./discourse')
 
 require('./app.styl')
 require('./styles/fonts.css')
@@ -54,6 +55,7 @@ let structure = immstruct('state', {
     '/login': login.routeOptions,
     '/logout': logout.render,
     '/account/forgotpassword': forgotPassword.routeOptions,
+    '/discourse/sso': discourse.routeOptions,
   }),
 })
 router.performInitial(structure.cursor())
