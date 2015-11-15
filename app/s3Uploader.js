@@ -39,7 +39,7 @@ module.exports = class S3Uploader {
             }
           }
 
-          let url = `http://${s3Settings.bucket}.s3.amazonaws.com`
+          let url = `https://${s3Settings.bucket}.s3.amazonaws.com`
           logger.debug(`Posting to ${url}`, formData)
           request.open('POST', url, true)
           request.send(formData)
