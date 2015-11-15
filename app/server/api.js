@@ -7,6 +7,8 @@ let S = require('underscore.string.fp')
 let moment = require('moment')
 let r = require('rethinkdb')
 let Aws = require('aws-sdk')
+let JSZip = require('jszip')
+let request = require('request')
 
 let auth = require('./auth')
 let {withDb,} = require('./db')
@@ -38,6 +40,124 @@ let getS3Client = () => {
       Bucket: process.env.S3_BUCKET,
     },
   })
+}
+
+let downloadResource = (url) => {
+  logger.debug(`Downloading resource '${url}'...`)
+  return new Promise((resolve, reject) => {
+    let performRequest = (numTries) => {
+      logger.debug(`Attempt #${numTries}`)
+      request.get(url, {
+        encoding: null,
+      }, (error, response, body) => {
+        if (error == null && response.statusCode === 200) {
+          logger.debug(`Downloaded '${url}' successfully`)
+          resolve(body)
+        } else {
+          if (numTries > 3) {
+            logger.warn(`Failed to download '${url}'`)
+            reject(error)
+          } else {
+            performRequest(numTries + 1)
+          }
+        }
+      })
+    }
+
+    performRequest(1)
+  })
+}
+
+let createZip = (owner, projectParams) => {
+  logger.debug('Generating zip...')
+  let s3Client = getS3Client()
+  // TODO: Async
+  let zip = new JSZip()
+  let downloadPromises = R.map((file) => {
+    return downloadResource(file.url)
+      .then((content) => {
+        logger.debug(`Adding file '${file.fullPath}' to zip`)
+        zip.file(file.fullPath, content)
+      })
+  }, projectParams.files)
+  logger.debug(`Waiting on download promises:`, downloadPromises)
+  return Promise.all(downloadPromises)
+    .then(() => {
+      logger.debug(`All files added to zip`)
+      logger.debug(`Generating zip...`)
+      let output = zip.generate({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+      })
+
+      logger.debug(`Uploading zip file to S3...`)
+      let filePath = `u/${owner}/${projectParams.id}/${projectParams.id}.zip`
+      return new Promise((resolve, reject) => {
+        s3Client.putObject({
+          Key: filePath,
+          ACL: 'public-read',
+          Body: output,
+        }, (error, data) => {
+          if (error == null) {
+            //  TODO: Try to get URL from S3
+            let region = process.env.S3_REGION
+            let bucket = process.env.S3_BUCKET
+            logger.debug(`Uploaded zip file successfully`)
+            resolve([`https://s3.${region}.amazonaws.com/${bucket}/${filePath}`, output.length,])
+          } else {
+            logger.warn(`Failed to upload zip file: '${error}':`, error.stack)
+            reject(error)
+          }
+        })
+      })
+    }, (error) => {
+      logger.warn(`Failed to download files: '${error}'`)
+      throw new Error(error)
+    })
+}
+
+let createProject = (request, reply) => {
+  let projectParams = request.payload
+  logger.debug(`Received request to create project:`, projectParams)
+  let owner = request.params.owner
+  if (owner !== request.auth.credentials.username) {
+    logger.debug(`User tried to create project for other user`)
+    reply(Boom.unauthorized(
+      `You are not allowed to create projects for others than your own user`))
+  } else {
+    let qualifiedProjectId = `${owner}/${projectParams.id}`
+    projectParams.projectId = projectParams.id
+
+    createZip(owner, projectParams)
+      .then(([zipUrl, zipSize]) => {
+        // verifyLicense(license)
+
+        let project = new Project(R.merge(projectParams, {
+          owner: request.auth.credentials.username,
+          ownerName: request.auth.credentials.name,
+          created: moment.utc().format(),
+          zipFile: {
+            url: zipUrl,
+            size: zipSize,
+          },
+        }))
+        withDb(reply, (conn) => {
+          logger.debug(`Creating project '${qualifiedProjectId}':`, project)
+          return r.table('projects')
+            .get(qualifiedProjectId)
+            .replace(R.merge(project, {
+              id: qualifiedProjectId,
+            }))
+            .run(conn)
+            .then(() => {
+              reply()
+            })
+        })
+      }, (error) => {
+        logger.warn(`Failed to generate zip: ${error}:`, error.stack)
+        throw new Error(error)
+      })
+  }
 }
 
 module.exports.register = (server) => {
@@ -146,7 +266,7 @@ module.exports.register = (server) => {
     path: '/api/logError',
     handler: (request, reply) => {
       let error = request.payload.error
-      logger.warn(`An error was logged on a client: ${error}`)
+      logger.warn(`An error was logged on a client: ${error}:`, error.stack)
       reply()
     },
   })
@@ -155,40 +275,7 @@ module.exports.register = (server) => {
     path: '/api/projects/{owner}',
     config: {
       auth: 'session',
-      handler: (request, reply) => {
-        let projectParams = request.payload
-        logger.debug(`Received request to create project:`, projectParams)
-        let owner = request.params.owner
-        if (owner !== request.auth.credentials.username) {
-          logger.debug(`User tried to create project for other user`)
-          reply(Boom.unauthorized(
-            `You are not allowed to create projects for others than your own user`))
-        } else {
-          let qualifiedProjectId = `${owner}/${projectParams.id}`
-          projectParams.projectId = projectParams.id
-          let project = new Project(R.merge(projectParams, {
-            owner: request.auth.credentials.username,
-            ownerName: request.auth.credentials.name,
-            created: moment.utc().format(),
-            // TODO
-            zipFile: {
-              size: 0,
-            },
-          }))
-          withDb(reply, (conn) => {
-            logger.debug(`Creating project '${qualifiedProjectId}':`, project)
-            return r.table('projects')
-              .get(qualifiedProjectId)
-              .replace(R.merge(project, {
-                id: qualifiedProjectId,
-              }))
-              .run(conn)
-              .then(() => {
-                reply()
-              })
-          })
-        }
-      },
+      handler: createProject,
     },
   })
   server.route({
@@ -252,7 +339,8 @@ module.exports.register = (server) => {
               .then(() => {
                 logger.debug(`Successfully removed ${fileType}(s) ${filePathsStr}`)
               }, (error) => {
-                logger.warn(`Failed to remove ${fileType}(s) ${filePathsStr}: '${error}'`)
+                logger.warn(`Failed to remove ${fileType}(s) ${filePathsStr}: '${error}':`,
+                  error.stack)
               })
           }
 
@@ -302,7 +390,7 @@ module.exports.register = (server) => {
               if (error == null) {
                 resolve(data.Contents)
               } else {
-                logger.warn(`Failed to list folder '${dirPath}': '${error}'`)
+                logger.warn(`Failed to list folder '${dirPath}': '${error}':`, error.stack)
                 reject(error)
               }
             })
@@ -339,7 +427,8 @@ module.exports.register = (server) => {
                     return removeFolder()
                   }
                 }, (error) => {
-                  logger.warn(`Failed to remove ${objects.length} object(s): '${error}'`)
+                  logger.warn(`Failed to remove ${objects.length} object(s): '${error}':`,
+                    error.stack)
                 })
               })
         }
