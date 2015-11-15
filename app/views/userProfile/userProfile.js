@@ -10,6 +10,7 @@ let ajax = require('../../ajax')
 let {nbsp,} = require('../../specialChars')
 let VCard = require('./vcard')
 let {convertMarkdown,} = require('../../markdown')
+let userManagement = require('../../userManagement')
 
 require('./userProfile.styl')
 
@@ -46,7 +47,8 @@ let Projects = component('Projects', (user) => {
 })
 
 let Plans = component('Plans', ({user, cursor,}) => {
-  let isLoggedInUser = cursor.get('loggedInUser').username === user.username
+  let loggedInUser = userManagement.getLoggedInUser(cursor)
+  let isLoggedInUser = loggedInUser != null && loggedInUser.username === user.username
   return h('div', [
     isLoggedInUser ? h('#plan-buttons.button-group', [
       h('button#create-plan.pure-button', {'data-tooltip': 'Create project plan',}, 'New'),

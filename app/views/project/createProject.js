@@ -15,6 +15,7 @@ let Loading = require('./loading')
 let {DescriptionEditor, InstructionsEditor, PicturesEditor,
   FilesEditor,} = require('./editors')
 let uploadProject = require('./uploadProject')
+let userManagement = require('../../userManagement')
 
 require('./createProject.styl')
 require('./editAndCreate.styl')
@@ -24,7 +25,7 @@ require('../dropzone.styl')
 let createProject = (cursor) => {
   let createCursor = cursor.cursor('createProject')
   let input = createCursor.toJS()
-  let username = cursor.get('loggedInUser').username
+  let username = userManagement.getLoggedInUser(cursor).username
   let inputExtended = R.merge(input, {
     projectId: input.id,
     owner: username,

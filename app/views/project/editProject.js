@@ -14,6 +14,7 @@ let {DescriptionEditor, InstructionsEditor, PicturesEditor,
 let router = require('../../router')
 let ajax = require('../../ajax')
 let uploadProject = require('./uploadProject')
+let userManagement = require('../../userManagement')
 
 require('./editProject.styl')
 
@@ -163,7 +164,7 @@ module.exports = {
       }
     },
     loadData: (cursor, params) => {
-      let loggedInUser = cursor.get('loggedInUser')
+      let loggedInUser = userManagement.getLoggedInUser(cursor)
       if (loggedInUser.username !== params.owner) {
         router.goTo(`${params.owner}/${params.projectId}`)
       } else {

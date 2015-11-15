@@ -4,6 +4,8 @@ let R = require('ramda')
 let S = require('underscore.string.fp')
 let component = require('omniscient')
 
+let userManagement = require('./userManagement')
+
 require('purecss/build/pure.css')
 require('normalize.css/normalize.css')
 require('./layout.styl')
@@ -17,8 +19,8 @@ let toClassName = (classes) => {
 }
 
 let AccountBar = component('AccountBar', (cursor) => {
-  let user = cursor.cursor('loggedInUser').toJS()
-  let isLoggedIn = !R.isEmpty(user)
+  let user = userManagement.getLoggedInUser(cursor)
+  let isLoggedIn = user != null
   if (isLoggedIn) {
     logger.debug(`AccountBar: logged in user:`, user)
   } else {

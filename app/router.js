@@ -10,6 +10,7 @@ let logger = require('js-logger-aknudsen').get('router')
 let Loading = require('./views/loading')
 let regex = require('./regex')
 let ajax = require('./ajax')
+let userManagement = require('./userManagement')
 
 let getState = () => {
   return immstruct('state').cursor()
@@ -94,9 +95,9 @@ let shouldRedirect = (cursor) => {
     return null
   }
 
-  let loggedInUser = cursor.get('loggedInUser')
+  let loggedInUser = userManagement.getLoggedInUser(cursor)
   if (loggedInUser != null) {
-    logger.debug(`User is logged in`)
+    logger.debug(`User is logged in:`, loggedInUser)
     if (options.redirectIfLoggedIn) {
       let redirectTo = '/'
       logger.debug(`Route requires redirect when logged in - redirecting to ${redirectTo}`)
@@ -319,7 +320,11 @@ module.exports = {
   },
   performInitial: (cursor) => {
     logger.debug(`Loading initial data...`)
-    cursor.cursor('router').set('isLoading', true)
+    cursor = cursor.mergeDeep({
+      router: {
+        isLoading: true,
+      },
+    })
     ajax.getJson('initialData').then((data) => {
       logger.debug(`Received initial data:`, data)
       cursor.set('loggedInUser', data.user)

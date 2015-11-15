@@ -9,6 +9,7 @@ let {markdownService,} = require('../../markdown')
 let dropzoneService = require('../../dropzoneService')
 let {trimWhitespace,} = require('../../stringUtils')
 let {ValidationError,} = require('../../errors')
+let userManagement = require('../../userManagement')
 
 require('./editAndCreate.styl')
 require('../dropzone.scss')
@@ -86,7 +87,7 @@ let getParameters = (input, cursor) => {
   let description = markdownService.getDescription()
   let instructions = markdownService.getInstructions()
   let tags = R.map(trimWhitespace, S.wordsDelim(/,/, input.tagsString))
-  let user = cursor.get('loggedInUser')
+  let user = userManagement.getLoggedInUser(cursor)
   let username = user.username
   let licenseSelect = document.getElementById('license-select')
   let licenseId = input.licenseId
