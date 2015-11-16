@@ -5,6 +5,7 @@ let path = require('path')
 let Logger = require('js-logger-aknudsen')
 Logger.useDefaults()
 let logger = Logger.get('server')
+let jade = require('jade')
 
 let auth = require('./server/auth')
 let api = require('./server/api')
@@ -25,16 +26,29 @@ server.connection({
 
 auth.register(server)
 
-server.register(R.map((x) => {return require(x)}, ['inert',]), (err) => {
+server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) => {
   if (err != null) {
     throw err
   }
 
+  server.views({
+    engines: { jade, },
+    path: __dirname + '/templates',
+    compileOptions: {
+      pretty: true,
+    },
+  })
+
   server.route({
     method: ['GET',],
     path: '/{path*}',
-    handler: {
-      file: 'index.html',
+    handler: (request, reply) => {
+      logger.debug(`Rendering index file`)
+      reply.view('index', {
+        // TODO
+        initialState: null,
+        reactHtml: null,
+      })
     },
   })
   server.route({
