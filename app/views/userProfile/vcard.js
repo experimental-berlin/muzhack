@@ -43,7 +43,7 @@ module.exports = component('VCard', (user) => {
         h('span.icon-link', nbsp),
         h('a', {href: user.website, target: '_blank',}, user.website),
       ]) : null,
-      user.soundCloud != null ? h('#user-soundcloud.vcard-detail', [
+      user.soundCloud && user.soundCloud.username ? h('#user-soundcloud.vcard-detail', [
         h('span.icon-soundcloud'),
         h('a', {
           href: `https://soundcloud.com/${user.soundCloud.username}`, target: '_blank',
