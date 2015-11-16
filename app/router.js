@@ -1,29 +1,23 @@
 'use strict'
+let isBrowser = require('./isBrowser')
 let immstruct = require('immstruct')
 let component = require('omniscient')
 let immutable = require('immutable')
 let R = require('ramda')
 let S = require('underscore.string.fp')
-let layout = require('./layout')
 let logger = require('js-logger-aknudsen').get('router')
 
-let Loading = require('./views/loading')
-let regex = require('./regex')
+let layout = require('./layout')
 let ajax = require('./ajax')
 let userManagement = require('./userManagement')
+let Loading = isBrowser ? require('./views/loading') : null
+let {normalizePath,} = require('./urlUtils')
+let getRouterState = require('./routerState')
+
+let routes = null
 
 let getState = () => {
   return immstruct('state').cursor()
-}
-
-let normalizePath = (path) => {
-  if (path[0] !== '/') {
-    path = `/${path}`
-  }
-  while (path.endsWith('/') && path.length > 1) {
-    path = path.slice(0, -1)
-  }
-  return path
 }
 
 // Get path component of the current URL
@@ -160,9 +154,11 @@ let perform = (isInitial=false) => {
   }
 }
 
-window.onpopstate = () => {
-  logger.debug('onpopstate')
-  perform()
+if (isBrowser) {
+  window.onpopstate = () => {
+    logger.debug('onpopstate')
+    perform()
+  }
 }
 
 let handleClick = (e) => {
@@ -230,8 +226,10 @@ let handleClick = (e) => {
   goTo(orig)
 }
 
-let clickEvent = document != null && document.ontouchstart ? 'touchstart' : 'click'
-document.addEventListener(clickEvent, handleClick, false)
+if (isBrowser) {
+  let clickEvent = document != null && document.ontouchstart ? 'touchstart' : 'click'
+  document.addEventListener(clickEvent, handleClick, false)
+}
 
 let getEventWhich = (e) => {
   e = e || window.event
@@ -264,10 +262,7 @@ let Router = component('Router', (cursor) => {
     logger.debug(`Route data is loading`)
     page = Loading()
   } else {
-    let func = routes[route]
-    if (typeof func !== 'function') {
-      func = func.render
-    }
+    let func = routes[route].render
     logger.debug('Calling function with args:', args)
     page = func.apply(null, [cursor,].concat(args))
   }
@@ -287,53 +282,11 @@ let getCurrentRoute = (routes) => {
 
 module.exports = {
   Router,
-  createState: (routes) => {
-    let currentPath = getCurrentPath()
-    let mappedRoutes = {}
-    let routeParamNames = {}
-    R.forEach((route) => {
-      // Replace :[^/]+ with ([^/]+), f.ex. /persons/:id/resource -> /persons/([^/]+)/resource
-      let mappedRoute = `^${route.replace(/:\w+/g, '([^/]+)')}$`
-      mappedRoutes[mappedRoute] = routes[route]
-      routeParamNames[mappedRoute] = regex.findAll(':(\\w+)', route)
-    }, R.keys(routes))
-    logger.debug(`Application routes:`, mappedRoutes)
-
-    return immutable.fromJS({
-      currentPath,
-      isLoading: false,
-      routes: mappedRoutes,
-      routeParamNames,
-      navItems: R.map((navItem) => {
-        let path = !navItem.isExternal ? normalizePath(navItem.path) : navItem.path
-        return R.merge(navItem, {
-          path: path,
-          isSelected: path === currentPath,
-        })
-      }, [
-        {path: '/', text: 'Explore',},
-        {path: '/create', text: 'Create',},
-        {path: 'http://forums.muzhack.com', text: 'Forums', isExternal: true,},
-        {path: '/about', text: 'About',},
-      ]),
-    })
-  },
   performInitial: (cursor) => {
-    logger.debug(`Loading initial data...`)
-    cursor = cursor.mergeDeep({
-      router: {
-        isLoading: true,
-      },
+    cursor.mergeDeep({
+      router: getRouterState(),
     })
-    ajax.getJson('initialData').then((data) => {
-      logger.debug(`Received initial data:`, data)
-      cursor.mergeDeep({
-        loggedInUser: data.user,
-      })
-      perform(true)
-    }, () => {
-      logger.warn(`Failed to receive initial data`)
-    })
+    perform(true)
   },
   goTo,
 }

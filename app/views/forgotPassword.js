@@ -7,7 +7,7 @@ let router = require('../router')
 
 require('./login.styl')
 
-module.exports.routeOptions = {
+module.exports = {
   redirectIfLoggedIn: true,
   render: (cursor) => {
     logger.debug(`Rendering`)

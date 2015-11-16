@@ -9,6 +9,7 @@ let jade = require('jade')
 
 let auth = require('./server/auth')
 let api = require('./server/api')
+let rendering = require('./server/rendering')
 
 let server = new Hapi.Server({
   connections: {
@@ -44,9 +45,12 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
     path: '/{path*}',
     handler: (request, reply) => {
       logger.debug(`Rendering index file`)
+      let initialState = rendering.getInitialState(request)
+      // TODO: Match path against routes
+      // 1.
       reply.view('index', {
+        initialState,
         // TODO
-        initialState: null,
         reactHtml: null,
       })
     },

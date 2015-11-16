@@ -1,8 +1,8 @@
 'use strict'
+let isBrowser = require('./isBrowser')
 let HtmlToReactParser = require('html-to-react/lib/parser')
 let React = require('react')
 let {getSanitizingConverter,} = require('./pagedown/Markdown.Sanitizer')
-let MarkdownEditor = require('./pagedown/Markdown.Editor').Editor
 let logger = require('js-logger-aknudsen').get('markdown')
 let $ = require('jquery')
 let R = require('ramda')
@@ -183,6 +183,7 @@ let markdownOptions = {
 
 class Editor {
   constructor(converter, purpose) {
+    let MarkdownEditor = require('./pagedown/Markdown.Editor').Editor
     this.purpose = purpose
     this.markdownEditor = new MarkdownEditor(converter, `-${purpose}`,
       R.merge(markdownOptions, {helpButton: {
@@ -326,4 +327,6 @@ class MarkdownService {
   }
 }
 
-module.exports.markdownService = new MarkdownService()
+if (isBrowser) {
+  module.exports.markdownService = new MarkdownService()
+}

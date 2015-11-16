@@ -1,4 +1,5 @@
 'use strict'
+let isBrowser = require('../../isBrowser')
 let component = require('omniscient')
 let R = require('ramda')
 let S = require('underscore.string.fp')
@@ -12,7 +13,9 @@ let VCard = require('./vcard')
 let {convertMarkdown,} = require('../../markdown')
 let userManagement = require('../../userManagement')
 
-require('./userProfile.styl')
+if (isBrowser) {
+  require('./userProfile.styl')
+}
 
 let About = component('About', (user) => {
   return h('div', [
@@ -114,7 +117,8 @@ let isActiveTab = (tabName, cursor) => {
 }
 
 class UserTab {
-  constructor(title, icon, enabled=true) {
+  constructor(title, icon, enabled) {
+    enabled = enabled == null ? true : enabled
     this.title = title
     this.icon = icon
     this.enabled = enabled
@@ -134,13 +138,12 @@ class UserTab {
   }
 }
 
-module.exports.createState = () => {
-  return immutable.fromJS({
-    activeTab: 'projects',
-  })
-}
-
-module.exports.routeOptions = {
+module.exports = {
+  createState: () => {
+    return immutable.fromJS({
+      activeTab: 'projects',
+    })
+  },
   loadData: (cursor, params) => {
     return ajax.getJson(`users/${params.user}`)
       .then((user) => {

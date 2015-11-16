@@ -40,24 +40,9 @@ window.onerror = (message, url, line) => {
   // Meteor.call("logException", message, url, line)
 }
 
-let structure = immstruct('state', {
-  search: '',
-  login: login.createState(),
-  explore: explore.createState(),
-  userProfile: userProfile.createState(),
-  router: router.createState({
-    '/': explore.routeOptions,
-    '/u/:user': userProfile.routeOptions,
-    '/u/:owner/:projectId': displayProject.routeOptions,
-    '/u/:owner/:projectId/edit': editProject.routeOptions,
-    '/create': createProject.routeOptions,
-    '/about': about.render,
-    '/login': login.routeOptions,
-    '/logout': logout.render,
-    '/account/forgotpassword': forgotPassword.routeOptions,
-    '/discourse/sso': discourse.routeOptions,
-  }),
-})
+let initialState = JSON.parse(document.getElementById('initial-state').getAttribute('data-json'))
+logger.debug(`Initial state as rendered by server:`, initialState)
+let structure = immstruct('state', initialState)
 router.performInitial(structure.cursor())
 
 let render = () => {

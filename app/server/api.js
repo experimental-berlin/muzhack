@@ -420,16 +420,6 @@ let getUser = (request, reply) => {
 module.exports.register = (server) => {
   server.route({
     method: ['GET',],
-    path: '/api/initialData',
-    handler: (request, reply) => {
-      logger.debug(`Getting initial data`)
-      reply({
-        user: auth.getLoggedInUser(request),
-      })
-    },
-  })
-  server.route({
-    method: ['GET',],
     path: '/api/search',
     handler: search,
   })

@@ -1,18 +1,27 @@
 'use strict'
+let isBrowser = require('../isBrowser')
 let component = require('omniscient')
 let immutable = require('immutable')
 let S = require('underscore.string.fp')
-let Isotope = require('isotope-layout/js/isotope.js')
 let logger = require('js-logger-aknudsen').get('explore')
-let $ = require('jquery/dist/jquery.js')
 let R = require('ramda')
 let h = require('react-hyperscript')
-let ReactDOM = require('react-dom')
+
+let ReactDOM
+let Isotope
+let $
+if (isBrowser) {
+  ReactDOM = require('react-dom')
+  Isotope = require('isotope-layout/js/isotope.js')
+  $ = require('jquery/dist/jquery.js')
+}
 
 let FocusingInput = require('./focusingInput')
 let ajax = require('../ajax')
 
-require('./explore.styl')
+if (isBrowser) {
+  require('./explore.styl')
+}
 
 let getQualifiedId = (project) => {
   return `${project.owner}/${project.projectId}`
@@ -150,29 +159,27 @@ module.exports = {
       ],
     })
   },
-  routeOptions: {
-    loadData: (cursor) => {
-      logger.debug(`Loading projects`)
-      return searchAsync(cursor)
-        .then((projects) => {
-          return {
-            isSearching: false,
-            explore: {
-              search: '',
-              projects,
-            },
-          }
-        })
-    },
-    render: (cursor) => {
-      return h('.pure-g', [
-        h('.pure-u-1', [
-          h('#explore-pad', [
-            SearchBox(cursor),
-            Results(cursor),
-          ]),
+  loadData: (cursor) => {
+    logger.debug(`Loading projects`)
+    return searchAsync(cursor)
+      .then((projects) => {
+        return {
+          isSearching: false,
+          explore: {
+            search: '',
+            projects,
+          },
+        }
+      })
+  },
+  render: (cursor) => {
+    return h('.pure-g', [
+      h('.pure-u-1', [
+        h('#explore-pad', [
+          SearchBox(cursor),
+          Results(cursor),
         ]),
-      ])
-    },
+      ]),
+    ])
   },
 }

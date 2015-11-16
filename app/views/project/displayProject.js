@@ -222,24 +222,22 @@ let render = (cursor) => {
 }
 
 module.exports = {
-  routeOptions: {
-    render: render,
-    loadData: (cursor, params) => {
-      logger.debug(`Loading project ${params.owner}/${params.projectId}`)
-      return ajax.getJson(`projects/${params.owner}/${params.projectId}`)
-        .then((project) => {
-          logger.debug(`Loading project JSON succeeded:`, project)
-          return {
-            displayProject: {
-              activeTab: 'description',
-              project: R.merge(project, {
-                license: licenses[project.licenseId],
-              }),
-            },
-          }
-        }, (reason) => {
-          logger.warn(`Loading project JSON failed: '${reason}'`)
-        })
-      },
+  render: render,
+  loadData: (cursor, params) => {
+    logger.debug(`Loading project ${params.owner}/${params.projectId}`)
+    return ajax.getJson(`projects/${params.owner}/${params.projectId}`)
+      .then((project) => {
+        logger.debug(`Loading project JSON succeeded:`, project)
+        return {
+          displayProject: {
+            activeTab: 'description',
+            project: R.merge(project, {
+              license: licenses[project.licenseId],
+            }),
+          },
+        }
+      }, (reason) => {
+        logger.warn(`Loading project JSON failed: '${reason}'`)
+      })
   },
 }

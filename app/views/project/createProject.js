@@ -148,7 +148,7 @@ let CreateProjectPad = component('CreateProjectPad', (cursor) => {
   ])
 })
 
-module.exports.routeOptions = {
+module.exports = {
   requiresLogin: true,
   render: (cursor) => {
     let createCursor = cursor.cursor('createProject')

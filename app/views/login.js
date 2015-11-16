@@ -5,12 +5,12 @@ let immutable = require('immutable')
 let logger = require('js-logger-aknudsen').get('login')
 let R = require('ramda')
 
-let {nbsp,} = require('../specialChars')
-let ajax = require('../ajax')
-let FocusingInput = require('./focusingInput')
-let router = require('../router')
+// let {nbsp,} = require('../specialChars')
+// let ajax = require('../ajax')
+// let FocusingInput = require('./focusingInput')
+// let router = require('../router')
 
-require('./login.styl')
+// require('./login.styl')
 
 let SignInForm = component('SignInForm', (cursor) => {
   return h('form#signin-form.pure-form.pure-form-stacked', {action: 'action',}, [
@@ -174,7 +174,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
   ])
 })
 
-module.exports.routeOptions = {
+module.exports = {
   redirectIfLoggedIn: true,
   render: (cursor) => {
     logger.debug(`Login rendering`)
@@ -213,10 +213,9 @@ module.exports.routeOptions = {
       h('.pure-u-1-5'),
     ])
   },
-}
-
-module.exports.createState = () => {
-  return immutable.fromJS({
-    activeTab: 'signIn',
-  })
+  createState: () => {
+    return immutable.fromJS({
+      activeTab: 'signIn',
+    })
+  },
 }

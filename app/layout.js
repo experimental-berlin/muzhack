@@ -1,4 +1,5 @@
 'use strict'
+let isBrowser = require('./isBrowser')
 let h = require('react-hyperscript')
 let R = require('ramda')
 let S = require('underscore.string.fp')
@@ -6,11 +7,14 @@ let component = require('omniscient')
 
 let userManagement = require('./userManagement')
 
-require('purecss/build/pure.css')
-require('normalize.css/normalize.css')
-require('./layout.styl')
-require('./bitcoinate.styl')
-let flattrImage = require('./images/flattr-badge-large.png')
+let flattrImage
+if (isBrowser) {
+  require('purecss/build/pure.css')
+  require('normalize.css/normalize.css')
+  require('./layout.styl')
+  require('./bitcoinate.styl')
+  flattrImage = require('./images/flattr-badge-large.png')
+}
 
 let logger = require('js-logger-aknudsen').get('layout')
 

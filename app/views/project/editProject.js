@@ -150,42 +150,40 @@ let EditProjectPad = component('EditProjectPad', (cursor) => {
 })
 
 module.exports = {
-  routeOptions: {
-    requiresLogin: true,
-    render: (cursor) => {
-      logger.debug(`Rendering`)
-      let projectCursor = cursor.cursor(['editProject', 'project',])
-      let project = projectCursor.toJS()
-      let qualifiedProjectId = `${project.owner}/${project.projectId}`
-      if (!cursor.cursor('editProject').get('isWaiting')) {
-        return EditProjectPad(cursor)
-      } else {
-        return Loading(cursor.cursor('editProject'))
-      }
-    },
-    loadData: (cursor, params) => {
-      let loggedInUser = userManagement.getLoggedInUser(cursor)
-      if (loggedInUser.username !== params.owner) {
-        router.goTo(`${params.owner}/${params.projectId}`)
-      } else {
-        logger.debug(`Loading project ${params.owner}/${params.projectId}`)
-        return ajax.getJson(`projects/${params.owner}/${params.projectId}`)
-          .then((project) => {
-            logger.debug(`Loading project JSON succeeded:`, project)
-            return {
-              editProject: {
-                isWaiting: false,
-                owner: params.owner,
-                projectId: params.projectId,
-                project: R.merge(project, {
-                  tagsString: S.join(',', project.tags),
-                }),
-              },
-            }
-          }, (reason) => {
-            logger.warn(`Loading project JSON failed: '${reason}'`)
-          })
-        }
-      },
+  requiresLogin: true,
+  render: (cursor) => {
+    logger.debug(`Rendering`)
+    let projectCursor = cursor.cursor(['editProject', 'project',])
+    let project = projectCursor.toJS()
+    let qualifiedProjectId = `${project.owner}/${project.projectId}`
+    if (!cursor.cursor('editProject').get('isWaiting')) {
+      return EditProjectPad(cursor)
+    } else {
+      return Loading(cursor.cursor('editProject'))
+    }
+  },
+  loadData: (cursor, params) => {
+    let loggedInUser = userManagement.getLoggedInUser(cursor)
+    if (loggedInUser.username !== params.owner) {
+      router.goTo(`${params.owner}/${params.projectId}`)
+    } else {
+      logger.debug(`Loading project ${params.owner}/${params.projectId}`)
+      return ajax.getJson(`projects/${params.owner}/${params.projectId}`)
+        .then((project) => {
+          logger.debug(`Loading project JSON succeeded:`, project)
+          return {
+            editProject: {
+              isWaiting: false,
+              owner: params.owner,
+              projectId: params.projectId,
+              project: R.merge(project, {
+                tagsString: S.join(',', project.tags),
+              }),
+            },
+          }
+        }, (reason) => {
+          logger.warn(`Loading project JSON failed: '${reason}'`)
+        })
+    }
   },
 }
