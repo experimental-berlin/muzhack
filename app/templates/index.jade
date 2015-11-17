@@ -1,8 +1,12 @@
 html
   head
+    meta(charset="utf-8")
     title MuzHack
+    style.
+      #container {visibility:hidden}
   body
     #initial-state(data-json=initialState)
     article
       #container
+        != reactHtml
     script(type="text/javascript" src="/bundle.js")

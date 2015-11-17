@@ -2,10 +2,12 @@
 let Hapi = require('hapi')
 let R = require('ramda')
 let path = require('path')
-let Logger = require('js-logger-aknudsen')
-Logger.useDefaults()
-let logger = Logger.get('server')
 let jade = require('jade')
+let immstruct = require('immstruct')
+let Boom = require('boom')
+let Logger = require('js-logger-aknudsen')
+let logger = Logger.get('server')
+Logger.useDefaults()
 
 let auth = require('./server/auth')
 let api = require('./server/api')
@@ -45,14 +47,22 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
     path: '/{path*}',
     handler: (request, reply) => {
       logger.debug(`Rendering index file`)
-      let initialState = rendering.getInitialState(request)
-      // TODO: Match path against routes
-      // 1.
-      reply.view('index', {
-        initialState,
-        // TODO
-        reactHtml: null,
-      })
+      rendering.getInitialState(request)
+        .then(([initialState, cursor,]) => {
+          logger.debug(`Successfully loaded initial state:`, initialState)
+          let reactHtml = rendering.render(cursor, request)
+          reply.view('index', {
+            initialState: JSON.stringify(initialState),
+            reactHtml,
+          })
+        }, (error) => {
+          logger.error(`Failed to load initial state:`, error)
+          reply(Boom.badImplementation())
+        })
+        .catch((error) => {
+          logger.error(`Rendering failed:`, error)
+          reply(Boom.badImplementation())
+        })
     },
   })
   server.route({

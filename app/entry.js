@@ -37,7 +37,6 @@ let logger = Logger.get('entry')
 
 window.onerror = (message, url, line) => {
   logger.error(`Uncaught exception, at ${url}:${line}:\n${message}`)
-  // Meteor.call("logException", message, url, line)
 }
 
 let initialState = JSON.parse(document.getElementById('initial-state').getAttribute('data-json'))

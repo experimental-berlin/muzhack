@@ -12,7 +12,8 @@ let ajax = require('./ajax')
 let userManagement = require('./userManagement')
 let Loading = isBrowser ? require('./views/loading') : null
 let {normalizePath,} = require('./urlUtils')
-let getRouterState = require('./routerState')
+let {createRouterState, updateRouterState,} = require('./routerState')
+let App = require('./components/app')
 
 let routes = null
 
@@ -117,12 +118,14 @@ let perform = (isInitial=false) => {
   let currentPath = getCurrentPath()
   let currentHash = document.location.hash.slice(1).toLowerCase()
   logger.debug(`Routing, current path: '${currentPath}', current hash: '${currentHash}'`)
-  let routerCursor = cursor.cursor('router')
-  if (!isInitial && currentPath === routerCursor.get('currentPath')) {
+  let routerState = cursor.cursor('router').toJS()
+  if (!isInitial && currentPath === routerState.currentPath) {
     logger.debug(`Path did not change:`, currentPath)
-    routerCursor.set('currentHash', currentHash)
+    cursor.cursor('router').set('currentHash', currentHash)
     return
   }
+
+  cursor = updateRouterState(cursor, currentPath)
 
   let redirectTo = shouldRedirect(cursor)
   if (redirectTo != null) {
@@ -139,17 +142,19 @@ let perform = (isInitial=false) => {
         isSelected,
         path,
       }
-    }, routerCursor.get('navItems').toJS())
+    }, routerState.navItems)
     // Default to root nav item being selected
     if (!R.any((navItem) => {return navItem.isSelected}, navItems)) {
       let navItem = R.find((navItem) => {return navItem.path === '/'}, navItems)
       navItem.isSelected = true
     }
-    routerCursor.mergeDeep({
-      isLoading,
-      currentPath,
-      navItems,
-      currentHash,
+    cursor.mergeDeep({
+      router: {
+        isLoading,
+        currentPath,
+        navItems,
+        currentHash,
+      },
     })
   }
 }
@@ -249,24 +254,8 @@ let sameOrigin = (href) => {
 
 let Router = component('Router', (cursor) => {
   logger.debug('Router rendering')
-  let routes = cursor.cursor(['router', 'routes',]).toJS()
   logger.debug('Current state:', cursor.toJS())
-  let route = getCurrentRoute(routes)
-  let path = cursor.cursor('router').get('currentPath')
-  logger.debug('Current path:', path)
-  let match = new RegExp(route).exec(path)
-  // Route arguments correspond to regex groups
-  let args = match.slice(1)
-  let page
-  if (cursor.cursor('router').get('isLoading')) {
-    logger.debug(`Route data is loading`)
-    page = Loading()
-  } else {
-    let func = routes[route].render
-    logger.debug('Calling function with args:', args)
-    page = func.apply(null, [cursor,].concat(args))
-  }
-  return layout.render(cursor, page)
+  return App(cursor)
 })
 
 let getCurrentRoute = (routes) => {
@@ -284,7 +273,7 @@ module.exports = {
   Router,
   performInitial: (cursor) => {
     cursor.mergeDeep({
-      router: getRouterState(),
+      router: createRouterState(),
     })
     perform(true)
   },
