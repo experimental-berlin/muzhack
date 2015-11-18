@@ -15,7 +15,7 @@ module.exports = {
       },
       {
         test: /\.styl$/,
-        loader: 'style-loader!css-loader!stylus-loader',
+        loader: 'style-loader!raw!stylus-loader',
       },
       {
         test: /\.css$/,
@@ -24,11 +24,6 @@ module.exports = {
       {
         test: /\.(eot|woff|woff2|ttf|svg)($|\?)/,
         loader: 'url-loader?limit=30000&name=[name]-[hash].[ext]',
-      },
-      {
-        test: /\.png$/,
-        loader: 'url-loader',
-        query: {mimetype: 'image/png?limit=8192',},
       },
       {
         test: /(isotope|masonry|outlayer|item|get-size|fizzy-ui-utils\/utils)\.js$/,

@@ -17,7 +17,7 @@ let server = new Hapi.Server({
   connections: {
     routes: {
       files: {
-        relativeTo: path.join(__dirname, 'public'),
+        relativeTo: path.join(__dirname, '../public'),
       },
     },
   },
@@ -70,6 +70,17 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
     path: '/bundle.js',
     handler: {
       file: path.join(__dirname, '../dist/bundle.js'),
+    },
+  })
+  server.route({
+    method: 'GET',
+    path: '/assets/{param*}',
+    handler: {
+      directory: {
+        path: '.',
+        redirectToSlash: true,
+        listing: true,
+      },
     },
   })
 

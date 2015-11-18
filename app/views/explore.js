@@ -160,6 +160,7 @@ module.exports = {
     })
   },
   loadData: (cursor) => {
+    if (isBrowser) {
     logger.debug(`Loading projects`)
     return searchAsync(cursor)
       .then((projects) => {
@@ -171,6 +172,14 @@ module.exports = {
           },
         }
       })
+    } else {
+      logger.debug(`Rendering on server, simulating loading of data`)
+      return {
+        router: {
+          isLoading: true,
+        },
+      }
+    }
   },
   render: (cursor) => {
     return h('.pure-g', [
