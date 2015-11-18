@@ -13,10 +13,23 @@ if (isBrowser) {
   require('normalize.css/normalize.css')
   require('./layout.styl')
   require('./bitcoinate.styl')
-  flattrImage = require('./images/flattr-badge-large.png')
 }
 
 let logger = require('js-logger-aknudsen').get('layout')
+
+let Bitcoinate = component('Bitcoinate', () => {
+  return h('button.bitcoinate', {
+    'data-size': '20',
+    'data-address': '3BPwSKv5fku9CFJRzb1JWiiKvTz7KaD3Go',
+    onClick: () => {
+      logger.debug(`Bitcoinate clicked`)
+      window.prompt(`Please donate bitcoins to: `, '3BPwSKv5fku9CFJRzb1JWiiKvTz7KaD3Go')
+    },
+  }, [
+    h('span.bitcoinate-image'),
+    'bitcoinate',
+  ])
+})
 
 let toClassName = (classes) => {
   return S.join(' ', R.filter((x) => {return x != null}, classes))
@@ -117,12 +130,9 @@ let Footer = component('Footer', () => {
         href: 'https://flattr.com/submit/auto?user_id=muzhack&url=https://github.com/muzhack/muzhack&title=MuzHack&description=MuzHack&tags=muzhack,programming&category=text',
         target: '_blank',
       }, [
-        h('img', {src: flattrImage, alt: 'Flattr MuzHack',}),
+        h('img', {src: 'assets/images/flattr-badge-large.png', alt: 'Flattr MuzHack',}),
       ]),
-      h('button.bitcoinate', {
-        'data-size': '20',
-        'data-address': '3BPwSKv5fku9CFJRzb1JWiiKvTz7KaD3Go',
-      }, 'bitcoinate'),
+      Bitcoinate(),
     ]),
   ])
 })
