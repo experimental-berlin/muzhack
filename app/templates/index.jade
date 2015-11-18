@@ -7,6 +7,5 @@ html
   body
     #initial-state(data-json=initialState)
     article
-      #container
-        != reactHtml
+      #container !{reactHtml}
     script(type="text/javascript" src="/bundle.js")
