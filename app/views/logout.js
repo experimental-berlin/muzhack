@@ -1,7 +1,7 @@
 'use strict'
 let logger = require('js-logger-aknudsen').get('logout')
 
-let ajax = require('../ajax')
+let ajax = require('../client/ajax')
 let router = require('../router')
 
 module.exports.render = (cursor) => {

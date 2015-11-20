@@ -2,7 +2,7 @@
 let logger = require('js-logger-aknudsen').get('S3Uploader')
 let R = require('ramda')
 
-let ajax = require('./ajax')
+let ajax = require('./client/ajax')
 
 module.exports = class S3Uploader {
   constructor(directive, {folder, isBackup,}) {

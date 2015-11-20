@@ -12,7 +12,7 @@ let {nbsp,} = require('../../specialChars')
 let {DescriptionEditor, InstructionsEditor, PicturesEditor,
   FilesEditor,} = require('./editors')
 let router = require('../../router')
-let ajax = require('../../ajax')
+let ajax = require('../../client/ajax')
 let uploadProject = require('./uploadProject')
 let userManagement = require('../../userManagement')
 

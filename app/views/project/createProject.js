@@ -10,7 +10,7 @@ let licenses = require('../../licenses')
 let FocusingInput = require('../focusingInput')
 let {nbsp,} = require('../../specialChars')
 let router = require('../../router')
-let ajax = require('../../ajax')
+let ajax = require('../../client/ajax')
 let Loading = require('./loading')
 let {DescriptionEditor, InstructionsEditor, PicturesEditor,
   FilesEditor,} = require('./editors')

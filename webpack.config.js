@@ -26,7 +26,7 @@ module.exports = {
         loader: 'url-loader?limit=30000&name=[name]-[hash].[ext]',
       },
       {
-        test: /(isotope|masonry|outlayer|item|get-size|fizzy-ui-utils\/utils)\.js$/,
+        test: /(app\/server|isotope|masonry|outlayer|item|get-size|fizzy-ui-utils\/utils)\.js$/,
         loader: 'imports?define=>false',
       },
       {

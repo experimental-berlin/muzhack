@@ -17,7 +17,7 @@ if (isBrowser) {
 }
 
 let FocusingInput = require('./focusingInput')
-let ajax = require('../ajax')
+let ajax = require('../client/ajax')
 
 if (isBrowser) {
   require('./explore.styl')

@@ -15,6 +15,9 @@ let App = require('../components/app')
 let {createRouterState, updateRouterState,} = require('../routerState')
 
 let getInitialRouterState = (currentPath) => {
+  if (currentPath === '/u/aknudsen/assets/images/flattr-badge-large.png') {
+    throw new Error(`Path is /u/aknudsen/assets/images/flattr-badge-large.png`)
+  }
   logger.debug(`Computing initial router state, path is '${currentPath}'`)
   return immutable.fromJS({
     currentPath,
@@ -55,7 +58,8 @@ module.exports = {
     let promise
     if (module.loadData != null) {
       logger.debug(`Loading route data...`)
-      let result = module.loadData(cursor)
+      logger.debug(`Current route args:`, routerState.currentRouteParams)
+      let result = module.loadData(cursor, routerState.currentRouteParams)
       if (result.then != null) {
         promise = result
       } else {

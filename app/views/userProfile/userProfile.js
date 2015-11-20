@@ -7,7 +7,7 @@ let h = require('react-hyperscript')
 let immutable = require('immutable')
 let logger = require('js-logger-aknudsen').get('userProfile')
 
-let ajax = require('../../ajax')
+let ajax = require('../../client/ajax')
 let {nbsp,} = require('../../specialChars')
 let VCard = require('./vcard')
 let {convertMarkdown,} = require('../../markdown')

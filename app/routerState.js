@@ -4,6 +4,7 @@ let logger = require('js-logger-aknudsen').get('routerState')
 
 let regex = require('./regex')
 let explore = require('./views/explore')
+let displayProject = require('./views/project/displayProject')
 let login = require('./views/login')
 let userProfile = require('./views/userProfile/userProfile')
 
@@ -12,7 +13,7 @@ module.exports = {
     let routes = {
       '/': explore,
       '/u/:user': userProfile,
-      // '/u/:owner/:projectId': displayProject.routeOptions,
+      '/u/:owner/:projectId': displayProject,
       // '/u/:owner/:projectId/edit': editProject.routeOptions,
       // '/create': createProject.routeOptions,
       // '/about': about.render,
@@ -48,11 +49,14 @@ module.exports = {
     }
     let match = new RegExp(currentRoute).exec(currentPath)
     // Route arguments correspond to regex groups
-    let currentRouteArgs = match.slice(1)
+    let currentRouteParams = R.fromPairs(R.zip(routerState.routeParamNames[currentRoute],
+        match.slice(1)))
+    logger.debug(`The current path, '${currentPath}', corresponds to route params:`,
+      currentRouteParams)
     return cursor.mergeDeep({
       router: {
         currentRoute,
-        currentRouteArgs,
+        currentRouteParams,
       },
     })
   },

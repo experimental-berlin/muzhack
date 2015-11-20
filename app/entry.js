@@ -16,7 +16,7 @@ let login = require('./views/login')
 let logout = require('./views/logout')
 let forgotPassword = require('./views/forgotPassword')
 let userProfile = require('./views/userProfile/userProfile')
-let ajax = require('./ajax')
+let ajax = require('./client/ajax')
 let discourse = require('./discourse')
 
 require('./app.styl')

@@ -1,7 +1,7 @@
 'use strict'
 let logger = require('js-logger-aknudsen').get('project.loadData')
 
-let ajax = require('../../ajax')
+let ajax = require('../../client/ajax')
 
 module.exports = (cursor, params) => {
   logger.debug(`Loading project ${params.owner}/${params.projectId}`)

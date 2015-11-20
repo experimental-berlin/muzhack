@@ -351,14 +351,16 @@ let search = (request, reply) => {
       logger.debug(`No tags`)
     }
     let regex = `(?i)${queryWithoutTags}`
-    return r.table('projects').filter((project) => {
-      let pred = project('projectId').match(regex).or(project('title').match(regex))
-        .or(project('owner').match(regex))
-      R.forEach((tag) => {
-        pred = pred.and(project('tags').contains(tag))
-      }, tags)
-      return pred
-    }).run(conn)
+    return r.table('projects')
+      .filter((project) => {
+        let pred = project('projectId').match(regex).or(project('title').match(regex))
+          .or(project('owner').match(regex))
+        R.forEach((tag) => {
+          pred = pred.and(project('tags').contains(tag))
+        }, tags)
+        return pred
+      })
+      .run(conn)
       .then((projectsCursor) => {
         projectsCursor.toArray()
           .then((projects) => {
@@ -417,41 +419,50 @@ let getUser = (request, reply) => {
   })
 }
 
+let getProject = (request, reply) => {
+  let {owner, projectId,} = request.params
+  let qualifiedProjectId = `${owner}/${projectId}`
+  logger.debug(`Getting project '${qualifiedProjectId}'`)
+  withDb(reply, (conn) => {
+    return r.table('projects').get(qualifiedProjectId).run(conn)
+      .then((project) => {
+        if (project != null) {
+          logger.debug(`Found project '${qualifiedProjectId}':`, project)
+          return project
+        } else {
+          logger.debug(`Could not find project '${qualifiedProjectId}'`)
+          return Boom.notFound()
+        }
+      })
+  })
+}
+
 module.exports.register = (server) => {
-  server.route({
+  let routeApiMethod = (options) => {
+    let path = `/api/${options.path}`
+    server.route(R.merge(options, {
+      path,
+    }))
+  }
+
+  routeApiMethod({
     method: ['GET',],
-    path: '/api/search',
+    path: 'search',
     handler: search,
   })
-  server.route({
+  routeApiMethod({
     method: ['GET',],
-    path: '/api/projects/{owner}/{projectId}',
-    handler: (request, reply) => {
-      let {owner, projectId,} = request.params
-      let qualifiedProjectId = `${owner}/${projectId}`
-      logger.debug(`Getting project '${qualifiedProjectId}'`)
-      withDb(reply, (conn) => {
-        return r.table('projects').get(qualifiedProjectId).run(conn)
-          .then((project) => {
-            if (project != null) {
-              logger.debug(`Found project '${qualifiedProjectId}':`, project)
-              reply(project)
-            } else {
-              logger.debug(`Could not find project '${qualifiedProjectId}'`)
-              reply(Boom.notFound())
-            }
-          })
-      })
-    },
+    path: 'projects/{owner}/{projectId}',
+    handler: getProject,
   })
-  server.route({
+  routeApiMethod({
     method: ['GET',],
-    path: '/api/users/{username}',
+    path: 'users/{username}',
     handler: getUser,
   })
-  server.route({
+  routeApiMethod({
     method: ['GET',],
-    path: '/api/s3Settings/{directive}',
+    path: 's3Settings/{directive}',
     config: {
       auth: 'session',
       handler: (request, reply) => {
@@ -483,34 +494,34 @@ module.exports.register = (server) => {
       },
     },
   })
-  server.route({
+  routeApiMethod({
     method: ['POST',],
-    path: '/api/logError',
+    path: 'logError',
     handler: (request, reply) => {
       let error = request.payload.error
       logger.warn(`An error was logged on a client: ${error}:`, error.stack)
       reply()
     },
   })
-  server.route({
+  routeApiMethod({
     method: ['POST',],
-    path: '/api/projects/{owner}',
+    path: 'projects/{owner}',
     config: {
       auth: 'session',
       handler: createProject,
     },
   })
-  server.route({
+  routeApiMethod({
     method: ['PUT',],
-    path: '/api/projects/{owner}/{id}',
+    path: 'projects/{owner}/{id}',
     config: {
       auth: 'session',
       handler: updateProject,
     },
   })
-  server.route({
+  routeApiMethod({
     method: ['DELETE',],
-    path: '/api/projects/{owner}/{id}',
+    path: 'projects/{owner}/{id}',
     config: {
       auth: 'session',
       handler: (request, reply) => {
@@ -589,9 +600,9 @@ module.exports.register = (server) => {
       },
     },
   })
-  server.route({
+  routeApiMethod({
     method: ['POST',],
-    path: '/api/verifyDiscourseSso',
+    path: 'verifyDiscourseSso',
     config: {
       auth: 'session',
       handler: verifyDiscourseSso,

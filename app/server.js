@@ -22,10 +22,15 @@ let server = new Hapi.Server({
     },
   },
 })
+let port = parseInt(process.env.PORT || '8000')
 server.connection({
   host: '0.0.0.0',
-  port: parseInt(process.env.PORT || '8000'),
+  port,
 })
+
+if (process.env.MUZHACK_URI == null) {
+  process.env.MUZHACK_URI = `http://localhost:${port}`
+}
 
 auth.register(server)
 

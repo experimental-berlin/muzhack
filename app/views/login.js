@@ -6,7 +6,7 @@ let logger = require('js-logger-aknudsen').get('login')
 let R = require('ramda')
 
 // let {nbsp,} = require('../specialChars')
-// let ajax = require('../ajax')
+// let ajax = require('../client/ajax')
 // let FocusingInput = require('./focusingInput')
 // let router = require('../router')
 

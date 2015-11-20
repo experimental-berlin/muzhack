@@ -1,19 +1,22 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('project')
+let logger = require('js-logger-aknudsen').get('displayProject')
 let h = require('react-hyperscript')
 let R = require('ramda')
 let S = require('underscore.string.fp')
 let component = require('omniscient')
 let React = require('react')
 
+let isBrowser = require('../../isBrowser')
 let datetime = require('../../datetime')
 let {nbsp,} = require('../../specialChars')
 let {convertMarkdown,} = require('../../markdown')
-let ajax = require('../../ajax')
+let ajax = require('../../client/ajax')
 let userManagement = require('../../userManagement')
 let licenses = require('../../licenses')
 
-require('./displayProject.styl')
+if (isBrowser) {
+  require('./displayProject.styl')
+}
 
 let getFileSize = (numBytes) => {
   let sizeStr
@@ -224,6 +227,13 @@ let render = (cursor) => {
 module.exports = {
   render: render,
   loadData: (cursor, params) => {
+    let {owner, projectId,} = params
+    if (owner == null) {
+      throw new Error(`Owner is undefined`)
+    }
+    if (projectId == null) {
+      throw new Error(`Project ID is undefined`)
+    }
     logger.debug(`Loading project ${params.owner}/${params.projectId}`)
     return ajax.getJson(`projects/${params.owner}/${params.projectId}`)
       .then((project) => {
@@ -238,6 +248,7 @@ module.exports = {
         }
       }, (reason) => {
         logger.warn(`Loading project JSON failed: '${reason}'`)
+        throw new Error(reason)
       })
   },
 }

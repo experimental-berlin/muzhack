@@ -14,11 +14,12 @@ let connectToDb = (reply, host, callback, attempt) => {
     logger.debug(`Successfully connected to RethinkDB host '${host}', attempt ${attempt}`)
     logger.debug(`Invoking callback`)
     callback(conn)
-      .then(() => {
+      .then((result) => {
         conn.close()
+        reply(result)
       }, (error) => {
-        conn.close()
         logger.warn(`There was an error in the callback of withDb: '${error}'`, error.stack)
+        conn.close()
         reply(Boom.badImplementation())
       })
   }, (error) => {
@@ -36,6 +37,5 @@ let connectToDb = (reply, host, callback, attempt) => {
 
 module.exports.withDb = (reply, callback) => {
   let host = process.env.RETHINKDB_HOST || 'localhost'
-  connectToDb(reply, host, callback, 1)
-
+  return connectToDb(reply, host, callback, 1)
 }
