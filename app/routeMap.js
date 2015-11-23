@@ -5,6 +5,7 @@ let login = require('./views/login')
 let userProfile = require('./views/userProfile/userProfile')
 let about = require('./views/about')
 let forgotPassword = require('./views/forgotPassword')
+let logout = require('./views/logout')
 
 module.exports = {
   '/': explore,
@@ -14,7 +15,7 @@ module.exports = {
   // '/create': createProject.routeOptions,
   '/about': about,
   '/login': login,
-  // '/logout': logout.render,
+  '/logout': logout,
   '/account/forgotpassword': forgotPassword,
   // '/discourse/sso': discourse.routeOptions,
 }

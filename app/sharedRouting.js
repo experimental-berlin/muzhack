@@ -10,7 +10,6 @@ class NotFoundError {
 let loadData = (cursor) => {
   let routerState = cursor.cursor('router').toJS()
   let module = routerState.routes[routerState.currentRoute]
-  logger.debug(`${routerState.currentRoute} => ${module}:`, routerState)
   let promise
   if (module.loadData != null) {
     logger.debug(`Loading route data...`)
