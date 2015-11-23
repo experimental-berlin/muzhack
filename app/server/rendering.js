@@ -20,23 +20,31 @@ let getInitialRouterState = (currentPath) => {
     throw new Error(`Path is /u/aknudsen/assets/images/flattr-badge-large.png`)
   }
   logger.debug(`Computing initial router state, path is '${currentPath}'`)
+  let navItems = R.map((navItem) => {
+    let path = !navItem.isExternal ? normalizePath(navItem.path) : navItem.path
+    let isSelected = path === currentPath
+    logger.debug(`Nav item '${navItem.text}' is selected: ${isSelected}, ${path}`)
+    return R.merge(navItem, {
+      path,
+      isSelected,
+    })
+  }, [
+    {path: '/', text: 'Explore',},
+    {path: '/create', text: 'Create',},
+    {path: 'http://forums.muzhack.com', text: 'Forums', isExternal: true,},
+    {path: '/about', text: 'About',},
+  ])
+  if (!R.any((navItem) => {return navItem.isSelected}, navItems)) {
+    logger.debug(`Defaulting to root nav item being selected`)
+    let navItem = R.find((navItem) => {return navItem.path === '/'}, navItems)
+    navItem.isSelected = true
+  }
   return immutable.fromJS({
     currentPath,
     isLoading: false,
     // routes: mappedRoutes,
     // routeParamNames,
-    navItems: R.map((navItem) => {
-      let path = !navItem.isExternal ? normalizePath(navItem.path) : navItem.path
-      return R.merge(navItem, {
-        path: path,
-        isSelected: path === currentPath,
-      })
-    }, [
-      {path: '/', text: 'Explore',},
-      {path: '/create', text: 'Create',},
-      {path: 'http://forums.muzhack.com', text: 'Forums', isExternal: true,},
-      {path: '/about', text: 'About',},
-    ]),
+    navItems,
   })
 }
 
@@ -81,7 +89,7 @@ module.exports = {
     }
     return promise.then((newState) => {
       logger.debug(`Updating cursor with new state:`, newState)
-      return [initialState, cursor.mergeDeep(newState),]
+      return cursor.mergeDeep(newState)
     })
   },
   render: (cursor, request) => {

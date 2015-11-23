@@ -58,6 +58,23 @@ module.exports = {
         match.slice(1)))
     logger.debug(`The current path, '${currentPath}', corresponds to route params:`,
       currentRouteParams)
+
+    let navItems = R.map((navItem) => {
+      let path = navItem.path
+      let isSelected = path === currentPath
+      if (isSelected) {
+        logger.debug(`Nav item with path '${path}' is selected`)
+      }
+      return {
+        isSelected,
+        path,
+      }
+    }, routerState.navItems)
+    // Default to root nav item being selected
+    if (!R.any((navItem) => {return navItem.isSelected}, navItems)) {
+      let navItem = R.find((navItem) => {return navItem.path === '/'}, navItems)
+      navItem.isSelected = true
+    }
     return cursor.mergeDeep({
       router: {
         currentRoute,

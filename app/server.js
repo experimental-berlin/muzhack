@@ -55,7 +55,8 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
     handler: (request, reply) => {
       logger.debug(`Rendering index file`)
       rendering.getInitialState(request)
-        .then(([initialState, cursor,]) => {
+        .then((cursor) => {
+          let initialState = cursor.toJS()
           logger.debug(`Successfully loaded initial state:`, initialState)
           let reactHtml = rendering.render(cursor, request)
           reply.view('index', {

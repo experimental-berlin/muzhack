@@ -27,52 +27,6 @@ let getCurrentPath = () => {
   return normalizePath(link.pathname)
 }
 
-let loadData = (cursor) => {
-  let routerCursor = cursor.cursor('router')
-  let routes = routerCursor.get('routes').toJS()
-  let route = getCurrentRoute(routes)
-  let func = routes[route]
-  if (typeof func !== 'function' && func.loadData != null) {
-    logger.debug(`Loading route data before rendering`)
-    let path = getCurrentPath()
-    let routeParamNames = routerCursor.get('routeParamNames').toJS()[route]
-    let match = new RegExp(route).exec(path)
-    let routeParams = match.slice(1)
-    let params = R.fromPairs(R.zip(routeParamNames, routeParams))
-    logger.debug(`Current route parameters:`, params)
-    let searchString = location.search.startsWith('?') ? location.search.slice(1) : ''
-    let queryParams = R.fromPairs(R.map((elem) => {
-      return S.wordsDelim(/=/, elem)
-    }, S.wordsDelim(/&/, searchString)))
-    logger.debug(`Current route query parameters:`, queryParams)
-    let promise = func.loadData(cursor, params, queryParams)
-    if (promise.then == null) {
-      promise = Promise.resolve(promise)
-    }
-    promise
-      .then((newState) => {
-        logger.debug(`Route data has been loaded ahead of rendering, new state:`, newState)
-        let updatedCursor = getState().update((toUpdate) => {
-          toUpdate = toUpdate.mergeDeep({
-            router: {
-              isLoading: false,
-            },
-          })
-          R.forEach(([key, value,]) => {
-            toUpdate = toUpdate.set(key, immutable.fromJS(value))
-          }, R.toPairs(newState))
-
-          return toUpdate
-        })
-        logger.debug(`Updated state:`, updatedCursor.toJS())
-      })
-
-    return true
-  } else {
-    return false
-  }
-}
-
 let goTo = (path) => {
   logger.debug(`Navigating to '${path}'`)
   window.history.pushState({}, 'MuzHack', path)
@@ -130,28 +84,10 @@ let perform = (isInitial=false) => {
   if (redirectTo != null) {
     goTo(redirectTo)
   } else {
-    let isLoading = loadData(cursor)
-    let navItems = R.map((navItem) => {
-      let path = navItem.path
-      let isSelected = path === currentPath
-      if (isSelected) {
-        logger.debug(`Nav item with path '${path}' is selected`)
-      }
-      return {
-        isSelected,
-        path,
-      }
-    }, routerState.navItems)
-    // Default to root nav item being selected
-    if (!R.any((navItem) => {return navItem.isSelected}, navItems)) {
-      let navItem = R.find((navItem) => {return navItem.path === '/'}, navItems)
-      navItem.isSelected = true
-    }
     cursor.mergeDeep({
       router: {
-        isLoading,
+        isLoading: false,
         currentPath,
-        navItems,
         currentHash,
       },
     })
