@@ -86,6 +86,9 @@ let renderIndex = (request, reply) => {
         reply(Boom.badImplementation())
       }
     })
+    .catch((error) => {
+      logger.error(`Rendering failed: ${error}`, error.stack)
+    })
 }
 
 module.exports = {

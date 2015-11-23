@@ -7,6 +7,7 @@ let explore = require('./views/explore')
 let displayProject = require('./views/project/displayProject')
 let login = require('./views/login')
 let userProfile = require('./views/userProfile/userProfile')
+let about = require('./views/about')
 
 class NotFoundError {
 }
@@ -40,7 +41,7 @@ module.exports = {
       '/u/:owner/:projectId': displayProject,
       // '/u/:owner/:projectId/edit': editProject.routeOptions,
       // '/create': createProject.routeOptions,
-      // '/about': about.render,
+      '/about': about,
       '/login': login,
       // '/logout': logout.render,
       // '/account/forgotpassword': forgotPassword.routeOptions,
@@ -86,10 +87,9 @@ module.exports = {
       if (isSelected) {
         logger.debug(`Nav item with path '${path}' is selected`)
       }
-      return {
+      return R.merge(navItem, {
         isSelected,
-        path,
-      }
+      })
     }, routerState.navItems)
     // Default to root nav item being selected
     if (!R.any((navItem) => {return navItem.isSelected}, navItems)) {
@@ -103,6 +103,7 @@ module.exports = {
         currentRoute,
         currentRouteParams,
         currentPath,
+        navItems,
       },
     })
 
