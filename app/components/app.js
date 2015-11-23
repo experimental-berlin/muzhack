@@ -6,10 +6,11 @@ let Loading = require('../views/loading')
 let layout = require('../layout')
 
 module.exports = component('App', (cursor) => {
+  logger.debug(`Rendering`)
   let routerState = cursor.cursor('router').toJS()
+  logger.debug(`Router state:`, routerState)
   let {currentRoute, routes, currentRouteParams,} = routerState
   let func = routes[currentRoute].render
-  logger.debug('Calling function with args:', currentRouteParams)
   let page
   if (cursor.cursor('router').get('isLoading')) {
     logger.debug(`Route data is loading`)

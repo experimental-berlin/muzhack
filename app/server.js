@@ -52,26 +52,7 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
   server.route({
     method: ['GET',],
     path: '/{path*}',
-    handler: (request, reply) => {
-      logger.debug(`Rendering index file`)
-      rendering.getInitialState(request)
-        .then((cursor) => {
-          let initialState = cursor.toJS()
-          logger.debug(`Successfully loaded initial state:`, initialState)
-          let reactHtml = rendering.render(cursor, request)
-          reply.view('index', {
-            initialState: JSON.stringify(initialState),
-            reactHtml,
-          })
-        }, (error) => {
-          if (error.isBoom) {
-            reply(error)
-          } else {
-            logger.error(`Failed to load initial state: '${error}':`, error.stack)
-            reply(Boom.badImplementation())
-          }
-        })
-    },
+    handler: rendering.renderIndex,
   })
   server.route({
     method: ['GET',],

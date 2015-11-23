@@ -1,6 +1,6 @@
 'use strict'
 let R = require('ramda')
-let logger = require('js-logger-aknudsen').get('routerState')
+let logger = require('js-logger-aknudsen').get('sharedRouting')
 
 let regex = require('./regex')
 let explore = require('./views/explore')
@@ -9,6 +9,27 @@ let login = require('./views/login')
 let userProfile = require('./views/userProfile/userProfile')
 
 class NotFoundError {
+}
+
+let loadData = (cursor) => {
+  let routerState = cursor.cursor('router').toJS()
+  let module = routerState.routes[routerState.currentRoute]
+  logger.debug(`${routerState.currentRoute} => ${module}:`, routerState)
+  let promise
+  if (module.loadData != null) {
+    logger.debug(`Loading route data...`)
+    logger.debug(`Current route args:`, routerState.currentRouteParams)
+    cursor = cursor.cursor('router').set('isLoading', true)
+    let result = module.loadData(cursor, routerState.currentRouteParams)
+    if (result.then != null) {
+      promise = result
+    } else {
+      promise = Promise.resolve(result)
+    }
+  } else {
+    promise = Promise.resolve({})
+  }
+  return promise
 }
 
 module.exports = {
@@ -39,7 +60,7 @@ module.exports = {
       routeParamNames,
     }
   },
-  updateRouterState: (cursor, currentPath) => {
+  updateRouterState: (cursor, currentPath, shouldLoad) => {
     logger.debug(`Updating router state`)
     logger.debug('Current path:', currentPath)
     let routerState = cursor.cursor('router').toJS()
@@ -75,12 +96,24 @@ module.exports = {
       let navItem = R.find((navItem) => {return navItem.path === '/'}, navItems)
       navItem.isSelected = true
     }
-    return cursor.mergeDeep({
+
+    cursor = cursor.mergeDeep({
       router: {
+        isLoading: shouldLoad,
         currentRoute,
         currentRouteParams,
+        currentPath,
       },
     })
+
+    if (shouldLoad) {
+      return loadData(cursor)
+        .then((newState) => {
+          return [cursor, newState,]
+        })
+    } else {
+      return Promise.resolve([cursor, {},])
+    }
   },
   NotFoundError,
 }

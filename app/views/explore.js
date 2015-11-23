@@ -6,6 +6,7 @@ let logger = require('js-logger-aknudsen').get('explore')
 let R = require('ramda')
 let h = require('react-hyperscript')
 let React = require('react')
+let ReactDOM = require('react-dom')
 let Packery = React.createFactory(require('react-packery-component')(React))
 
 let FocusingInput = require('./focusingInput')

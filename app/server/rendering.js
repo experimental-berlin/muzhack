@@ -13,7 +13,7 @@ let explore = require('../views/explore')
 let login = require('../views/login')
 let userProfile = require('../views/userProfile/userProfile')
 let App = require('../components/app')
-let {createRouterState, updateRouterState, NotFoundError,} = require('../routerState')
+let {createRouterState, updateRouterState, NotFoundError,} = require('../sharedRouting')
 
 let getInitialRouterState = (currentPath) => {
   if (currentPath === '/u/aknudsen/assets/images/flattr-badge-large.png') {
@@ -48,52 +48,46 @@ let getInitialRouterState = (currentPath) => {
   })
 }
 
-module.exports = {
-  getInitialState: (request) => {
-    let initialState = {
-      search: '',
-      login: login.createState(),
-      explore: explore.createState(),
-      userProfile: userProfile.createState(),
-      router: getInitialRouterState(request.path),
-    }
-    let cursor = immstruct('state', initialState).cursor()
-    cursor = cursor.mergeDeep({
-      router: createRouterState(),
-    })
-    try {
-      cursor = updateRouterState(cursor, request.path)
-    } catch (error) {
+let renderIndex = (request, reply) => {
+  let initialState = {
+    search: '',
+    login: login.createState(),
+    explore: explore.createState(),
+    userProfile: userProfile.createState(),
+    router: getInitialRouterState(request.path),
+  }
+  let cursor = immstruct('state', initialState).cursor()
+  cursor = cursor.mergeDeep({
+    router: createRouterState(),
+  })
+  return updateRouterState(cursor, request.path, true)
+    .then(([cursor, newState,]) => {
+      logger.debug(`Got new state:`, newState)
+      cursor = cursor.mergeDeep(R.merge(newState, {
+        router: {
+          isLoading: false,
+        },
+      }))
+      let initialState = cursor.toJS()
+      logger.debug(`Successfully loaded initial state:`, initialState)
+      logger.debug(`Rendering on server - current state:`, cursor.toJS())
+      let reactHtml = ReactDomServer.renderToString(App(cursor))
+      logger.debug(`Finished rendering`)
+      reply.view('index', {
+        initialState: JSON.stringify(initialState),
+        reactHtml,
+      })
+    }, (error) => {
       if (error instanceof NotFoundError) {
         logger.debug(`Current route not recognized`)
-        return Promise.reject(Boom.notFound())
+        reply(Boom.notFound())
       } else {
-        logger.debug(`Unrecognized exception:`, error)
+        logger.error(`Failed to load initial state: '${error}':`, error.stack)
+        reply(Boom.badImplementation())
       }
-      throw error
-    }
-    let routerState = cursor.cursor('router').toJS()
-    let module = routerState.routes[routerState.currentRoute]
-    let promise
-    if (module.loadData != null) {
-      logger.debug(`Loading route data...`)
-      logger.debug(`Current route args:`, routerState.currentRouteParams)
-      let result = module.loadData(cursor, routerState.currentRouteParams)
-      if (result.then != null) {
-        promise = result
-      } else {
-        promise = Promise.resolve(result)
-      }
-    } else {
-      promise = Promise.resolve({})
-    }
-    return promise.then((newState) => {
-      logger.debug(`Updating cursor with new state:`, newState)
-      return cursor.mergeDeep(newState)
     })
-  },
-  render: (cursor, request) => {
-    logger.debug(`Rendering on server - current state:`, cursor.toJS())
-    return ReactDomServer.renderToString(App(cursor))
-  },
+}
+
+module.exports = {
+  renderIndex,
 }

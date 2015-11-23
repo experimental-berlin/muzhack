@@ -11,7 +11,7 @@ let ajax = require('./client/ajax')
 let userManagement = require('./userManagement')
 let Loading = __IS_BROWSER__ ? require('./views/loading') : null
 let {normalizePath,} = require('./urlUtils')
-let {createRouterState, updateRouterState,} = require('./routerState')
+let {createRouterState, updateRouterState,} = require('./sharedRouting')
 let App = require('./components/app')
 
 let routes = null
@@ -78,20 +78,19 @@ let perform = (isInitial=false) => {
     return
   }
 
-  cursor = updateRouterState(cursor, currentPath)
-
-  let redirectTo = shouldRedirect(cursor)
-  if (redirectTo != null) {
-    goTo(redirectTo)
-  } else {
-    cursor.mergeDeep({
-      router: {
-        isLoading: false,
-        currentPath,
-        currentHash,
-      },
+  updateRouterState(cursor, currentPath, !isInitial)
+    .then(([cursor, newState,]) => {
+      cursor = cursor.mergeDeep(R.merge(newState, {
+        router: {
+          currentHash,
+          isLoading: false,
+        },
+      }))
+      let redirectTo = shouldRedirect(cursor)
+      if (redirectTo != null) {
+        goTo(redirectTo)
+      }
     })
-  }
 }
 
 if (__IS_BROWSER__) {
