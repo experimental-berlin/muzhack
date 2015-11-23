@@ -5,15 +5,8 @@ let S = require('underscore.string.fp')
 let logger = require('js-logger-aknudsen').get('explore')
 let R = require('ramda')
 let h = require('react-hyperscript')
-
-let ReactDOM
-let Isotope
-let $
-if (__IS_BROWSER__) {
-  ReactDOM = require('react-dom')
-  Isotope = require('isotope-layout/js/isotope.js')
-  $ = require('jquery/dist/jquery.js')
-}
+let React = require('react')
+let Packery = React.createFactory(require('react-packery-component')(React))
 
 let FocusingInput = require('./focusingInput')
 let ajax = require('../client/ajax')
@@ -31,19 +24,22 @@ let setSearch = (cursor, text) => {
   cursor.cursor('explore').set('search', text)
 }
 
-let createProjectElement = (cursor) => {
+let createProjectElement = (cursor, i) => {
   let project = cursor.toJS()
   let thumbnail = !R.isEmpty(project.pictures || []) ? project.pictures[0].url :
     '/images/revox-reel-to-reel-resized.jpg'
-  return $(`<div class=\"project-item\" data-id=\"${getQualifiedId(project)}\">
-    <a href=\"/u/${project.owner}/${project.projectId}\">
-      <div class=\"project-item-header\">
-        <div class=\"project-item-title\">${project.title}</div>
-        <div class=\"project-item-author\">${project.owner}</div>
-      </div>
-      <img class=\"project-item-image\" src=\"${thumbnail}\" />
-    </a>
-  </div>`)[0]
+  return h('.project-item', {
+    key: i,
+    'data-id': getQualifiedId(project),
+  }, [
+    h('a', {href: `/u/${project.owner}/${project.projectId}`,}, [
+      h('.project-item-header', [
+        h('.project-item-title', project.title),
+        h('.project-item-author', project.owner),
+      ]),
+      h('img.project-item-image', {src: thumbnail,}),
+    ]),
+  ])
 }
 
 let Results = component('Results', (cursor) => {
@@ -53,28 +49,15 @@ let Results = component('Results', (cursor) => {
     let exploreCursor = cursor.cursor('explore')
     let projectsCursor = exploreCursor.cursor('projects')
     logger.debug('Have got search results:', projectsCursor.toJS())
+    let projectElems = projectsCursor.map(createProjectElement).toJS()
     return projectsCursor.isEmpty() ? h('p', 'No projects were found, please try again.') :
-      IsotopeContainer(cursor)
+      Packery({
+        className: 'projects-container',
+        options: {
+          itemSelector: '.project-item',
+        },
+      }, projectElems)
   }
-})
-
-let IsotopeContainer = component('IsotopeContainer', {
-  componentDidMount: function () {
-    logger.debug(`Isotope container did mount`)
-    let projectsCursor = this.cursor.cursor(['explore', 'projects',])
-    let projectElems = projectElems = projectsCursor.map(createProjectElement).toJS()
-    let containerElem = this.refs.container
-    logger.debug('Got Isotope container element:', containerElem)
-    let iso = new Isotope(containerElem, {
-      itemSelector: '.project-item',
-      layoutMode: 'fitRows',
-    })
-    let elements = iso.getItemElements()
-    iso.remove(elements)
-    iso.insert(projectElems)
-  },
-}, () => {
-   return h('#isotope-container', {ref: 'container',})
 })
 
 let searchAsync = (cursor, query) => {
@@ -159,7 +142,6 @@ module.exports = {
     })
   },
   loadData: (cursor) => {
-    if (__IS_BROWSER__) {
     logger.debug(`Loading projects`)
     return searchAsync(cursor)
       .then((projects) => {
@@ -171,14 +153,6 @@ module.exports = {
           },
         }
       })
-    } else {
-      logger.debug(`Rendering on server, simulating loading of data`)
-      return {
-        router: {
-          isLoading: true,
-        },
-      }
-    }
   },
   render: (cursor) => {
     return h('.pure-g', [
