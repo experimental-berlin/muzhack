@@ -5,6 +5,7 @@ let S = require('underscore.string.fp')
 
 let isBrowser = require('../isBrowser')
 let {resolveWithResponse,} = require('../ajaxUtils')
+let serverAjax = require('../server/ajax')
 
 let ajax = (method, path, params, payload) => {
   let paramStr = S.join('&', R.map(([param, value,]) => {

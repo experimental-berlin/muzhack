@@ -246,9 +246,9 @@ module.exports = {
             }),
           },
         }
-      }, (reason) => {
-        logger.warn(`Loading project JSON failed: '${reason}'`)
-        throw new Error(reason)
+      }, (error) => {
+        logger.warn(`Loading project JSON failed: '${error}:'`, error.stack)
+        throw new Error(error)
       })
   },
 }

@@ -16,6 +16,7 @@ let connectToDb = (reply, host, callback, attempt) => {
     callback(conn)
       .then((result) => {
         conn.close()
+        logger.debug(`Replying with result:`, result)
         reply(result)
       }, (error) => {
         logger.warn(`There was an error in the callback of withDb: '${error}'`, error.stack)

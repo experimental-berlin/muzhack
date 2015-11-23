@@ -164,9 +164,6 @@ let createProject = (request, reply) => {
               id: qualifiedProjectId,
             }))
             .run(conn)
-            .then(() => {
-              reply()
-            })
         })
       }, (error) => {
         logger.warn(`Failed to generate zip: ${error}:`, error.stack)
@@ -260,7 +257,6 @@ let updateProject = (request, reply) => {
                     })).run(conn)
                       .then(() => {
                         logger.debug(`Project successfully updated in database`)
-                        reply()
                       })
                 })
           })
@@ -362,13 +358,13 @@ let search = (request, reply) => {
       })
       .run(conn)
       .then((projectsCursor) => {
-        projectsCursor.toArray()
+        return projectsCursor.toArray()
           .then((projects) => {
             logger.debug(`Found ${projects.length} project(s):`, projects)
-            reply(projects)
+            return projects
           }, (error) => {
             logger.warn(`Failed to iterate projects: '${error}'`, error.stack)
-            reply(boom.badImplementation())
+            throw new Error(error)
           })
       })
   })
@@ -394,7 +390,8 @@ let getUser = (request, reply) => {
               .then((content) => {
                 return JSON.parse(content)
               }, (error) => {
-                logger.warn("Ignoring upload at '${uploadUrl}' since we couldn't get its embed data")
+                logger.warn(
+                  `Ignoring upload at '${uploadUrl}' since we couldn't get its embed data`)
                 return null
               })
           }, scUploads)
@@ -406,14 +403,14 @@ let getUser = (request, reply) => {
                 },
               })
               logger.debug(`Returning user:`, extendedUser)
-              reply(extendedUser)
+              return extendedUser
             }, (error) => {
               logger.error(`An error occurred:`, error)
-              reply(Boom.badImplementation())
+              throw new Error(error)
             })
         } else {
           logger.debug(`Could not find user '${username}'`)
-          reply(Boom.notFound())
+          return Boom.notFound()
         }
       })
   })
@@ -530,7 +527,7 @@ module.exports.register = (server) => {
           logger.debug(`Removing folder '${dirPath}'...`)
           logger.debug(`Listing folder contents...`)
           return new Promise((resolve, reject) => {
-            s3Client.listObjects({Prefix: `${dirPath}/`}, (error, data) => {
+            s3Client.listObjects({Prefix: `${dirPath}/`,}, (error, data) => {
               if (error == null) {
                 resolve(data.Contents)
               } else {
@@ -567,7 +564,7 @@ module.exports.register = (server) => {
                   logger.debug(`Successfully removed ${objects.length} object(s)`)
                   // API will list max 1000 objects
                   if (objects.length === 1000) {
-                    logger.debug("We hit max number of listed objects, deleting recursively")
+                    logger.debug('We hit max number of listed objects, deleting recursively')
                     return removeFolder()
                   }
                 }, (error) => {
@@ -592,7 +589,6 @@ module.exports.register = (server) => {
                 return removeFolder()
                   .then(() => {
                     logger.debug(`Project '${qualifiedProjectId}' successfully deleted`)
-                    reply()
                   })
               })
           })
