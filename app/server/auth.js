@@ -54,7 +54,7 @@ let logIn = (request, reply) => {
       let usernameOrEmail = request.payload.username
       return r.table('users')
         .filter((user) => {
-          return user('id').eq(usernameOrEmail) || user('email').eq(usernameOrEmail)
+          return user('id').eq(usernameOrEmail).or(user('email').eq(usernameOrEmail))
         }).run(conn)
         .then((cursor) => {
           return cursor.toArray()
@@ -87,6 +87,32 @@ let logIn = (request, reply) => {
                 }
               }
             })
+        })
+    })
+  }
+}
+
+let resetPassword = (request, reply) => {
+  logger.debug(`Handling request to reset password`)
+  if (request.payload.username == null) {
+    logger.debug(`Username is missing`)
+    reply(Boom.badRequest('Missing username'))
+  } else {
+    withDb(reply, (conn) => {
+      let usernameOrEmail = request.payload.username
+      return r.table('users')
+        .filter((user) => {
+          return user('id').eq(usernameOrEmail).or(user('email').eq(usernameOrEmail))
+        }).run(conn)
+        .then((cursor) => {return cursor.toArray()})
+        .then((users) => {
+          if (R.isEmpty(users)) {
+            logger.debug(`Could not find user with username or email '${usernameOrEmail}'`)
+            return Boom.badRequest('Invalid username or password')
+          } else {
+            let user = users[0]
+            // TODO
+          }
         })
     })
   }
@@ -159,6 +185,11 @@ module.exports.register = (server) => {
         }
       })
     },
+  })
+  server.route({
+    method: ['POST',],
+    path: '/api/resetPassword',
+    handler: resetPassword,
   })
   server.route({
     method: ['GET',],

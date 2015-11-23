@@ -4,8 +4,11 @@ let logger = require('js-logger-aknudsen').get('forgotPassword')
 
 let FocusingInput = require('./focusingInput')
 let router = require('../router')
+let ajax = require('../client/ajax')
 
-require('./login.styl')
+if (__IS_BROWSER__) {
+  require('./login.styl')
+}
 
 module.exports = {
   redirectIfLoggedIn: true,
@@ -24,8 +27,15 @@ module.exports = {
           h('fieldset', [
             h('legend', 'Account Info'),
             FocusingInput({
-              id: 'account-email', type: 'email', placeholder: 'email',
-              classes: ['account-email',], required: true,
+              id: 'account-email',
+              type: 'email',
+              placeholder: 'email',
+              classes: ['account-email',],
+              required: true,
+              onChange: (event) => {
+                logger.debug('Setting emailOrUsername')
+                cursor.cursor('forgotPassword').set('emailOrUsername', event.target.value)
+              },
             }),
           ]),
           h('.button-group', [
@@ -34,6 +44,14 @@ module.exports = {
               onClick: (event) => {
                 event.preventDefault()
                 logger.debug('Submitting forgot password dialog')
+                ajax.postJson('resetPassword', {
+                  username: cursor.cursor('forgotPassword').get('emailOrUsername'),
+                }).then(() => {
+                  let redirectTo = '/'
+                  logger.info(`Request to reset password successfully sent`)
+                }, () => {
+                  logger.warn(`Resetting password failed`)
+                })
               }, value: 'Search',
             }),
             h('button#cancel-button.pure-button', {
