@@ -1,4 +1,6 @@
 'use strict'
+GLOBAL.__IS_BROWSER__ = false
+
 let Hapi = require('hapi')
 let R = require('ramda')
 let path = require('path')

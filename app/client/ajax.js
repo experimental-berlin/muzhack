@@ -45,7 +45,7 @@ let ajax = (method, path, params, payload) => {
       clientAjax(resolve, reject)
     } else {
       let serverAjax = require('../server/ajax')
-      serverAjax(resolve, reject)
+      serverAjax(absPath, method, payloadJson, resolve, reject)
     }
   })
 }
