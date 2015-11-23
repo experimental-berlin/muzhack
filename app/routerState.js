@@ -8,6 +8,9 @@ let displayProject = require('./views/project/displayProject')
 let login = require('./views/login')
 let userProfile = require('./views/userProfile/userProfile')
 
+class NotFoundError {
+}
+
 module.exports = {
   createRouterState: () => {
     let routes = {
@@ -45,7 +48,9 @@ module.exports = {
       return new RegExp(route).test(currentPath)
     }, R.keys(routes))
     if (currentRoute == null) {
-      throw new Error(`Couldn't find route corresponding to path '${currentPath}'`)
+      logger.debug(
+        `Couldn't find route corresponding to path '${currentPath}', throwing NotFoundError`)
+      throw new NotFoundError()
     }
     let match = new RegExp(currentRoute).exec(currentPath)
     // Route arguments correspond to regex groups
@@ -60,4 +65,5 @@ module.exports = {
       },
     })
   },
+  NotFoundError,
 }

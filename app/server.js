@@ -61,12 +61,12 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
             reactHtml,
           })
         }, (error) => {
-          logger.error(`Failed to load initial state: '${error}':`, error.stack)
-          reply(Boom.badImplementation())
-        })
-        .catch((error) => {
-          logger.error(`Rendering failed:`, error)
-          reply(Boom.badImplementation())
+          if (error.isBoom) {
+            reply(error)
+          } else {
+            logger.error(`Failed to load initial state: '${error}':`, error.stack)
+            reply(Boom.badImplementation())
+          }
         })
     },
   })
