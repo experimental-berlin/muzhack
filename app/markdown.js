@@ -1,5 +1,4 @@
 'use strict'
-let isBrowser = require('./isBrowser')
 let HtmlToReactParser = require('html-to-react/lib/parser')
 let React = require('react')
 let {getSanitizingConverter,} = require('./pagedown/Markdown.Sanitizer')
@@ -327,6 +326,6 @@ class MarkdownService {
   }
 }
 
-if (isBrowser) {
+if (__IS_BROWSER__) {
   module.exports.markdownService = new MarkdownService()
 }

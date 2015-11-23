@@ -1,5 +1,4 @@
 'use strict'
-let isBrowser = require('../../isBrowser')
 let component = require('omniscient')
 let R = require('ramda')
 let S = require('underscore.string.fp')
@@ -13,7 +12,7 @@ let VCard = require('./vcard')
 let {convertMarkdown,} = require('../../markdown')
 let userManagement = require('../../userManagement')
 
-if (isBrowser) {
+if (__IS_BROWSER__) {
   require('./userProfile.styl')
 }
 

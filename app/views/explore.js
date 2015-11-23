@@ -1,5 +1,4 @@
 'use strict'
-let isBrowser = require('../isBrowser')
 let component = require('omniscient')
 let immutable = require('immutable')
 let S = require('underscore.string.fp')
@@ -10,7 +9,7 @@ let h = require('react-hyperscript')
 let ReactDOM
 let Isotope
 let $
-if (isBrowser) {
+if (__IS_BROWSER__) {
   ReactDOM = require('react-dom')
   Isotope = require('isotope-layout/js/isotope.js')
   $ = require('jquery/dist/jquery.js')
@@ -19,7 +18,7 @@ if (isBrowser) {
 let FocusingInput = require('./focusingInput')
 let ajax = require('../client/ajax')
 
-if (isBrowser) {
+if (__IS_BROWSER__) {
   require('./explore.styl')
 }
 
@@ -160,7 +159,7 @@ module.exports = {
     })
   },
   loadData: (cursor) => {
-    if (isBrowser) {
+    if (__IS_BROWSER__) {
     logger.debug(`Loading projects`)
     return searchAsync(cursor)
       .then((projects) => {

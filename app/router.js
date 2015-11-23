@@ -1,5 +1,4 @@
 'use strict'
-let isBrowser = require('./isBrowser')
 let immstruct = require('immstruct')
 let component = require('omniscient')
 let immutable = require('immutable')
@@ -10,7 +9,7 @@ let logger = require('js-logger-aknudsen').get('router')
 let layout = require('./layout')
 let ajax = require('./client/ajax')
 let userManagement = require('./userManagement')
-let Loading = isBrowser ? require('./views/loading') : null
+let Loading = __IS_BROWSER__ ? require('./views/loading') : null
 let {normalizePath,} = require('./urlUtils')
 let {createRouterState, updateRouterState,} = require('./routerState')
 let App = require('./components/app')
@@ -159,7 +158,7 @@ let perform = (isInitial=false) => {
   }
 }
 
-if (isBrowser) {
+if (__IS_BROWSER__) {
   window.onpopstate = () => {
     logger.debug('onpopstate')
     perform()
@@ -231,7 +230,7 @@ let handleClick = (e) => {
   goTo(orig)
 }
 
-if (isBrowser) {
+if (__IS_BROWSER__) {
   let clickEvent = document != null && document.ontouchstart ? 'touchstart' : 'click'
   document.addEventListener(clickEvent, handleClick, false)
 }

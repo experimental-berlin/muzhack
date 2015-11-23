@@ -3,9 +3,7 @@ let logger = require('js-logger-aknudsen').get('client.ajax')
 let R = require('ramda')
 let S = require('underscore.string.fp')
 
-let isBrowser = require('../isBrowser')
 let {resolveWithResponse,} = require('../ajaxUtils')
-let serverAjax = require('../server/ajax')
 
 let ajax = (method, path, params, payload) => {
   let paramStr = S.join('&', R.map(([param, value,]) => {
@@ -43,9 +41,10 @@ let ajax = (method, path, params, payload) => {
   }
 
   return new Promise((resolve, reject) => {
-    if (isBrowser) {
+    if (__IS_BROWSER__) {
       clientAjax(resolve, reject)
     } else {
+      let serverAjax = require('../server/ajax')
       serverAjax(resolve, reject)
     }
   })

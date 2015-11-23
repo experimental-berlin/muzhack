@@ -1,5 +1,4 @@
 'use strict'
-let isBrowser = require('./isBrowser')
 let h = require('react-hyperscript')
 let R = require('ramda')
 let S = require('underscore.string.fp')
@@ -8,7 +7,7 @@ let component = require('omniscient')
 let userManagement = require('./userManagement')
 
 let flattrImage
-if (isBrowser) {
+if (__IS_BROWSER__) {
   require('purecss/build/pure.css')
   require('normalize.css/normalize.css')
   require('./layout.styl')

@@ -6,7 +6,6 @@ let S = require('underscore.string.fp')
 let component = require('omniscient')
 let React = require('react')
 
-let isBrowser = require('../../isBrowser')
 let datetime = require('../../datetime')
 let {nbsp,} = require('../../specialChars')
 let {convertMarkdown,} = require('../../markdown')
@@ -14,7 +13,7 @@ let ajax = require('../../client/ajax')
 let userManagement = require('../../userManagement')
 let licenses = require('../../licenses')
 
-if (isBrowser) {
+if (__IS_BROWSER__) {
   require('./displayProject.styl')
 }
 

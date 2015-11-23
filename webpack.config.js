@@ -1,4 +1,10 @@
 'use strict'
+let webpack = require('webpack')
+
+var definePlugin = new webpack.DefinePlugin({
+  __IS_BROWSER__: true,
+})
+
 module.exports = {
   context: __dirname + '/app',
   entry: './entry.js',
@@ -26,7 +32,7 @@ module.exports = {
         loader: 'url-loader?limit=30000&name=[name]-[hash].[ext]',
       },
       {
-        test: /(app\/server|isotope|masonry|outlayer|item|get-size|fizzy-ui-utils\/utils)\.js$/,
+        test: /(isotope|masonry|outlayer|item|get-size|fizzy-ui-utils\/utils)\.js$/,
         loader: 'imports?define=>false',
       },
       {
@@ -61,4 +67,5 @@ module.exports = {
       '*': 'http://localhost:8000',
     },
   },
+  plugins: [definePlugin,],
 }
