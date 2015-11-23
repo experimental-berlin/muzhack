@@ -27,7 +27,7 @@ let connectToDb = (reply, host, callback, attempt) => {
     if (attempt < 5) {
       let timeout = attempt * 0.5
       logger.debug(`Waiting ${timeout} second(s) before attempting again to connect to DB...`)
-      setTimeout(R.partial(connectToDb, [reply, host, callback, attempt + 1]), timeout)
+      setTimeout(R.partial(connectToDb, [reply, host, callback, attempt + 1,]), timeout)
     } else {
       logger.warn(`Failed to connect to RethinkDB after ${attempt} attempts: '${error}':`,
         error.stack)

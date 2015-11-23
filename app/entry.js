@@ -18,6 +18,7 @@ let forgotPassword = require('./views/forgotPassword')
 let userProfile = require('./views/userProfile/userProfile')
 let ajax = require('./client/ajax')
 let discourse = require('./discourse')
+let routeMap = require('./routeMap')
 
 require('./app.styl')
 require('./styles/fonts.css')
@@ -42,7 +43,7 @@ window.onerror = (message, url, line) => {
 let initialState = JSON.parse(document.getElementById('initial-state').getAttribute('data-json'))
 logger.debug(`Initial state as rendered by server:`, initialState)
 let structure = immstruct('state', initialState)
-router.performInitial(structure.cursor())
+router.performInitial(structure.cursor(), routeMap)
 
 let render = () => {
   ReactDom.render(router.Router(structure.cursor()), document.getElementById('container'))

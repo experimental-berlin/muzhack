@@ -14,6 +14,7 @@ let login = require('../views/login')
 let userProfile = require('../views/userProfile/userProfile')
 let App = require('../components/app')
 let {createRouterState, updateRouterState, NotFoundError,} = require('../sharedRouting')
+let routeMap = require('../routeMap')
 
 let getInitialRouterState = (currentPath) => {
   if (currentPath === '/u/aknudsen/assets/images/flattr-badge-large.png') {
@@ -42,8 +43,6 @@ let getInitialRouterState = (currentPath) => {
   return immutable.fromJS({
     currentPath,
     isLoading: false,
-    // routes: mappedRoutes,
-    // routeParamNames,
     navItems,
   })
 }
@@ -58,7 +57,7 @@ let renderIndex = (request, reply) => {
   }
   let cursor = immstruct('state', initialState).cursor()
   cursor = cursor.mergeDeep({
-    router: createRouterState(),
+    router: createRouterState(routeMap),
   })
   return updateRouterState(cursor, request.path, true)
     .then(([cursor, newState,]) => {

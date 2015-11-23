@@ -3,11 +3,6 @@ let R = require('ramda')
 let logger = require('js-logger-aknudsen').get('sharedRouting')
 
 let regex = require('./regex')
-let explore = require('./views/explore')
-let displayProject = require('./views/project/displayProject')
-let login = require('./views/login')
-let userProfile = require('./views/userProfile/userProfile')
-let about = require('./views/about')
 
 class NotFoundError {
 }
@@ -34,27 +29,15 @@ let loadData = (cursor) => {
 }
 
 module.exports = {
-  createRouterState: () => {
-    let routes = {
-      '/': explore,
-      '/u/:user': userProfile,
-      '/u/:owner/:projectId': displayProject,
-      // '/u/:owner/:projectId/edit': editProject.routeOptions,
-      // '/create': createProject.routeOptions,
-      '/about': about,
-      '/login': login,
-      // '/logout': logout.render,
-      // '/account/forgotpassword': forgotPassword.routeOptions,
-      // '/discourse/sso': discourse.routeOptions,
-    }
+  createRouterState: (routeMap) => {
     let mappedRoutes = {}
     let routeParamNames = {}
     R.forEach((route) => {
       // Replace :[^/]+ with ([^/]+), f.ex. /persons/:id/resource -> /persons/([^/]+)/resource
       let mappedRoute = `^${route.replace(/:\w+/g, '([^/]+)')}$`
-      mappedRoutes[mappedRoute] = routes[route]
+      mappedRoutes[mappedRoute] = routeMap[route]
       routeParamNames[mappedRoute] = regex.findAll(':(\\w+)', route)
-    }, R.keys(routes))
+    }, R.keys(routeMap))
     logger.debug(`Application routes:`, mappedRoutes)
     return {
       routes: mappedRoutes,

@@ -44,6 +44,54 @@ let validateSignup = (request, reply) => {
   return true
 }
 
+let logIn = (request, reply) => {
+  logger.debug(`Handling request to log user in`)
+  if (request.payload.username == null || request.payload.password == null) {
+    logger.debug(`Username or password is missing`)
+    reply(Boom.badRequest('Missing username or password'))
+  } else {
+    withDb(reply, (conn) => {
+      let usernameOrEmail = request.payload.username
+      return r.table('users')
+        .filter((user) => {
+          return user('id').eq(usernameOrEmail) || user('email').eq(usernameOrEmail)
+        }).run(conn)
+        .then((cursor) => {
+          return cursor.toArray()
+            .then((users) => {
+              if (R.isEmpty(users)) {
+                logger.debug(
+                  `Could not find user with username or email '${usernameOrEmail}'`)
+                return Boom.badRequest('Invalid username or password')
+              } else {
+                let user = users[0]
+                logger.debug(`Users:`, users)
+                if (request.auth.isAuthenticated) {
+                  logger.debug(`User is already logged in`)
+                  return {username: user.username,}
+                } else {
+                  logger.debug(`Logging user in`)
+                  return new Promise((resolve, reject) => {
+                    bcrypt.compare(request.payload.password, user.password, (err, isValid) => {
+                      if (!isValid) {
+                        logger.debug(`Password not valid`)
+                        reject(Boom.badRequest('Invalid username or password'))
+                      } else {
+                        logUserIn(request, user)
+                        let result = {username: user.username,}
+                        logger.debug(`User successfully logged in - replying with:`, result)
+                        resolve(result)
+                      }
+                    })
+                  })
+                }
+              }
+            })
+        })
+    })
+  }
+}
+
 module.exports.register = (server) => {
   server.register(require('hapi-auth-cookie'), (err) => {
     server.auth.strategy('session', 'cookie', 'try', {
@@ -55,51 +103,7 @@ module.exports.register = (server) => {
   server.route({
     method: ['POST',],
     path: '/api/login',
-    handler: (request, reply) => {
-      logger.debug(`Handling request to log user in`)
-      if (request.payload.username == null || request.payload.password == null) {
-        logger.debug(`Username or password is missing`)
-        reply(Boom.badRequest('Missing username or password'))
-      } else {
-        withDb(reply, (conn) => {
-          let usernameOrEmail = request.payload.username
-          return r.table('users')
-            .filter((user) => {
-              return user('id').eq(usernameOrEmail) || user('email').eq(usernameOrEmail)
-            }).run(conn)
-            .then((cursor) => {
-              cursor.toArray()
-                .then((users) => {
-                  if (R.isEmpty(users)) {
-                    logger.debug(
-                      `Could not find user with username or email '${usernameOrEmail}'`)
-                    reply(Boom.badRequest('Invalid username or password'))
-                  } else {
-                    let user = users[0]
-                    logger.debug(`Users:`, users)
-                    if (request.auth.isAuthenticated) {
-                      logger.debug(`User is already logged in`)
-                      reply({username: user.username,})
-                    } else {
-                      logger.debug(`Logging user in`)
-                      bcrypt.compare(request.payload.password, user.password, (err, isValid) => {
-                        if (!isValid) {
-                          logger.debug(`Password not valid`)
-                          reply(Boom.badRequest('Invalid username or password'))
-                        } else {
-                          logUserIn(request, user)
-                          let result = {username: user.username,}
-                          logger.debug(`User successfully logged in - replying with:`, result)
-                          reply(result)
-                        }
-                      })
-                    }
-                  }
-                })
-            })
-        })
-      }
-    },
+    handler: logIn,
   })
   server.route({
     method: ['POST',],
@@ -141,15 +145,14 @@ module.exports.register = (server) => {
                   if (result.first_error.startsWith('Duplicate primary key')) {
                     logger.debug(
                       `User's requested username is already taken: '${payload.username}'`)
-                    reply(Boom.badRequest('Username is taken'))
+                    return Boom.badRequest('Username is taken')
                   } else {
                     logger.debug(
                       `An error was encountered while adding new user: '${result.first_error}'`)
-                    reply(Boom.badImplementation())
+                    return Boom.badImplementation()
                   }
                 } else {
                   logUserIn(request, user)
-                  reply()
                 }
               })
           })

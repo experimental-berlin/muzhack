@@ -14,8 +14,6 @@ let {normalizePath,} = require('./urlUtils')
 let {createRouterState, updateRouterState,} = require('./sharedRouting')
 let App = require('./components/app')
 
-let routes = null
-
 let getState = () => {
   return immstruct('state').cursor()
 }
@@ -205,9 +203,9 @@ let getCurrentRoute = (routes) => {
 
 module.exports = {
   Router,
-  performInitial: (cursor) => {
+  performInitial: (cursor, routeMap) => {
     cursor.mergeDeep({
-      router: createRouterState(),
+      router: createRouterState(routeMap),
     })
     perform(true)
   },

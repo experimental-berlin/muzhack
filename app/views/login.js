@@ -5,12 +5,14 @@ let immutable = require('immutable')
 let logger = require('js-logger-aknudsen').get('login')
 let R = require('ramda')
 
-// let {nbsp,} = require('../specialChars')
-// let ajax = require('../client/ajax')
-// let FocusingInput = require('./focusingInput')
-// let router = require('../router')
+let {nbsp,} = require('../specialChars')
+let ajax = require('../client/ajax')
+let FocusingInput = require('./focusingInput')
+let router = require('../router.js')
 
-// require('./login.styl')
+if (__IS_BROWSER__) {
+  require('./login.styl')
+}
 
 let SignInForm = component('SignInForm', (cursor) => {
   return h('form#signin-form.pure-form.pure-form-stacked', {action: 'action',}, [
