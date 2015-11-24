@@ -70,6 +70,14 @@ let shouldRedirect = (cursor) => {
   }
 }
 
+let redirectIfNecessary = (cursor) => {
+  let redirectTo = shouldRedirect(cursor)
+  if (redirectTo != null) {
+    logger.debug(`Redirecting to '${redirectTo}'...`)
+    goTo(redirectTo)
+  }
+}
+
 let perform = (isInitial=false) => {
   let cursor = getState()
   let currentPath = getCurrentPath()
@@ -79,6 +87,7 @@ let perform = (isInitial=false) => {
   if (!isInitial && currentPath === routerState.currentPath) {
     logger.debug(`Path did not change:`, currentPath)
     cursor.cursor('router').set('currentHash', currentHash)
+    redirectIfNecessary(cursor)
     return
   }
 
@@ -92,10 +101,7 @@ let perform = (isInitial=false) => {
       })
       logger.debug(`Merging in new state after loading data:`, mergedNewState)
       cursor = cursor.mergeDeep(mergedNewState)
-      let redirectTo = shouldRedirect(cursor)
-      if (redirectTo != null) {
-        goTo(redirectTo)
-      }
+      redirectIfNecessary(cursor)
     })
 }
 
@@ -217,5 +223,6 @@ module.exports = {
     })
     perform(true)
   },
+  perform,
   goTo,
 }

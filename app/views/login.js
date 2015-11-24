@@ -8,7 +8,7 @@ let R = require('ramda')
 let {nbsp,} = require('../specialChars')
 let ajax = require('../client/ajax')
 let FocusingInput = require('./focusingInput')
-let router = require('../router.js')
+let router = require('../router')
 
 if (__IS_BROWSER__) {
   require('./login.styl')
@@ -51,10 +51,9 @@ let SignInForm = component('SignInForm', (cursor) => {
             username: loginCursor.get('emailOrUsername'),
             password: loginCursor.get('password'),
           }).then((user) => {
-            let redirectTo = '/'
-            logger.info(`User successfully logged in - redirecting to '${redirectTo}'`)
+            logger.info(`User successfully logged in`)
             cursor.set('loggedInUser', immutable.fromJS(user))
-            router.goTo(redirectTo)
+            router.perform()
           }, () => {
             logger.warn(`Logging user in failed`)
           })
@@ -165,7 +164,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
                   isLoading: false,
                 },
               })
-              router.goTo('/')
+              router.perform()
             }, (err) => {
               logger.warn(`User signup failed: '${err}'`)
               cursor.cursor('router').set('isLoading', false)
