@@ -96,10 +96,10 @@ module.exports = {
     if (shouldLoad) {
       return loadData(cursor)
         .then((newState) => {
-          return [cursor, newState,]
+          return newState
         })
     } else {
-      return Promise.resolve([cursor, {},])
+      return Promise.resolve({})
     }
   },
   NotFoundError,

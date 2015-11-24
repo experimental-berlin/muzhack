@@ -83,13 +83,16 @@ let perform = (isInitial=false) => {
   }
 
   updateRouterState(cursor, currentPath, !isInitial)
-    .then(([cursor, newState,]) => {
-      cursor = cursor.mergeDeep(R.merge(newState, {
+    .then((newState) => {
+      let cursor = getState()
+      let mergedNewState = R.merge(newState, {
         router: {
           currentHash,
           isLoading: false,
         },
-      }))
+      })
+      logger.debug(`Merging in new state after loading data:`, mergedNewState)
+      cursor = cursor.mergeDeep(mergedNewState)
       let redirectTo = shouldRedirect(cursor)
       if (redirectTo != null) {
         goTo(redirectTo)
