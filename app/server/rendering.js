@@ -16,7 +16,8 @@ let App = require('../components/app')
 let {createRouterState, updateRouterState, NotFoundError,} = require('../sharedRouting')
 let routeMap = require('../routeMap')
 
-let getInitialRouterState = (currentPath) => {
+let getInitialRouterState = (request) => {
+  let currentPath = request.path
   if (currentPath === '/u/aknudsen/assets/images/flattr-badge-large.png') {
     throw new Error(`Path is /u/aknudsen/assets/images/flattr-badge-large.png`)
   }
@@ -53,9 +54,10 @@ let renderIndex = (request, reply) => {
     login: login.createState(),
     explore: explore.createState(),
     userProfile: userProfile.createState(),
-    router: getInitialRouterState(request.path),
+    router: getInitialRouterState(request),
     loggedInUser: request.auth.isAuthenticated ? request.auth.credentials : null,
   }
+  immstruct.clear()
   let cursor = immstruct('state', initialState).cursor()
   cursor = cursor.mergeDeep({
     router: createRouterState(routeMap),
