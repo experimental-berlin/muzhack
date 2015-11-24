@@ -29,6 +29,9 @@ let loadData = (cursor) => {
     promise = Promise.resolve({})
   }
   return promise
+    .then((result) => {
+      return [cursor, result,]
+    })
 }
 
 module.exports = {
@@ -95,11 +98,8 @@ module.exports = {
 
     if (shouldLoad) {
       return loadData(cursor)
-        .then((newState) => {
-          return newState
-        })
     } else {
-      return Promise.resolve({})
+      return Promise.resolve([cursor, {},])
     }
   },
   NotFoundError,

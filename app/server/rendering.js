@@ -63,9 +63,8 @@ let renderIndex = (request, reply) => {
     router: createRouterState(routeMap),
   })
   return updateRouterState(cursor, request.path, true)
-    .then((newState) => {
+    .then(([cursor, newState,]) => {
       logger.debug(`Got new state:`, newState)
-      cursor = immstruct('state').cursor()
       cursor = cursor.mergeDeep(R.merge(newState, {
         router: {
           isLoading: false,

@@ -83,8 +83,7 @@ let perform = (isInitial=false) => {
   }
 
   updateRouterState(cursor, currentPath, !isInitial)
-    .then((newState) => {
-      let cursor = getState()
+    .then(([cursor, newState,]) => {
       let mergedNewState = R.merge(newState, {
         router: {
           currentHash,
