@@ -53,7 +53,7 @@ let SignInForm = component('SignInForm', (cursor) => {
           }).then((user) => {
             let redirectTo = '/'
             logger.info(`User successfully logged in - redirecting to '${redirectTo}'`)
-            cursor.set('loggedInUser', user)
+            cursor.set('loggedInUser', immutable.fromJS(user))
             router.goTo(redirectTo)
           }, () => {
             logger.warn(`Logging user in failed`)

@@ -9,18 +9,8 @@ let R = require('ramda')
 
 let logUserIn = (request, user) => {
   let username = user.id
-  request.auth.session.set({username: username, name: user.name,})
+  request.auth.session.set({username, name: user.name,})
   logger.debug(`Successfully logged user '${username}' in`)
-}
-
-module.exports.getLoggedInUser = (request) => {
-  if (request.auth.isAuthenticated) {
-    return {
-      username: request.auth.credentials.username,
-    }
-  } else {
-    return null
-  }
 }
 
 let validateSignup = (request, reply) => {

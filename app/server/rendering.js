@@ -54,7 +54,7 @@ let renderIndex = (request, reply) => {
     explore: explore.createState(),
     userProfile: userProfile.createState(),
     router: getInitialRouterState(request.path),
-    loggedInUser: request.auth.credentials,
+    loggedInUser: request.auth.isAuthenticated ? request.auth.credentials : null,
   }
   let cursor = immstruct('state', initialState).cursor()
   cursor = cursor.mergeDeep({

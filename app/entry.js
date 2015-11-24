@@ -1,23 +1,10 @@
 'use strict'
-let component = require('omniscient')
 let immstruct = require('immstruct')
-let React = require('react')
 let ReactDom = require('react-dom')
 let router = require('./router')
 let Logger = require('js-logger-aknudsen')
-let R = require('ramda')
 
-let about = require('./views/about')
-let explore = require('./views/explore')
-let displayProject = require('./views/project/displayProject')
-let editProject = require('./views/project/editProject')
-let createProject = require('./views/project/createProject')
-let login = require('./views/login')
-let logout = require('./views/logout')
-let forgotPassword = require('./views/forgotPassword')
-let userProfile = require('./views/userProfile/userProfile')
 let ajax = require('./client/ajax')
-let discourse = require('./discourse')
 let routeMap = require('./routeMap')
 
 require('./app.styl')

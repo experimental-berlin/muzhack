@@ -14,8 +14,12 @@ let loadData = (cursor) => {
   if (module.loadData != null) {
     logger.debug(`Loading route data...`)
     logger.debug(`Current route args:`, routerState.currentRouteParams)
-    cursor = cursor.cursor('router').set('isLoading', true)
-    let result = module.loadData(cursor, routerState.currentRouteParams)
+    cursor = cursor.mergeDeep({
+      router: {
+        isLoading: true,
+      },
+    })
+    let result = module.loadData(cursor, routerState.currentRouteParams) || {}
     if (result.then != null) {
       promise = result
     } else {

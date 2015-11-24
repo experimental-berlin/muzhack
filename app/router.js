@@ -54,12 +54,18 @@ let shouldRedirect = (cursor) => {
     }
   } else {
     logger.debug(`User is not logged in`)
-    if (!options.requiresLogin) {
-      logger.debug(`Route doesn't require login`)
-      return null
+    if (options.redirectIfLoggedOut) {
+      let redirectTo = '/'
+      logger.debug(`Route requires redirect when logged out - redirecting to ${redirectTo}`)
+      return redirectTo
     } else {
-      logger.debug(`Route requires user being logged in - redirecting to login page`)
-      return '/login'
+      if (!options.requiresLogin) {
+        logger.debug(`Route doesn't require login`)
+        return null
+      } else  {
+        logger.debug(`Route requires user being logged in - redirecting to login page`)
+        return '/login'
+      }
     }
   }
 }
