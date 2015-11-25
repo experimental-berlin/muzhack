@@ -82,7 +82,7 @@ let Header = component('Header', (cursor) => {
   logger.debug('Nav items:', navItems)
   return h('header', [
     h('nav#menu.pure-menu.pure-menu-open.pure-menu-fixed.pure-menu-horizontal', [
-      h('a.pure-menu-heading', {href: '/',}, 'MuzHack'),
+      h('a.pure-menu-heading', {href: '/',}, h('span.icon-Muzhack_logo1')),
       h('ul.pure-menu-list', R.addIndex(R.map)((navItem, i) => {
         let classes = ['pure-menu-item', navItem.isSelected ? 'pure-menu-selected' : null,]
         let extraAttrs = navItem.isExternal ? {target: '_blank',} : {}

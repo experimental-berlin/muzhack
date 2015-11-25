@@ -1,11 +1,11 @@
 @font-face {
 	font-family: 'icomoon';
-	src:url('fonts/icomoon.eot?k34x6g');
-	src:url('fonts/icomoon.eot?k34x6g#iefix') format('embedded-opentype'),
-		url('fonts/icomoon.woff2?k34x6g') format('woff2'),
-		url('fonts/icomoon.ttf?k34x6g') format('truetype'),
-		url('fonts/icomoon.woff?k34x6g') format('woff'),
-		url('fonts/icomoon.svg?k34x6g#icomoon') format('svg');
+	src:url('fonts/icomoon.eot?g23cej');
+	src:url('fonts/icomoon.eot?g23cej#iefix') format('embedded-opentype'),
+		url('fonts/icomoon.woff2?g23cej') format('woff2'),
+		url('fonts/icomoon.ttf?g23cej') format('truetype'),
+		url('fonts/icomoon.woff?g23cej') format('woff'),
+		url('fonts/icomoon.svg?g23cej#icomoon') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -24,8 +24,11 @@
 	-moz-osx-font-smoothing: grayscale;
 }
 
-.icon-header:before {
-	content: "\f1dc";
+.icon-Muzhack_logo2:before {
+	content: "\e900";
+}
+.icon-Muzhack_logo1:before {
+	content: "\e901";
 }
 .icon-trello:before {
 	content: "\e601";
