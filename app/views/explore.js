@@ -44,10 +44,10 @@ let createProjectElement = (cursor, i) => {
 }
 
 let Results = component('Results', (cursor) => {
-  if (cursor.get('isSearching')) {
+  let exploreCursor = cursor.cursor('explore')
+  if (exploreCursor.get('isSearching')) {
     return h('p', 'Searching...')
   } else {
-    let exploreCursor = cursor.cursor('explore')
     let projectsCursor = exploreCursor.cursor('projects')
     logger.debug('Have got search results:', projectsCursor.toJS())
     let projectElems = projectsCursor.map(createProjectElement).toJS()
@@ -73,7 +73,8 @@ let searchAsync = (cursor, query) => {
 }
 
 let performSearch = (cursor) => {
-  if (cursor.get('isSearching')) {
+  let exploreCursor = cursor.cursor('explore')
+  if (exploreCursor.get('isSearching')) {
     logger.warn(`performSearch invoked while already searching`)
     return
   }
@@ -81,26 +82,27 @@ let performSearch = (cursor) => {
   let setSearchResults = (cursor, results) => {
     cursor.update((state) => {
       return state.merge({
-        isSearching: false,
         explore: state.get('explore').merge({
+          isSearching: false,
           projects: immutable.fromJS(results),
         }),
        })
      })
   }
 
-  let exploreCursor = cursor.cursor('explore')
   let query = exploreCursor.get('search')
   logger.debug(`Performing search: '${query}'`)
   cursor = cursor.mergeDeep({
-    isSearching: true,
-    search: query,
+    explore: {
+      isSearching: true,
+      search: query,
+    },
   })
   return searchAsync(cursor, query)
     .then((projects) => {
       cursor = cursor.update((current) => {
         current = current.setIn(['explore', 'projects',], immutable.fromJS(projects))
-        return current.set('isSearching', false)
+        return current.setIn(['explore', 'isSearching',], false)
       })
     })
 }
@@ -147,8 +149,8 @@ module.exports = {
     return searchAsync(cursor)
       .then((projects) => {
         return {
-          isSearching: false,
           explore: {
+            isSearching: false,
             search: '',
             projects,
           },

@@ -100,7 +100,15 @@ let perform = (isInitial=false) => {
         },
       })
       logger.debug(`Merging in new state after loading data:`, mergedNewState)
-      cursor = cursor.mergeDeep(mergedNewState)
+      cursor = cursor.update((current) => {
+        current = current.mergeDeep({
+          router: {
+            currentHash,
+            isLoading: false,
+          },
+        })
+        return current.merge(newState)
+      })
       redirectIfNecessary(cursor)
     })
 }
