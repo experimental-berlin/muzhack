@@ -2,6 +2,7 @@
 let explore = require('./views/explore')
 let displayProject = require('./views/project/displayProject')
 let editProject = require('./views/project/editProject')
+let createProject = require('./views/project/createProject')
 let login = require('./views/login')
 let userProfile = require('./views/userProfile/userProfile')
 let about = require('./views/about')
@@ -13,7 +14,7 @@ module.exports = {
   '/u/:user': userProfile,
   '/u/:owner/:projectId': displayProject,
   '/u/:owner/:projectId/edit': editProject,
-  // '/create': createProject,
+  '/create': createProject,
   '/about': about,
   '/login': login,
   '/logout': logout,

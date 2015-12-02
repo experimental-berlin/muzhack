@@ -3,21 +3,23 @@ let component = require('omniscient')
 let h = require('react-hyperscript')
 let R = require('ramda')
 let logger = require('js-logger-aknudsen').get('createProject')
-let $ = require('jquery')
 let S = require('underscore.string.fp')
 
+let userManagement = require('../../userManagement')
 let licenses = require('../../licenses')
 let FocusingInput = require('../focusingInput')
 let {nbsp,} = require('../../specialChars')
-let router = require('../../router')
 let ajax = require('../../ajax')
 let Loading = require('./loading')
 let {DescriptionEditor, InstructionsEditor, PicturesEditor,
   FilesEditor,} = require('./editors')
-let uploadProject = require('./uploadProject')
-let userManagement = require('../../userManagement')
 
+let uploadProject
+let router
 if (__IS_BROWSER__) {
+  uploadProject = require('./uploadProject')
+  router = require('../../router')
+
   require('./editAndCreate.styl')
   require('./createProject.styl')
   require('../dropzone.scss')
