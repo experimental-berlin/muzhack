@@ -2,7 +2,7 @@
 let logger = require('js-logger-aknudsen').get('logout')
 let h = require('react-hyperscript')
 
-let ajax = require('../client/ajax')
+let ajax = require('../ajax')
 
 module.exports = {
   redirectIfLoggedOut: true,

@@ -3,7 +3,7 @@ let S = require('underscore.string.fp')
 let logger = require('js-logger-aknudsen').get('discourse')
 let h = require('react-hyperscript')
 
-let ajax = require('./client/ajax')
+let ajax = require('./ajax')
 
 module.exports = {
   requiresLogin: true,

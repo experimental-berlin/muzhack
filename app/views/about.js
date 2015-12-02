@@ -24,7 +24,7 @@ module.exports = {
         ]),
       ]),
       h('.pure-u-1', [
-        h('#about-pad.airy-padding-sides', [
+        h('#about-pad', [
           h('h1', 'About MuzHack'),
           h('p', `MuzHack is a joint effort between Arve Knudsen and Notam to produce an online
 hub for music hardware projects. The goal is for this application to contain descriptions of the

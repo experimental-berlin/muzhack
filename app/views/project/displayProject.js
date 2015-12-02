@@ -9,7 +9,7 @@ let React = require('react')
 let datetime = require('../../datetime')
 let {nbsp,} = require('../../specialChars')
 let {convertMarkdown,} = require('../../markdown')
-let ajax = require('../../client/ajax')
+let ajax = require('../../ajax')
 let userManagement = require('../../userManagement')
 let licenses = require('../../licenses')
 
@@ -40,7 +40,7 @@ let TopPad = component('TopPad', (cursor) => {
   let mainPicture = project.chosenPicture || project.pictures[0]
   let loggedInUser = userManagement.getLoggedInUser(cursor)
   let canEdit = loggedInUser != null && loggedInUser.username === project.owner
-  return h('#project-top-pad.airy-padding-sides', [
+  return h('#project-top-pad', [
     canEdit ? h('a#edit-action.action.pull-right', {
       href: `/u/${project.owner}/${project.projectId}/edit`, 'data-tooltip': 'Edit project',
     }, [
@@ -87,14 +87,14 @@ let RightColumn = component('RightColumn', (project) => {
     }, tag), ', ',]
   }, project.tags).slice(0, -1)
   return h('#right-column', [
-    h('#tag-pad.airy-padding-sides', [
+    h('#tag-pad', [
       h('h2', [
         h('span.icon-tags2'),
         `${nbsp}Tags`,
       ]),
       h('#project-tags', tagElems),
     ]),
-    h('#license-pad.airy-padding-sides', [
+    h('#license-pad', [
       h('h2', 'License'),
       h('#license-icons', [
         h('a', {href: project.license.url, target: '_blank',}, R.map((icon) => {
@@ -214,9 +214,8 @@ let render = (cursor) => {
   let project = projectCursor.toJS()
 
   logger.debug(`Rendering display of project:`, project)
-  let qualifiedProjectId = `${project.owner}/${project.projectId}`
-  return h('.airy-padding-sides', [
-    h('h1#project-path', qualifiedProjectId),
+  return h('div', [
+    h('h1#project-path', `${project.owner} / ${project.projectId}`),
     TopPad(cursor),
     RightColumn(project),
     BottomPad({cursor, project,}),

@@ -7,7 +7,7 @@ let S = require('underscore.string.fp')
 let logger = require('js-logger-aknudsen').get('router')
 
 let layout = require('./layout')
-let ajax = require('./client/ajax')
+let ajax = require('./ajax')
 let userManagement = require('./userManagement')
 let Loading = __IS_BROWSER__ ? require('./views/loading') : null
 let {normalizePath,} = require('./urlUtils')

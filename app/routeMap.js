@@ -1,6 +1,7 @@
 'use strict'
 let explore = require('./views/explore')
 let displayProject = require('./views/project/displayProject')
+let editProject = require('./views/project/editProject')
 let login = require('./views/login')
 let userProfile = require('./views/userProfile/userProfile')
 let about = require('./views/about')
@@ -11,8 +12,8 @@ module.exports = {
   '/': explore,
   '/u/:user': userProfile,
   '/u/:owner/:projectId': displayProject,
-  // '/u/:owner/:projectId/edit': editProject.routeOptions,
-  // '/create': createProject.routeOptions,
+  '/u/:owner/:projectId/edit': editProject,
+  // '/create': createProject,
   '/about': about,
   '/login': login,
   '/logout': logout,

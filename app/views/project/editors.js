@@ -6,14 +6,17 @@ let R = require('ramda')
 let S = require('underscore.string.fp')
 
 let {markdownService,} = require('../../markdown')
-let dropzoneService = require('../../dropzoneService')
 let {trimWhitespace,} = require('../../stringUtils')
 let {ValidationError,} = require('../../errors')
 let userManagement = require('../../userManagement')
 
-require('./editAndCreate.styl')
-require('../dropzone.scss')
-require('../dropzone.styl')
+let dropzoneService
+if (__IS_BROWSER__) {
+  dropzoneService = require('../../dropzoneService')
+
+  require('../dropzone.scss')
+  require('../dropzone.styl')
+}
 
 let DescriptionEditor = component('DescriptionEditor', {
   componentDidMount: function () {

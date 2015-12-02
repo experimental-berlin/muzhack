@@ -4,7 +4,7 @@ let logger = require('js-logger-aknudsen').get('forgotPassword')
 
 let FocusingInput = require('./focusingInput')
 let router = require('../router')
-let ajax = require('../client/ajax')
+let ajax = require('../ajax')
 
 if (__IS_BROWSER__) {
   require('./login.styl')

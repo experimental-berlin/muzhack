@@ -10,7 +10,7 @@ let ReactDOM = require('react-dom')
 let Packery = React.createFactory(require('react-packery-component')(React))
 
 let FocusingInput = require('./focusingInput')
-let ajax = require('../client/ajax')
+let ajax = require('../ajax')
 
 if (__IS_BROWSER__) {
   require('./explore.styl')

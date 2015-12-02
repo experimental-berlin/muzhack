@@ -10,17 +10,19 @@ let licenses = require('../../licenses')
 let FocusingInput = require('../focusingInput')
 let {nbsp,} = require('../../specialChars')
 let router = require('../../router')
-let ajax = require('../../client/ajax')
+let ajax = require('../../ajax')
 let Loading = require('./loading')
 let {DescriptionEditor, InstructionsEditor, PicturesEditor,
   FilesEditor,} = require('./editors')
 let uploadProject = require('./uploadProject')
 let userManagement = require('../../userManagement')
 
-require('./createProject.styl')
-require('./editAndCreate.styl')
-require('../dropzone.scss')
-require('../dropzone.styl')
+if (__IS_BROWSER__) {
+  require('./editAndCreate.styl')
+  require('./createProject.styl')
+  require('../dropzone.scss')
+  require('../dropzone.styl')
+}
 
 let createProject = (cursor) => {
   let createCursor = cursor.cursor('createProject')

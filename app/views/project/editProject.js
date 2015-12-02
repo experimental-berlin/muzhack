@@ -5,18 +5,24 @@ let S = require('underscore.string.fp')
 let logger = require('js-logger-aknudsen').get('editProject')
 let h = require('react-hyperscript')
 
-let FocusingInput = require('../focusingInput')
-let Loading = require('./loading')
+let userManagement = require('../../userManagement')
 let licenses = require('../../licenses')
 let {nbsp,} = require('../../specialChars')
+let ajax = require('../../ajax')
+let FocusingInput = require('../focusingInput')
 let {DescriptionEditor, InstructionsEditor, PicturesEditor,
   FilesEditor,} = require('./editors')
-let router = require('../../router')
-let ajax = require('../../client/ajax')
-let uploadProject = require('./uploadProject')
-let userManagement = require('../../userManagement')
+let Loading = require('./loading')
 
-require('./editProject.styl')
+let router
+let uploadProject
+if (__IS_BROWSER__) {
+  uploadProject = require('./uploadProject')
+  router = require('../../router')
+
+  require('./editAndCreate.styl')
+  require('./editProject.styl')
+}
 
 let editProject = (cursor) => {
   let editCursor = cursor.cursor('editProject')
@@ -155,9 +161,11 @@ module.exports = {
     logger.debug(`Rendering`)
     let projectCursor = cursor.cursor(['editProject', 'project',])
     let project = projectCursor.toJS()
-    let qualifiedProjectId = `${project.owner}/${project.projectId}`
     if (!cursor.cursor('editProject').get('isWaiting')) {
-      return EditProjectPad(cursor)
+      return h('div', [
+        h('h1#project-path', `${project.owner} / ${project.projectId}`),
+        EditProjectPad(cursor),
+      ])
     } else {
       return Loading(cursor.cursor('editProject'))
     }
@@ -181,8 +189,8 @@ module.exports = {
               }),
             },
           }
-        }, (reason) => {
-          logger.warn(`Loading project JSON failed: '${reason}'`)
+        }, (error) => {
+          logger.warn(`Loading project JSON failed: '${error}':`, error.stack)
         })
     }
   },

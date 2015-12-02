@@ -4,7 +4,7 @@ let ReactDom = require('react-dom')
 let router = require('./router')
 let Logger = require('js-logger-aknudsen')
 
-let ajax = require('./client/ajax')
+let ajax = require('./ajax')
 let routeMap = require('./routeMap')
 
 require('./app.styl')
