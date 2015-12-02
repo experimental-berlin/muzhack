@@ -3,7 +3,9 @@ let component = require('omniscient')
 let h = require('react-hyperscript')
 let logger = require('js-logger-aknudsen').get('project.loading')
 
-require('../loading.styl')
+if (__IS_BROWSER__) {
+  require('../loading.styl')
+}
 
 module.exports =  component('Loading', (cursor) => {
   let status = cursor.get('isWaiting')
