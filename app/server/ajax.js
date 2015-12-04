@@ -2,6 +2,8 @@
 let request = require('request')
 let logger = require('js-logger-aknudsen').get('server.ajax')
 
+let {resolveWithResponse,} = require('../ajaxUtils')
+
 module.exports = (absPath, method, payloadJson, resolve, reject) => {
   let uri = `${process.env.MUZHACK_URI}${absPath}`
   logger.debug(`Making ${method} request to '${uri}'`)
@@ -11,7 +13,7 @@ module.exports = (absPath, method, payloadJson, resolve, reject) => {
     json: payloadJson,
   }, (error, response, body) => {
     if (error == null && response.statusCode === 200) {
-      resolve(body)
+      resolveWithResponse(body, resolve, reject)
     } else {
       let reason
       if (error == null) {

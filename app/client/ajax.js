@@ -2,6 +2,8 @@
 let logger = require('js-logger-aknudsen').get('client.ajax')
 let S = require('underscore.string.fp')
 
+let {resolveWithResponse,} = require('../ajaxUtils')
+
 module.exports = (absPath, method, payloadJson, resolve, reject) => {
   logger.debug(`Getting ${absPath}`)
   let request = new XMLHttpRequest()
@@ -9,19 +11,7 @@ module.exports = (absPath, method, payloadJson, resolve, reject) => {
     if (request.readyState === XMLHttpRequest.DONE) {
       logger.debug('Received response from server:', request)
       if (request.status === 200) {
-        let json = request.responseText
-        logger.debug(`Response was successful:`, json)
-        if (!S.isBlank(json)) {
-          try {
-            let result = JSON.parse(json)
-            resolve(result)
-          } catch (error) {
-            logger.warn(`Received malformed JSON from server:`, json)
-            reject(`Parsing JSON from server failed: ${error}`)
-          }
-        } else {
-          resolve()
-        }
+        resolveWithResponse(request.responseText, resolve, reject)
       } else {
         logger.debug(`Response was not successful: ${request.status}`)
         let result = !S.isBlank(request.responseText) ? JSON.parse(request.responseText) : ''
