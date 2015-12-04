@@ -7,16 +7,18 @@ let ajax = require('./ajax')
 
 module.exports = {
   requiresLogin: true,
+  shouldRenderServerSide: false,
   render: (cursor) => {
     let discourse = cursor.cursor('discourse').toJS()
     let error = discourse.error
     logger.debug(`Handling Discourse SSO request error:`, error)
     return h('div', [
       h('h1', 'Discourse SSO Error'),
-      h('#discourse-sso-error', `Verification of Discourse SSO request failed: ${error}.`),
+      h('#discourse-sso-error', `Verification of Discourse SSO request failed: ${error.message}.`),
     ])
   },
   loadData: (cursor, params, queryParams) => {
+    logger.debug(`Loading data, params/queryParams:`, params, queryParams)
     let error = null
     let discourseCursor = cursor.cursor('discourse')
     if (S.isBlank(queryParams.sso) || S.isBlank(queryParams.sig)) {
@@ -35,16 +37,17 @@ module.exports = {
         sig,
       })
         .then((result) => {
+          logger.debug(`Got SSO verification result:`, result)
           let [respPayload, respSig, discourseUrl,] = result
           logger.info(
             `Server successfully verified Discourse call - redirecting to '${discourseUrl}'`)
           window.location = `${discourseUrl}/session/sso_login?sso=${respPayload}&sig=${respSig}`
           return {}
         }, (error) => {
-          logger.error(`Server failed to verify Discourse call: ${error.message}`)
+          logger.error(`Server failed to verify Discourse call: ${error}`)
           return {
             discourse: {
-              error: error.message,
+              error: error,
             },
           }
         })

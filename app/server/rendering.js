@@ -49,20 +49,19 @@ let getInitialRouterState = (request) => {
 }
 
 let renderIndex = (request, reply) => {
-  let initialState = {
+  immstruct.clear()
+  let cursor = immstruct('state', {
     search: '',
     login: login.createState(),
     explore: explore.createState(),
     userProfile: userProfile.createState(),
     router: getInitialRouterState(request),
     loggedInUser: request.auth.isAuthenticated ? request.auth.credentials : null,
-  }
-  immstruct.clear()
-  let cursor = immstruct('state', initialState).cursor()
+  }).cursor()
   cursor = cursor.mergeDeep({
     router: createRouterState(routeMap),
   })
-  return updateRouterState(cursor, request.path, true)
+  return updateRouterState(cursor, request.path, request.query)
     .then(([cursor, newState,]) => {
       logger.debug(`Got new state:`, newState)
       cursor = cursor.mergeDeep(R.merge(newState, {
@@ -72,13 +71,20 @@ let renderIndex = (request, reply) => {
       }))
       let initialState = cursor.toJS()
       logger.debug(`Successfully loaded initial state:`, initialState)
-      logger.debug(`Rendering on server - current state:`, cursor.toJS())
-      let reactHtml = ReactDomServer.renderToString(App(cursor))
-      logger.debug(`Finished rendering`)
-      reply.view('index', {
-        initialState: JSON.stringify(initialState),
-        reactHtml,
-      })
+      if (initialState.router.shouldRenderServerSide) {
+        logger.debug(`Rendering on server - current state:`, cursor.toJS())
+        let reactHtml = ReactDomServer.renderToString(App(cursor))
+        logger.debug(`Finished rendering`)
+        reply.view('serverSideIndex', {
+          initialState: JSON.stringify(initialState),
+          reactHtml,
+        })
+      } else {
+        logger.debug(`Not rendering JavaScript on server side`)
+        reply.view('nonServerSideIndex', {
+          initialState: JSON.stringify(initialState),
+        })
+      }
     }, (error) => {
       if (error instanceof NotFoundError) {
         logger.debug(`Current route not recognized`)

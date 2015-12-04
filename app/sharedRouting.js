@@ -7,19 +7,20 @@ let regex = require('./regex')
 class NotFoundError {
 }
 
-let loadData = (cursor) => {
+let loadData = (cursor, module) => {
   let routerState = cursor.cursor('router').toJS()
-  let module = routerState.routes[routerState.currentRoute]
   let promise
   if (module.loadData != null) {
     logger.debug(`Loading route data...`)
     logger.debug(`Current route args:`, routerState.currentRouteParams)
+    logger.debug(`Current query params:`, routerState.currentQueryParams)
     cursor = cursor.mergeDeep({
       router: {
         isLoading: true,
       },
     })
-    let result = module.loadData(cursor, routerState.currentRouteParams) || {}
+    let result = module.loadData(cursor, routerState.currentRouteParams,
+      routerState.currentQueryParams) || {}
     if (result.then != null) {
       promise = result
     } else {
@@ -50,7 +51,7 @@ module.exports = {
       routeParamNames,
     }
   },
-  updateRouterState: (cursor, currentPath, shouldLoad) => {
+  updateRouterState: (cursor, currentPath, currentQueryParams, isInitialClientSideRender) => {
     logger.debug(`Updating router state`)
     logger.debug('Current path:', currentPath)
     let routerState = cursor.cursor('router').toJS()
@@ -86,19 +87,26 @@ module.exports = {
       navItem.isSelected = true
     }
 
+    let module = routerState.routes[currentRoute]
+    let shouldRenderServerSide = R.defaultTo(true, module.shouldRenderServerSide)
+    let shouldLoad = (__IS_BROWSER__ && (!isInitialClientSideRender || !shouldRenderServerSide)) ||
+      shouldRenderServerSide
     cursor = cursor.mergeDeep({
       router: {
         isLoading: shouldLoad,
         currentRoute,
         currentRouteParams,
         currentPath,
+        currentQueryParams,
         navItems,
+        shouldRenderServerSide,
       },
     })
 
     if (shouldLoad) {
-      return loadData(cursor)
+      return loadData(cursor, module)
     } else {
+      logger.debug(`Not loading module data:`, __IS_BROWSER__, shouldRenderServerSide)
       return Promise.resolve([cursor, {},])
     }
   },

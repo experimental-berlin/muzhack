@@ -31,14 +31,14 @@ let goTo = (path) => {
   perform()
 }
 
-let shouldRedirect = (cursor) => {
+let redirectIfNecessary = (cursor) => {
   let routerCursor = cursor.cursor('router')
   let routes = routerCursor.get('routes').toJS()
   let route = getCurrentRoute(routes)
   let options = routes[route]
   if (typeof options === 'function') {
     logger.debug(`Route has no options`)
-    return null
+    return
   }
 
   let loggedInUser = userManagement.getLoggedInUser(cursor)
@@ -46,35 +46,27 @@ let shouldRedirect = (cursor) => {
     logger.debug(`User is logged in:`, loggedInUser)
     if (options.redirectIfLoggedIn) {
       let redirectTo = '/'
-      logger.debug(`Route requires redirect when logged in - redirecting to ${redirectTo}`)
-      return redirectTo
+      logger.debug(`Route requires redirect when logged in - redirecting to ${redirectTo}...`)
+      goTo(redirectTo)
     } else {
       logger.debug(`Route doesn't require redirect when logged in`)
-      return null
+      return
     }
   } else {
     logger.debug(`User is not logged in`)
     if (options.redirectIfLoggedOut) {
       let redirectTo = '/'
-      logger.debug(`Route requires redirect when logged out - redirecting to ${redirectTo}`)
-      return redirectTo
+      logger.debug(`Route requires redirect when logged out - redirecting to ${redirectTo}...`)
+      goTo(redirectTo)
     } else {
       if (!options.requiresLogin) {
         logger.debug(`Route doesn't require login`)
-        return null
+        return
       } else  {
-        logger.debug(`Route requires user being logged in - redirecting to login page`)
-        return '/login'
+        logger.debug(`Route requires user being logged in - redirecting to login page...`)
+        goTo('/login')
       }
     }
-  }
-}
-
-let redirectIfNecessary = (cursor) => {
-  let redirectTo = shouldRedirect(cursor)
-  if (redirectTo != null) {
-    logger.debug(`Redirecting to '${redirectTo}'...`)
-    goTo(redirectTo)
   }
 }
 
@@ -91,7 +83,12 @@ let perform = (isInitial=false) => {
     return
   }
 
-  updateRouterState(cursor, currentPath, !isInitial)
+  let queryStrings = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&')
+  let queryParams = R.fromPairs(R.map((elem) => {
+    return elem.split('=')
+  }, queryStrings))
+  logger.debug(`Current query parameters:`, queryParams)
+  updateRouterState(cursor, currentPath, queryParams, isInitial)
     .then(([cursor, newState,]) => {
       let mergedNewState = R.merge(newState, {
         router: {
