@@ -8,5 +8,5 @@ module.exports = {
       path = path.slice(0, -1)
     }
     return path
-  }
+  },
 }

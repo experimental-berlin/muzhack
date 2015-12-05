@@ -68,5 +68,8 @@
     "rethinkdb": "^2.2.0",
     "underscore.string.fp": "^1.0.4",
     "vision": "^4.0.1"
+  },
+  "scripts": {
+    "lint": "eslint ./app"
   }
 }
