@@ -22,10 +22,14 @@ def _run_tutum(args):
         sys.exit(1)
 
 
+def _inspect_service(service):
+    output = subprocess.check_output(['tutum', 'service', 'inspect',
+    '{}.muzhack-staging'.format(service)]).decode('utf-8')
+    return json.loads(output)
+
+
 _info('Determining current production details...')
-output = subprocess.check_output(['tutum', 'service', 'inspect', 'lb.muzhack-staging']).decode(
-    'utf-8')
-data = json.loads(output)
+data = _inspect_service('lb')
 linked_service = data['linked_to_service'][0]['name']
 _info('Currently linked service is \'{}\''.format(linked_service))
 

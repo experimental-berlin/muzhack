@@ -1,5 +1,5 @@
 muzhack-green:
-  image: quay.io/aknuds1/muzhack:omniscient
+  image: quay.io/aknuds1/muzhack:latest
   tags:
     - muzhack-green
   environment:
@@ -16,7 +16,7 @@ muzhack-green:
   restart: always
   deployment_strategy: high_availability
 muzhack-blue:
-  image: quay.io/aknuds1/muzhack:omniscient
+  image: quay.io/aknuds1/muzhack:latest
   tags:
     - muzhack-blue
   environment:
