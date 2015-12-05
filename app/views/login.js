@@ -176,6 +176,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
 })
 
 module.exports = {
+  shouldRenderServerSide: false,
   redirectIfLoggedIn: true,
   render: (cursor) => {
     logger.debug(`Login rendering`)

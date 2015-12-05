@@ -11,6 +11,7 @@ if (__IS_BROWSER__) {
 }
 
 module.exports = {
+  shouldRenderServerSide: false,
   redirectIfLoggedIn: true,
   render: (cursor) => {
     logger.debug(`Rendering`)
@@ -28,8 +29,7 @@ module.exports = {
             h('legend', 'Account Info'),
             FocusingInput({
               id: 'account-email',
-              type: 'email',
-              placeholder: 'email',
+              placeholder: 'email or username',
               classes: ['account-email',],
               required: true,
               onChange: (event) => {
@@ -43,9 +43,10 @@ module.exports = {
               type: 'submit',
               onClick: (event) => {
                 event.preventDefault()
-                logger.debug('Submitting forgot password dialog')
+                let usernameOrEmail = cursor.cursor('forgotPassword').get('emailOrUsername')
+                logger.debug(`Submitting forgot password dialog: '${usernameOrEmail}'`)
                 ajax.postJson('resetPassword', {
-                  username: cursor.cursor('forgotPassword').get('emailOrUsername'),
+                  username: usernameOrEmail,
                 }).then(() => {
                   let redirectTo = '/'
                   logger.info(`Request to reset password successfully sent`)
