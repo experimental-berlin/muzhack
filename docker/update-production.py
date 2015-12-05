@@ -5,7 +5,7 @@ import json
 import sys
 
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(description='Update production server to latest Docker image.')
 args = parser.parse_args()
 
 
