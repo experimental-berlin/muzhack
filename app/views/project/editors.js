@@ -14,7 +14,7 @@ let dropzoneService
 if (__IS_BROWSER__) {
   dropzoneService = require('../../dropzoneService')
 
-  require('../dropzone.scss')
+  require('dropzone/src/dropzone.scss')
   require('../dropzone.styl')
 }
 

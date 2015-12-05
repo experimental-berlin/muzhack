@@ -55,6 +55,7 @@ module.exports = {
   devtool: 'cheap-module-eval-source-map',
   resolve: {
     root: ['/',],
+    modulesDirectories: ['node_modules', 'lib',],
     extensions: ['', '.js',],
     alias: {
       // Workaround https://github.com/Reactive-Extensions/RxJS/issues/832, until it's fixed

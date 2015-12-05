@@ -22,7 +22,7 @@ if (__IS_BROWSER__) {
 
   require('./editAndCreate.styl')
   require('./createProject.styl')
-  require('../dropzone.scss')
+  require('dropzone/src/dropzone.scss')
   require('../dropzone.styl')
 }
 

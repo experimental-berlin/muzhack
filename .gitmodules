@@ -1,21 +1,9 @@
-[submodule "packages/aknudsen:dropzone"]
-	path = packages/aknudsen:dropzone
-	url = git@github.com:aknuds1/dropzone.git
 [submodule "packages/ms-seo"]
 	path = packages/ms-seo
 	url = git@github.com:DerMambo/ms-seo.git
-[submodule "packages/aknudsen:iron-router-ga"]
-	path = packages/aknudsen:iron-router-ga
-	url = git@github.com:aknuds1/meteor-iron-router-ga.git
-[submodule "packages/aknudsen:ms-seo"]
-	path = packages/aknudsen:ms-seo
-	url = git@github.com:aknuds1/ms-seo.git
-[submodule "packages/aknudsen:spiderable2"]
-	path = packages/aknudsen:spiderable2
-	url = git@github.com:aknuds1/spiderable2.git
-[submodule "packages/aknudsen:pagedown"]
-	path = packages/aknudsen:pagedown
-	url = git@github.com:aknuds1/meteor-pagedown.git
-[submodule "packages/aknudsen:tooltips"]
-	path = packages/aknudsen:tooltips
-	url = git@github.com:aknuds1/meteor-tooltips.git
+[submodule "lib/pagedown"]
+	path = lib/pagedown
+	url = git@github.com:aknuds1/pagedown.git
+[submodule "lib/dropzone"]
+	path = lib/dropzone
+	url = git@github.com:aknuds1/dropzone.git
