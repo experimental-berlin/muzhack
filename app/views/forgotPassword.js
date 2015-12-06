@@ -16,9 +16,14 @@ module.exports = {
   render: (cursor) => {
     logger.debug(`Rendering`)
     let forgotPasswordCursor = cursor.cursor('forgotPassword')
-    let showRedirect = forgotPasswordCursor.get('showRedirect')
     let seconds = forgotPasswordCursor.get('remainingSeconds')
+    let showRedirect = seconds != null
     let remainingSecondsString = `${seconds} second${seconds !== 1 ? 's' : ''}`
+    if (showRedirect) {
+      logger.debug(`Showing redirect timeout - remaining seconds: ${remainingSecondsString}`)
+    } else {
+      logger.debug(`Not showing redirect timeout`)
+    }
     let content = !showRedirect ?
       h('.login-pad', [
         h('.login-header', [
@@ -48,8 +53,25 @@ module.exports = {
                 ajax.postJson('resetPassword', {
                   username: usernameOrEmail,
                 }).then(() => {
-                  let redirectTo = '/'
+                  let countDown = () => {
+                    let remainingSeconds = forgotPasswordCursor.get('remainingSeconds')
+                    if (remainingSeconds > 1) {
+                      logger.debug(`Counting down until redirect...`)
+                      forgotPasswordCursor = forgotPasswordCursor.set('remainingSeconds',
+                        remainingSeconds-1)
+                      setTimeout(countDown, 1000)
+                    } else {
+                      let redirectTo = '/login'
+                      logger.debug(`Redirect timeout reached, redirecting to ${redirectTo}`)
+                      forgotPasswordCursor = forgotPasswordCursor.set('remainingSeconds', null)
+                      router.goTo(redirectTo)
+                    }
+                  }
+
                   logger.info(`Request to reset password successfully sent`)
+                  logger.debug(`Setting remainingSeconds to 5`)
+                  forgotPasswordCursor = forgotPasswordCursor.set(`remainingSeconds`, 5)
+                  setTimeout(countDown, 1000)
                 }, () => {
                   logger.warn(`Resetting password failed`)
                 })

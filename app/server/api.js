@@ -15,6 +15,7 @@ let licenses = require('../licenses')
 let auth = require('./auth')
 let {trimWhitespace,} = require('../stringUtils')
 let {withDb,} = require('./db')
+let {getEnvParam,} = require('./environment')
 
 class Project {
   constructor({projectId, tags, owner, ownerName, title, created, pictures, licenseId,
@@ -262,16 +263,6 @@ let updateProject = (request, reply) => {
           })
         })
     })
-  }
-}
-
-let getEnvParam = (key) => {
-  let value = process.env[key]
-  if (value == null) {
-    logger.error(`${key} not defined in environment`)
-    reply(Boom.badImplementation())
-  } else {
-    return value
   }
 }
 
