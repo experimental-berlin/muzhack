@@ -50,7 +50,7 @@ module.exports = {
                 event.preventDefault()
                 let usernameOrEmail = cursor.cursor('forgotPassword').get('emailOrUsername')
                 logger.debug(`Submitting forgot password dialog: '${usernameOrEmail}'`)
-                ajax.postJson('resetPassword', {
+                ajax.postJson('forgotPassword', {
                   username: usernameOrEmail,
                 }).then(() => {
                   let countDown = () => {
@@ -68,12 +68,12 @@ module.exports = {
                     }
                   }
 
-                  logger.info(`Request to reset password successfully sent`)
+                  logger.info(`Forgot password request successfully sent`)
                   logger.debug(`Setting remainingSeconds to 5`)
                   forgotPasswordCursor = forgotPasswordCursor.set(`remainingSeconds`, 5)
                   setTimeout(countDown, 1000)
                 }, () => {
-                  logger.warn(`Resetting password failed`)
+                  logger.warn(`Submitting forgot password request failed`)
                 })
               }, value: 'Search',
             }),
@@ -86,7 +86,7 @@ module.exports = {
             }, 'Cancel'),
           ]),
         ]),
-      ]) : h('#password-reset-page', [
+      ]) : h('#forgot-password-page', [
         h('p', `You should've been sent an email to reset your password.
   You're being redirected to the login page in ${remainingSecondsString}...`),
       ])

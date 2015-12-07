@@ -7,6 +7,9 @@ let {withDb,} = require('./db')
 let r = require('rethinkdb')
 let R = require('ramda')
 let mandrill = require('mandrill-api/mandrill')
+let base64url = require('base64url')
+let crypto = require('crypto')
+let moment = require('moment')
 
 let {getEnvParam,} = require('./environment')
 
@@ -85,8 +88,90 @@ let logIn = (request, reply) => {
   }
 }
 
-let resetPassword = (request, reply) => {
-  logger.debug(`Handling request to reset password`)
+let pruneResetPasswordTokens = (user, conn) => {
+  logger.debug(`Pruning old reset password tokens`)
+  return r.table('resetPasswordTokens')
+    .filter((token) => {
+      return token('username').eq(user.username).or(token('expires').date().lt(r.now().date()))
+    })
+    .delete()
+    .run(conn)
+}
+
+let issueResetPasswordLink = (user, conn) => {
+  return new Promise((resolve, reject) => {
+    crypto.randomBytes(48, function(error, buf) {
+      if (error == null) {
+        resolve(base64url(buf))
+      } else {
+        reject(error)
+      }
+    })
+  })
+    .then((token) => {
+      let expires = moment().utc().add(24, 'hours').format()
+      let username = user.username
+      logger.debug(
+        `Storing reset password token for user '${username}' with expiration ${expires}:
+${token}`)
+      return r.table('resetPasswordTokens')
+        .get(token)
+        .replace({
+          id: token,
+          expires,
+          username,
+        })
+        .run(conn)
+        .then(() => {
+          let mandrillClient = new mandrill.Mandrill(getEnvParam('MANDRILL_SECRET'))
+          return new Promise((resolve, reject) => {
+            let email = user.email
+            let appUrl = getEnvParam('APP_URL')
+            logger.debug(`Sending email to '${user.email}' with password reset link...`)
+            let url = `${appUrl}/account/resetpassword/${token}"`
+            let message = {
+              html: `<p>Hello ${user.name},</p>
+
+<p>
+To reset your password, simply click the link below.
+</p>
+
+<p>
+<a href="${url}">${url}</a>
+</p>
+
+<p>
+Thanks.
+</p>
+`,
+              subject: `How to reset your password on muzhack.com`,
+              from_email: `contact@muzhack.com`,
+              from_name: `MuzHack`,
+              to: [{
+                email,
+                name: user.name,
+                type: 'to',
+              },],
+              headers: {
+                'Reply-To': `no-reply@muzhack.com`,
+              },
+            }
+            mandrillClient.messages.send({
+              message: message,
+              async: true,
+            }, () => {
+              logger.debug(`Sent email to '${email}' successfully`)
+              resolve()
+            }, (error) => {
+              reject(`A Mandrill error occurred: '${error.message}'`)
+            })
+          })
+        })
+    })
+}
+
+let forgotPassword = (request, reply) => {
+  logger.debug(`Handling forgot password request`)
   if (request.payload.username == null) {
     logger.debug(`Username is missing`)
     reply(Boom.badRequest('Missing username'))
@@ -104,89 +189,85 @@ let resetPassword = (request, reply) => {
             return Boom.badRequest('Invalid username or password')
           } else {
             let user = users[0]
-            let mandrillClient = new mandrill.Mandrill(getEnvParam('MANDRILL_SECRET'))
-//             return new Promise((resolve, reject) => {
-//               let message = {
-//     "html": "<p>Example HTML content</p>",
-//     "text": "Example text content",
-//     "subject": "example subject",
-//     "from_email": "message.from_email@example.com",
-//     "from_name": "Example Name",
-//     "to": [{
-//             "email": "recipient.email@example.com",
-//             "name": "Recipient Name",
-//             "type": "to"
-//         }],
-//     "headers": {
-//         "Reply-To": "message.reply@example.com"
-//     },
-//     "important": false,
-//     "track_opens": null,
-//     "track_clicks": null,
-//     "auto_text": null,
-//     "auto_html": null,
-//     "inline_css": null,
-//     "url_strip_qs": null,
-//     "preserve_recipients": null,
-//     "view_content_link": null,
-//     "bcc_address": "message.bcc_address@example.com",
-//     "tracking_domain": null,
-//     "signing_domain": null,
-//     "return_path_domain": null,
-//     "merge": true,
-//     "merge_language": "mailchimp",
-//     "global_merge_vars": [{
-//             "name": "merge1",
-//             "content": "merge1 content"
-//         }],
-//     "merge_vars": [{
-//             "rcpt": "recipient.email@example.com",
-//             "vars": [{
-//                     "name": "merge2",
-//                     "content": "merge2 content"
-//                 }]
-//         }],
-//     "tags": [
-//         "password-resets"
-//     ],
-//     "subaccount": "customer-123",
-//     "google_analytics_domains": [
-//         "example.com"
-//     ],
-//     "google_analytics_campaign": "message.from_email@example.com",
-//     "metadata": {
-//         "website": "www.example.com"
-//     },
-//     "recipient_metadata": [{
-//             "rcpt": "recipient.email@example.com",
-//             "values": {
-//                 "user_id": 123456
-//             }
-//         }],
-//     "attachments": [{
-//             "type": "text/plain",
-//             "name": "myfile.txt",
-//             "content": "ZXhhbXBsZSBmaWxl"
-//         }],
-//     "images": [{
-//             "type": "image/png",
-//             "name": "IMAGECID",
-//             "content": "ZXhhbXBsZSBmaWxl"
-//         }]
-// }
-//               mandrillClient.messages.send({
-//                 message: message,
-//                 async: true,
-//               }, () => {
-//                 resolve()
-//               }, (error) => {
-//                 reject(`A Mandrill error occurred: '${error.message}'`)
-//               })
-            // })
+            return pruneResetPasswordTokens(user, conn)
+              .then(() => {
+               return issueResetPasswordLink(user, conn)
+             })
           }
         })
     })
   }
+}
+
+let setUserPassword = (user, password, conn) => {
+  logger.debug(`Setting password of user '${user.username}'`)
+  return hashPassword(password)
+    .then((hash) => {
+      return r.table('users')
+        .get(user.username)
+        .update({
+          password: hash,
+        })
+        .run(conn)
+        .then(() => {
+          logger.debug(`Successfully reset password of user '${user.username}'`)
+        })
+    })
+}
+
+let resetPassword = (request, reply) => {
+  let token = request.params.token
+  logger.debug(`Handling password reset request, token: '${token}'`)
+  withDb(reply, (conn) => {
+    return r.table('resetPasswordTokens')
+      .get(token)
+      .run(conn)
+      .then((obj) => {
+        if (obj == null) {
+          logger.debug(`Could not find password reset object with token '${token}'`)
+          return Boom.badRequest('Invalid token')
+        } else {
+          let expires = moment(obj.expires)
+          if (moment().utc().diff(expires) > 0) {
+            logger.debug(`Token '${token}' has expired, '${expires}':`, moment().utc().diff(expires))
+            return Boom.badRequest('Expired token')
+          } else {
+            logger.debug(`Password reset token has not expired:`, expires.format())
+            return r.table('users')
+              .get(obj.username)
+              .run(conn)
+              .then((user) => {
+                if (user == null) {
+                  logger.debug(`No user corresponding to password reset token '${token}'`)
+                  return Boom.badRequest('Expired token')
+                } else {
+                  return setUserPassword(user, request.payload.password, conn)
+                    .then(() => {
+                      return pruneResetPasswordTokens(user, conn)
+                        .then(() => {
+                          logUserIn(request, user)
+                        })
+                    })
+                }
+              })
+          }
+        }
+      })
+  })
+}
+
+let hashPassword = (password) => {
+  return new Promise((resolve, reject) => {
+    bcrypt.hash(password, bcrypt.genSaltSync(), (err, hash) => {
+      logger.debug(`Finished hashing password`)
+      if (err != null) {
+        logger.error(`Hashing password failed: '${err}'`)
+        reject(err)
+      } else {
+        resolve(hash)
+      }
+    })
+  })
 }
 
 module.exports.register = (server) => {
@@ -213,12 +294,8 @@ module.exports.register = (server) => {
 
       let payload = request.payload
       logger.debug(`Generating hash...`)
-      bcrypt.hash(payload.password, bcrypt.genSaltSync(), (err, hash) => {
-        logger.debug(`Finished hashing`)
-        if (err != null) {
-          logger.error(`Hashing password failed: '${err}'`)
-          reply(Boom.badImplementation())
-        } else {
+      hashPassword(payload.password)
+        .then((hash) => {
           logger.debug(`Successfully registered user '${payload.username}'`)
           let user = {
             id: payload.username,
@@ -253,13 +330,19 @@ module.exports.register = (server) => {
                 }
               })
           })
-        }
-      })
+        }, (err) => {
+          reply(Boom.badImplementation())
+        })
     },
   })
   server.route({
     method: ['POST',],
-    path: '/api/resetPassword',
+    path: '/api/forgotPassword',
+    handler: forgotPassword,
+  })
+  server.route({
+    method: ['POST',],
+    path: '/api/resetPassword/{token}',
     handler: resetPassword,
   })
   server.route({

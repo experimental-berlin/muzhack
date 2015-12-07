@@ -13,16 +13,23 @@ let connectToDb = (reply, host, callback, attempt) => {
   }).then((conn) => {
     logger.debug(`Successfully connected to RethinkDB host '${host}', attempt ${attempt}`)
     logger.debug(`Invoking callback`)
-    callback(conn)
-      .then((result) => {
-        conn.close()
-        logger.debug(`Replying with result:`, result)
-        reply(result)
-      }, (error) => {
-        logger.warn(`There was an error in the callback of withDb: '${error}'`, error.stack)
-        conn.close()
-        reply(Boom.badImplementation())
-      })
+    try {
+      callback(conn)
+        .then((result) => {
+          conn.close()
+          logger.debug(`Replying with result:`, result)
+          reply(result)
+        }, (error) => {
+          logger.warn(`There was an error in the callback of withDb: '${error}'`, error.stack)
+          conn.close()
+          reply(Boom.badImplementation())
+        })
+    } catch (error) {
+      logger.error(`There was an unhandled exception in the callback of withDb: '${error}'`,
+        error.stack)
+      conn.close()
+      reply(Boom.badImplementation())
+    }
   }, (error) => {
     if (attempt < 5) {
       let timeout = attempt * 0.5

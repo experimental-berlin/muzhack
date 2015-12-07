@@ -12,3 +12,4 @@ r.db('rethinkdb').table('cluster_config').get('auth').update({'auth_key': args.a
 r.db_create('muzhack').run(conn)
 r.db('muzhack').table_create('users').run(conn)
 r.db('muzhack').table_create('projects').run(conn)
+r.db('muzhack').table_create('resetPasswordTokens').run(conn)
