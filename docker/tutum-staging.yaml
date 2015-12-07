@@ -4,13 +4,17 @@ muzhack-green:
     - muzhack-green
   environment:
     - FORCE_SSL=yes
-    - HAPI_IRON_PASSWORD
-    - AWS_ACCESS_KEY
-    - AWS_SECRET_ACCESS_KEY
+    - APP_URL=https://staging.muzhack.com
+    - DISCOURSE_URL=http://forums.muzhack.com \
     - S3_BUCKET=staging.muzhack.com
     - S3_REGION=eu-central-1
     - RETHINKDB_HOST=rethinkdb
     - RETHINKDB_AUTH_KEY
+    - HAPI_IRON_PASSWORD
+    - AWS_ACCESS_KEY
+    - AWS_SECRET_ACCESS_KEY
+    - SSO_SECRET
+    - MANDRILL_SECRET
   links:
     - rethinkdb-tunnel:rethinkdb
   restart: always
@@ -21,13 +25,17 @@ muzhack-blue:
     - muzhack-blue
   environment:
     - FORCE_SSL=yes
-    - HAPI_IRON_PASSWORD
-    - AWS_ACCESS_KEY
-    - AWS_SECRET_ACCESS_KEY
+    - APP_URL=https://staging.muzhack.com
+    - DISCOURSE_URL=http://forums.muzhack.com \
     - S3_BUCKET=staging.muzhack.com
     - S3_REGION=eu-central-1
     - RETHINKDB_HOST=rethinkdb
     - RETHINKDB_AUTH_KEY
+    - HAPI_IRON_PASSWORD
+    - AWS_ACCESS_KEY
+    - AWS_SECRET_ACCESS_KEY
+    - SSO_SECRET
+    - MANDRILL_SECRET
   links:
     - rethinkdb-tunnel:rethinkdb
   restart: always
