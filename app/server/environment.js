@@ -1,4 +1,6 @@
 'use strict'
+let logger = require('js-logger-aknudsen').get('environment')
+
 module.exports = {
   getEnvParam: (key) => {
     let value = process.env[key]
