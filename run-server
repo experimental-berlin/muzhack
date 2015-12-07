@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+import subprocess
+import json
+import sys
+import os
+import subprocess
+
+try:
+    with open('settings.json', 'rb') as f:
+        settings = json.load(f)
+except IOError:
+    sys.exit('settings.json doesn\'t exist')
+for k, v in settings.iteritems():
+    os.environ[k] = v
+
+subprocess.check_call(['babel-node', '--harmony_destructuring', '--presets', 'node5', '.',])
