@@ -72,6 +72,17 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
       },
     },
   })
+  server.route({
+    method: 'GET',
+    path: '/robots.txt',
+    handler: (request, reply) => {
+      if ((process.env.NODE_ENV || '').toLowerCase() !== 'production') {
+        reply(`User-agent: *\nDisallow: /`).header('Content-Type', 'text/plain')
+      } else {
+        reply()
+      }
+    },
+  })
 
   api.register(server)
 

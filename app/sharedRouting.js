@@ -62,8 +62,9 @@ module.exports = {
     if (currentRoute == null) {
       logger.debug(
         `Couldn't find route corresponding to path '${currentPath}', throwing NotFoundError`)
-      throw new NotFoundError()
+      return Promise.reject(new NotFoundError())
     }
+
     let match = new RegExp(currentRoute).exec(currentPath)
     // Route arguments correspond to regex groups
     let currentRouteParams = R.fromPairs(R.zip(routerState.routeParamNames[currentRoute],
