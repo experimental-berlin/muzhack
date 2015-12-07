@@ -1,6 +1,3 @@
-[submodule "packages/ms-seo"]
-	path = packages/ms-seo
-	url = git@github.com:DerMambo/ms-seo.git
 [submodule "lib/pagedown"]
 	path = lib/pagedown
 	url = git@github.com:aknuds1/pagedown.git
