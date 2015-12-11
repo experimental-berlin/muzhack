@@ -62,6 +62,19 @@ lb:
   roles:
     - global
   deployment_strategy: high_availability
+dd-agent:
+  image: tutum.co/aknuds1/dd-agent
+  tags:
+    - muzhack-staging-dd
+  restart: always
+  links:
+    - lb:haproxy
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - /proc/:/host/proc/:ro
+    - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+  environment:
+    - API_KEY
 logspout-muzhack-staging:
   image: gliderlabs/logspout
   command: syslog://logs3.papertrailapp.com:19740
