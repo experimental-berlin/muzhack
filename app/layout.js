@@ -30,10 +30,6 @@ let Bitcoinate = component('Bitcoinate', () => {
   ])
 })
 
-let toClassName = (classes) => {
-  return S.join(' ', R.filter((x) => {return x != null}, classes))
-}
-
 let AccountBar = component('AccountBar', (cursor) => {
   let user = userManagement.getLoggedInUser(cursor)
   let isLoggedIn = user != null
