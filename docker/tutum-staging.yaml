@@ -68,7 +68,7 @@ dd-agent:
     - muzhack-staging-dd
   restart: always
   links:
-    - lb:haproxy
+    - lb:staging.muzhack.com
   volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     - /proc/:/host/proc/:ro
