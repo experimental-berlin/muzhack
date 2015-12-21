@@ -11,6 +11,7 @@ let Packery = React.createFactory(require('react-packery-component')(React))
 
 let FocusingInput = require('./focusingInput')
 let ajax = require('../ajax')
+let notification = require('./notification')
 
 if (__IS_BROWSER__) {
   require('./explore.styl')
@@ -159,6 +160,7 @@ module.exports = {
   },
   render: (cursor) => {
     return h('.pure-g', [
+      notification.question(),
       h('.pure-u-1', [
         h('#explore-pad', [
           SearchBox(cursor),

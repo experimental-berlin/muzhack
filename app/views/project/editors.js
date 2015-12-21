@@ -12,7 +12,7 @@ let userManagement = require('../../userManagement')
 
 let dropzoneService
 if (__IS_BROWSER__) {
-  dropzoneService = require('../../dropzoneService')
+  dropzoneService = require('../../services/dropzoneService')
 
   require('dropzone/src/dropzone.scss')
   require('../dropzone.styl')
