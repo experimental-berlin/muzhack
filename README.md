@@ -3,6 +3,7 @@ MuzHack
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/muzhack/muzhack?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Docker Repository on Quay.io](https://quay.io/repository/aknuds1/muzhack/status "Docker Repository on Quay.io")](https://quay.io/repository/aknuds1/muzhack)
+[![Circle CI](https://circleci.com/gh/muzhack/muzhack.svg?style=svg)](https://circleci.com/gh/muzhack/muzhack)
 
 [MuzHack](https://muzhack.com) is a Web application for publishing musical instrument designs.
 
