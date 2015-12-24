@@ -5,7 +5,9 @@ let ReactModal = React.createFactory(require('react-modal'))
 let component = require('omniscient')
 let h = require('react-hyperscript')
 
-require('./modal.styl')
+if (__IS_BROWSER__) {
+  require('./modal.styl')
+}
 
 let modalStyles = {
   overlay: {

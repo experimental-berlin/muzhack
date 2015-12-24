@@ -11,6 +11,7 @@ let {nbsp,} = require('../../specialChars')
 let VCard = require('./vcard')
 let {convertMarkdown,} = require('../../markdown')
 let userManagement = require('../../userManagement')
+let datetime = require('../../datetime')
 
 if (__IS_BROWSER__) {
   require('./userProfile.styl')
@@ -24,6 +25,7 @@ let About = component('About', (user) => {
 })
 
 let Projects = component('Projects', (user) => {
+  let {username,} = user
   return !R.isEmpty(user.projects) ? h('table#user-projects', [
     h('thead', [
       h('tr', [
@@ -33,15 +35,17 @@ let Projects = component('Projects', (user) => {
       ]),
     ]),
     h('tbody', R.map((project) => {
-      h('tr', [
+      let {projectId, title,} = project
+      let createdStr = datetime.displayDateTextual(project.created)
+      return h('tr', [
         h('td', [
-          h('a.user-project', {href: `/u/${owner}/${projectId}`,}, projectId),
+          h('a.user-project', {href: `/u/${username}/${projectId}`,}, projectId),
         ]),
         h('td', [
-          h('a.user-project', {href: `/u/${owner}/${projectId}`,}, title),
+          h('a.user-project', {href: `/u/${username}/${projectId}`,}, title),
         ]),
         h('td', [
-          h('a.user-project', {href: `/u/${owner}/${projectId}`,}, createdStr),
+          h('a.user-project', {href: `/u/${username}/${projectId}`,}, createdStr),
         ]),
       ])
     }, user.projects)),

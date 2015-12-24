@@ -359,7 +359,15 @@ let getUser = (request, reply) => {
   let {username,} = request.params
   withDb(reply, (conn) => {
     logger.debug(`Getting user '${username}'`)
-    return r.table('users').get(username).run(conn)
+    return r.table('users')
+      .get(username)
+      .merge((user) => {
+        return {
+          'projects': r.table('projects').getAll(username, {index: 'owner',})
+            .coerceTo('array'),
+        }
+      })
+      .run(conn)
       .then((user) => {
         if (user != null) {
           logger.debug(`Found user '${username}':`, user)
