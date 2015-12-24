@@ -13,6 +13,8 @@ let {convertMarkdown,} = require('../../markdown')
 let userManagement = require('../../userManagement')
 let datetime = require('../../datetime')
 let notification = require('../notification')
+let FocusingInput = require('../focusingInput')
+let Modal = require('../modal')
 
 if (__IS_BROWSER__) {
   require('./userProfile.styl')
@@ -53,19 +55,112 @@ let Projects = component('Projects', (user) => {
   ]) : h('em', 'No projects.')
 })
 
+let getPlanModal = (cursor, title, fields, submitCallback, closeCallback) => {
+  let content = h('div', [
+    h('.modal-body-content', [
+      h('form.pure-form.pure-form-stacked', [
+        h('fieldset', fields),
+      ]),
+    ]),
+    h('.button-group', [
+      h('button.pure-button.pure-button-primary', {
+        onClick: () => {
+          logger.debug(`OK button clicked`)
+          submitCallback()
+          closeCallback()
+        },
+      }, 'OK'),
+      h('button.pure-button', {
+        onClick: () => {
+          logger.debug(`Cancel button clicked`)
+          closeCallback()
+        },
+      }, 'Cancel'),
+    ]),
+  ])
+
+  return Modal({closeCallback, title, content,})
+}
+
+let AddNewPlanModal = component('AddNewPlanModal', (cursor) => {
+  let profileCursor = cursor.cursor('userProfile')
+
+  let closeCallback = () => {
+    profileCursor.set('showAddNewPlan', false)
+  }
+
+  let submit = () => {
+    logger.debug(`Submitting new project plan...`)
+  }
+
+  logger.debug(`Rendering AddNewPlanModal`)
+  let fields = [
+    FocusingInput({
+      id: 'create-board-name',
+      classes: ['modal-input',],
+      placeholder: 'Name',
+      onChange: (event) => {
+        logger.debug(`Input detected`)
+      },
+      onEnter: submit,
+    }),
+    h('input#create-board-description.modal-input', {placeholder: 'Description',}),
+    h('input#create-board-organization.modal-input', {placeholder: 'Organization',}),
+  ]
+  return getPlanModal(cursor, 'Create Trello Board', fields, submit, closeCallback)
+})
+
+let AddExistingPlanModal = component('AddExistingPlanModal', (cursor) => {
+  let profileCursor = cursor.cursor('userProfile')
+
+  let closeCallback = () => {
+    profileCursor.set('showAddExistingPlan', false)
+  }
+
+  let submit = () => {
+    logger.debug(`Submitting new project plan...`)
+  }
+
+  logger.debug(`Rendering AddExistingPlanModal`)
+  let fields = [
+    h('select#add-existing-board-select.modal-select', {
+      name: 'boardId',
+      defaultValue: null,
+    }, [
+      h('option', {
+        disabled: true,
+      }, 'Choose a Trello board'),
+    ]),
+  ]
+  return getPlanModal(cursor, 'Add Existing Trello Board', fields, submit, closeCallback)
+})
+
 let Plans = component('Plans', ({user, cursor,}) => {
   let loggedInUser = userManagement.getLoggedInUser(cursor)
   let isLoggedInUser = loggedInUser != null && loggedInUser.username === user.username
+  let profileCursor = cursor.cursor('userProfile')
   return h('div', [
-    cursor.get('askRemovePlan') ? notification.question('Remove/Close Project Plan?',
+    profileCursor.get('askRemovePlan') ? notification.question('Remove/Close Project Plan?',
       'Are you sure you wish to remove the project plan #{@name} and close the Trello board?',
       removeProjectPlan, () => {
         cursor.set('askRemovePlan', false)
       }) : null,
+    profileCursor.get('showAddNewPlan') ? AddNewPlanModal(cursor) : null,
+    profileCursor.get('showAddExistingPlan') ? AddExistingPlanModal(cursor) : null,
     isLoggedInUser ? h('#plan-buttons.button-group', [
-      h('button#create-plan.pure-button', {'data-tooltip': 'Create project plan',}, 'New'),
+      h('button#create-plan.pure-button', {
+        'data-tooltip': 'Create project plan',
+        onClick: () => {
+          logger.debug(`Showing dialog to add new project plan...`)
+          cursor.cursor('userProfile').set('showAddNewPlan', true)
+        },
+      }, 'New'),
       h('button#add-existing-plan.pure-button', {
         'data-tooltip': 'Add existing project plan',
+        onClick: () => {
+          logger.debug(`Showing dialog to add existing project plan...`)
+          cursor.cursor('userProfile').set('showAddExistingPlan', true)
+        },
       }, 'Add Existing'),
       h('hr'),
     ]) : null,
@@ -192,6 +287,7 @@ module.exports = {
     }, profileTabs)) ? currentHash : 'projects'
 
     logger.debug(`Rendering profile of user '${user.username}', active tab '${activeTab}':`, user)
+    logger.debug(`State:`, profileCursor.toJS())
     let tabContents
     if (activeTab === 'about') {
       tabContents = About(user)

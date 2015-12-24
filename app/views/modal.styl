@@ -3,6 +3,8 @@
 border-color = #C1C1C1
 
 .modal-header
+  background menu-background
+  color white
   border-bottom 1px solid border-color
   box-sizing border-box
 
@@ -10,11 +12,11 @@ border-color = #C1C1C1
     display flex
     padding 15px
 
-  h3
-    margin 0
+  .modal-label
+    margin auto
 
   .close
-    margin-left auto
+    margin-right 10px
 
 .modal-body
   .modal-body-content
@@ -24,14 +26,17 @@ border-color = #C1C1C1
     border-top 1px solid border-color
     padding 15px
 
+  fieldset
+    border 0
+    padding 0
+
 button.close
   border 0
   background 0 0
   padding 0
-  color muted
-
-  &:hover
-    color black
 
   &:active,&:focus
     outline none
+
+.modal-input, .modal-select
+  width 100%
