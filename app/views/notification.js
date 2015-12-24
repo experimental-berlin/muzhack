@@ -5,8 +5,8 @@ let h = require('react-hyperscript')
 let Modal = require('./modal')
 
 module.exports = {
-  warn: (title, message) => {
-    return Modal({title, cursor,})
+  warn: (title, message, cursor) => {
+    cursor.set(`showWarningDialog`, {title, message,})
   },
   question: (title, message, yesCallback, closeCallback) => {
     let content = h('div', [

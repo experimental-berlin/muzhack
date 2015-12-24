@@ -67,7 +67,6 @@ let getPlanModal = (cursor, title, fields, submitCallback, closeCallback) => {
         onClick: () => {
           logger.debug(`OK button clicked`)
           submitCallback()
-          closeCallback()
         },
       }, 'OK'),
       h('button.pure-button', {
@@ -82,7 +81,7 @@ let getPlanModal = (cursor, title, fields, submitCallback, closeCallback) => {
   return Modal({closeCallback, title, content,})
 }
 
-let AddNewPlanModal = component('AddNewPlanModal', (cursor) => {
+let AddNewPlanModal = component('AddNewPlanModal', ({username, cursor,}) => {
   let profileCursor = cursor.cursor('userProfile')
 
   let closeCallback = () => {
@@ -90,7 +89,22 @@ let AddNewPlanModal = component('AddNewPlanModal', (cursor) => {
   }
 
   let submit = () => {
-    logger.debug(`Submitting new project plan...`)
+    let newPlan = profileCursor.cursor('newPlan').toJS()
+    logger.debug(`Submitting new project plan...:`, newPlan)
+    return ajax.postJson(`users/${username}/plans`, newPlan)
+      .then(() => {
+        logger.info(`Successfully posted new project plan to server`)
+        closeCallback()
+      }, (err) => {
+        let {statusCode, error,} = err
+        logger.info(`Failed to post new project plan to server: ${error}`)
+        notification.warn(`Error`, `Failed to create new project plan: '${error}'`, cursor)
+      })
+  }
+
+  let onChange = (parameter, event) => {
+    logger.debug(`Input detected for parameter '${parameter}'`)
+    profileCursor.cursor('newPlan').set(parameter, event.currentTarget.value)
   }
 
   logger.debug(`Rendering AddNewPlanModal`)
@@ -99,18 +113,24 @@ let AddNewPlanModal = component('AddNewPlanModal', (cursor) => {
       id: 'create-board-name',
       classes: ['modal-input',],
       placeholder: 'Name',
-      onChange: (event) => {
-        logger.debug(`Input detected`)
-      },
+      onChange: R.partial(onChange, ['name',]),
       onEnter: submit,
     }),
-    h('input#create-board-description.modal-input', {placeholder: 'Description',}),
-    h('input#create-board-organization.modal-input', {placeholder: 'Organization',}),
+    h('input#create-board-description.modal-input', {
+      placeholder: 'Description',
+      onChange: R.partial(onChange, ['description',]),
+      onEnter: submit,
+    }),
+    h('input#create-board-organization.modal-input', {
+      placeholder: 'Organization',
+      onChange: R.partial(onChange, ['organization',]),
+      onEnter: submit,
+    }),
   ]
   return getPlanModal(cursor, 'Create Trello Board', fields, submit, closeCallback)
 })
 
-let AddExistingPlanModal = component('AddExistingPlanModal', (cursor) => {
+let AddExistingPlanModal = component('AddExistingPlanModal', ({username, cursor,}) => {
   let profileCursor = cursor.cursor('userProfile')
 
   let closeCallback = () => {
@@ -119,6 +139,7 @@ let AddExistingPlanModal = component('AddExistingPlanModal', (cursor) => {
 
   let submit = () => {
     logger.debug(`Submitting new project plan...`)
+    closeCallback()
   }
 
   logger.debug(`Rendering AddExistingPlanModal`)
@@ -137,7 +158,8 @@ let AddExistingPlanModal = component('AddExistingPlanModal', (cursor) => {
 
 let Plans = component('Plans', ({user, cursor,}) => {
   let loggedInUser = userManagement.getLoggedInUser(cursor)
-  let isLoggedInUser = loggedInUser != null && loggedInUser.username === user.username
+  let username = user.username
+  let isLoggedInUser = loggedInUser != null && loggedInUser.username === username
   let profileCursor = cursor.cursor('userProfile')
   return h('div', [
     profileCursor.get('askRemovePlan') ? notification.question('Remove/Close Project Plan?',
@@ -145,8 +167,8 @@ let Plans = component('Plans', ({user, cursor,}) => {
       removeProjectPlan, () => {
         cursor.set('askRemovePlan', false)
       }) : null,
-    profileCursor.get('showAddNewPlan') ? AddNewPlanModal(cursor) : null,
-    profileCursor.get('showAddExistingPlan') ? AddExistingPlanModal(cursor) : null,
+    profileCursor.get('showAddNewPlan') ? AddNewPlanModal({username, cursor,}) : null,
+    profileCursor.get('showAddExistingPlan') ? AddExistingPlanModal({username, cursor,}) : null,
     isLoggedInUser ? h('#plan-buttons.button-group', [
       h('button#create-plan.pure-button', {
         'data-tooltip': 'Create project plan',
