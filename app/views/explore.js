@@ -151,6 +151,7 @@ module.exports = {
       .then((projects) => {
         return {
           explore: {
+            showQuestion: true,
             isSearching: false,
             search: '',
             projects,
@@ -159,8 +160,21 @@ module.exports = {
       })
   },
   render: (cursor) => {
+    let yesCallback = () => {
+
+    }
+
+    let noCallback = () => {
+      
+    }
+
+    let exploreCursor = cursor.cursor('explore')
+    logger.debug(`Explore state:`, exploreCursor.toJS())
     return h('.pure-g', [
-      notification.question(),
+      exploreCursor.get('showQuestion') ? notification.question('Yo', 'Yo?', yesCallback,
+        noCallback, () => {
+        exploreCursor.set('showQuestion', false)
+      }) : null,
       h('.pure-u-1', [
         h('#explore-pad', [
           SearchBox(cursor),
