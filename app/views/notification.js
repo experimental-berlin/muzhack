@@ -56,7 +56,7 @@ module.exports = {
   warn: (title, message) => {
     return Modal({title, cursor,})
   },
-  question: (title, message, yesCallback, noCallback, closeCallback) => {
+  question: (title, message, yesCallback, closeCallback) => {
     let content = h('div', [
       h('.modal-body-content', [
         message,
@@ -72,7 +72,6 @@ module.exports = {
         h('button.pure-button', {
           onClick: () => {
             logger.debug(`No button clicked`)
-            noCallback()
             closeCallback()
           },
         }, 'No'),

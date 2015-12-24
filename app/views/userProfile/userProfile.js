@@ -12,6 +12,7 @@ let VCard = require('./vcard')
 let {convertMarkdown,} = require('../../markdown')
 let userManagement = require('../../userManagement')
 let datetime = require('../../datetime')
+let notification = require('../notification')
 
 if (__IS_BROWSER__) {
   require('./userProfile.styl')
@@ -56,6 +57,11 @@ let Plans = component('Plans', ({user, cursor,}) => {
   let loggedInUser = userManagement.getLoggedInUser(cursor)
   let isLoggedInUser = loggedInUser != null && loggedInUser.username === user.username
   return h('div', [
+    cursor.get('askRemovePlan') ? notification.question('Remove/Close Project Plan?',
+      'Are you sure you wish to remove the project plan #{@name} and close the Trello board?',
+      removeProjectPlan, () => {
+        cursor.set('askRemovePlan', false)
+      }) : null,
     isLoggedInUser ? h('#plan-buttons.button-group', [
       h('button#create-plan.pure-button', {'data-tooltip': 'Create project plan',}, 'New'),
       h('button#add-existing-plan.pure-button', {
@@ -71,7 +77,14 @@ let Plans = component('Plans', ({user, cursor,}) => {
             h('a.edit-project-plan', {href: '#', 'data-tooltip': 'Edit project plan',}, [
               h('span.icon-pencil3'),
             ]),
-            h('a.remove-project-plan', {href: '#', 'data-tooltip': 'Remove project plan',}, [
+            h('a.remove-project-plan', {
+              href: '#',
+              'data-tooltip':
+              'Remove project plan',
+              onClick: () => {
+                cursor.set('askRemovePlan', true)
+              },
+            }, [
               'span.icon-cross',
             ]),
             h('a.close-project-plan', {
