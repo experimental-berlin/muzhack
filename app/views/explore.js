@@ -11,6 +11,7 @@ let Packery = React.createFactory(require('react-packery-component')(React))
 
 let FocusingInput = require('./focusingInput')
 let ajax = require('../ajax')
+let notification = require('./notification')
 
 if (__IS_BROWSER__) {
   require('./explore.styl')
@@ -150,6 +151,7 @@ module.exports = {
       .then((projects) => {
         return {
           explore: {
+            showQuestion: true,
             isSearching: false,
             search: '',
             projects,
@@ -158,7 +160,21 @@ module.exports = {
       })
   },
   render: (cursor) => {
+    let yesCallback = () => {
+
+    }
+
+    let noCallback = () => {
+      
+    }
+
+    let exploreCursor = cursor.cursor('explore')
+    logger.debug(`Explore state:`, exploreCursor.toJS())
     return h('.pure-g', [
+      exploreCursor.get('showQuestion') ? notification.question('Yo', 'Yo?', yesCallback,
+        noCallback, () => {
+        exploreCursor.set('showQuestion', false)
+      }) : null,
       h('.pure-u-1', [
         h('#explore-pad', [
           SearchBox(cursor),

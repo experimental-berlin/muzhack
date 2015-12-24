@@ -3,8 +3,8 @@ let R = require('ramda')
 let Dropzone = require('dropzone/src/dropzone.coffee')
 let S = require('underscore.string.fp')
 
-let editing = require('./editing')
-let S3Uploader = require('./s3Uploader')
+let editing = require('../editing')
+let S3Uploader = require('../s3Uploader')
 
 let monitoredDropzoneEvents = [
   'addedfile',

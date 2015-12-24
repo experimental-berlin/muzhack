@@ -24,6 +24,7 @@ Logger.setHandler((messages, context) => {
 let logger = Logger.get('entry')
 
 window.onerror = (message, url, line) => {
+  // TODO: Show dialog?
   logger.error(`Uncaught exception, at ${url}:${line}:\n${message}`)
 }
 
