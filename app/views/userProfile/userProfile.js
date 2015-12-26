@@ -228,6 +228,7 @@ let Plans = component('Plans', ({user, cursor,}) => {
             classes: ['edit-project-plan',],
             onClick: () => {
               logger.debug(`Editing project plan`)
+              profileCursor.set('showEditPlan', true)
             },
           }, [
             h('span.icon-pencil3'),
@@ -237,7 +238,7 @@ let Plans = component('Plans', ({user, cursor,}) => {
             'data-tooltip': 'Remove project plan',
             onClick: () => {
               logger.debug(`Removing project plan`)
-              cursor.set('askRemovePlan', true)
+              profileCursor.set('askRemovePlan', true)
             },
           }, [
             h('span.icon-cross'),
@@ -247,6 +248,7 @@ let Plans = component('Plans', ({user, cursor,}) => {
             'data-tooltip': 'Remove project plan and close Trello board',
             onClick: () => {
               logger.debug(`Removing project plan and closing Trello board`)
+              profileCursor.set('askClosePlan', true)
             },
           }, [
             h('span.icon-bin'),
