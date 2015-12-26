@@ -47,7 +47,7 @@ let SignInForm = component('SignInForm', (cursor) => {
           logger.debug(`Signing user in`)
           event.preventDefault()
           let loginCursor = cursor.cursor('login')
-          ajax.postJson('login', {
+          ajax.postJson('/api/login', {
             username: loginCursor.get('emailOrUsername'),
             password: loginCursor.get('password'),
           }).then((user) => {
@@ -153,7 +153,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
 
           logger.debug(`Signing up new user:`, data)
           cursor.cursor('router').set('isLoading', true)
-          ajax.postJson('signup', data)
+          ajax.postJson('/api/signup', data)
             .then(() => {
               logger.debug(`User signup succeeded`)
               cursor.mergeDeep({

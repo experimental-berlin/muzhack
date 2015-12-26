@@ -13,9 +13,10 @@ module.exports = component('App', (cursor) => {
   let func = routes[currentRoute].render
   let page
   if (cursor.cursor('router').get('isLoading')) {
-    logger.debug(`Route data is loading`)
+    logger.debug(`Route data is loading, rendering loading page`)
     page = Loading()
   } else {
+    logger.debug(`Route data is not loading, rendering route page`)
     page = func.apply(null, [cursor,].concat(currentRouteParams))
   }
   return layout.render(cursor, page)

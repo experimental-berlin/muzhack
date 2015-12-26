@@ -5,7 +5,7 @@ let ajax = require('../../ajax')
 
 module.exports = (cursor, params) => {
   logger.debug(`Loading project ${params.owner}/${params.projectId}`)
-  return ajax.getJson(`projects/${params.owner}/${params.projectId}`)
+  return ajax.getJson(`/api/projects/${params.owner}/${params.projectId}`)
     .then((project) => {
       logger.debug(`Loading project JSON succeeded:`, project)
       return {

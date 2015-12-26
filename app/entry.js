@@ -13,7 +13,7 @@ require('./styles/fonts.css')
 Logger.useDefaults()
 Logger.setHandler((messages, context) => {
   if (context.level === Logger.ERROR) {
-    ajax.postJson('logError', {
+    ajax.postJson('/api/logError', {
       error: messages[0],
     })
   }

@@ -5,6 +5,7 @@ let S = require('underscore.string.fp')
 let component = require('omniscient')
 
 let userManagement = require('./userManagement')
+let Modal = require('./views/modal')
 
 let flattrImage
 if (__IS_BROWSER__) {
@@ -15,6 +16,28 @@ if (__IS_BROWSER__) {
 }
 
 let logger = require('js-logger-aknudsen').get('layout')
+
+let WarningDialog = component('WarningDialog', ({cursor, title, message,}) => {
+  let closeCallback = () => {
+    cursor.set('showWarningDialog', null)
+  }
+
+  logger.debug(`Rendering WarningDialog:`, message)
+  let content = h('div', [
+    h('.modal-body-content', [
+      message,
+    ]),
+    h('.button-group', [
+      h('button.pure-button.pure-button-primary', {
+        onClick: () => {
+          logger.debug(`OK button clicked`)
+          closeCallback()
+        },
+      }, 'OK'),
+    ]),
+  ])
+  return Modal({title, content, closeCallback,})
+})
 
 let Bitcoinate = component('Bitcoinate', () => {
   return h('button.bitcoinate', {
@@ -134,7 +157,13 @@ let Footer = component('Footer', () => {
 
 module.exports.render = (cursor, page) => {
   logger.debug(`Layout rendering`)
+  let showWarningDialog = cursor.get('showWarningDialog')
   return h('div', [
+    showWarningDialog != null ? WarningDialog({
+      cursor,
+      title: showWarningDialog.title,
+      message: showWarningDialog.message,
+    }) : null,
     Header(cursor),
     h('#content', [page,]),
     Footer(),

@@ -15,12 +15,10 @@ let userProfile = require('../views/userProfile/userProfile')
 let App = require('../components/app')
 let {createRouterState, updateRouterState, NotFoundError,} = require('../sharedRouting')
 let routeMap = require('../routeMap')
+let {getEnvParam,} = require('./environment')
 
 let getInitialRouterState = (request) => {
   let currentPath = request.path
-  if (currentPath === '/u/aknudsen/assets/images/flattr-badge-large.png') {
-    throw new Error(`Path is /u/aknudsen/assets/images/flattr-badge-large.png`)
-  }
   logger.debug(`Computing initial router state, path is '${currentPath}'`)
   let navItems = R.map((navItem) => {
     let path = !navItem.isExternal ? normalizePath(navItem.path) : navItem.path
@@ -57,6 +55,7 @@ let renderIndex = (request, reply) => {
     userProfile: userProfile.createState(),
     router: getInitialRouterState(request),
     loggedInUser: request.auth.isAuthenticated ? request.auth.credentials : null,
+    trelloKey: getEnvParam('TRELLO_KEY'),
   }).cursor()
   cursor = cursor.mergeDeep({
     router: createRouterState(routeMap),

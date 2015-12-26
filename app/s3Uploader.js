@@ -15,7 +15,7 @@ module.exports = class S3Uploader {
     logger.debug(`Sending data...`)
     logger.debug(`Getting S3 upload settings from server...`)
     let key = `${this.folder}/${file.name}`
-    return ajax.getJson(`s3Settings/${this.directive}`, {key, isBackup: this.isBackup,})
+    return ajax.getJson(`/api/s3Settings/${this.directive}`, {key, isBackup: this.isBackup,})
       .then((s3Settings) => {
         logger.debug(`Received S3 settings from server`, s3Settings)
         let formData = new FormData()

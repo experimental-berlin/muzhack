@@ -273,7 +273,7 @@ let hashPassword = (password) => {
 module.exports.register = (server) => {
   server.register(require('hapi-auth-cookie'), (err) => {
     server.auth.strategy('session', 'cookie', 'try', {
-      password: process.env.HAPI_IRON_PASSWORD,
+      password: getEnvParam('HAPI_IRON_PASSWORD'),
       isSecure: false,
     })
   })
