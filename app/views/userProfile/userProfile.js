@@ -12,7 +12,7 @@ let VCard = require('./vcard')
 let {convertMarkdown,} = require('../../markdown')
 let datetime = require('../../datetime')
 let notification = require('../notification')
-let {ProjectPlans,} = require('./ProjectPlans')
+let {ProjectPlans,} = require('./projectPlans')
 
 if (__IS_BROWSER__) {
   require('./userProfile.styl')
