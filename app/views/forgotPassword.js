@@ -50,7 +50,7 @@ module.exports = {
                 event.preventDefault()
                 let usernameOrEmail = cursor.cursor('forgotPassword').get('emailOrUsername')
                 logger.debug(`Submitting forgot password dialog: '${usernameOrEmail}'`)
-                ajax.postJson('forgotPassword', {
+                ajax.postJson('/api/forgotPassword', {
                   username: usernameOrEmail,
                 }).then(() => {
                   let countDown = () => {

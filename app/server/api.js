@@ -16,6 +16,7 @@ let auth = require('./auth')
 let {trimWhitespace,} = require('../stringUtils')
 let {withDb,} = require('./db')
 let {getEnvParam,} = require('./environment')
+let ajax = require('../ajax')
 
 class Project {
   constructor({projectId, tags, owner, ownerName, title, created, pictures, licenseId,
@@ -43,11 +44,11 @@ let verifyLicense = (projectParams) => {
 
 let getS3Client = () => {
   return new Aws.S3({
-    accessKeyId: process.env.AWS_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: process.env.S3_REGION,
+    accessKeyId: getEnvParam('AWS_ACCESS_KEY'),
+    secretAccessKey: getEnvParam('AWS_SECRET_ACCESS_KEY'),
+    region: getEnvParam('S3_REGION'),
     params: {
-      Bucket: process.env.S3_BUCKET,
+      Bucket: getEnvParam('S3_BUCKET'),
     },
   })
 }
@@ -116,8 +117,8 @@ let createZip = (owner, projectId, projectParams) => {
         }, (error, data) => {
           if (error == null) {
             //  TODO: Try to get URL from S3
-            let region = process.env.S3_REGION
-            let bucket = process.env.S3_BUCKET
+            let region = getEnvParam('S3_REGION')
+            let bucket = getEnvParam('S3_BUCKET')
             let zipUrl = `https://s3.${region}.amazonaws.com/${bucket}/${filePath}`
             logger.debug(`Uploaded zip file successfully to '${zipUrl}'`)
             resolve({
@@ -409,6 +410,78 @@ let getUser = (request, reply) => {
   })
 }
 
+let addProjectPlan = (request, reply) => {
+  logger.debug(`Received request to add project plan`)
+  let {username,} = request.params
+  if (username !== request.auth.credentials.username) {
+    logger.debug(`User tried to create project for other user`)
+    reply(Boom.unauthorized(
+      `You are not allowed to create project plans for others than yourself`))
+  }
+
+  let appKey = getEnvParam('TRELLO_KEY')
+  let {id, token, name, description, organization,} = request.payload
+  if (id == null) {
+    let params = R.pickBy((value) => value != null, {
+      name: name,
+      desc: description,
+      idOrganization: organization,
+      prefs_permissionLevel: 'public',
+    })
+    logger.debug(`Creating Trello board:`, params)
+    ajax.postJson(`https://api.trello.com/1/boards?key=${appKey}&token=${token}`, params)
+      .then((R.partial(addTrelloBoard, [username, request, reply,])), (error) => {
+        logger.warn(`Failed to create Trello board: '${error}'`)
+        reply(Boom.badImplementation())
+      })
+  } else {
+    logger.debug(`Adding existing Trello board:`, {id, name, description, organization,})
+    ajax.getJson(`https://api.trello.com/1/boards/${id}?key=${appKey}&token=${token}`)
+      .then(R.partial(addTrelloBoard, [username, request, reply,]), (error) => {
+        logger.warn(`Failed to get Trello board: '${error}'`)
+        reply(Boom.badImplementation())
+      })
+  }
+}
+
+let addTrelloBoard = (username, request, reply, data) => {
+  logger.debug(`Got data`, data)
+  let {id, name, desc, idOrganization, url,} = data
+  withDb(reply, (conn) => {
+    logger.debug(`Adding project plan '${name}' for user '${username}':`,
+      {desc, idOrganization,})
+    return r.table('users')
+      .get(username)
+      .run(conn)
+      .then((user) => {
+        if (user == null) {
+          logger.warn(`Couldn't find user '${username}'`)
+          throw new Error(`Couldn't find user '${username}'`)
+        } else {
+          let projectPlans = {}
+          projectPlans[id] = {
+            name,
+            description: desc,
+            organization: idOrganization,
+            url,
+          }
+          return r.table('users')
+            .get('username')
+            .update({
+              projectPlans,
+            })
+            .run(conn)
+            .then(() => {
+              logger.debug(`Project successfully updated in database`)
+            }, (error) => {
+              logger.warn(`Failed to update project in database:`, error)
+              throw new Error(`Failed to update project in database: '${error}'`)
+            })
+        }
+      })
+  })
+}
+
 let getProject = (request, reply) => {
   let {owner, projectId,} = request.params
   let qualifiedProjectId = `${owner}/${projectId}`
@@ -451,6 +524,11 @@ module.exports.register = (server) => {
     handler: getUser,
   })
   routeApiMethod({
+    method: ['POST',],
+    path: 'users/{username}/projectPlans',
+    handler: addProjectPlan,
+  })
+  routeApiMethod({
     method: ['GET',],
     path: 's3Settings/{directive}',
     config: {
@@ -460,13 +538,13 @@ module.exports.register = (server) => {
         let {key, isBackup,} = request.query
         logger.debug(`Getting S3 form data for directive '${directive}'`)
 
-        let bucket = !isBackup ? process.env.S3_BUCKET : `backup.${process.env.S3_BUCKET}`
+        let bucket = !isBackup ? getEnvParam('S3_BUCKET') : `backup.${getEnvParam('S3_BUCKET')}`
         let keyPrefix = `u/${request.auth.credentials.username}/`
-        let region = process.env.S3_REGION
+        let region = getEnvParam('S3_REGION')
         let s3Form = new AwsS3Form({
           secure: true,
-          accessKeyId: process.env.AWS_ACCESS_KEY,
-          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+          accessKeyId: getEnvParam('AWS_ACCESS_KEY'),
+          secretAccessKey: getEnvParam('AWS_SECRET_ACCESS_KEY'),
           region,
           bucket,
           keyPrefix,

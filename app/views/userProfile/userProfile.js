@@ -16,7 +16,9 @@ let notification = require('../notification')
 let FocusingInput = require('../focusingInput')
 let Modal = require('../modal')
 
+let trello
 if (__IS_BROWSER__) {
+  trello = require('../../lib/trello')
   require('./userProfile.styl')
 }
 
@@ -91,15 +93,17 @@ let AddNewPlanModal = component('AddNewPlanModal', ({username, cursor,}) => {
   let submit = () => {
     let newPlan = profileCursor.cursor('newPlan').toJS()
     logger.debug(`Submitting new project plan...:`, newPlan)
-    return ajax.postJson(`users/${username}/plans`, newPlan)
-      .then(() => {
-        logger.info(`Successfully posted new project plan to server`)
-        closeCallback()
-      }, (err) => {
-        let {statusCode, error,} = err
-        logger.info(`Failed to post new project plan to server: ${error}`)
-        notification.warn(`Error`, `Failed to create new project plan: '${error}'`, cursor)
-      })
+    invokeTrelloApi(cursor, (token) => {
+      return ajax.postJson(`/api/users/${username}/projectPlans`, R.merge({token,}, newPlan))
+        .then(() => {
+          logger.info(`Successfully posted new project plan to server`)
+          closeCallback()
+        }, (err) => {
+          let {statusCode, error,} = err
+          logger.info(`Failed to post new project plan to server: ${error}`)
+          notification.warn(`Error`, `Failed to create new project plan: '${error}'`, cursor)
+        })
+    })
   }
 
   let onChange = (parameter, event) => {
@@ -156,6 +160,25 @@ let AddExistingPlanModal = component('AddExistingPlanModal', ({username, cursor,
   return getPlanModal(cursor, 'Add Existing Trello Board', fields, submit, closeCallback)
 })
 
+let invokeTrelloApi = (cursor, callback) => {
+  cursor.cursor('router').set('isLoading', 'Calling Trello')
+  logger.debug(`Asking Trello for authorization...`)
+  return trello.authorize(cursor.get('trelloKey'), {
+      type: 'popup',
+      name: 'MuzHack',
+      scope: { read: true, 'write': true, },
+  })
+    .then((token) => {
+      cursor.cursor('router').set('isLoading', false)
+      logger.info(`Trello authorization succeeded`)
+      return callback(token)
+    }, (error) => {
+      cursor.cursor('router').set('isLoading', false)
+      logger.warn(`Trello authorization failed`)
+      notification.warn(`Error`, `Trello authorization failed`)
+    })
+}
+
 let Plans = component('Plans', ({user, cursor,}) => {
   let loggedInUser = userManagement.getLoggedInUser(cursor)
   let username = user.username
@@ -174,7 +197,10 @@ let Plans = component('Plans', ({user, cursor,}) => {
         'data-tooltip': 'Create project plan',
         onClick: () => {
           logger.debug(`Showing dialog to add new project plan...`)
-          cursor.cursor('userProfile').set('showAddNewPlan', true)
+          cursor.cursor('userProfile').merge({
+            showAddNewPlan: true,
+            newPlan: {},
+          })
         },
       }, 'New'),
       h('button#add-existing-plan.pure-button', {
@@ -278,7 +304,7 @@ module.exports = {
     })
   },
   loadData: (cursor, params) => {
-    return ajax.getJson(`users/${params.user}`)
+    return ajax.getJson(`/api/users/${params.user}`)
       .then((user) => {
         logger.debug(`Loading user JSON succeeded:`, user)
         return {

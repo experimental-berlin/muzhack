@@ -52,7 +52,7 @@ let createProject = (cursor) => {
       }
       logger.debug(`Creating project '${qualifiedProjectId}'...:`, data)
       cursor.cursor('createProject').set('isWaiting', 'Saving project...')
-      ajax.postJson(`projects/${username}`, data)
+      ajax.postJson(`/api/projects/${username}`, data)
         .then(() => {
           logger.info(`Successfully created project '${qualifiedProjectId}' on server`)
           router.goTo(`/u/${qualifiedProjectId}`)

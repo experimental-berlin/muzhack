@@ -233,7 +233,7 @@ module.exports = {
       throw new Error(`Project ID is undefined`)
     }
     logger.debug(`Loading project ${params.owner}/${params.projectId}`)
-    return ajax.getJson(`projects/${params.owner}/${params.projectId}`)
+    return ajax.getJson(`/api/projects/${params.owner}/${params.projectId}`)
       .then((project) => {
         logger.debug(`Loading project JSON succeeded:`, project)
         return {

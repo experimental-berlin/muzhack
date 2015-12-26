@@ -62,7 +62,7 @@ let Results = component('Results', (cursor) => {
 })
 
 let searchAsync = (cursor, query) => {
-  return ajax.getJson('search', {query: query || '',})
+  return ajax.getJson('/api/search', {query: query || '',})
     .then((projects) => {
       logger.debug(`Searching succeeded:`, projects)
       return projects

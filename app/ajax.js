@@ -3,12 +3,12 @@ let logger = require('js-logger-aknudsen').get('ajax')
 let R = require('ramda')
 let S = require('underscore.string.fp')
 
-let ajax = (method, path, params, payload) => {
+let ajax = (method, uri, params, payload) => {
   let paramStr = S.join('&', R.map(([param, value,]) => {
     return `${encodeURIComponent(param)}=${encodeURIComponent(value || '')}`
   }, R.toPairs(params || {})))
   let queryPart = !S.isBlank(paramStr) ? `?${paramStr}` : ''
-  let absPath = `/api/${path}${queryPart}`
+  let absPath = `${uri}${queryPart}`
   let payloadJson = payload != null ? JSON.stringify(payload) : null
 
   return new Promise((resolve, reject) => {

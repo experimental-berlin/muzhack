@@ -4,11 +4,13 @@ let Boom = require('boom')
 let R = require('ramda')
 let r = require('rethinkdb')
 
+let {getEnvParam,} = require('./environment')
+
 let connectToDb = (reply, host, callback, attempt) => {
   logger.debug(`Trying to connect to RethinkDB host '${host}', attempt #${attempt}`)
   r.connect({
     host,
-    authKey: process.env.RETHINKDB_AUTH_KEY,
+    authKey: getEnvParam('RETHINKDB_AUTH_KEY', null),
     db: 'muzhack',
   }).then((conn) => {
     logger.debug(`Successfully connected to RethinkDB host '${host}', attempt ${attempt}`)
@@ -44,6 +46,6 @@ let connectToDb = (reply, host, callback, attempt) => {
 }
 
 module.exports.withDb = (reply, callback) => {
-  let host = process.env.RETHINKDB_HOST || 'localhost'
+  let host = getEnvParam('RETHINKDB_HOST', 'localhost')
   return connectToDb(reply, host, callback, 1)
 }
