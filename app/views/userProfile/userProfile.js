@@ -218,9 +218,10 @@ let Plans = component('Plans', ({user, cursor,}) => {
     !R.isEmpty(user.projectPlans) ? h('ul#planned-projects', R.map((projectPlan) => {
       return h('li', [
         h('a.planned-project', {href: projectPlan.url, target: '_blank',}, [
-          h('span.icon-trello', projectPlan.name),
+          h('span.icon-trello'),
+          `${nbsp}${projectPlan.name}`,
         ]),
-        isLoggedInUser ? h('div', [
+        isLoggedInUser ? h('.planned-project-controls', [
           h('a.edit-project-plan', {href: '#', 'data-tooltip': 'Edit project plan',}, [
             h('span.icon-pencil3'),
           ]),
