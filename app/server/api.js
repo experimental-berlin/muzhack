@@ -487,6 +487,67 @@ let addTrelloBoard = (username, request, reply, data) => {
   })
 }
 
+let updateProjectPlan = (request, reply) => {
+  logger.debug(`Received request to update project plan`)
+  let {username,} = request.params
+  if (username !== request.auth.credentials.username) {
+    logger.debug(`User tried to update project plan for other user`)
+    reply(Boom.unauthorized(
+      `You are not allowed to update project plans for others than yourself`))
+  }
+
+  let appKey = getEnvParam('TRELLO_KEY')
+  let {id, token, name, description, organization,} = request.payload
+  logger.debug(`Updating project plan:`, {id, name, description, organization,})
+  ajax.putJson(`https://api.trello.com/1/boards/${id}?key=${appKey}&token=${token}`, {
+    name,
+    desc: description,
+    idOrganization: organization,
+  })
+    .then(() => {
+      return ajax.getJson(`https://api.trello.com/1/boards/${id}/url?key=${appKey}&token=${token}`)
+        .then((url) => {
+          return withDb(reply, (conn) => {
+            logger.debug(`Updating project plan in database`)
+            return getUserWithConn(username, conn)
+              .then((user) => {
+                if (user == null) {
+                  logger.warn(`Couldn't find user '${username}'`)
+                  throw new Error(`Couldn't find user '${username}'`)
+                } else {
+                  let projectPlan = {
+                    id,
+                    name,
+                    description,
+                    organization,
+                    url,
+                  }
+                  let projectPlans = R.concat(R.filter((projectPlan) => {
+                    return projectPlan.id !== id
+                  }, user.projectPlans || []), projectPlan)
+                  return r.table('users')
+                    .get(username)
+                    .update({
+                      projectPlans,
+                    })
+                    .run(conn)
+                    .then(() => {
+                      logger.debug(`User successfully updated in database`)
+                      return R.merge(user, {projectPlans,})
+                    }, (error) => {
+                      logger.warn(`Failed to update project in database:`, error)
+                      throw new Error(`Failed to update project in database: '${error}'`)
+                    })
+                }
+              })
+          })
+      })
+    }, (error) => {
+      logger.warn(`Failed to update Trello board '${id}': '${error}'`)
+      reply(Boom.badImplementation())
+    })
+}
+
 let removeProjectPlan = (request, reply) => {
   let doCloseBoard = (projectPlan, token) => {
     let appKey = getEnvParam('TRELLO_KEY')
@@ -639,6 +700,11 @@ module.exports.register = (server) => {
     method: ['POST',],
     path: 'users/{username}/projectPlans',
     handler: addProjectPlan,
+  })
+  routeApiMethod({
+    method: ['PUT',],
+    path: 'users/{username}/projectPlans/{planId}',
+    handler: updateProjectPlan,
   })
   routeApiMethod({
     method: ['DELETE',],

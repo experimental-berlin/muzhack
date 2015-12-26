@@ -48,7 +48,7 @@ let AddNewPlanModal = component('AddNewPlanModal', ({username, cursor,}) => {
   let profileCursor = cursor.cursor('userProfile')
 
   let closeCallback = () => {
-    profileCursor.set('showAddNewPlan', false)
+    profileCursor.set('showAddNewPlan', null)
   }
 
   let submit = () => {
@@ -79,24 +79,24 @@ let AddNewPlanModal = component('AddNewPlanModal', ({username, cursor,}) => {
 
   let fields = [
     FocusingInput({
-      id: 'create-board-name',
+      id: 'create-project-plan-name',
       classes: ['modal-input',],
       placeholder: 'Name',
       onChange: R.partial(onChange, ['name',]),
       onEnter: submit,
     }),
-    h('input#create-board-description.modal-input', {
+    h('input#create-project-plan-description.modal-input', {
       placeholder: 'Description',
       onChange: R.partial(onChange, ['description',]),
       onEnter: submit,
     }),
-    h('input#create-board-organization.modal-input', {
+    h('input#create-project-plan-organization.modal-input', {
       placeholder: 'Organization',
       onChange: R.partial(onChange, ['organization',]),
       onEnter: submit,
     }),
   ]
-  return getPlanModal(cursor, 'Create Trello Board', fields, submit, closeCallback)
+  return getPlanModal(cursor, 'Create Project Plan', fields, submit, closeCallback)
 })
 
 let AddExistingPlanModal = component('AddExistingPlanModal', ({username, cursor,}) => {
@@ -151,6 +151,66 @@ let AddExistingPlanModal = component('AddExistingPlanModal', ({username, cursor,
     }, otherTrelloBoards))),
   ]
   return getPlanModal(cursor, 'Add Existing Project Plan', fields, submit, closeCallback)
+})
+
+let EditPlanModal = component('EditPlanModal', ({username, cursor,}) => {
+  let profileCursor = cursor.cursor('userProfile')
+  let projectPlan = profileCursor.cursor('editedPlan').toJS()
+
+  let closeCallback = () => {
+    profileCursor.set('showEditPlan', null)
+  }
+
+  let submit = () => {
+    let editedProjectPlan = profileCursor.get('editedPlan').toJS()
+    logger.debug(`Submitting edited project plan...:`, editedProjectPlan)
+    invokeTrelloApi(cursor, (token) => {
+      return ajax.putJson(`/api/users/${username}/projectPlans/${projectPlan.id}`,
+          R.merge({token,}, editedProjectPlan))
+        .then((updatedUser) => {
+          logger.info(`Successfully updated project plan on server, updated user:`, updatedUser)
+          profileCursor = profileCursor.merge({
+            user: updatedUser,
+          })
+          closeCallback()
+        }, (err) => {
+          let {statusCode, error,} = err
+          logger.info(`Failed to update project plan on server: ${error}`)
+          notification.warn(`Error`, `Failed to update project plan: '${error}'`, cursor)
+        })
+    })
+  }
+
+  let onChange = (parameter, event) => {
+    logger.debug(`Input detected for parameter '${parameter}'`)
+    profileCursor.cursor('editedPlan').set(parameter, event.currentTarget.value)
+  }
+
+  logger.debug(`Rendering EditPlanModal`)
+
+  let fields = [
+    FocusingInput({
+      id: 'edit-project-plan-name',
+      classes: ['modal-input',],
+      placeholder: 'Name',
+      value: projectPlan.name,
+      onChange: R.partial(onChange, ['name',]),
+      onEnter: submit,
+    }),
+    h('input#edit-project-plan-description.modal-input', {
+      placeholder: 'Description',
+      value: projectPlan.description,
+      onChange: R.partial(onChange, ['description',]),
+      onEnter: submit,
+    }),
+    h('input#edit-project-plan-organization.modal-input', {
+      placeholder: 'Organization',
+      value: projectPlan.organization,
+      onChange: R.partial(onChange, ['organization',]),
+      onEnter: submit,
+    }),
+  ]
+  return getPlanModal(cursor, 'Edit Project Plan', fields, submit, closeCallback)
 })
 
 let RemovePlanModal = component('RemovePlanModal', ({username, cursor,}) => {
@@ -229,9 +289,10 @@ let ProjectPlans = component('ProjectPlans', ({user, cursor,}) => {
   let profileCursor = cursor.cursor('userProfile')
   return h('div', [
     profileCursor.get('showAddNewPlan') ? AddNewPlanModal({username, cursor,}) : null,
+    profileCursor.get('showAddExistingPlan') ? AddExistingPlanModal({username, cursor,}) : null,
+    profileCursor.get('showEditPlan') ? EditPlanModal({username, cursor,}) : null,
     profileCursor.get('askRemovePlan') ? RemovePlanModal({username, cursor,}) : null,
     profileCursor.get('askClosePlan') ? ClosePlanModal({username, cursor,}) : null,
-    profileCursor.get('showAddExistingPlan') ? AddExistingPlanModal({username, cursor,}) : null,
     isLoggedInUser ? h('#plan-buttons.button-group', [
       h('button#create-plan.pure-button', {
         'data-tooltip': 'Create project plan',
@@ -274,7 +335,10 @@ let ProjectPlans = component('ProjectPlans', ({user, cursor,}) => {
             classes: ['edit-project-plan',],
             onClick: () => {
               logger.debug(`Editing project plan`)
-              profileCursor.set('showEditPlan', true)
+              profileCursor.merge({
+                showEditPlan: projectPlan,
+                editedPlan: projectPlan,
+              })
             },
           }, [
             h('span.icon-pencil3'),
