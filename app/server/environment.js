@@ -6,8 +6,7 @@ module.exports = {
     let value = process.env[key]
     if (value == null) {
       if (dflt === undefined) {
-        logger.error(`${key} not defined in environment`)
-        reply(Boom.badImplementation())
+        throw new Error(`${key} not defined in environment`)
       } else {
         return dflt
       }
