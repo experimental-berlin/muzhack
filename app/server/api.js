@@ -488,8 +488,23 @@ let addTrelloBoard = (username, request, reply, data) => {
 }
 
 let removeProjectPlan = (request, reply) => {
+  let doCloseBoard = (projectPlan, token) => {
+    let appKey = getEnvParam('TRELLO_KEY')
+    return ajax.putJson(
+        `https://api.trello.com/1/boards/${projectPlan.id}/closed?key=${appKey}&token=${token}`, {
+          value: true,
+        })
+      .then(() => {
+        logger.debug(`Closed Trello board successfully`)
+      }, (error) => {
+        logger.warn(`Failed to close Trello board: '${error}'`)
+        throw error
+      })
+  }
+
   logger.debug(`Received request to remove project plan:`, request)
   let {username, planId,} = request.params
+  let {closeBoard,} = request.query
   if (username !== request.auth.credentials.username) {
     logger.debug(`User tried to remove project plan for other user`)
     reply(Boom.unauthorized(
@@ -504,23 +519,35 @@ let removeProjectPlan = (request, reply) => {
           throw new Error(`Couldn't find user '${username}'`)
         }
 
-        let projectPlans = R.filter((projectPlan) => {
-          return projectPlan.id !== planId
-        }, user.projectPlans)
-        return r.table('users')
-          .get(username)
-          .update({
-            projectPlans,
-          })
-          .run(conn)
-          .then(() => {
-            logger.debug(`Successfully removed project plan ${planId} for user '${username}'`)
-            return R.merge(user, {
+        let closeBoardPromise
+        if (!S.isBlank(closeBoard)) {
+          logger.debug(`Closing associated Trello board as well`)
+          let projectPlan = R.find((projectPlan) => {
+            return projectPlan.id === planId
+          }, user.projectPlans)
+          closeBoardPromise = doCloseBoard(projectPlan, closeBoard)
+        } else {
+          closeBoardPromise = Promise.resolve()
+        }
+        return closeBoardPromise.then(() => {
+          let projectPlans = R.filter((projectPlan) => {
+            return projectPlan.id !== planId
+          }, user.projectPlans)
+          return r.table('users')
+            .get(username)
+            .update({
               projectPlans,
             })
-          }, (error) => {
-            logger.warn(`Failed to remove project plan ${planId} for user '${username}':`, error)
-            throw error
+            .run(conn)
+            .then(() => {
+              logger.debug(`Successfully removed project plan ${planId} for user '${username}'`)
+              return R.merge(user, {
+                projectPlans,
+              })
+            }, (error) => {
+              logger.warn(`Failed to remove project plan ${planId} for user '${username}':`, error)
+              throw error
+            })
           })
       })
   })

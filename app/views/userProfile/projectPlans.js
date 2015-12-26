@@ -148,6 +148,33 @@ let RemovePlanModal = component('RemovePlanModal', ({username, cursor,}) => {
     })
 })
 
+let ClosePlanModal = component('ClosePlanModal', ({username, cursor,}) => {
+  let projectPlan = cursor.cursor('userProfile').get('askClosePlan')
+  return notification.question(`Close Project Plan?`,
+    `Are you sure you wish to remove the project plan ${projectPlan.name} and close the ` +
+        `associated Trello board?`, () => {
+      return invokeTrelloApi(cursor, (token) => {
+        logger.debug(`User confirmed closing project plan '${projectPlan.id}'`)
+        return ajax.delete(
+            `/api/users/${username}/projectPlans/${projectPlan.id}?closeBoard=${token}`)
+          .then((user) => {
+            logger.debug(`Successfully closed project plan '${projectPlan.id}':`, user)
+            cursor.cursor('userProfile').update((current) => {
+              return current.merge({
+                askClosePlan: null,
+                user: current.get('user').merge({
+                  projectPlans: immutable.fromJS(user.projectPlans),
+                }),
+              })
+            })
+            logger.debug(`After removal:`, cursor.toJS())
+          })
+        })
+    }, () => {
+      cursor.cursor('userProfile').set('askClosePlan', null)
+    })
+})
+
 let invokeTrelloApi = (cursor, callback) => {
   cursor.cursor('router').set('isLoading', 'Calling Trello')
   logger.debug(`Asking Trello for authorization...`)
@@ -175,6 +202,7 @@ let ProjectPlans = component('ProjectPlans', ({user, cursor,}) => {
   return h('div', [
     profileCursor.get('showAddNewPlan') ? AddNewPlanModal({username, cursor,}) : null,
     profileCursor.get('askRemovePlan') ? RemovePlanModal({username, cursor,}) : null,
+    profileCursor.get('askClosePlan') ? ClosePlanModal({username, cursor,}) : null,
     profileCursor.get('showAddExistingPlan') ? AddExistingPlanModal({username, cursor,}) : null,
     isLoggedInUser ? h('#plan-buttons.button-group', [
       h('button#create-plan.pure-button', {
@@ -227,7 +255,7 @@ let ProjectPlans = component('ProjectPlans', ({user, cursor,}) => {
             'data-tooltip': 'Remove project plan and close Trello board',
             onClick: () => {
               logger.debug(`Removing project plan and closing Trello board`)
-              profileCursor.set('askClosePlan', true)
+              profileCursor.set('askClosePlan', projectPlan)
             },
           }, [
             h('span.icon-bin'),
