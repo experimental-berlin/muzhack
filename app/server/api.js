@@ -356,19 +356,23 @@ let search = (request, reply) => {
   })
 }
 
+let getUserWithConn = (username, conn) => {
+  return r.table('users')
+    .get(username)
+    .merge((user) => {
+      return {
+        'projects': r.table('projects').getAll(username, {index: 'owner',})
+          .coerceTo('array'),
+      }
+    })
+    .run(conn)
+}
+
 let getUser = (request, reply) => {
   let {username,} = request.params
   withDb(reply, (conn) => {
     logger.debug(`Getting user '${username}'`)
-    return r.table('users')
-      .get(username)
-      .merge((user) => {
-        return {
-          'projects': r.table('projects').getAll(username, {index: 'owner',})
-            .coerceTo('array'),
-        }
-      })
-      .run(conn)
+    return getUserWithConn(username, conn)
       .then((user) => {
         if (user != null) {
           logger.debug(`Found user '${username}':`, user)
@@ -414,7 +418,7 @@ let addProjectPlan = (request, reply) => {
   logger.debug(`Received request to add project plan`)
   let {username,} = request.params
   if (username !== request.auth.credentials.username) {
-    logger.debug(`User tried to create project for other user`)
+    logger.debug(`User tried to create project plan for other user`)
     reply(Boom.unauthorized(
       `You are not allowed to create project plans for others than yourself`))
   }
@@ -449,9 +453,7 @@ let addTrelloBoard = (username, request, reply, data) => {
   withDb(reply, (conn) => {
     logger.debug(`Adding project plan '${id}' for user '${username}':`,
       {name, desc, idOrganization, url,})
-    return r.table('users')
-      .get(username)
-      .run(conn)
+    return getUserWithConn(username, conn)
       .then((user) => {
         if (user == null) {
           logger.warn(`Couldn't find user '${username}'`)
@@ -481,6 +483,45 @@ let addTrelloBoard = (username, request, reply, data) => {
               throw new Error(`Failed to update project in database: '${error}'`)
             })
         }
+      })
+  })
+}
+
+let removeProjectPlan = (request, reply) => {
+  logger.debug(`Received request to remove project plan:`, request)
+  let {username, planId,} = request.params
+  if (username !== request.auth.credentials.username) {
+    logger.debug(`User tried to remove project plan for other user`)
+    reply(Boom.unauthorized(
+      `You are not allowed to remove project plans for others than yourself`))
+  }
+
+  logger.debug(`Removing project plan ${planId} from user ${username}`)
+  withDb(reply, (conn) => {
+    return getUserWithConn(username, conn)
+      .then((user) => {
+        if (user == null) {
+          throw new Error(`Couldn't find user '${username}'`)
+        }
+
+        let projectPlans = R.filter((projectPlan) => {
+          return projectPlan.id !== planId
+        }, user.projectPlans)
+        return r.table('users')
+          .get(username)
+          .update({
+            projectPlans,
+          })
+          .run(conn)
+          .then(() => {
+            logger.debug(`Successfully removed project plan ${planId} for user '${username}'`)
+            return R.merge(user, {
+              projectPlans,
+            })
+          }, (error) => {
+            logger.warn(`Failed to remove project plan ${planId} for user '${username}':`, error)
+            throw error
+          })
       })
   })
 }
@@ -530,6 +571,11 @@ module.exports.register = (server) => {
     method: ['POST',],
     path: 'users/{username}/projectPlans',
     handler: addProjectPlan,
+  })
+  routeApiMethod({
+    method: ['DELETE',],
+    path: 'users/{username}/projectPlans/{planId}',
+    handler: removeProjectPlan,
   })
   routeApiMethod({
     method: ['GET',],
