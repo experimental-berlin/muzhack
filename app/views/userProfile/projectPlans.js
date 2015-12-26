@@ -101,33 +101,56 @@ let AddNewPlanModal = component('AddNewPlanModal', ({username, cursor,}) => {
 
 let AddExistingPlanModal = component('AddExistingPlanModal', ({username, cursor,}) => {
   let profileCursor = cursor.cursor('userProfile')
-  let otherTrelloBoards = profileCursor.get('showAddExistingPlan')
+  let otherTrelloBoards = profileCursor.get('showAddExistingPlan').toJS()
 
   let closeCallback = () => {
     profileCursor.set('showAddExistingPlan', null)
   }
 
   let submit = () => {
-    logger.debug(`Submitting new project plan...`)
-    closeCallback()
+    let boardId = profileCursor.get('selectedExistingPlan')
+    logger.debug(`Submitting existing project plan, with ID '${boardId}'...`)
+    invokeTrelloApi(cursor, (token) => {
+      return ajax.postJson(`/api/users/${username}/projectPlans`, {
+        token,
+        id: boardId,
+      })
+        .then((updatedUser) => {
+          logger.info(`Successfully added existing Trello board among users' project plans`)
+          profileCursor = profileCursor.merge({
+            user: updatedUser,
+          })
+          closeCallback()
+        }, (error) => {
+          logger.warn(`Failed to add existing Trello board among users' project plans:`, error)
+        })
+    })
   }
 
   logger.debug(`Rendering AddExistingPlanModal`)
   let fields = [
     h('select#add-existing-board-select.modal-select', {
       name: 'boardId',
-      defaultValue: null,
+      defaultValue: 'default',
+      onChange: (event) => {
+        let value = event.currentTarget.value
+        logger.debug(`Board selected, ID: '${value}'`)
+        profileCursor.set(`selectedExistingPlan`, value)
+      },
     }, R.concat([
       h('option', {
+        key: 0,
         disabled: true,
+        value: 'default',
       }, 'Choose a Trello board'),
-    ], R.map((board) => {
+    ], R.addIndex(R.map)((board, index) => {
       return h('option', {
+        key: index+1,
         value: board.id,
       }, board.name)
     }, otherTrelloBoards))),
   ]
-  return getPlanModal(cursor, 'Add Existing Trello Board', fields, submit, closeCallback)
+  return getPlanModal(cursor, 'Add Existing Project Plan', fields, submit, closeCallback)
 })
 
 let RemovePlanModal = component('RemovePlanModal', ({username, cursor,}) => {
@@ -230,7 +253,10 @@ let ProjectPlans = component('ProjectPlans', ({user, cursor,}) => {
             })
               .then((trelloBoards) => {
                 logger.debug(`Got list of user's not-added Trello boards:`, trelloBoards)
-                cursor.cursor('userProfile').set('showAddExistingPlan', trelloBoards)
+                cursor.cursor('userProfile').merge({
+                  showAddExistingPlan: immutable.fromJS(trelloBoards),
+                  selectedExistingPlan: null,
+                })
               })
           })
         },
