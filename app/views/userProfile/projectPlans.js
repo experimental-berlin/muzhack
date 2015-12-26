@@ -256,6 +256,9 @@ let ClosePlanModal = component('ClosePlanModal', ({username, cursor,}) => {
               })
             })
             logger.debug(`After removal:`, cursor.toJS())
+          }, (error) => {
+            logger.warn(`Failed to close project plan '${projectPlan.id}':`, error)
+            notification.warn(`Error`, `Failed to close project plan: ${error.message}.`, cursor)
           })
         })
     }, () => {
@@ -278,7 +281,7 @@ let invokeTrelloApi = (cursor, callback) => {
     }, (error) => {
       cursor.cursor('router').set('isLoading', false)
       logger.warn(`Trello authorization failed`)
-      notification.warn(`Error`, `Trello authorization failed`)
+      notification.warn(`Error`, `Trello authorization failed`, cursor)
     })
 }
 
