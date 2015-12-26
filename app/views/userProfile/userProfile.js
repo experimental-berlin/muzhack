@@ -5,6 +5,7 @@ let S = require('underscore.string.fp')
 let h = require('react-hyperscript')
 let immutable = require('immutable')
 let logger = require('js-logger-aknudsen').get('userProfile')
+let React = require('react')
 
 let ajax = require('../../ajax')
 let {nbsp,} = require('../../specialChars')
@@ -15,6 +16,7 @@ let datetime = require('../../datetime')
 let notification = require('../notification')
 let FocusingInput = require('../focusingInput')
 let Modal = require('../modal')
+let TransparentButton = require('../../transparentButton')
 
 let trello
 if (__IS_BROWSER__) {
@@ -222,21 +224,30 @@ let Plans = component('Plans', ({user, cursor,}) => {
           `${nbsp}${projectPlan.name}`,
         ]),
         isLoggedInUser ? h('.planned-project-controls', [
-          h('a.edit-project-plan', {href: '#', 'data-tooltip': 'Edit project plan',}, [
+          TransparentButton({
+            classes: ['edit-project-plan',],
+            onClick: () => {
+              logger.debug(`Editing project plan`)
+            },
+          }, [
             h('span.icon-pencil3'),
           ]),
-          h('a.remove-project-plan', {
-            href: '#',
-            'data-tooltip':
-            'Remove project plan',
+          TransparentButton({
+            classes: ['remove-project-plan',],
+            'data-tooltip': 'Remove project plan',
             onClick: () => {
+              logger.debug(`Removing project plan`)
               cursor.set('askRemovePlan', true)
             },
           }, [
             h('span.icon-cross'),
           ]),
-          h('a.close-project-plan', {
-            href: '#', 'data-tooltip': 'Remove project plan and close Trello board',
+          TransparentButton({
+            classes: ['close-project-plan',],
+            'data-tooltip': 'Remove project plan and close Trello board',
+            onClick: () => {
+              logger.debug(`Removing project plan and closing Trello board`)
+            },
           }, [
             h('span.icon-bin'),
           ]),
