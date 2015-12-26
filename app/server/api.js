@@ -445,11 +445,10 @@ let addProjectPlan = (request, reply) => {
 }
 
 let addTrelloBoard = (username, request, reply, data) => {
-  logger.debug(`Got data`, data)
   let {id, name, desc, idOrganization, url,} = data
   withDb(reply, (conn) => {
-    logger.debug(`Adding project plan '${name}' for user '${username}':`,
-      {desc, idOrganization,})
+    logger.debug(`Adding project plan '${id}' for user '${username}':`,
+      {name, desc, idOrganization, url,})
     return r.table('users')
       .get(username)
       .run(conn)
@@ -458,21 +457,25 @@ let addTrelloBoard = (username, request, reply, data) => {
           logger.warn(`Couldn't find user '${username}'`)
           throw new Error(`Couldn't find user '${username}'`)
         } else {
-          let projectPlans = {}
-          projectPlans[id] = {
+          let projectPlan = {
+            id,
             name,
             description: desc,
             organization: idOrganization,
             url,
           }
+          let projectPlans = R.concat(R.filter((projectPlan) => {
+            return projectPlan.id !== id
+          }, user.projectPlans || []), projectPlan)
           return r.table('users')
-            .get('username')
+            .get(username)
             .update({
               projectPlans,
             })
             .run(conn)
             .then(() => {
-              logger.debug(`Project successfully updated in database`)
+              logger.debug(`User successfully updated in database`)
+              return R.merge(user, {projectPlans,})
             }, (error) => {
               logger.warn(`Failed to update project in database:`, error)
               throw new Error(`Failed to update project in database: '${error}'`)

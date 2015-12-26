@@ -95,8 +95,11 @@ let AddNewPlanModal = component('AddNewPlanModal', ({username, cursor,}) => {
     logger.debug(`Submitting new project plan...:`, newPlan)
     invokeTrelloApi(cursor, (token) => {
       return ajax.postJson(`/api/users/${username}/projectPlans`, R.merge({token,}, newPlan))
-        .then(() => {
-          logger.info(`Successfully posted new project plan to server`)
+        .then((updatedUser) => {
+          logger.info(`Successfully posted new project plan to server, updated user:`, updatedUser)
+          profileCursor = profileCursor.merge({
+            user: updatedUser,
+          })
           closeCallback()
         }, (err) => {
           let {statusCode, error,} = err
@@ -216,27 +219,27 @@ let Plans = component('Plans', ({user, cursor,}) => {
       return h('li', [
         h('a.planned-project', {href: projectPlan.url, target: '_blank',}, [
           h('span.icon-trello', projectPlan.name),
-          isLoggedInUser ? h('div', [
-            h('a.edit-project-plan', {href: '#', 'data-tooltip': 'Edit project plan',}, [
-              h('span.icon-pencil3'),
-            ]),
-            h('a.remove-project-plan', {
-              href: '#',
-              'data-tooltip':
-              'Remove project plan',
-              onClick: () => {
-                cursor.set('askRemovePlan', true)
-              },
-            }, [
-              'span.icon-cross',
-            ]),
-            h('a.close-project-plan', {
-              href: '#', 'data-tooltip': 'Remove project plan and close Trello board',
-            }, [
-              h('span.icon-bin'),
-            ]),
-          ]) : null,
         ]),
+        isLoggedInUser ? h('div', [
+          h('a.edit-project-plan', {href: '#', 'data-tooltip': 'Edit project plan',}, [
+            h('span.icon-pencil3'),
+          ]),
+          h('a.remove-project-plan', {
+            href: '#',
+            'data-tooltip':
+            'Remove project plan',
+            onClick: () => {
+              cursor.set('askRemovePlan', true)
+            },
+          }, [
+            h('span.icon-cross'),
+          ]),
+          h('a.close-project-plan', {
+            href: '#', 'data-tooltip': 'Remove project plan and close Trello board',
+          }, [
+            h('span.icon-bin'),
+          ]),
+        ]) : null,
       ])
     }, user.projectPlans)) : h('em', 'No project plans.'),
   ])
