@@ -553,6 +553,47 @@ let removeProjectPlan = (request, reply) => {
   })
 }
 
+let getOtherTrelloBoards = (request, reply) => {
+  logger.debug(`Received request to get a user's non-taken Trello boards`)
+  let {username,} = request.params
+  if (username !== request.auth.credentials.username) {
+    logger.debug(`User tried to get Trello boards for other user`)
+    reply(Boom.unauthorized(
+      `You are not allowed to get Trello boards for others than yourself`))
+  }
+
+  let appKey = getEnvParam('TRELLO_KEY')
+  let {token,} = request.query
+  logger.debug(`Getting all Trello boards for user '${username}'`)
+  ajax.getJson(`https://api.trello.com/1/members/me/boards?filter=open&fields=name,id&` +
+    `key=${appKey}&token=${token}`)
+    .then((boards) => {
+      logger.debug(`Got all of users' boards:`, boards)
+
+      return withDb(reply, (conn) => {
+        return r.table('users')
+          .get(username)
+          .run(conn)
+          .then((user) => {
+            if (user == null) {
+              throw new Error(`Couldn't find user '${username}'`)
+            }
+
+            let otherBoards = R.filter((board) => {
+              return !R.any((projectPlan) => {
+                return projectPlan.id === board.id
+              }, user.projectPlans)
+            }, boards)
+            logger.debug(`Non-added boards:`, otherBoards)
+            return otherBoards
+          })
+      })
+    }, (error) => {
+      logger.warn(`Failed to get Trello boards: '${error}'`)
+      reply(Boom.badImplementation())
+    })
+}
+
 let getProject = (request, reply) => {
   let {owner, projectId,} = request.params
   let qualifiedProjectId = `${owner}/${projectId}`
@@ -603,6 +644,11 @@ module.exports.register = (server) => {
     method: ['DELETE',],
     path: 'users/{username}/projectPlans/{planId}',
     handler: removeProjectPlan,
+  })
+  routeApiMethod({
+    method: ['GET',],
+    path: 'users/{username}/otherTrelloBoards',
+    handler: getOtherTrelloBoards,
   })
   routeApiMethod({
     method: ['GET',],
