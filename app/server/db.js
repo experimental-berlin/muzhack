@@ -7,6 +7,9 @@ let r = require('rethinkdb')
 let {getEnvParam,} = require('./environment')
 
 let connectToDb = (host, callback, attempt) => {
+  if (attempt == null) {
+    attempt = 1
+  }
   logger.debug(`Trying to connect to RethinkDB host '${host}', attempt #${attempt}`)
   return r.connect({
     host,
@@ -52,7 +55,7 @@ let connectToDb = (host, callback, attempt) => {
 module.exports = {
   withDb: (reply, callback) => {
     let host = getEnvParam('RETHINKDB_HOST', 'localhost')
-    return connectToDb(host, callback, 1)
+    return connectToDb(host, callback)
       .then((result) => {
         logger.debug(`Replying with result:`, result)
         reply(result)
