@@ -72,12 +72,15 @@ dd-agent:
   restart: always
   links:
     - lb:staging.muzhack.com
+    - rethinkdb-tunnel:rethinkdb
   volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     - /proc/:/host/proc/:ro
     - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
   environment:
     - API_KEY
+    - RETHINKDB_HOST=rethinkdb
+    - RETHINKDB_AUTH_KEY
   autoredeploy: true
 logspout-muzhack-staging:
   image: gliderlabs/logspout
