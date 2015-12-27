@@ -16,7 +16,7 @@ let connectToDb = (host, callback, attempt) => {
     authKey: getEnvParam('RETHINKDB_AUTH_KEY', null),
     db: 'muzhack',
   }).then((conn) => {
-    logger.debug(`Successfully connected to RethinkDB host '${host}', attempt ${attempt}`)
+    logger.debug(`Successfully connected to RethinkDB host '${host}', attempt #${attempt}`)
     logger.debug(`Invoking callback`)
     try {
       return callback(conn)
@@ -66,29 +66,25 @@ module.exports = {
   },
   setUp: () => {
     let host = getEnvParam('RETHINKDB_HOST', 'localhost')
+    logger.debug(`Setting up database...`)
+    let indexes = ['owner',]
     return connectToDb(host, (conn) => {
-      return r.table('projects').indexStatus('owner')
+      return r.table('projects').indexList()
         .run(conn)
-        .then((results) => {
-          let indexPromises = R.filter((promise) => {return promise != null},
-              R.map((result) => {
-            logger.debug(`Checking index '${result.index}'...`)
-            if (!result.ready) {
-              logger.debug(`Need to create index`)
-              return r.table('projects')
-                .indexCreate(result.index)
-                .run(conn)
-            } else {
-              logger.debug(`Index already exists`)
-            }
-          }, results))
+        .then((existingIndexes) => {
+          let indexPromises = R.map((index) => {
+            logger.debug(`Creating index '${index}'...`)
+            return r.table('projects')
+              .indexCreate(index)
+              .run(conn)
+          }, R.difference(indexes, existingIndexes))
           return Promise.all(indexPromises)
             .then(() => {
               return r.table('projects')
                 .indexWait()
                 .run(conn)
             })
-        })
+      })
     })
   },
 }
