@@ -15,6 +15,7 @@ muzhack-green:
     - AWS_SECRET_ACCESS_KEY
     - SSO_SECRET
     - MANDRILL_SECRET
+    - TRELLO_KEY
   links:
     - rethinkdb-tunnel:rethinkdb
   restart: always
@@ -36,6 +37,7 @@ muzhack-blue:
     - AWS_SECRET_ACCESS_KEY
     - SSO_SECRET
     - MANDRILL_SECRET
+    - TRELLO_KEY
   links:
     - rethinkdb-tunnel:rethinkdb
   restart: always

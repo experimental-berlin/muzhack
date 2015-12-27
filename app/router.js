@@ -107,6 +107,9 @@ let perform = (isInitial=false) => {
         return current.merge(newState)
       })
       redirectIfNecessary(cursor)
+    }, (error) => {
+      logger.warn(`An error occurred updating router state: ${error}`)
+      notification.warn(`Error`, error, cursor)
     })
 }
 
