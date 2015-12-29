@@ -62,7 +62,7 @@ let Results = component('Results', (cursor) => {
 })
 
 let searchAsync = (cursor, query) => {
-  return ajax.getJson('search', {query: query || '',})
+  return ajax.getJson('/api/search', {query: query || '',})
     .then((projects) => {
       logger.debug(`Searching succeeded:`, projects)
       return projects
@@ -158,6 +158,16 @@ module.exports = {
       })
   },
   render: (cursor) => {
+    let yesCallback = () => {
+
+    }
+
+    let noCallback = () => {
+
+    }
+
+    let exploreCursor = cursor.cursor('explore')
+    logger.debug(`Explore state:`, exploreCursor.toJS())
     return h('.pure-g', [
       h('.pure-u-1', [
         h('#explore-pad', [

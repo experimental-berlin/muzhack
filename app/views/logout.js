@@ -15,7 +15,7 @@ module.exports = {
       return
     } else {
       logger.debug('Logging out...')
-      return ajax.getJson('logout')
+      return ajax.getJson('/api/logout')
         .then(() => {
           logger.info(`Successfully logged out`)
           return {

@@ -2,11 +2,14 @@
 let logger = require('js-logger-aknudsen').get('environment')
 
 module.exports = {
-  getEnvParam: (key) => {
+  getEnvParam: (key, dflt) => {
     let value = process.env[key]
     if (value == null) {
-      logger.error(`${key} not defined in environment`)
-      reply(Boom.badImplementation())
+      if (dflt === undefined) {
+        throw new Error(`${key} not defined in environment`)
+      } else {
+        return dflt
+      }
     } else {
       return value
     }

@@ -13,4 +13,5 @@ except IOError:
 for k, v in settings.iteritems():
     os.environ[k] = v
 
-subprocess.check_call(['babel-node', '--harmony_destructuring', '--presets', 'node5', '.',])
+subprocess.check_call(['./node_modules/.bin/babel-node', '--harmony_destructuring', '--presets',
+    'node5', '.',])

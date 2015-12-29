@@ -32,7 +32,7 @@ module.exports = {
       let payload = decodeURIComponent(queryParams.sso)
       let sig = decodeURIComponent(queryParams.sig)
       logger.debug(`Calling server to verify Discourse SSO parameters`)
-      return ajax.postJson('verifyDiscourseSso', {
+      return ajax.postJson('/api/verifyDiscourseSso', {
         payload,
         sig,
       })

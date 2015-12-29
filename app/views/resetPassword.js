@@ -83,7 +83,7 @@ module.exports = {
                 }
 
                 logger.debug(`Submitting reset password dialog for token '${token}'`)
-                ajax.postJson(`resetPassword/${token}`, {
+                ajax.postJson(`/api/resetPassword/${token}`, {
                   password,
                 }).then(() => {
                   let countDown = () => {

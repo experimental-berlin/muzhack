@@ -8,7 +8,7 @@ if (__IS_BROWSER__) {
 }
 
 module.exports =  component('Loading', (cursor) => {
-  let status = cursor.get('isWaiting')
+  let status = cursor.get('isLoading')
   logger.debug(`Rendering, status: '${status}'`)
   return h('div', [
     h('.spinner', [

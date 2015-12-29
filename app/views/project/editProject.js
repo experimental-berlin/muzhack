@@ -43,7 +43,7 @@ let editProject = (cursor) => {
         files,
       }
       logger.debug(`Updating project '${qualifiedProjectId}'...:`, data)
-      ajax.putJson(`projects/${qualifiedProjectId}`, data)
+      ajax.putJson(`/api/projects/${qualifiedProjectId}`, data)
         .then(() => {
           logger.info(`Successfully updated project '${qualifiedProjectId}' on server`)
           router.goTo(`/u/${qualifiedProjectId}`)
@@ -140,7 +140,7 @@ let EditProjectPad = component('EditProjectPad', (cursor) => {
           let project = cursor.cursor(['editProject', 'project',]).toJS()
           editCursor = editCursor.set('isWaiting', 'Removing project...')
           let qualifiedProjectId = `${project.owner}/${project.projectId}`
-          ajax.delete(`projects/${project.owner}/${project.projectId}`)
+          ajax.delete(`/api/projects/${project.owner}/${project.projectId}`)
             .then(() => {
               logger.debug(`Project successfully deleted '${qualifiedProjectId}'`)
               router.goTo('/')
@@ -176,7 +176,7 @@ module.exports = {
       router.goTo(`${params.owner}/${params.projectId}`)
     } else {
       logger.debug(`Loading project ${params.owner}/${params.projectId}`)
-      return ajax.getJson(`projects/${params.owner}/${params.projectId}`)
+      return ajax.getJson(`/api/projects/${params.owner}/${params.projectId}`)
         .then((project) => {
           logger.debug(`Loading project JSON succeeded:`, project)
           return {

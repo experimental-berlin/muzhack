@@ -1,0 +1,42 @@
+@require '_common'
+
+border-color = #C1C1C1
+
+.modal-header
+  background menu-background
+  color white
+  border-bottom 1px solid border-color
+  box-sizing border-box
+
+  .modal-header-content
+    display flex
+    padding 15px
+
+  .modal-label
+    margin auto
+
+  .close
+    margin-right 10px
+
+.modal-body
+  .modal-body-content
+    padding 15px
+
+  .button-group
+    border-top 1px solid border-color
+    padding 15px
+
+  fieldset
+    border 0
+    padding 0
+
+button.close
+  border 0
+  background 0 0
+  padding 0
+
+  &:active,&:focus
+    outline none
+
+.modal-input, .modal-select
+  width 100%

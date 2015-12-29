@@ -10,7 +10,9 @@ let ajax = require('../../ajax')
 let {nbsp,} = require('../../specialChars')
 let VCard = require('./vcard')
 let {convertMarkdown,} = require('../../markdown')
-let userManagement = require('../../userManagement')
+let datetime = require('../../datetime')
+let notification = require('../notification')
+let {ProjectPlans,} = require('./projectPlans')
 
 if (__IS_BROWSER__) {
   require('./userProfile.styl')
@@ -24,6 +26,7 @@ let About = component('About', (user) => {
 })
 
 let Projects = component('Projects', (user) => {
+  let {username,} = user
   return !R.isEmpty(user.projects) ? h('table#user-projects', [
     h('thead', [
       h('tr', [
@@ -33,53 +36,21 @@ let Projects = component('Projects', (user) => {
       ]),
     ]),
     h('tbody', R.map((project) => {
-      h('tr', [
+      let {projectId, title,} = project
+      let createdStr = datetime.displayDateTextual(project.created)
+      return h('tr', [
         h('td', [
-          h('a.user-project', {href: `/u/${owner}/${projectId}`,}, projectId),
+          h('a.user-project', {href: `/u/${username}/${projectId}`,}, projectId),
         ]),
         h('td', [
-          h('a.user-project', {href: `/u/${owner}/${projectId}`,}, title),
+          h('a.user-project', {href: `/u/${username}/${projectId}`,}, title),
         ]),
         h('td', [
-          h('a.user-project', {href: `/u/${owner}/${projectId}`,}, createdStr),
+          h('a.user-project', {href: `/u/${username}/${projectId}`,}, createdStr),
         ]),
       ])
     }, user.projects)),
   ]) : h('em', 'No projects.')
-})
-
-let Plans = component('Plans', ({user, cursor,}) => {
-  let loggedInUser = userManagement.getLoggedInUser(cursor)
-  let isLoggedInUser = loggedInUser != null && loggedInUser.username === user.username
-  return h('div', [
-    isLoggedInUser ? h('#plan-buttons.button-group', [
-      h('button#create-plan.pure-button', {'data-tooltip': 'Create project plan',}, 'New'),
-      h('button#add-existing-plan.pure-button', {
-        'data-tooltip': 'Add existing project plan',
-      }, 'Add Existing'),
-      h('hr'),
-    ]) : null,
-    !R.isEmpty(user.projectPlans) ? h('ul#planned-projects', R.map((projectPlan) => {
-      return h('li', [
-        h('a.planned-project', {href: projectPlan.url, target: '_blank',}, [
-          h('span.icon-trello', projectPlan.name),
-          isLoggedInUser ? h('div', [
-            h('a.edit-project-plan', {href: '#', 'data-tooltip': 'Edit project plan',}, [
-              h('span.icon-pencil3'),
-            ]),
-            h('a.remove-project-plan', {href: '#', 'data-tooltip': 'Remove project plan',}, [
-              'span.icon-cross',
-            ]),
-            h('a.close-project-plan', {
-              href: '#', 'data-tooltip': 'Remove project plan and close Trello board',
-            }, [
-              h('span.icon-bin'),
-            ]),
-          ]) : null,
-        ]),
-      ])
-    }, user.projectPlans)) : h('em', 'No project plans.'),
-  ])
 })
 
 let SoundCloudUpload = component('SoundCloudUpload', {
@@ -144,7 +115,7 @@ module.exports = {
     })
   },
   loadData: (cursor, params) => {
-    return ajax.getJson(`users/${params.user}`)
+    return ajax.getJson(`/api/users/${params.user}`)
       .then((user) => {
         logger.debug(`Loading user JSON succeeded:`, user)
         return {
@@ -175,13 +146,14 @@ module.exports = {
     }, profileTabs)) ? currentHash : 'projects'
 
     logger.debug(`Rendering profile of user '${user.username}', active tab '${activeTab}':`, user)
+    logger.debug(`State:`, profileCursor.toJS())
     let tabContents
     if (activeTab === 'about') {
       tabContents = About(user)
     } else if (activeTab === 'projects') {
       tabContents = Projects(user)
     } else if (activeTab === 'plans') {
-      tabContents = Plans({user, cursor,})
+      tabContents = ProjectPlans({user, cursor,})
     } else if (activeTab === 'media') {
       tabContents = Media(user)
     } else if (activeTab === 'workshops') {

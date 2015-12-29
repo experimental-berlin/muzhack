@@ -14,6 +14,7 @@ Logger.useDefaults()
 let auth = require('./server/auth')
 let api = require('./server/api')
 let rendering = require('./server/rendering')
+let db = require('./server/db')
 
 let server = new Hapi.Server({
   connections: {
@@ -72,10 +73,26 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
       },
     },
   })
+  server.route({
+    method: 'GET',
+    path: '/robots.txt',
+    handler: (request, reply) => {
+      if ((process.env.NODE_ENV || '').toLowerCase() !== 'production') {
+        reply(`User-agent: *\nDisallow: /`).header('Content-Type', 'text/plain')
+      } else {
+        reply()
+      }
+    },
+  })
 
   api.register(server)
 
-  server.start(() => {
-    logger.info('Server running at', server.info.uri);
-  })
+  db.setUp()
+    .then(() => {
+      server.start(() => {
+        logger.info('Server running at', server.info.uri);
+      })
+    }, (error) => {
+      logger.error(`Failed to set up database`)
+    })
 })

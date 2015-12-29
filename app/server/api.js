@@ -16,6 +16,7 @@ let auth = require('./auth')
 let {trimWhitespace,} = require('../stringUtils')
 let {withDb,} = require('./db')
 let {getEnvParam,} = require('./environment')
+let ajax = require('../ajax')
 
 class Project {
   constructor({projectId, tags, owner, ownerName, title, created, pictures, licenseId,
@@ -43,11 +44,11 @@ let verifyLicense = (projectParams) => {
 
 let getS3Client = () => {
   return new Aws.S3({
-    accessKeyId: process.env.AWS_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: process.env.S3_REGION,
+    accessKeyId: getEnvParam('AWS_ACCESS_KEY'),
+    secretAccessKey: getEnvParam('AWS_SECRET_ACCESS_KEY'),
+    region: getEnvParam('S3_REGION'),
     params: {
-      Bucket: process.env.S3_BUCKET,
+      Bucket: getEnvParam('S3_BUCKET'),
     },
   })
 }
@@ -116,8 +117,8 @@ let createZip = (owner, projectId, projectParams) => {
         }, (error, data) => {
           if (error == null) {
             //  TODO: Try to get URL from S3
-            let region = process.env.S3_REGION
-            let bucket = process.env.S3_BUCKET
+            let region = getEnvParam('S3_REGION')
+            let bucket = getEnvParam('S3_BUCKET')
             let zipUrl = `https://s3.${region}.amazonaws.com/${bucket}/${filePath}`
             logger.debug(`Uploaded zip file successfully to '${zipUrl}'`)
             resolve({
@@ -355,11 +356,23 @@ let search = (request, reply) => {
   })
 }
 
+let getUserWithConn = (username, conn) => {
+  return r.table('users')
+    .get(username)
+    .merge((user) => {
+      return {
+        'projects': r.table('projects').getAll(username, {index: 'owner',})
+          .coerceTo('array'),
+      }
+    })
+    .run(conn)
+}
+
 let getUser = (request, reply) => {
   let {username,} = request.params
   withDb(reply, (conn) => {
     logger.debug(`Getting user '${username}'`)
-    return r.table('users').get(username).run(conn)
+    return getUserWithConn(username, conn)
       .then((user) => {
         if (user != null) {
           logger.debug(`Found user '${username}':`, user)
@@ -399,6 +412,247 @@ let getUser = (request, reply) => {
         }
       })
   })
+}
+
+let addProjectPlan = (request, reply) => {
+  logger.debug(`Received request to add project plan`)
+  let {username,} = request.params
+  if (username !== request.auth.credentials.username) {
+    logger.debug(`User tried to create project plan for other user`)
+    reply(Boom.unauthorized(
+      `You are not allowed to create project plans for others than yourself`))
+  }
+
+  let appKey = getEnvParam('TRELLO_KEY')
+  let {id, token, name, description, organization,} = request.payload
+  if (id == null) {
+    let params = R.pickBy((value) => value != null, {
+      name: name,
+      desc: description,
+      idOrganization: organization,
+      prefs_permissionLevel: 'public',
+    })
+    logger.debug(`Creating Trello board:`, params)
+    ajax.postJson(`https://api.trello.com/1/boards?key=${appKey}&token=${token}`, params)
+      .then((R.partial(addTrelloBoard, [username, request, reply,])), (error) => {
+        logger.warn(`Failed to create Trello board: '${error}'`)
+        reply(Boom.badImplementation())
+      })
+  } else {
+    logger.debug(`Adding existing Trello board:`, {id, name, description, organization,})
+    ajax.getJson(`https://api.trello.com/1/boards/${id}?key=${appKey}&token=${token}`)
+      .then(R.partial(addTrelloBoard, [username, request, reply,]), (error) => {
+        logger.warn(`Failed to get Trello board: '${error}'`)
+        reply(Boom.badImplementation())
+      })
+  }
+}
+
+let addTrelloBoard = (username, request, reply, data) => {
+  let {id, name, desc, idOrganization, url,} = data
+  withDb(reply, (conn) => {
+    logger.debug(`Adding project plan '${id}' for user '${username}':`,
+      {name, desc, idOrganization, url,})
+    return getUserWithConn(username, conn)
+      .then((user) => {
+        if (user == null) {
+          logger.warn(`Couldn't find user '${username}'`)
+          throw new Error(`Couldn't find user '${username}'`)
+        } else {
+          let projectPlan = {
+            id,
+            name,
+            description: desc,
+            organization: idOrganization,
+            url,
+          }
+          let projectPlans = R.concat(R.filter((projectPlan) => {
+            return projectPlan.id !== id
+          }, user.projectPlans || []), projectPlan)
+          return r.table('users')
+            .get(username)
+            .update({
+              projectPlans,
+            })
+            .run(conn)
+            .then(() => {
+              logger.debug(`User successfully updated in database`)
+              return R.merge(user, {projectPlans,})
+            }, (error) => {
+              logger.warn(`Failed to update project in database:`, error)
+              throw new Error(`Failed to update project in database: '${error}'`)
+            })
+        }
+      })
+  })
+}
+
+let updateProjectPlan = (request, reply) => {
+  logger.debug(`Received request to update project plan`)
+  let {username,} = request.params
+  if (username !== request.auth.credentials.username) {
+    logger.debug(`User tried to update project plan for other user`)
+    reply(Boom.unauthorized(
+      `You are not allowed to update project plans for others than yourself`))
+  }
+
+  let appKey = getEnvParam('TRELLO_KEY')
+  let {id, token, name, description, organization,} = request.payload
+  logger.debug(`Updating project plan:`, {id, name, description, organization,})
+  ajax.putJson(`https://api.trello.com/1/boards/${id}?key=${appKey}&token=${token}`, {
+    name,
+    desc: description,
+    idOrganization: organization,
+  })
+    .then(() => {
+      return ajax.getJson(`https://api.trello.com/1/boards/${id}/url?key=${appKey}&token=${token}`)
+        .then((url) => {
+          return withDb(reply, (conn) => {
+            logger.debug(`Updating project plan in database`)
+            return getUserWithConn(username, conn)
+              .then((user) => {
+                if (user == null) {
+                  logger.warn(`Couldn't find user '${username}'`)
+                  throw new Error(`Couldn't find user '${username}'`)
+                } else {
+                  let projectPlan = {
+                    id,
+                    name,
+                    description,
+                    organization,
+                    url,
+                  }
+                  let projectPlans = R.concat(R.filter((projectPlan) => {
+                    return projectPlan.id !== id
+                  }, user.projectPlans || []), projectPlan)
+                  return r.table('users')
+                    .get(username)
+                    .update({
+                      projectPlans,
+                    })
+                    .run(conn)
+                    .then(() => {
+                      logger.debug(`User successfully updated in database`)
+                      return R.merge(user, {projectPlans,})
+                    }, (error) => {
+                      logger.warn(`Failed to update project in database:`, error)
+                      throw new Error(`Failed to update project in database: '${error}'`)
+                    })
+                }
+              })
+          })
+      })
+    }, (error) => {
+      logger.warn(`Failed to update Trello board '${id}': '${error}'`)
+      reply(Boom.badImplementation())
+    })
+}
+
+let removeProjectPlan = (request, reply) => {
+  let doCloseBoard = (projectPlan, token) => {
+    let appKey = getEnvParam('TRELLO_KEY')
+    return ajax.putJson(
+        `https://api.trello.com/1/boards/${projectPlan.id}/closed?key=${appKey}&token=${token}`, {
+          value: true,
+        })
+      .then(() => {
+        logger.debug(`Closed Trello board successfully`)
+      }, (error) => {
+        logger.warn(`Failed to close Trello board: '${error}'`)
+        throw error
+      })
+  }
+
+  logger.debug(`Received request to remove project plan:`, request)
+  let {username, planId,} = request.params
+  let {closeBoard,} = request.query
+  if (username !== request.auth.credentials.username) {
+    logger.debug(`User tried to remove project plan for other user`)
+    reply(Boom.unauthorized(
+      `You are not allowed to remove project plans for others than yourself`))
+  }
+
+  logger.debug(`Removing project plan ${planId} from user ${username}`)
+  withDb(reply, (conn) => {
+    return getUserWithConn(username, conn)
+      .then((user) => {
+        if (user == null) {
+          throw new Error(`Couldn't find user '${username}'`)
+        }
+
+        let closeBoardPromise
+        if (!S.isBlank(closeBoard)) {
+          logger.debug(`Closing associated Trello board as well`)
+          let projectPlan = R.find((projectPlan) => {
+            return projectPlan.id === planId
+          }, user.projectPlans)
+          closeBoardPromise = doCloseBoard(projectPlan, closeBoard)
+        } else {
+          closeBoardPromise = Promise.resolve()
+        }
+        return closeBoardPromise.then(() => {
+          let projectPlans = R.filter((projectPlan) => {
+            return projectPlan.id !== planId
+          }, user.projectPlans)
+          return r.table('users')
+            .get(username)
+            .update({
+              projectPlans,
+            })
+            .run(conn)
+            .then(() => {
+              logger.debug(`Successfully removed project plan ${planId} for user '${username}'`)
+              return R.merge(user, {
+                projectPlans,
+              })
+            }, (error) => {
+              logger.warn(`Failed to remove project plan ${planId} for user '${username}':`, error)
+              throw error
+            })
+          })
+      })
+  })
+}
+
+let getOtherTrelloBoards = (request, reply) => {
+  logger.debug(`Received request to get a user's non-taken Trello boards`)
+  let {username,} = request.params
+  if (username !== request.auth.credentials.username) {
+    logger.debug(`User tried to get Trello boards for other user`)
+    reply(Boom.unauthorized(
+      `You are not allowed to get Trello boards for others than yourself`))
+  }
+
+  let appKey = getEnvParam('TRELLO_KEY')
+  let {token,} = request.query
+  logger.debug(`Getting all Trello boards for user '${username}'`)
+  ajax.getJson(`https://api.trello.com/1/members/me/boards?filter=open&fields=name,id&` +
+    `key=${appKey}&token=${token}`)
+    .then((boards) => {
+      logger.debug(`Got all of users' boards:`, boards)
+
+      return withDb(reply, (conn) => {
+        return r.table('users')
+          .get(username)
+          .run(conn)
+          .then((user) => {
+            if (user == null) {
+              throw new Error(`Couldn't find user '${username}'`)
+            }
+
+            let otherBoards = R.filter((board) => {
+              return !R.any((projectPlan) => {
+                return projectPlan.id === board.id
+              }, user.projectPlans)
+            }, boards)
+            logger.debug(`Non-added boards:`, otherBoards)
+            return otherBoards
+          })
+      })
+    }, (error) => {
+      logger.warn(`Failed to get Trello boards: '${error}'`)
+      reply(Boom.badImplementation())
+    })
 }
 
 let getProject = (request, reply) => {
@@ -443,6 +697,26 @@ module.exports.register = (server) => {
     handler: getUser,
   })
   routeApiMethod({
+    method: ['POST',],
+    path: 'users/{username}/projectPlans',
+    handler: addProjectPlan,
+  })
+  routeApiMethod({
+    method: ['PUT',],
+    path: 'users/{username}/projectPlans/{planId}',
+    handler: updateProjectPlan,
+  })
+  routeApiMethod({
+    method: ['DELETE',],
+    path: 'users/{username}/projectPlans/{planId}',
+    handler: removeProjectPlan,
+  })
+  routeApiMethod({
+    method: ['GET',],
+    path: 'users/{username}/otherTrelloBoards',
+    handler: getOtherTrelloBoards,
+  })
+  routeApiMethod({
     method: ['GET',],
     path: 's3Settings/{directive}',
     config: {
@@ -452,13 +726,13 @@ module.exports.register = (server) => {
         let {key, isBackup,} = request.query
         logger.debug(`Getting S3 form data for directive '${directive}'`)
 
-        let bucket = !isBackup ? process.env.S3_BUCKET : `backup.${process.env.S3_BUCKET}`
+        let bucket = !isBackup ? getEnvParam('S3_BUCKET') : `backup.${getEnvParam('S3_BUCKET')}`
         let keyPrefix = `u/${request.auth.credentials.username}/`
-        let region = process.env.S3_REGION
+        let region = getEnvParam('S3_REGION')
         let s3Form = new AwsS3Form({
           secure: true,
-          accessKeyId: process.env.AWS_ACCESS_KEY,
-          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+          accessKeyId: getEnvParam('AWS_ACCESS_KEY'),
+          secretAccessKey: getEnvParam('AWS_SECRET_ACCESS_KEY'),
           region,
           bucket,
           keyPrefix,

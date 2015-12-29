@@ -3,6 +3,7 @@ MuzHack
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/muzhack/muzhack?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Docker Repository on Quay.io](https://quay.io/repository/aknuds1/muzhack/status "Docker Repository on Quay.io")](https://quay.io/repository/aknuds1/muzhack)
+[![Circle CI](https://circleci.com/gh/muzhack/muzhack.svg?style=svg)](https://circleci.com/gh/muzhack/muzhack)
 
 [MuzHack](https://muzhack.com) is a Web application for publishing musical instrument designs.
 
@@ -24,8 +25,10 @@ For the database we use [RethinkDB](https://www.rethinkdb.com/), a NoSQL technol
 2. Install [nvm](https://github.com/creationix/nvm).
 3. `nvm install`.
 4. `npm install`.
-5. [Install RethinkDB](http://rethinkdb.com/docs/install/).
-6. `./rethinkdb/setup-rethinkdb.py $AUTH_KEY`.
+5. If you don't have Python already, install it with brew: `brew install python`.
+6. `pip install -r requirements.txt`
+7. [Install RethinkDB](http://rethinkdb.com/docs/install/).
+8. `./rethinkdb/setup-rethinkdb.py $AUTH_KEY`.
 
 ## Running Locally
 1. In one terminal, enter the MuzHack repository.
