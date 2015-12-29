@@ -65,10 +65,11 @@ lb:
   roles:
     - global
   deployment_strategy: high_availability
-dd-agent:
+dd-agent-rethinkdb:
   image: tutum.co/aknuds1/dd-agent
   tags:
-    - muzhack-staging-dd
+    - muzhack-staging-dd-rethinkdb
+  hostname: dd-agent-rethinkdb
   restart: always
   links:
     - lb:staging.muzhack.com
@@ -105,3 +106,17 @@ rethinkdb-tunnel:
     - /root/.ssh:/root/.ssh:ro
   restart: always
   deployment_strategy: high_availability
+dd-agent-general:
+  image: datadog/docker-dd-agent
+  tags:
+    - muzhack-staging
+  restart: always
+  links:
+    - lb:staging.muzhack.com
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - /proc/:/host/proc/:ro
+    - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+  environment:
+    - API_KEY
+  deployment_strategy: every_node
