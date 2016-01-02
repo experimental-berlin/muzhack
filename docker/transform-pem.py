@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Script to transform letsencrypt certificate files into string that can be inserted into
 environment variable for Tutum to pick up.
 
