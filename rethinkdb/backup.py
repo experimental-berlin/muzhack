@@ -26,6 +26,8 @@ def _get_environment_value(key):
 
 parser = argparse.ArgumentParser(description='Back up local RethinkDB instance')
 parser.add_argument('--s3-bucket', default=None, help='Specify S3 bucket')
+parser.add_argument('--remove', action='store_true', default=False,
+    help='Remove backup archive when done?')
 args = parser.parse_args()
 
 date_time_str = datetime.utcnow().strftime('%Y-%m-%dT%H:%M')
@@ -47,5 +49,8 @@ if args.s3_bucket:
         aws_secret_access_key=secret)
     s3_client.upload_file(filename, args.s3_bucket, filename)
     # TODO: Implement deleting backups that are older than 100 days
+
+if args.remove:
+    os.remove(filename)
 
 _info('Success!')
