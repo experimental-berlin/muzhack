@@ -1,0 +1,1 @@
+30 18 * * * /env/bin/python3 /app/rethinkdb/backup.py --s3-bucket $S3_BUCKET --remove

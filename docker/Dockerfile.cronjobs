@@ -1,0 +1,17 @@
+FROM gliderlabs/alpine
+MAINTAINER "MuzHack" <contact@muzhack.com>
+
+RUN apk add --no-cache python3 \
+  bash curl \
+  && pip3 install virtualenv \
+  && rm -rf /var/cache/apk/*
+
+WORKDIR /app
+COPY ./requirements.txt /app
+COPY ./docker/crontab /var/spool/cron/crontabs/root
+COPY ./rethinkdb/backup.py /app/rethinkdb/
+
+RUN virtualenv /env && /env/bin/pip3 install -r requirements.txt
+RUN rm -rf requirements.txt
+
+CMD crond -l 2 -f
