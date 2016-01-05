@@ -7,7 +7,10 @@ var definePlugin = new webpack.DefinePlugin({
 
 module.exports = {
   context: __dirname + '/app',
-  entry: './entry.js',
+  entry: [
+    'babel-polyfill',
+    './entry.js',
+  ],
   output: {
     path: __dirname + '/dist',
     filename: 'bundle.js',
