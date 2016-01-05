@@ -6,6 +6,11 @@ let r = require('rethinkdb')
 
 let {getEnvParam,} = require('./environment')
 
+let closeConn = (conn) => {
+  conn.close()
+  logger.debug('Closed RethinkDB connection')
+}
+
 let connectToDb = (host, callback, attempt) => {
   if (attempt == null) {
     attempt = 1
@@ -21,15 +26,15 @@ let connectToDb = (host, callback, attempt) => {
     try {
       return callback(conn)
         .then((result) => {
-          conn.close()
+          closeConn(conn)
           return result
         }, (error) => {
-          conn.close()
+          closeConn(conn)
           logger.warn(`There was an error in the callback of withDb: '${error}'`, error.stack)
           throw new Error(`There was an error in the callback of withDb`)
         })
     } catch (error) {
-      conn.close()
+      closeConn(conn)
       logger.error(`There was an unhandled exception in the callback of withDb: '${error}'`,
         error.stack)
       throw new Error(`There was an unhandled exception in the callback of withDb`)
