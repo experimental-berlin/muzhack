@@ -120,3 +120,19 @@ dd-agent-general:
   environment:
     - API_KEY
   deployment_strategy: every_node
+backup-rethinkdb:
+  image: muzhack/muzhack-backup-rethinkdb
+  tags:
+    - muzhack-staging
+  restart: always
+  links:
+    - rethinkdb-tunnel:rethinkdb
+  environment:
+    - RETHINKDB_HOST=rethinkdb
+    - RETHINKDB_BACKUP_S3_BUCKET
+    - RETHINKDB_AUTH_KEY
+    - RETHINKDB_BACKUP_AWS_ACCESS_KEY_ID
+    - RETHINKDB_BACKUP_AWS_SECRET_ACCESS_KEY
+    - S3_REGION=eu-central-1
+    - DATADOG_API_KEY
+    - DATADOG_APP_KEY
