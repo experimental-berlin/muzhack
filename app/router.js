@@ -13,6 +13,7 @@ let Loading = __IS_BROWSER__ ? require('./views/loading') : null
 let {normalizePath,} = require('./urlUtils')
 let {createRouterState, updateRouterState,} = require('./sharedRouting')
 let App = require('./components/app')
+let notification = require('./views/notification')
 
 let getState = () => {
   return immstruct('state').cursor()
