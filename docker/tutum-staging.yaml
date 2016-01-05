@@ -121,7 +121,7 @@ dd-agent-general:
     - API_KEY
   deployment_strategy: every_node
 backup-rethinkdb:
-  image: muzhack/muzhack-backup-rethinkdb
+  image: tutum.co/aknuds1/muzhack-backup-rethinkdb
   tags:
     - muzhack-staging
   restart: always
