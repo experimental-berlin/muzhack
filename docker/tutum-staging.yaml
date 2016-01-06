@@ -93,18 +93,18 @@ logspout-muzhack-staging:
     - /var/run/docker.sock:/tmp/docker.sock
   deployment_strategy: every_node
 rethinkdb-tunnel:
-  image: aknudsen/ssh
+  image: tutum.co/aknuds1/ssh-tunnel
   tags:
     - muzhack-rethinkdb-tunnel
-  target_num_containers: 2
   environment:
-    - RETHINKDB_SSH_HOST
-  command: -v -T -N -L *:28015:localhost:28015 root@188.166.16.45
+    - SSH_TUNNEL_PORT
+    - SSH_TUNNEL_TARGET
   expose:
     - "28015"
   volumes:
     - /root/.ssh:/root/.ssh:ro
   restart: always
+  target_num_containers: 2
   deployment_strategy: high_availability
 dd-agent-general:
   image: datadog/docker-dd-agent
