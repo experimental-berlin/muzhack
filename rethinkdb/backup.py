@@ -3,7 +3,7 @@ import subprocess
 import argparse
 import os.path
 import sys
-from datetime import datetime
+import datetime as dt
 import boto3
 
 
@@ -30,7 +30,7 @@ parser.add_argument('--remove', action='store_true', default=False,
     help='Remove backup archive when done?')
 args = parser.parse_args()
 
-date_time_str = datetime.utcnow().strftime('%Y-%m-%dT%H:%M')
+date_time_str = dt.datetime.utcnow().strftime('%Y-%m-%dT%H:%M')
 filename = 'rethinkdb-dump-{}.tar.gz'.format(date_time_str)
 if os.path.exists(filename):
     os.remove(filename)
@@ -48,7 +48,18 @@ if args.s3_bucket:
     s3_client = boto3.client('s3', region_name='eu-central-1', aws_access_key_id=access_key_id,
         aws_secret_access_key=secret)
     s3_client.upload_file(filename, args.s3_bucket, filename)
-    # TODO: Implement deleting backups that are older than 100 days
+
+    # delete backups that are older than 100 days
+    s3 = boto3.resource('s3')
+    retention_period = 100
+    bucket = s3.Bucket(args.s3_bucket)
+
+    for object in bucket.objects.all():
+        gap = dt.datetime.now(dt.timezone.utc) - object.last_modified
+
+        if gap.days > retention_period:
+            _info('Deleting {}...'.format(object.key))
+            object.delete()
 
 if args.remove:
     os.remove(filename)
