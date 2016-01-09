@@ -57,8 +57,7 @@ module.exports = {
                 resetPasswordCursor = resetPasswordCursor.set('password', event.target.value)
               },
             }),
-            FocusingInput({
-              id: 'account-password-confirm',
+            h('input#account-password-confirm', {
               placeholder: 'confirm password',
               name: 'confirmPassword',
               classes: ['account-password-confirm',],

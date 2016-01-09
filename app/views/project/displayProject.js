@@ -142,7 +142,7 @@ let BottomPad = component('BottomPad', ({cursor, project,}) => {
   } else if (activeTab === 'files') {
     tabContent = ProjectFiles({project,})
   } else if (activeTab === 'store') {
-    tabContent = ProjectStore({storeItems,})
+    tabContent = ProjectStore({project, storeItems, cursor,})
   }
   return h('#project-bottom-pad', [
     h('ul.tabs', {role: 'tablist',}, R.map((projectTab) => {
