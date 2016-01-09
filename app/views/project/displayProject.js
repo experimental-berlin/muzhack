@@ -33,14 +33,9 @@ let getFileSize = (numBytes) => {
   return sizeStr
 }
 
-let BuyButton = component('BuyButton', () => {
-  return h('button.pure-button', 'Buy')
-})
-
-let ProjectControls = component('ProjectControls', ({canEdit, project,}) => {
+let ProjectControls = component('ProjectControls', ({canEdit, project, cursor,}) => {
   return h('#project-controls', [
-    BuyButton(),
-    canEdit ? h('a#edit-action.action.pull-right', {
+    canEdit ? h('a#edit-project-action.action', {
       href: `/u/${project.owner}/${project.projectId}/edit`, 'data-tooltip': 'Edit project',
     }, [h('span.icon-pencil3'),]) : null,
   ])
@@ -125,10 +120,13 @@ let RightColumn = component('RightColumn', (project) => {
 })
 
 let BottomPad = component('BottomPad', ({cursor, project,}) => {
+  let storeArticles = project.storeArticles || []
+  logger.debug('Project has store articles:', storeArticles)
   let projectTabs = [
     new ProjectTab('Description', 'file-text'),
     new ProjectTab('Instructions', 'book'),
     new ProjectTab('Files', 'puzzle4'),
+    new ProjectTab(`Store (${storeArticles.length})`, 'credit-card', !R.isEmpty(storeArticles)),
   ]
   let activeTab = cursor.cursor(['displayProject',]).get('activeTab')
   let tabContent
@@ -152,7 +150,8 @@ let BottomPad = component('BottomPad', ({cursor, project,}) => {
           onClick: (event) => {
             event.preventDefault()
 
-            if (cursor.cursor(['displayProject',]).get('activeTab') !== projectTab.name) {
+            if (projectTab.isEnabled && cursor.cursor(['displayProject',]).get('activeTab') !==
+                projectTab.name) {
               logger.debug(`Switching project tab to '${projectTab.name}'`)
               cursor.cursor(['displayProject',]).set('activeTab', projectTab.name)
             }
@@ -204,20 +203,24 @@ let ProjectFiles = component('ProjectFiles', (project) => {
 })
 
 class ProjectTab {
-  constructor (title, icon) {
+  constructor (title, icon, isEnabled=true) {
     this.title = title
     this.icon = icon
     this.name = title.toLowerCase()
+    this.isEnabled = isEnabled
   }
 
   getClasses(cursor) {
     let activeTab = cursor.cursor(['displayProject',]).get('activeTab')
+    let classes = []
     if (activeTab === this.name) {
       logger.debug(`${this.name} is active tab`)
-      return ['active',]
-    } else {
-      return []
+      classes.push('active')
     }
+    if (!this.isEnabled) {
+      classes.push('disabled')
+    }
+    return classes
   }
 }
 

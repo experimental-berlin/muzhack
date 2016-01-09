@@ -20,6 +20,16 @@ subtle-shadow()
   &>:first-child
     margin-top 0
 
+#project-top-elements
+  display flex
+
+#project-controls
+  margin-left auto
+
+#edit-project-action
+  align-self center
+  margin-left 4px
+
 #project-bottom-pad
   pad-base()
   airy-padding-sides()
@@ -39,10 +49,10 @@ subtle-shadow()
       a
         color muted
 
-    li.active
-      border-left 1px solid muted
-      border-right 1px solid muted
-      border-top 1px solid muted
+      &.active
+        border-left 1px solid muted
+        border-right 1px solid muted
+        border-top 1px solid muted
 
 #tab-contents
   padding padding
