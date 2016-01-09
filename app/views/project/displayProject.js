@@ -12,6 +12,7 @@ let {convertMarkdown,} = require('../../markdown')
 let ajax = require('../../ajax')
 let userManagement = require('../../userManagement')
 let licenses = require('../../licenses')
+let ProjectStore = require('./projectStore')
 
 if (__IS_BROWSER__) {
   require('./displayProject.styl')
@@ -120,13 +121,13 @@ let RightColumn = component('RightColumn', (project) => {
 })
 
 let BottomPad = component('BottomPad', ({cursor, project,}) => {
-  let storeArticles = project.storeArticles || []
-  logger.debug('Project has store articles:', storeArticles)
+  let storeItems = project.storeItems || []
+  logger.debug('Project has store items:', storeItems)
   let projectTabs = [
     new ProjectTab('Description', 'file-text'),
     new ProjectTab('Instructions', 'book'),
     new ProjectTab('Files', 'puzzle4'),
-    new ProjectTab(`Store (${storeArticles.length})`, 'credit-card', !R.isEmpty(storeArticles)),
+    new ProjectTab(`Store (${storeItems.length})`, 'credit-card', !R.isEmpty(storeItems)),
   ]
   let activeTab = cursor.cursor(['displayProject',]).get('activeTab')
   let tabContent
@@ -139,7 +140,9 @@ let BottomPad = component('BottomPad', ({cursor, project,}) => {
       convertMarkdown(project.instructions),
     ])
   } else if (activeTab === 'files') {
-    tabContent = ProjectFiles(project)
+    tabContent = ProjectFiles({project,})
+  } else if (activeTab === 'store') {
+    tabContent = ProjectStore({storeItems,})
   }
   return h('#project-bottom-pad', [
     h('ul.tabs', {role: 'tablist',}, R.map((projectTab) => {
@@ -168,7 +171,8 @@ let BottomPad = component('BottomPad', ({cursor, project,}) => {
   ])
 })
 
-let ProjectFiles = component('ProjectFiles', (project) => {
+let ProjectFiles = component('ProjectFiles', ({project,}) => {
+  logger.debug(`Rendering files of project:`, project)
   if (R.isEmpty(project.files)) {
     return h('em', 'The project has no files')
   } else {
@@ -206,7 +210,7 @@ class ProjectTab {
   constructor (title, icon, isEnabled=true) {
     this.title = title
     this.icon = icon
-    this.name = title.toLowerCase()
+    this.name = title.toLowerCase().replace(/ \(.+\)/, '')
     this.isEnabled = isEnabled
   }
 
