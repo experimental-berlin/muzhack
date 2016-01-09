@@ -33,6 +33,19 @@ let getFileSize = (numBytes) => {
   return sizeStr
 }
 
+let BuyButton = component('BuyButton', () => {
+  return h('button.pure-button', 'Buy')
+})
+
+let ProjectControls = component('ProjectControls', ({canEdit, project,}) => {
+  return h('#project-controls', [
+    BuyButton(),
+    canEdit ? h('a#edit-action.action.pull-right', {
+      href: `/u/${project.owner}/${project.projectId}/edit`, 'data-tooltip': 'Edit project',
+    }, [h('span.icon-pencil3'),]) : null,
+  ])
+})
+
 let TopPad = component('TopPad', (cursor) => {
   let projectCursor = cursor.cursor(['displayProject', 'project',])
   let project = projectCursor.toJS()
@@ -41,16 +54,15 @@ let TopPad = component('TopPad', (cursor) => {
   let loggedInUser = userManagement.getLoggedInUser(cursor)
   let canEdit = loggedInUser != null && loggedInUser.username === project.owner
   return h('#project-top-pad', [
-    canEdit ? h('a#edit-action.action.pull-right', {
-      href: `/u/${project.owner}/${project.projectId}/edit`, 'data-tooltip': 'Edit project',
-    }, [
-        h('span.icon-pencil3'),]) : null,
-    h('#project-heading', [
-      h('h1#project-title', project.title),
-      h('p#project-creation-date', [
-        `Added ${creationDateString} by `,
-        h('a', {href: `/u/${project.owner}`,}, project.ownerName),
+    h('#project-top-elements', [
+      h('#project-heading', [
+        h('h1#project-title', project.title),
+        h('p#project-creation-date', [
+          `Added ${creationDateString} by `,
+          h('a', {href: `/u/${project.owner}`,}, project.ownerName),
+        ]),
       ]),
+      ProjectControls({canEdit, project,}),
     ]),
     h('#image-box', [
       h('#thumbnails', R.map((picture) => {

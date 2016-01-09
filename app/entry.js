@@ -30,6 +30,7 @@ window.onerror = (message, url, line) => {
 
 let initialState = JSON.parse(document.getElementById('initial-state').getAttribute('data-json'))
 logger.debug(`Initial state as rendered by server:`, initialState)
+Stripe.setPublishableKey(initialState.stripeKey)
 let structure = immstruct('state', initialState)
 router.performInitial(structure.cursor(), routeMap)
 
