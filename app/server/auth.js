@@ -350,7 +350,9 @@ module.exports.register = (server) => {
     path: '/api/logout',
     handler: (request, reply) => {
       logger.debug(`Logging user out`)
-      request.auth.session.clear()
+      if (request.auth.session != null) {
+        request.auth.session.clear()
+      }
       reply()
     },
   })
