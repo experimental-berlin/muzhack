@@ -17,6 +17,7 @@ let {trimWhitespace,} = require('../stringUtils')
 let {withDb,} = require('./db')
 let {getEnvParam,} = require('./environment')
 let ajax = require('../ajax')
+let stripeApi = require('./api/stripeApi')
 
 class Project {
   constructor({projectId, tags, owner, ownerName, title, created, pictures, licenseId,
@@ -861,6 +862,13 @@ module.exports.register = (server) => {
     config: {
       auth: 'session',
       handler: verifyDiscourseSso,
+    },
+  })
+  routeApiMethod({
+    method: ['POST',],
+    path: 'stripe/checkout',
+    config: {
+      handler: stripeApi.stripeCheckout,
     },
   })
 }

@@ -13,7 +13,7 @@ if (__IS_BROWSER__) {
   require('./projectStore.styl')
 }
 
-let CheckoutButton = component('CheckoutButton', ({cursor, item,}) => {
+let CheckoutButton = component('CheckoutButton', ({project, cursor, item,}) => {
   let disableSubmit = cursor.cursor('checkoutDialog').get('disableSubmit')
   logger.debug(`Rendering Checkout button - disabled: ${disableSubmit}`)
   return h('input#checkout-button.pure-button.pure-button-primary', {
@@ -44,6 +44,10 @@ let CheckoutButton = component('CheckoutButton', ({cursor, item,}) => {
             logger.debug(`Received Stripe token: '${token}'`)
             ajax.postJson('/api/stripe/checkout', {
               token,
+              // TODO
+              currency: 'usd',
+              description: `1 ${project.title} - ${item.title}`,
+              amount: token.price,
             })
               .then(() => {
                 cursor.cursor('projectStore').set('checkingOutItem', null)
@@ -131,7 +135,7 @@ let CheckoutDialog = component('CheckoutDialog', ({project, item, cursor,}) => {
                   }
                 },
               }),
-              CheckoutButton({item, cursor,}),
+              CheckoutButton({project, item, cursor,}),
             ]),
           ]),
         ]),
