@@ -5,7 +5,7 @@ let logger = require('js-logger-aknudsen').get('focusingInput')
 let ReactDOM = require('react-dom')
 let S = require('underscore.string.fp')
 
-module.exports = component({
+module.exports = component('FocusingInput', {
   componentDidMount: function () {
     let node = ReactDOM.findDOMNode(this)
     logger.debug('Giving focus to input node:', node)
