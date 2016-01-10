@@ -149,7 +149,7 @@ let CheckoutDialog = component('CheckoutDialog', ({project, item, cursor,}) => {
 
 let BuyButton = component('BuyButton', ({item, cursor,}) => {
   logger.debug(`Rendering buy button`)
-  return h('button.pure-button', {
+  return h('button#buy-button.pure-button', {
     onClick: () => {
       logger.debug(`Buy button clicked`)
       cursor.cursor('projectStore').set('checkingOutItem', item)
