@@ -1,11 +1,11 @@
 @font-face {
     font-family: 'icomoon';
-    src:    url('fonts/icomoon.eot?etmjb5');
-    src:    url('fonts/icomoon.eot?etmjb5#iefix') format('embedded-opentype'),
-        url('fonts/icomoon.woff2?etmjb5') format('woff2'),
-        url('fonts/icomoon.ttf?etmjb5') format('truetype'),
-        url('fonts/icomoon.woff?etmjb5') format('woff'),
-        url('fonts/icomoon.svg?etmjb5#icomoon') format('svg');
+    src:    url('fonts/icomoon.eot?tr6hy0');
+    src:    url('fonts/icomoon.eot?tr6hy0#iefix') format('embedded-opentype'),
+        url('fonts/icomoon.woff2?tr6hy0') format('woff2'),
+        url('fonts/icomoon.ttf?tr6hy0') format('truetype'),
+        url('fonts/icomoon.woff?tr6hy0') format('woff'),
+        url('fonts/icomoon.svg?tr6hy0#icomoon') format('svg');
     font-weight: normal;
     font-style: normal;
 }
@@ -70,8 +70,8 @@
 .icon-tags2:before {
     content: "\e9f1";
 }
-.icon-credit-card:before {
-    content: "\ea15";
+.icon-barcode:before {
+    content: "\e9f6";
 }
 .icon-envelop3:before {
     content: "\ea32";

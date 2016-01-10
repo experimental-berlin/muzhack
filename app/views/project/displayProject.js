@@ -57,7 +57,7 @@ let GoToStore = component('GoToStore', (cursor) => {
       })
     },
   }, [
-    h('span.icon-credit-card'),
+    h('span.icon-barcode'),
   ])
 })
 
@@ -158,7 +158,7 @@ let BottomPad = component('BottomPad', {
     new ProjectTab('Description', 'file-text'),
     new ProjectTab('Instructions', 'book'),
     new ProjectTab('Files', 'puzzle4'),
-    new ProjectTab(`Store (${storeItems.length})`, 'credit-card', !R.isEmpty(storeItems)),
+    new ProjectTab(`Store (${storeItems.length})`, 'barcode', !R.isEmpty(storeItems)),
   ]
   let activeTab = cursor.cursor(['displayProject',]).get('activeTab')
   let tabContent
