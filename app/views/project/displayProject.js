@@ -5,6 +5,7 @@ let R = require('ramda')
 let S = require('underscore.string.fp')
 let component = require('omniscient')
 let React = require('react')
+let ReactDOM = require('react-dom')
 
 let datetime = require('../../datetime')
 let {nbsp,} = require('../../specialChars')
@@ -35,10 +36,28 @@ let getFileSize = (numBytes) => {
 }
 
 let ProjectControls = component('ProjectControls', ({canEdit, project, cursor,}) => {
+  let hasStoreItems = !R.isEmpty(project.storeItems || [])
   return h('#project-controls', [
+    hasStoreItems ? GoToStore(cursor) : null,
     canEdit ? h('a#edit-project-action.action', {
       href: `/u/${project.owner}/${project.projectId}/edit`, 'data-tooltip': 'Edit project',
     }, [h('span.icon-pencil3'),]) : null,
+  ])
+})
+
+let GoToStore = component('GoToStore', (cursor) => {
+  return h('#go-to-store.action', {
+    onClick: () => {
+      logger.debug(`Go to store clicked`)
+      cursor = cursor.mergeDeep({
+        displayProject: {
+          goToStore: true,
+          activeTab: 'store',
+        },
+      })
+    },
+  }, [
+    h('span.icon-credit-card'),
   ])
 })
 
@@ -58,7 +77,7 @@ let TopPad = component('TopPad', (cursor) => {
           h('a', {href: `/u/${project.owner}`,}, project.ownerName),
         ]),
       ]),
-      ProjectControls({canEdit, project,}),
+      ProjectControls({canEdit, project, cursor,}),
     ]),
     h('#image-box', [
       h('#thumbnails', R.map((picture) => {
@@ -120,7 +139,19 @@ let RightColumn = component('RightColumn', (project) => {
   ])
 })
 
-let BottomPad = component('BottomPad', ({cursor, project,}) => {
+let BottomPad = component('BottomPad', {
+    componentDidUpdate: function () {
+      let node = ReactDOM.findDOMNode(this)
+      let cursor = this.props.cursor
+      let activeTab = cursor.cursor(['projectStore',]).get('activeTab')
+      if (cursor.cursor('displayProject').get('goToStore')) {
+        let domNode = React.findDOMNode(this)
+        logger.debug(`Scrolling bottom pad into view`)
+        domNode.scrollIntoView({behavior: 'smooth',})
+        cursor.cursor('displayProject').set('goToStore', false)
+      }
+    },
+  }, ({cursor, project,}) => {
   let storeItems = project.storeItems || []
   logger.debug('Project has store items:', storeItems)
   let projectTabs = [
