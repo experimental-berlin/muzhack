@@ -9,7 +9,11 @@ let immstruct = require('immstruct')
 let Boom = require('boom')
 let Logger = require('js-logger-aknudsen')
 let logger = Logger.get('server')
-Logger.useDefaults()
+Logger.useDefaults({
+  formatter: (messages, context) => {
+    messages.unshift(`${context.level.name} - [${context.name}]`)
+  },
+})
 
 let auth = require('./server/auth')
 let api = require('./server/api')

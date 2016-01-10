@@ -10,7 +10,11 @@ let routeMap = require('./routeMap')
 require('./app.styl')
 require('./styles/fonts.css')
 
-Logger.useDefaults()
+Logger.useDefaults({
+  formatter: (messages, context) => {
+    messages.unshift(`${context.level.name} - [${context.name}]`)
+  },
+})
 Logger.setHandler((messages, context) => {
   if (context.level === Logger.ERROR) {
     ajax.postJson('/api/logError', {
