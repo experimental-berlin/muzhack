@@ -1,9 +1,0 @@
-.accountbar
-  if isLoggedIn
-    each buttons
-      a.toolbar-btn(href=url class=klass)
-        span(class="icon-#{icon}", data-tooltip=tooltip, data-tooltip-direction="s",
-          data-tooltip-top="18")
-  else
-    a#login.toolbar-btn(href="/login", data-tooltip="Log in", data-tooltip-direction="s")
-      span.icon-enter3
