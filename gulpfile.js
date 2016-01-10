@@ -16,6 +16,12 @@ gulp.task('jade', () => {
     .pipe(gulp.dest('dist/app/'))
 })
 
+gulp.task('assets', () => {
+  return gulp
+    .src('public/**/*')
+    .pipe(gulp.dest('dist/public/'))
+})
+
 gulp.task('webpack', () => {
   return gulp
     .src('dist/bundle.js')
@@ -34,6 +40,7 @@ gulp.task('default', () => {
     'libCode',
     'appCode',
     'jade',
-    'webpack'
+    'webpack',
+    'assets'
   )
 })
