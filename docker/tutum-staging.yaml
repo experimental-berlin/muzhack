@@ -16,6 +16,7 @@ muzhack-green:
     - SSO_SECRET
     - MANDRILL_SECRET
     - TRELLO_KEY
+    - STRIPE_PUBLISHABLE_KEY
   links:
     - rethinkdb-tunnel:rethinkdb
   restart: always
@@ -38,6 +39,7 @@ muzhack-blue:
     - SSO_SECRET
     - MANDRILL_SECRET
     - TRELLO_KEY
+    - STRIPE_PUBLISHABLE_KEY
   links:
     - rethinkdb-tunnel:rethinkdb
   restart: always

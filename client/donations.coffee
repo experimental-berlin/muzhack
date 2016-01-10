@@ -1,3 +1,0 @@
-Template.donations.onRendered(->
-  loadBitCoinate()
-)
