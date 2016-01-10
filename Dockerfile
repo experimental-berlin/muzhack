@@ -2,7 +2,7 @@ FROM nodesource/jessie:5
 MAINTAINER Arve Knudsen
 
 WORKDIR /app
-ENTRYPOINT ["node", "--harmony_destructuring", "dist"]
+ENTRYPOINT ["node", "--harmony_destructuring", "dist/app/server.js"]
 ENV PORT=80
 EXPOSE 80
 
@@ -14,5 +14,5 @@ RUN npm install
 RUN npm install -g gulp
 
 COPY ./ .
-RUN gulp
 RUN ./node_modules/.bin/webpack
+RUN gulp

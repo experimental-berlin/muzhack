@@ -6,11 +6,13 @@ let sourcemaps = require('gulp-sourcemaps')
 
 gulp.task('javascript', () => {
   return gulp
-    .src(['app/**/*.js', 'lib/**/*.js', '!app/entry.js', '!app/lib/trello.js',])
+    .src(['app/**/*.js', 'lib/**/*.js', '!app/entry.js', '!app/lib/trello.js',], {
+      base: '.',
+    })
     .pipe(sourcemaps.init())
     .pipe(babel())
     .pipe(sourcemaps.write('.'))
-    .pipe(gulp.dest('dist/app'))
+    .pipe(gulp.dest('dist/'))
 })
 
 gulp.task('jade', () => {
