@@ -10,6 +10,18 @@ gulp.task('appCode', () => {
     .pipe(gulp.dest('dist/app'))
 })
 
+gulp.task('jade', () => {
+  return gulp
+    .src('app/**/*.jade')
+    .pipe(gulp.dest('dist/app/'))
+})
+
+gulp.task('webpack', () => {
+  return gulp
+    .src('dist/bundle.js')
+    .pipe(gulp.dest('dist/dist/'))
+})
+
 gulp.task('libCode', () => {
   return gulp
     .src('lib/**/*.js')
@@ -20,6 +32,8 @@ gulp.task('libCode', () => {
 gulp.task('default', () => {
   return runSequence(
     'libCode',
-    'appCode'
+    'appCode',
+    'jade',
+    'webpack'
   )
 })
