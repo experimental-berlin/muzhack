@@ -352,6 +352,8 @@ module.exports.register = (server) => {
       logger.debug(`Logging user out`)
       if (request.auth.session != null) {
         request.auth.session.clear()
+      } else {
+        logger.warn('request.auth.session is null')
       }
       reply()
     },
