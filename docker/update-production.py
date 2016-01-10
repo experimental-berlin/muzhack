@@ -5,7 +5,8 @@ import json
 import sys
 
 
-parser = argparse.ArgumentParser(description='Update production server to latest Docker image.')
+parser = argparse.ArgumentParser(
+    description='Update production server to latest Docker image.')
 args = parser.parse_args()
 
 
@@ -16,15 +17,16 @@ def _info(msg):
 
 def _run_tutum(args):
     try:
-        subprocess.check_call(['tutum',] + args, stdout=subprocess.PIPE)
+        subprocess.check_call(['tutum', ] + args, stdout=subprocess.PIPE)
     except subprocess.CalledProcessError as err:
         sys.stderr.write('{}\n'.format(err))
         sys.exit(1)
 
 
 def _inspect_service(service):
-    output = subprocess.check_output(['tutum', 'service', 'inspect',
-    '{}.muzhack-staging'.format(service)]).decode('utf-8')
+    output = subprocess.check_output([
+        'tutum', 'service', 'inspect', '{}.muzhack-staging'.format(service),
+    ]).decode('utf-8')
     return json.loads(output)
 
 
@@ -40,9 +42,11 @@ else:
     link_to = 'muzhack-green'
 
 _info('Redeploying service \'{}\'...'.format(link_to))
-_run_tutum(['service', 'redeploy', '--sync', link_to,])
+_run_tutum(['service', 'redeploy', '--sync', link_to, ])
 
 _info('Linking to service \'{}\'...'.format(link_to))
-_run_tutum(['service', 'set', '--link-service', '{0}:{0}'.format(link_to),
-    '--sync', 'lb.muzhack-staging',])
+_run_tutum([
+    'service', 'set', '--link-service', '{0}:{0}'.format(link_to),
+    '--sync', 'lb.muzhack-staging',
+])
 _info('Successfully switched production service to {}'.format(link_to))
