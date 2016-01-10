@@ -12,7 +12,6 @@ let request = require('request')
 let CryptoJs = require('crypto-js')
 
 let licenses = require('../licenses')
-let auth = require('./auth')
 let {trimWhitespace,} = require('../stringUtils')
 let {withDb,} = require('./db')
 let {getEnvParam,} = require('./environment')

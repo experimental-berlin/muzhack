@@ -15,7 +15,7 @@ let {getEnvParam,} = require('./environment')
 
 let logUserIn = (request, user) => {
   let username = user.id
-  request.auth.session.set({username, name: user.name,})
+  request.cookieAuth.set({username, name: user.name,})
   logger.debug(`Successfully logged user '${username}' in`)
 }
 
@@ -350,11 +350,7 @@ module.exports.register = (server) => {
     path: '/api/logout',
     handler: (request, reply) => {
       logger.debug(`Logging user out`)
-      if (request.auth.session != null) {
-        request.auth.session.clear()
-      } else {
-        logger.warn('request.auth.session is null')
-      }
+      request.cookieAuth.clear()
       reply()
     },
   })
