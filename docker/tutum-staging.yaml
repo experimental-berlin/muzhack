@@ -101,6 +101,7 @@ rethinkdb-tunnel:
   environment:
     - SSH_TUNNEL_PORT
     - SSH_TUNNEL_TARGET
+    - SSH_EXTRA_OPTS=-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
   expose:
     - "28015"
   volumes:
