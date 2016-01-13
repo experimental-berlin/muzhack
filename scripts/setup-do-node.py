@@ -25,7 +25,7 @@ for i, line in enumerate(grub_lines[:]):
         previous = m.group(1)
         if previous:
             previous = previous + ' '
-        grub_lines[i] = 'GRUB_CMDLINE_LINUX_DEFAULT="{} {}"'.format(
+        grub_lines[i] = 'GRUB_CMDLINE_LINUX_DEFAULT="{} {}\n"'.format(
             previous, 'cgroup_enable=memory swapaccount=1')
 
 with open('/etc/default/grub', 'wb') as f:
@@ -43,5 +43,9 @@ export LANG=en_US.UTF-8
 export LC_TYPE=en_US.UTF-8
 export EDITOR=vim
 """.format(bashrc))
+
+if os.path.exist('/etc/localtime'):
+    os.remove('/etc/localtime')
+os.symlink('/usr/share/zoneinfo/UTC', '/etc/localtime')
 
 subprocess.check_call('reboot')
