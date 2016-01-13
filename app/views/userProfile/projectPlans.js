@@ -232,7 +232,7 @@ let RemovePlanModal = component('RemovePlanModal', ({username, cursor,}) => {
           logger.debug(`After removal:`, cursor.toJS())
         }, (error) => {
           logger.warn(`Failed to remove project plan '${projectPlan.id}':`, error)
-          notification.warn(`Error`, `Failed to remove project plan: ${error.message}.`)
+          notification.warn(`Error`, `Failed to remove project plan: ${error.message}.`, cursor)
         })
     }, () => {
       cursor.cursor('userProfile').set('askRemovePlan', null)

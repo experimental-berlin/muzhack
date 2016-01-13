@@ -7,7 +7,6 @@ let ReactDomServer = require('react-dom/server')
 let Boom = require('boom')
 
 let router = require('../router')
-let regex = require('../regex')
 let {normalizePath,} = require('../urlUtils')
 let explore = require('../views/explore')
 let login = require('../views/login')
