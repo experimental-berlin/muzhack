@@ -4,8 +4,13 @@ let logger = require('js-logger-aknudsen').get('sharedRouting')
 
 let regex = require('./regex')
 
-class NotFoundError {
+class NotFoundError extends Error {
+  constructor(message) {
+    super()
+    this.message = message
+  }
 }
+
 
 let loadData = (cursor, module) => {
   let routerState = cursor.cursor('router').toJS()
