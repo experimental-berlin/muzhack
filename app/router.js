@@ -110,7 +110,7 @@ let perform = (isInitial=false) => {
       redirectIfNecessary(cursor)
     }, (error) => {
       logger.warn(`An error occurred updating router state: ${error}`)
-      notification.warn(`Error`, error, cursor)
+      notification.warn(`Error`, error.message, cursor)
     })
 }
 
