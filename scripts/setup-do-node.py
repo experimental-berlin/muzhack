@@ -32,6 +32,14 @@ with open('/etc/default/grub', 'wb') as f:
     f.writelines(grub_lines)
 subprocess.check_call('update-grub')
 
+with open('/etc/sysctl.conf', 'rb') as f:
+    sysctl = f.read()
+if sysctl.endswith('\n'):
+    sysctl = sysctl[:-1]
+with open('/etc/sysctl.conf', 'wb') as f:
+    f.write('{}\nvm.swappiness = 10\nvm.vfs_cache_pressure = 50\n'.format(
+        sysctl))
+
 with open(os.path.expanduser('~/.bashrc'), 'rb') as f:
     bashrc = f.read()
 with open(os.path.expanduser('~/.bashrc'), 'wb') as f:
