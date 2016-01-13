@@ -5,6 +5,12 @@ import sys
 import os
 import subprocess
 
+
+def _error(msg):
+    sys.stderr.write('{}\n'.format(msg))
+    sys.exit(1)
+    
+
 try:
     with open('settings.json', 'rb') as f:
         settings = json.load(f)
@@ -13,5 +19,10 @@ except IOError:
 for k, v in settings.iteritems():
     os.environ[k] = v
 
-subprocess.check_call(
-    ['./node_modules/.bin/babel-node', '--harmony_destructuring', '.', ])
+try:
+    subprocess.check_call(
+        ['./node_modules/.bin/babel-node', '--harmony_destructuring', '.', ])
+except subprocess.CalledProcessError:
+    _error('Node failed')
+except KeyboardInterrupt:
+    sys.exit(0)
