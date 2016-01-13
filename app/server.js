@@ -89,8 +89,13 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
 
   db.setUp()
     .then(() => {
-      server.start(() => {
-        logger.info('Server running at', server.info.uri);
+      server.start((err) => {
+        if (err != null) {
+          logger.error(`Failed to start server: ${err}`)
+          process.exit(1)
+        } else {
+          logger.info('Server running at', server.info.uri)
+        }
       })
     }, (error) => {
       logger.error(`Failed to set up database`)
