@@ -23,13 +23,14 @@ For the database we use [RethinkDB](https://www.rethinkdb.com/), a NoSQL technol
 
 ## Local Installation
 1. Enter the MuzHack Git repository.
-2. Install [nvm](https://github.com/creationix/nvm).
-3. `nvm install`.
-4. `npm install`.
-5. If you don't have Python 3 already, install it with brew: `brew install python3`.
-6. `pip3 install -r requirements.txt`
-7. [Install RethinkDB](http://rethinkdb.com/docs/install/).
-8. `./rethinkdb/setup-rethinkdb.py $AUTH_KEY`.
+2. Get Git submodules: `git submodule update --init --recursive`
+3. Install [nvm](https://github.com/creationix/nvm).
+4. `nvm install`.
+5. `npm install`.
+6. If you don't have Python 3 already, install it with brew: `brew install python3`.
+7. `pip3 install -r requirements.txt`
+8. [Install RethinkDB](http://rethinkdb.com/docs/install/).
+9. `./rethinkdb/setup-rethinkdb.py`.
 
 ## Running Locally
 1. In one terminal, enter the MuzHack repository.
