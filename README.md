@@ -2,6 +2,7 @@ MuzHack
 ===========
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/muzhack/muzhack?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Stories in Ready](https://badge.waffle.io/muzhack/muzhack.png?label=ready&title=Ready)](https://waffle.io/muzhack/muzhack)
 [![Docker Repository on Quay.io](https://quay.io/repository/aknuds1/muzhack/status "Docker Repository on Quay.io")](https://quay.io/repository/aknuds1/muzhack)
 [![Circle CI](https://circleci.com/gh/muzhack/muzhack.svg?style=svg)](https://circleci.com/gh/muzhack/muzhack)
 
@@ -22,13 +23,14 @@ For the database we use [RethinkDB](https://www.rethinkdb.com/), a NoSQL technol
 
 ## Local Installation
 1. Enter the MuzHack Git repository.
-2. Install [nvm](https://github.com/creationix/nvm).
-3. `nvm install`.
-4. `npm install`.
-5. If you don't have Python already, install it with brew: `brew install python`.
-6. `pip install -r requirements.txt`
-7. [Install RethinkDB](http://rethinkdb.com/docs/install/).
-8. `./rethinkdb/setup-rethinkdb.py $AUTH_KEY`.
+2. Get Git submodules: `git submodule update --init --recursive`
+3. Install [nvm](https://github.com/creationix/nvm).
+4. `nvm install`.
+5. `npm install`.
+6. If you don't have Python 3 already, install it with brew: `brew install python3`.
+7. `pip3 install -r requirements.txt`
+8. [Install RethinkDB](http://rethinkdb.com/docs/install/).
+9. `./rethinkdb/setup-rethinkdb.py`.
 
 ## Running Locally
 1. In one terminal, enter the MuzHack repository.
