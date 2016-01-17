@@ -1,51 +1,35 @@
-#!/usr/bin/env python
-import subprocess
-import re
+#!/usr/bin/env python3
+import argparse
 import os.path
+import sys
 
+root_dir = os.path.abspath(os.path.normpath(os.path.dirname(__file__)))
+sys.path.insert(0, root_dir)
 
-subprocess.check_call(['fallocate', '-l', '2G', '/swapfile'])
-subprocess.check_call(['mkswap', '/swapfile'])
-subprocess.check_call(['swapon', '/swapfile'])
+from _common import *
 
-with open('/etc/fstab', 'rb') as f:
-    fstab = f.read()
-print(fstab)
-with open('/etc/fstab', 'wb') as f:
-    if fstab.endswith('\n'):
-        fstab = fstab[:-1]
-    f.write(fstab + '\n/swapfile   none    swap    sw    0   0' + '\n')
+os.chdir(root_dir)
 
-with open('/etc/default/grub', 'rb') as f:
-    grub_lines = f.readlines()
-re_grub_line = re.compile(r'')
-for i, line in enumerate(grub_lines[:]):
-    if line.startswith('GRUB_CMDLINE_LINUX_DEFAULT='):
-        m = re.match(r'^GRUB_CMDLINE_LINUX_DEFAULT="(.+)?"$', line)
-        previous = m.group(1)
-        if previous:
-            previous = previous + ' '
-        grub_lines[i] = 'GRUB_CMDLINE_LINUX_DEFAULT="{} {}\n"'.format(
-            previous, 'cgroup_enable=memory swapaccount=1')
+parser = argparse.ArgumentParser(
+    description='Set up DigitalOcean node.')
+parser.add_argument(
+    'node_addr', help='Specify DigitalOcean node address')
+args = parser.parse_args()
 
-with open('/etc/default/grub', 'wb') as f:
-    f.writelines(grub_lines)
-subprocess.check_call('update-grub')
-
-with open(os.path.expanduser('~/.bashrc'), 'rb') as f:
-    bashrc = f.read()
-with open(os.path.expanduser('~/.bashrc'), 'wb') as f:
-    f.write("""{}
-
-export LANGUAGE=en_US.UTF-8
-export LC_ALL=en_US.UTF-8
-export LANG=en_US.UTF-8
-export LC_TYPE=en_US.UTF-8
-export EDITOR=vim
-""".format(bashrc))
-
-if os.path.exist('/etc/localtime'):
-    os.remove('/etc/localtime')
-os.symlink('/usr/share/zoneinfo/UTC', '/etc/localtime')
-
-subprocess.check_call('reboot')
+run_command([
+    'scp', '_setup-do-node-after-bootstrap.py',
+    'root@{}:/tmp/'.format(args.node_addr),
+])
+run_command([
+    'scp', '_common.py',
+    'root@{}:/tmp/'.format(args.node_addr),
+])
+run_command([
+    'ssh', 'root@{}'.format(args.node_addr), 'apt-get update && '
+    'DEBIAN_FRONTEND=noninteractive apt-get upgrade -o '
+    'Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" '
+    '-y && apt-get install -y python3 curl vim && apt-get autoremove -y '
+    '&& python3 /tmp/_setup-do-node-after-bootstrap.py',
+])
+run_command(
+    ['ssh', 'root@{}'.format(args.node_addr), 'reboot', ], ignore_error=True)
