@@ -15,9 +15,9 @@ def _info(msg):
     sys.stdout.flush()
 
 
-def _run_tutum(args):
+def _run_docker_cloud(args):
     try:
-        subprocess.check_call(['tutum', ] + args, stdout=subprocess.PIPE)
+        subprocess.check_call(['docker-cloud', ] + args, stdout=subprocess.PIPE)
     except subprocess.CalledProcessError as err:
         sys.stderr.write('{}\n'.format(err))
         sys.exit(1)
@@ -25,7 +25,7 @@ def _run_tutum(args):
 
 def _inspect_service(service):
     output = subprocess.check_output([
-        'tutum', 'service', 'inspect', '{}.muzhack-staging'.format(service),
+        'docker-cloud', 'service', 'inspect', '{}.muzhack-staging'.format(service),
     ]).decode('utf-8')
     return json.loads(output)
 
@@ -42,10 +42,10 @@ else:
     link_to = 'muzhack-green'
 
 _info('Redeploying service \'{}\'...'.format(link_to))
-_run_tutum(['service', 'redeploy', '--sync', link_to, ])
+_run_docker_cloud(['service', 'redeploy', '--sync', link_to, ])
 
 _info('Linking to service \'{}\'...'.format(link_to))
-_run_tutum([
+_run_docker_cloud([
     'service', 'set', '--link-service', '{0}:{0}'.format(link_to),
     '--sync', 'lb.muzhack-staging',
 ])

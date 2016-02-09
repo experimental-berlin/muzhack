@@ -68,7 +68,7 @@ lb:
     - global
   deployment_strategy: high_availability
 dd-agent-rethinkdb:
-  image: tutum.co/aknuds1/dd-agent
+  image: tutum.co/muzhack/dd-agent
   tags:
     - muzhack-staging-dd-rethinkdb
   hostname: dd-agent-rethinkdb
@@ -95,7 +95,7 @@ syslogger-muzhack-staging:
     - /var/run/docker.sock:/tmp/docker.sock
   deployment_strategy: every_node
 rethinkdb-tunnel:
-  image: tutum.co/aknuds1/ssh-tunnel
+  image: tutum.co/muzhack/ssh-tunnel
   tags:
     - muzhack-rethinkdb-tunnel
   environment:
@@ -124,7 +124,7 @@ dd-agent-general:
     - API_KEY
   deployment_strategy: every_node
 backup-rethinkdb:
-  image: tutum.co/aknuds1/muzhack-backup-rethinkdb
+  image: tutum.co/muzhack/muzhack-backup-rethinkdb
   tags:
     - muzhack-staging
   restart: always
