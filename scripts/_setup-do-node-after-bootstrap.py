@@ -9,7 +9,10 @@ from _common import *
 
 
 def _install_swap_memory():
+    if os.path.exists('/swapfile'):
+        run_command(['swapoff', '/swapfile'])
     run_command(['fallocate', '-l', '2G', '/swapfile'])
+    os.chmod('/swapfile', 600)
     run_command(['mkswap', '/swapfile'])
     run_command(['swapon', '/swapfile'])
 
@@ -29,7 +32,7 @@ def _install_swap_memory():
             previous = m.group(1)
             if previous:
                 previous = previous + ' '
-            grub_lines[i] = 'GRUB_CMDLINE_LINUX_DEFAULT="{} {}\n"'.format(
+            grub_lines[i] = 'GRUB_CMDLINE_LINUX_DEFAULT="{} {}"\n'.format(
                 previous, 'cgroup_enable=memory swapaccount=1')
 
     with open('/etc/default/grub', 'wt') as f:
@@ -46,6 +49,7 @@ def _install_swap_memory():
 
 
 def _configure_shell():
+    run_command(['locale-gen', 'UTF-8', ])
     with open(os.path.expanduser('~/.bashrc'), 'rt') as f:
         bashrc = f.read()
     with open(os.path.expanduser('~/.bashrc'), 'wt') as f:
@@ -58,7 +62,7 @@ def _configure_shell():
     export EDITOR=vim
     """.format(bashrc))
 
-    if os.path.exist('/etc/localtime'):
+    if os.path.exists('/etc/localtime'):
         os.remove('/etc/localtime')
     os.symlink('/usr/share/zoneinfo/UTC', '/etc/localtime')
 
