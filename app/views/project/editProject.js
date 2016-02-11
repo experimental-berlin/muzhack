@@ -44,6 +44,7 @@ let editProject = (cursor) => {
         files,
       }
       logger.debug(`Updating project '${qualifiedProjectId}'...:`, data)
+
       ajax.putJson(`/api/projects/${qualifiedProjectId}`, data)
         .then(() => {
           logger.info(`Successfully updated project '${qualifiedProjectId}' on server`)
@@ -52,10 +53,10 @@ let editProject = (cursor) => {
           editCursor = editCursor.set('isWaiting', false)
           logger.warn(`Failed to update project '${qualifiedProjectId}' on server: ${reason}`)
         })
-      }, (error) => {
-        logger.warn(`Uploading files/pictures failed: ${error}`, error.stack)
-        editCursor = editCursor.set('isWaiting', false)
-      })
+    }, (error) => {
+      logger.warn(`Uploading files/pictures failed: ${error}`, error.stack)
+      editCursor = editCursor.set('isWaiting', false)
+    })
 }
 
 let DeleteProjectDialog = component('DeleteProjectDialog', (cursor) => {
@@ -71,31 +72,32 @@ let DeleteProjectDialog = component('DeleteProjectDialog', (cursor) => {
     ajax.delete(`/api/projects/${project.owner}/${project.projectId}`)
       .then(() => {
         logger.debug(`Project successfully deleted '${qualifiedProjectId}'`)
-        router.goTo('/')
+        router.goTo('/explore')
       }, (error) => {
         logger.warn(`Failed to delete project '${qualifiedProjectId}': ${error}`)
       })
       .finally(() => {
-        cursor.set('showDeleteProjectDialog', false)
-        editCursor.set('isWaiting', false)
+        editCursor.mergeDeep({
+          'showDeleteProjectDialog': false,
+          'isWaiting': false,
+        })
       })
   }
 
   let closeCallback = () => {
-    cursor.set('showDeleteProjectDialog', false)
+    editCursor.set('showDeleteProjectDialog', false)
   }
   let title = 'Delete'
   let message = 'Are you sure you want to delete this project?'
 
   return notification.question(title, message, yesCallback, closeCallback)
-  
 })
 
 let EditProjectPad = component('EditProjectPad', (cursor) => {
   let editCursor = cursor.cursor('editProject')
   let projectCursor = editCursor.cursor('project')
   let project = projectCursor.toJS()
-  let showDialog = cursor.get('showDeleteProjectDialog') === true
+  let showDialog = !!editCursor.get('showDeleteProjectDialog')
 
   return h('#edit-project-pad', [
     showDialog ? DeleteProjectDialog(cursor) : null,
@@ -173,9 +175,7 @@ let EditProjectPad = component('EditProjectPad', (cursor) => {
         href: '#',
         onClick: () => {
           logger.debug(`Asked to remove project`)
-          // TODO: Ask user for confirmations
-          
-          cursor.set('showDeleteProjectDialog', true)
+          cursor.cursor('editProject').set('showDeleteProjectDialog', true)
         },
       }, 'Remove this project'),
     ]),
