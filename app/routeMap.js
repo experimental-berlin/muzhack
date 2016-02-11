@@ -13,7 +13,6 @@ let discourse = require('./discourse')
 
 module.exports = {
   '/': explore,
-  '/explore': explore,
   '/u/:user': userProfile,
   '/u/:owner/:projectId': displayProject,
   '/u/:owner/:projectId/edit': editProject,

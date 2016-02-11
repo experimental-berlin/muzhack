@@ -72,7 +72,7 @@ let DeleteProjectDialog = component('DeleteProjectDialog', (cursor) => {
     ajax.delete(`/api/projects/${project.owner}/${project.projectId}`)
       .then(() => {
         logger.debug(`Project successfully deleted '${qualifiedProjectId}'`)
-        router.goTo('/explore')
+        router.goTo('/')
       }, (error) => {
         logger.warn(`Failed to delete project '${qualifiedProjectId}': ${error}`)
       })

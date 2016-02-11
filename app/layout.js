@@ -36,6 +36,7 @@ let WarningDialog = component('WarningDialog', ({cursor, title, message,}) => {
       }, 'OK'),
     ]),
   ])
+  
   return Modal({title, content, closeCallback,})
 })
 
