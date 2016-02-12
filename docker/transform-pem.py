@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Script to transform letsencrypt certificate files into string that can be inserted into
-environment variable for Tutum to pick up.
+"""Script to transform letsencrypt certificate files into string that can be
+inserted into environment variable for DockerCloud to pick up.
 
-Put your private key in certs/privkey.pem and your certificate in certs/fullchain.pem,
-then run this script in order to obtain a certificate string compatible with HAProxy and ready
-for inserting into an environment variable.
+Put your private key in certs/privkey.pem and your certificate in
+certs/fullchain.pem, then run this script in order to obtain a certificate
+string compatible with HAProxy and ready for inserting into an environment
+variable.
 """
 import re
 
