@@ -45,7 +45,7 @@ muzhack-blue:
   restart: always
   deployment_strategy: high_availability
 lb:
-  image: tutum/haproxy
+  image: dockercloud/haproxy
   tags:
     - muzhack-lb
   environment:
