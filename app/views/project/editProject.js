@@ -51,7 +51,7 @@ let editProject = (cursor) => {
           router.goTo(`/u/${qualifiedProjectId}`)
         }, (error) => {
           editCursor = editCursor.set('isWaiting', false)
-          logger.warn(`Failed to update project '${qualifiedProjectId}' on server: ${reason}`)
+            logger.warn(`Failed to update project '${qualifiedProjectId}' on server: ${reason}`)
         })
     }, (error) => {
       logger.warn(`Uploading files/pictures failed: ${error}`, error.stack)
@@ -60,15 +60,14 @@ let editProject = (cursor) => {
 }
 
 let DeleteProjectDialog = component('DeleteProjectDialog', (cursor) => {
-  
   let yesCallback = () => {
     let editCursor = cursor.cursor('editProject')
     let projectCursor = editCursor.cursor('project')
     let project = projectCursor.toJS()
     let qualifiedProjectId = `${project.owner}/${project.projectId}`
-    
+
     editCursor.set('isWaiting', true)
-    
+
     ajax.delete(`/api/projects/${project.owner}/${project.projectId}`)
       .then(() => {
         logger.debug(`Project successfully deleted '${qualifiedProjectId}'`)
@@ -87,9 +86,9 @@ let DeleteProjectDialog = component('DeleteProjectDialog', (cursor) => {
   let closeCallback = () => {
     editCursor.set('showDeleteProjectDialog', false)
   }
+
   let title = 'Delete'
   let message = 'Are you sure you want to delete this project?'
-
   return notification.question(title, message, yesCallback, closeCallback)
 })
 
