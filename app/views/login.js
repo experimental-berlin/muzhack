@@ -9,6 +9,7 @@ let {nbsp,} = require('../specialChars')
 let ajax = require('../ajax')
 let FocusingInput = require('./focusingInput')
 let router = require('../router')
+let validationErrors = require('../validationErrors')
 
 if (__IS_BROWSER__) {
   require('./login.styl')
@@ -82,10 +83,13 @@ let SignUpForm = component('SignUpForm', (cursor) => {
           name: 'username',
           required: true,
           onChange: (event) => {
+            let validation = new validationErrors.InvalidUsernameError(event.target.value)
+            cursor.updateIn(['signup', 'errors', 'username',], value => validation.errorText)
             cursor.cursor('signup').set('username', event.target.value)
           },
         }),
       ]),
+      h('span.form-error-message', cursor.getIn(['signup', 'errors', 'username',])),
       h('.required', [
         h('input.account-password', {
           type: 'password',

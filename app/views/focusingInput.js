@@ -22,7 +22,7 @@ module.exports = component('FocusingInput', {
     value,
     ref,
     onChange,
-    onKeyUp: (event) => {
+    onKeyUp (event) {
       if (event.keyCode === 13 && onEnter != null) {
         logger.debug('Enter pressed')
         onEnter()
