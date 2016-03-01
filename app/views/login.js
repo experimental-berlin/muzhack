@@ -65,124 +65,140 @@ let SignInForm = component('SignInForm', (cursor) => {
   ])
 })
 
-let SignUpForm = component('SignUpForm', (cursor) => {
-  return h('form#signup-form.pure-form.pure-form-stacked', {
-    action: 'action',
-  }, [
-    h('#userhint', [
-      h('span.required-asterisk', `*${nbsp}`),
-      'indicates a required field',
-    ]),
-    h('fieldset', [
-      h('legend', 'Account Info'),
-      h('.required', [
-        FocusingInput({
-          id: 'signup-username',
-          classes: ['account-username',],
-          placeholder: 'username',
-          name: 'username',
-          required: true,
-          onChange: (event) => {
-            let validation = new validationErrors.InvalidUsernameError(event.target.value)
-            cursor.updateIn(['signup', 'errors', 'username',], value => validation.errorText)
-            cursor.cursor('signup').set('username', event.target.value)
-          },
-        }),
+let SignUpForm = component('SignUpForm', {
+    componentDidMount () {
+      this.cursor.cursor('signup').set('errors', new Map())
+    },
+  }, (cursor) => {
+    return h('form#signup-form.pure-form.pure-form-stacked', {
+      action: 'action',
+    }, [
+      h('#userhint', [
+        h('span.required-asterisk', `*${nbsp}`),
+        'indicates a required field',
       ]),
-      h('span.form-error-message', cursor.getIn(['signup', 'errors', 'username',])),
-      h('.required', [
-        h('input.account-password', {
-          type: 'password',
-          'placeholder': 'password',
-          required: true,
-          onChange: (event) => {
-            cursor.cursor('signup').set('password', event.target.value)
-          },
-        }),
-      ]),
-      h('.required', [
-        h('input.account-password-confirm', {
-          type: 'password',
-          placeholder: 'confirm password',
-          required: true,
-          onChange: (event) => {
-            cursor.cursor('signup').set('confirmPassword', event.target.value)
-          },
-        }),
-      ]),
-      h('.required', [
-        h('input#signup-email.account-email', {
+      h('fieldset', [
+        h('legend', 'Account Info'),
+        h('.required', [
+          FocusingInput({
+            id: 'signup-username',
+            classes: ['account-username',],
+            placeholder: 'username',
+            name: 'username',
+            required: true,
+            onChange: (event) => {
+              let validation = new validationErrors.InvalidUsernameError(event.target.value)
+              cursor.getIn(['signup', 'errors',]).set('username', validation)
+              cursor.cursor('signup').set('username', event.target.value)
+            },
+          }),
+        ]),
+        h('span.form-error-message', 
+          cursor.getIn(['signup', 'errors','username',]) ? 
+          cursor.getIn(['signup', 'errors','username',]).errorText : null
+        ),
+        h('.required', [
+          h('input.account-password', {
+            type: 'password',
+            'placeholder': 'password',
+            required: true,
+            onChange: (event) => {
+              cursor.cursor('signup').set('password', event.target.value)
+            },
+          }),
+        ]),
+        h('.required', [
+          h('input.account-password-confirm', {
+            type: 'password',
+            placeholder: 'confirm password',
+            required: true,
+            onChange: (event) => {
+              cursor.cursor('signup').set('confirmPassword', event.target.value)
+            },
+          }),
+        ]),
+        h('.required', [
+          h('input#signup-email.account-email', {
+            autofocus: true,
+            type: 'email',
+            placeholder: 'email',
+            required: true,
+            onChange: (event) => {
+              cursor.cursor('signup').set('email', event.target.value)
+            },
+          }),
+        ]),
+        h('.required', [
+          h('input#signup-name.account-name', {
+            autofocus: true,
+            type: 'text',
+            placeholder: 'name',
+            required: true,
+            onChange: (event) => {
+              cursor.cursor('signup').set('name', event.target.value)
+            },
+          }),
+        ]),
+        h('input#signup-website.account-website', {
           autofocus: true,
-          type: 'email',
-          placeholder: 'email',
-          required: true,
+          type: 'url',
+          placeholder: 'website',
           onChange: (event) => {
-            cursor.cursor('signup').set('email', event.target.value)
+            cursor.cursor('signup').set('website', event.target.value)
           },
         }),
       ]),
-      h('.required', [
-        h('input#signup-name.account-name', {
-          autofocus: true,
-          type: 'text',
-          placeholder: 'name',
-          required: true,
-          onChange: (event) => {
-            cursor.cursor('signup').set('name', event.target.value)
-          },
-        }),
-      ]),
-      h('input#signup-website.account-website', {
-        autofocus: true,
-        type: 'url',
-        placeholder: 'website',
-        onChange: (event) => {
-          cursor.cursor('signup').set('website', event.target.value)
-        },
-      }),
-    ]),
-    h('.button-group', [
-      h('input#signup-button.pure-button.pure-button-primary', {
-        type: 'submit',
-        value: 'Sign up',
-        onClick: (event) => {
-          logger.debug(`Signing user up`)
-          event.preventDefault()
-          let data = R.pick([
-            'username', 'password', 'email', 'name', 'website',
-          ], cursor.get('signup').toJS())
-          if (cursor.cursor('signup').get('confirmPassword') !== data.password) {
-            throw new Error(`Passwords don't match`)
-          }
+      h('.button-group', [
+        h('input#signup-button.pure-button.pure-button-primary', {
+          type: 'submit',
+          value: 'Sign up',
+          onClick: (event) => {
+            logger.debug(`Signing user up`)
+            event.preventDefault()
 
-          logger.debug(`Signing up new user:`, data)
-          cursor.cursor('router').set('isLoading', true)
-          ajax.postJson('/api/signup', data)
-            .then(() => {
-              logger.debug(`User signup succeeded`)
-              cursor.mergeDeep({
-                loggedInUser: {
-                  username: data.username,
-                },
-                router: {
-                  isLoading: false,
-                },
+            cursor.getIn(['signup', 'errors',])
+              .forEach(e => {
+                if (e.isInvalid) {
+                  return false
+                }
               })
-              router.perform()
-            }, (err) => {
-              logger.warn(`User signup failed: '${err}'`)
-              cursor.cursor('router').set('isLoading', false)
-            })
-        },
-      }),
-    ]),
-  ])
-})
+
+            let data = R.pick([
+              'username', 'password', 'email', 'name', 'website',
+            ], cursor.get('signup').toJS())
+            if (cursor.cursor('signup').get('confirmPassword') !== data.password) {
+              throw new Error(`Passwords don't match`)
+            }
+
+            logger.debug(`Signing up new user:`, data)
+            cursor.cursor('router').set('isLoading', true)
+            ajax.postJson('/api/signup', data)
+              .then(() => {
+                logger.debug(`User signup succeeded`)
+                cursor.mergeDeep({
+                  loggedInUser: {
+                    username: data.username,
+                  },
+                  router: {
+                    isLoading: false,
+                  },
+                })
+                router.perform()
+              }, (err) => {
+                logger.warn(`User signup failed: '${err}'`)
+                cursor.cursor('router').set('isLoading', false)
+              })
+          },
+        }),
+      ]),
+    ])
+  }
+)
 
 module.exports = {
   shouldRenderServerSide: false,
   redirectIfLoggedIn: true,
-  render: (cursor) => {
+  render (cursor) {
     logger.debug(`Login rendering`)
     let showSignIn = cursor.cursor('login').get('activeTab') === 'signIn'
     let signInClass = showSignIn ? '.active' : ''

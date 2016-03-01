@@ -15,10 +15,7 @@ class ValidationError {
 
   get isInvalid() {
     let errors = this.validators.map((fn) => fn(this.input))
-    let anyError = R.any(v => v, errors)
-    console.log(`IS THIS INVALID? ${anyError} ${errors}`);
-
-    return anyError
+    return R.any(v => v, errors)
   }
 }
 
