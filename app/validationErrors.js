@@ -14,12 +14,14 @@ class ValidationError {
   }
 
   get isInvalid() {
-    let errors = this.validators.map((fn) => fn(this.input))
+    let errors = this.validators.map((fn) => {
+      return this.input instanceof Array ? fn(...this.input) : fn(this.input)
+    })
     return R.any(v => v, errors)
   }
 }
 
-class InvalidUsernameError extends ValidationError {
+class InvalidUsername extends ValidationError {
   constructor(input) {
     super(
       input, 
@@ -29,7 +31,29 @@ class InvalidUsernameError extends ValidationError {
   }
 }
 
+class InvalidPassword extends ValidationError {
+  constructor(input) {
+    super(
+      input, 
+      [Fns.isEmptyOrHasSpace,], 
+      'Invalid password, it cannot contain whitespace.'
+    )
+  }
+}
+
+class InvalidPasswordConfirm extends ValidationError {
+  constructor(input) {
+    super(
+      input,
+      [Fns.areNotTheSame,],
+      'The passwords do not match'
+    )
+  }
+}
+
 module.exports = {
   ValidationError,
-  InvalidUsernameError,
+  InvalidUsername,
+  InvalidPassword,
+  InvalidPasswordConfirm,
 }

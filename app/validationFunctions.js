@@ -12,4 +12,8 @@ module.exports = {
     let val = R.toLower(input)
     return R.match(/[a-z_]/g, val).length !== val.length
   },
+
+  areNotTheSame (inputA, inputB) {
+    return inputA !== inputB
+  },
 }

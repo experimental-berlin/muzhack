@@ -89,7 +89,7 @@ let SignUpForm = component('SignUpForm', {
             name: 'username',
             required: true,
             onChange: (event) => {
-              let validation = new validationErrors.InvalidUsernameError(event.target.value)
+              let validation = new validationErrors.InvalidUsername(event.target.value)
               cursor.getIn(['signup', 'errors',]).set('username', validation)
               cursor.cursor('signup').set('username', event.target.value)
             },
@@ -105,20 +105,35 @@ let SignUpForm = component('SignUpForm', {
             'placeholder': 'password',
             required: true,
             onChange: (event) => {
+              let validation = new validationErrors.InvalidPassword(event.target.value)
+              cursor.getIn(['signup', 'errors',]).set('password', validation)
               cursor.cursor('signup').set('password', event.target.value)
             },
           }),
         ]),
+        h('span.form-error-message', 
+          cursor.getIn(['signup', 'errors','password',]) ? 
+          cursor.getIn(['signup', 'errors','password',]).errorText : null
+        ),
         h('.required', [
           h('input.account-password-confirm', {
             type: 'password',
             placeholder: 'confirm password',
             required: true,
             onChange: (event) => {
+              let validation = new validationErrors.InvalidPasswordConfirm([
+                event.target.value,
+                cursor.getIn(['signup', 'password',]),
+              ])
+              cursor.getIn(['signup', 'errors',]).set('passwordConfirm', validation)
               cursor.cursor('signup').set('confirmPassword', event.target.value)
             },
           }),
         ]),
+        h('span.form-error-message', 
+          cursor.getIn(['signup', 'errors','passwordConfirm',]) ? 
+          cursor.getIn(['signup', 'errors','passwordConfirm',]).errorText : null
+        ),
         h('.required', [
           h('input#signup-email.account-email', {
             autofocus: true,
