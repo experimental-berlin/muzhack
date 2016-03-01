@@ -74,6 +74,8 @@ let SignUpForm = component('SignUpForm', {
       action: 'action',
     }, [
       h('#userhint', [
+        h('#submittedWithErrors', cursor.getIn(['signup', 'submittedWithErrors',]) ? 
+          'There are errors in your form' : ''),
         h('span.required-asterisk', `*${nbsp}`),
         'indicates a required field',
       ]),
@@ -159,35 +161,37 @@ let SignUpForm = component('SignUpForm', {
             cursor.getIn(['signup', 'errors',])
               .forEach(e => {
                 if (e.isInvalid) {
-                  return false
+                  cursor.get('signup').set('submittedWithErrors', true)
                 }
               })
 
-            let data = R.pick([
-              'username', 'password', 'email', 'name', 'website',
-            ], cursor.get('signup').toJS())
-            if (cursor.cursor('signup').get('confirmPassword') !== data.password) {
-              throw new Error(`Passwords don't match`)
-            }
+            if (cursor.get(['signup', 'submittedWithErrors',]) === false) {
+              let data = R.pick([
+                'username', 'password', 'email', 'name', 'website',
+              ], cursor.get('signup').toJS())
+              if (cursor.cursor('signup').get('confirmPassword') !== data.password) {
+                throw new Error(`Passwords don't match`)
+              }
 
-            logger.debug(`Signing up new user:`, data)
-            cursor.cursor('router').set('isLoading', true)
-            ajax.postJson('/api/signup', data)
-              .then(() => {
-                logger.debug(`User signup succeeded`)
-                cursor.mergeDeep({
-                  loggedInUser: {
-                    username: data.username,
-                  },
-                  router: {
-                    isLoading: false,
-                  },
+              logger.debug(`Signing up new user:`, data)
+              cursor.cursor('router').set('isLoading', true)
+              ajax.postJson('/api/signup', data)
+                .then(() => {
+                  logger.debug(`User signup succeeded`)
+                  cursor.mergeDeep({
+                    loggedInUser: {
+                      username: data.username,
+                    },
+                    router: {
+                      isLoading: false,
+                    },
+                  })
+                  router.perform()
+                }, (err) => {
+                  logger.warn(`User signup failed: '${err}'`)
+                  cursor.cursor('router').set('isLoading', false)
                 })
-                router.perform()
-              }, (err) => {
-                logger.warn(`User signup failed: '${err}'`)
-                cursor.cursor('router').set('isLoading', false)
-              })
+              }
           },
         }),
       ]),
