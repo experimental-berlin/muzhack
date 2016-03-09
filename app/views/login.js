@@ -65,154 +65,153 @@ let SignInForm = component('SignInForm', (cursor) => {
   ])
 })
 
-let SignUpForm = component('SignUpForm', {
-    componentDidMount () {
-      this.cursor.cursor('signup').set('errors', new Map())
-    },
-  }, (cursor) => {
-    return h('form#signup-form.pure-form.pure-form-stacked', {
-      action: 'action',
-    }, [
-      h('#userhint', [
-        h('#submittedWithErrors', cursor.getIn(['signup', 'submittedWithErrors',]) ? 
-          'There are errors in your form' : ''),
-        h('span.required-asterisk', `*${nbsp}`),
-        'indicates a required field',
-      ]),
-      h('fieldset', [
-        h('legend', 'Account Info'),
-        h('.required', [
-          FocusingInput({
-            id: 'signup-username',
-            classes: ['account-username',],
-            placeholder: 'username',
-            name: 'username',
-            required: true,
-            onChange: (event) => {
-              let validation = new validationErrors.InvalidUsername(event.target.value)
-              cursor.getIn(['signup', 'errors',]).set('username', validation)
-              cursor.cursor('signup').set('username', event.target.value)
-            },
-          }),
-        ]),
-        h('span.form-error-message', 
-          cursor.getIn(['signup', 'errors','username',]) ? 
-          cursor.getIn(['signup', 'errors','username',]).errorText : null
-        ),
-        h('.required', [
-          h('input.account-password', {
-            type: 'password',
-            'placeholder': 'password',
-            required: true,
-            onChange: (event) => {
-              let validation = new validationErrors.InvalidPassword(event.target.value)
-              cursor.getIn(['signup', 'errors',]).set('password', validation)
-              cursor.cursor('signup').set('password', event.target.value)
-            },
-          }),
-        ]),
-        h('span.form-error-message', 
-          cursor.getIn(['signup', 'errors','password',]) ? 
-          cursor.getIn(['signup', 'errors','password',]).errorText : null
-        ),
-        h('.required', [
-          h('input.account-password-confirm', {
-            type: 'password',
-            placeholder: 'confirm password',
-            required: true,
-            onChange: (event) => {
-              let validation = new validationErrors.InvalidPasswordConfirm([
-                event.target.value,
-                cursor.getIn(['signup', 'password',]),
-              ])
-              cursor.getIn(['signup', 'errors',]).set('passwordConfirm', validation)
-              cursor.cursor('signup').set('confirmPassword', event.target.value)
-            },
-          }),
-        ]),
-        h('span.form-error-message', 
-          cursor.getIn(['signup', 'errors','passwordConfirm',]) ? 
-          cursor.getIn(['signup', 'errors','passwordConfirm',]).errorText : null
-        ),
-        h('.required', [
-          h('input#signup-email.account-email', {
-            autofocus: true,
-            type: 'email',
-            placeholder: 'email',
-            required: true,
-            onChange: (event) => {
-              cursor.cursor('signup').set('email', event.target.value)
-            },
-          }),
-        ]),
-        h('.required', [
-          h('input#signup-name.account-name', {
-            autofocus: true,
-            type: 'text',
-            placeholder: 'name',
-            required: true,
-            onChange: (event) => {
-              cursor.cursor('signup').set('name', event.target.value)
-            },
-          }),
-        ]),
-        h('input#signup-website.account-website', {
-          autofocus: true,
-          type: 'url',
-          placeholder: 'website',
-          onChange: (event) => {
-            cursor.cursor('signup').set('website', event.target.value)
-          },
-        }),
-      ]),
-      h('.button-group', [
-        h('input#signup-button.pure-button.pure-button-primary', {
-          type: 'submit',
-          value: 'Sign up',
-          onClick: (event) => {
-            logger.debug(`Signing user up`)
-            event.preventDefault()
-
-            cursor.getIn(['signup', 'errors',])
-              .forEach(e => {
-                if (e.isInvalid) {
-                  cursor.get('signup').set('submittedWithErrors', true)
-                }
-              })
-
-            if (cursor.get(['signup', 'submittedWithErrors',]) === false) {
-              let data = R.pick([
-                'username', 'password', 'email', 'name', 'website',
-              ], cursor.get('signup').toJS())
-              if (cursor.cursor('signup').get('confirmPassword') !== data.password) {
-                throw new Error(`Passwords don't match`)
-              }
-
-              logger.debug(`Signing up new user:`, data)
-              cursor.cursor('router').set('isLoading', true)
-              ajax.postJson('/api/signup', data)
-                .then(() => {
-                  logger.debug(`User signup succeeded`)
-                  cursor.mergeDeep({
-                    loggedInUser: {
-                      username: data.username,
-                    },
-                    router: {
-                      isLoading: false,
-                    },
-                  })
-                  router.perform()
-                }, (err) => {
-                  logger.warn(`User signup failed: '${err}'`)
-                  cursor.cursor('router').set('isLoading', false)
-                })
-              }
-          },
-        }),
-      ]),
-    ])
+let updateFieldState = (cursor, names, ErrorType, event) => {
+  if (!R.isArrayLike(names)) {
+    names = [names,]
   }
-)
+  let name = names[0]
+  let signupCursor = cursor.cursor(['login', 'signup',])
+  let errorsCursor = signupCursor.cursor('errors')
+  errorsCursor.update((current) => {
+    let remainingValues = R.map((property) => {
+      return signupCursor.get(property)
+    }, names.slice(1))
+    logger.debug(`Remaining values: '${remainingValues}'`, signupCursor.toJS())
+    let validation = new ErrorType(R.concat([event.target.value,], remainingValues))
+    if (validation.isInvalid) {
+      logger.debug(`Signup field '${name}' is invalid: '${validation.errorText}'`)
+      return current.set(name, validation)
+    } else {
+      logger.debug(`Signup field '${name}' is valid`)
+      return current.delete(name)
+    }
+  })
+  signupCursor = signupCursor.set(name, event.target.value)
+  logger.debug(`Setting signup field '${name}': ${event.target.value}`)
+}
+
+let SignUpForm = component('SignUpForm', (cursor) => {
+  let errors = cursor.cursor(['login', 'signup', 'errors',]).toJS()
+  return h('form#signup-form.pure-form.pure-form-stacked', {
+    action: 'action',
+  }, [
+    h('#userhint', [
+      !R.isEmpty(errors) ? h('#submittedWithErrors',
+        'There are errors in your form') : null,
+      h('span.required-asterisk', `*${nbsp}`),
+      'indicates a required field',
+    ]),
+    h('fieldset', [
+      h('legend', 'Account Info'),
+      h('.required', [
+        FocusingInput({
+          id: 'signup-username',
+          classes: ['account-username',],
+          placeholder: 'username',
+          name: 'username',
+          required: true,
+          onChange: R.partial(updateFieldState, [cursor, 'username',
+            validationErrors.InvalidUsername,]),
+        }),
+      ]),
+      h('span.form-error-message',
+        errors.username != null ? errors.username.errorText : null
+      ),
+      h('.required', [
+        h('input.account-password', {
+          type: 'password',
+          'placeholder': 'password',
+          required: true,
+          onChange: R.partial(updateFieldState, [cursor, 'password',
+            validationErrors.InvalidPassword,]),
+        }),
+      ]),
+      h('span.form-error-message',
+        errors.password != null ? errors.password.errorText : null
+      ),
+      h('.required', [
+        h('input.account-password-confirm', {
+          type: 'password',
+          placeholder: 'confirm password',
+          required: true,
+          onChange: R.partial(updateFieldState, [cursor, ['passwordConfirm',
+            'password',], validationErrors.InvalidPasswordConfirm,]),
+        }),
+      ]),
+      h('span.form-error-message',
+        errors.passwordConfirm != null ? errors.passwordConfirm.errorText : null
+      ),
+      h('.required', [
+        h('input#signup-email.account-email', {
+          autofocus: true,
+          type: 'email',
+          placeholder: 'email',
+          required: true,
+          onChange: (event) => {
+            cursor.cursor('signup').set('email', event.target.value)
+          },
+        }),
+      ]),
+      h('.required', [
+        h('input#signup-name.account-name', {
+          autofocus: true,
+          type: 'text',
+          placeholder: 'name',
+          required: true,
+          onChange: (event) => {
+            cursor.cursor('signup').set('name', event.target.value)
+          },
+        }),
+      ]),
+      h('input#signup-website.account-website', {
+        autofocus: true,
+        type: 'url',
+        placeholder: 'website',
+        onChange: (event) => {
+          cursor.cursor('signup').set('website', event.target.value)
+        },
+      }),
+    ]),
+    h('.button-group', [
+      h('input#signup-button.pure-button.pure-button-primary', {
+        type: 'submit',
+        value: 'Sign up',
+        onClick: (event) => {
+          logger.debug(`Signing user up`)
+          event.preventDefault()
+
+          if (R.isEmpty(errors)) {
+            let data = R.pick([
+              'username', 'password', 'email', 'name', 'website',
+            ], cursor.get('signup').toJS())
+            if (cursor.cursor('signup').get('confirmPassword') !== data.password) {
+              throw new Error(`Passwords don't match`)
+            }
+
+            logger.debug(`Signing up new user:`, data)
+            cursor.cursor('router').set('isLoading', true)
+            ajax.postJson('/api/signup', data)
+              .then(() => {
+                logger.debug(`User signup succeeded`)
+                cursor.mergeDeep({
+                  loggedInUser: {
+                    username: data.username,
+                  },
+                  router: {
+                    isLoading: false,
+                  },
+                })
+                router.perform()
+              }, (err) => {
+                logger.warn(`User signup failed: '${err}'`)
+                cursor.cursor('router').set('isLoading', false)
+              })
+            }
+        },
+      }),
+    ]),
+  ])
+})
 
 module.exports = {
   shouldRenderServerSide: false,
@@ -257,6 +256,9 @@ module.exports = {
   createState: () => {
     return immutable.fromJS({
       activeTab: 'signIn',
+      signup: {
+        errors: {},
+      },
     })
   },
 }

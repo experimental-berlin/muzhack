@@ -8,7 +8,7 @@ class ValidationError {
     this.validators = validators
     this._errorText = errorText
   }
-  
+
   get errorText() {
     return this.isInvalid ? this._errorText : ''
   }
@@ -24,8 +24,8 @@ class ValidationError {
 class InvalidUsername extends ValidationError {
   constructor(input) {
     super(
-      input, 
-      [Fns.isEmptyOrHasSpace, Fns.hasSpecialChars,], 
+      input,
+      [Fns.isEmptyOrHasSpace, Fns.hasSpecialChars,],
       'Invalid username, please use only a-z, A-Z ,_.'
     )
   }
@@ -34,17 +34,17 @@ class InvalidUsername extends ValidationError {
 class InvalidPassword extends ValidationError {
   constructor(input) {
     super(
-      input, 
-      [Fns.isEmptyOrHasSpace,], 
+      input,
+      [Fns.isEmptyOrHasSpace,],
       'Invalid password, it cannot contain whitespace.'
     )
   }
 }
 
 class InvalidPasswordConfirm extends ValidationError {
-  constructor(input) {
+  constructor(inputs) {
     super(
-      input,
+      inputs,
       [Fns.areNotTheSame,],
       'The passwords do not match'
     )
