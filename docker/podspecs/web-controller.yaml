@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: web
+  labels:
+    app: web
+spec:
+  replicas: 1
+  selector:
+    app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: quay.io/aknuds1/realtime-music
+        env:
+        - name: APP_URI
+          value: https://staging.realtime-music.com
+        ports:
+        - name: http-server
+          containerPort: 8080
+      imagePullSecrets:
+      - name: quay.io
