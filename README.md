@@ -40,4 +40,4 @@ For the database we use [RethinkDB](https://www.rethinkdb.com/), a NoSQL technol
 5. Access the Webpack dev server at http://localhost:8080 in your browser. The app will automatically be refreshed when you make changes to the source code thanks to Webpack's hot reload feature.
 
 ### Deployment
-MuzHack is deployed as a set of Docker containers to [Google Container Engine](https://cloud.google.com/container-engine).
+MuzHack is deployed as a set of Docker containers to [Google Container Engine](https://cloud.google.com/container-engine) (GKE), which is a [Kubernetes](http://kubernetes.io) service for managing Docker clusters. GKE is for all intents and purposes Kubernetes, so read up on the latter in order to understand how MuzHack is deployed.
