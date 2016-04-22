@@ -47,7 +47,7 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
   }
 
   server.views({
-    engines: { jade: pug, },
+    engines: { pug, },
     path: __dirname + '/templates',
     compileOptions: {
       pretty: true,

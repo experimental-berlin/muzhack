@@ -6,3 +6,4 @@ dist/
 .DS_Store
 run-server.sh
 __pycache__/
+docker/podspecs/*-secret.yaml
