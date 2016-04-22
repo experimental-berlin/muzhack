@@ -22,21 +22,45 @@ spec:
         - name: APP_URI
           value: https://staging.muzhack.com
         - name: HAPI_IRON_PASSWORD
-          value: nI0rbYO!#j1p
+          valueFrom:
+            secretKeyRef:
+              name: environment
+              key: hapiIronPassword
         - name: RETHINKDB_AUTH_KEY
-          value: Gcyr2dyZ*6@*
+          valueFrom:
+            secretKeyRef:
+              name: environment
+              key: rethinkdbAuthKey
         - name: AWS_ACCESS_KEY
-          value: AKIAI4YURJIFKFZNFO6A
+          valueFrom:
+            secretKeyRef:
+              name: environment
+              key: awsAccessKeyId
         - name: AWS_SECRET_ACCESS_KEY
-          value: N4Zci4cDCweNNi/YApv9WoZQUWZ1IWBduwGmPB8Q
+          valueFrom:
+            secretKeyRef:
+              name: environment
+              key: awsSecretAccessKey
         - name: MANDRILL_SECRET
-          value: 1MJ01cNUtFGLyKxJOsoxOw
+          valueFrom:
+            secretKeyRef:
+              name: environment
+              key: mandrillSecret
         - name: SSO_SECRET
-          value: X%*bqCi9&r40
+          valueFrom:
+            secretKeyRef:
+              name: environment
+              key: ssoSecret
         - name: TRELLO_KEY
-          value: 772ac191aa991f29df2bda206c742cd5
+          valueFrom:
+            secretKeyRef:
+              name: environment
+              key: trelloKey
         - name: STRIPE_PUBLISHABLE_KEY
-          value: pk_test_6pRNASCoBOKtIshFeQd4XMUh
+          valueFrom:
+            secretKeyRef:
+              name: environment
+              key: stripePublishableKey
         ports:
         - name: http-server
           containerPort: 80
