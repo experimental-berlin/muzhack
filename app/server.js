@@ -4,7 +4,7 @@ GLOBAL.__IS_BROWSER__ = false
 let Hapi = require('hapi')
 let R = require('ramda')
 let path = require('path')
-let jade = require('jade')
+let pug = require('pug')
 let immstruct = require('immstruct')
 let Boom = require('boom')
 let Logger = require('js-logger-aknudsen')
@@ -47,7 +47,7 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
   }
 
   server.views({
-    engines: { jade, },
+    engines: { jade: pug, },
     path: __dirname + '/templates',
     compileOptions: {
       pretty: true,

@@ -15,9 +15,9 @@ gulp.task('javascript', () => {
     .pipe(gulp.dest('dist/'))
 })
 
-gulp.task('jade', () => {
+gulp.task('pug', () => {
   return gulp
-    .src('app/**/*.jade')
+    .src('app/**/*.pug')
     .pipe(gulp.dest('dist/app/'))
 })
 
@@ -36,7 +36,7 @@ gulp.task('webpack', () => {
 gulp.task('default', () => {
   return runSequence(
     'javascript',
-    'jade',
+    'pug',
     'webpack',
     'assets'
   )
