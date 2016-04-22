@@ -25,42 +25,42 @@ spec:
           valueFrom:
             secretKeyRef:
               name: environment
-              key: hapiIronPassword
+              key: hapi-iron-password
         - name: RETHINKDB_AUTH_KEY
           valueFrom:
             secretKeyRef:
               name: environment
-              key: rethinkdbAuthKey
+              key: rethinkdb-auth-key
         - name: AWS_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               name: environment
-              key: awsAccessKeyId
+              key: aws-access-key-id
         - name: AWS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
               name: environment
-              key: awsSecretAccessKey
+              key: aws-secret-access-key
         - name: MANDRILL_SECRET
           valueFrom:
             secretKeyRef:
               name: environment
-              key: mandrillSecret
+              key: mandrill-secret
         - name: SSO_SECRET
           valueFrom:
             secretKeyRef:
               name: environment
-              key: ssoSecret
+              key: sso-secret
         - name: TRELLO_KEY
           valueFrom:
             secretKeyRef:
               name: environment
-              key: trelloKey
+              key: trello-key
         - name: STRIPE_PUBLISHABLE_KEY
           valueFrom:
             secretKeyRef:
               name: environment
-              key: stripePublishableKey
+              key: stripe-publishable-key
         ports:
         - name: http-server
           containerPort: 80
