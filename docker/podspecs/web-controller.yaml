@@ -15,12 +15,30 @@ spec:
     spec:
       containers:
       - name: web
-        image: quay.io/aknuds1/realtime-music
+        image: quay.io/aknuds1/muzhack
+        # Always pull latest version of image
+        imagePullPolicy: Always
         env:
         - name: APP_URI
-          value: https://staging.realtime-music.com
+          value: https://staging.muzhack.com
+        - name: HAPI_IRON_PASSWORD
+          value: nI0rbYO!#j1p
+        - name: RETHINKDB_AUTH_KEY
+          value: Gcyr2dyZ*6@*
+        - name: AWS_ACCESS_KEY
+          value: AKIAI4YURJIFKFZNFO6A
+        - name: AWS_SECRET_ACCESS_KEY
+          value: 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
+        - name: MANDRILL_SECRET
+          value: 1MJ01cNUtFGLyKxJOsoxOw
+        - name: SSO_SECRET
+          value: X%*bqCi9&r40
+        - name: TRELLO_KEY
+          value: 772ac191aa991f29df2bda206c742cd5
+        - name: STRIPE_PUBLISHABLE_KEY
+          value: pk_test_6pRNASCoBOKtIshFeQd4XMUh
         ports:
         - name: http-server
-          containerPort: 8080
+          containerPort: 80
       imagePullSecrets:
       - name: quay.io
