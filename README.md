@@ -41,3 +41,8 @@ For the database we use [RethinkDB](https://www.rethinkdb.com/), a NoSQL technol
 
 ### Deployment
 MuzHack is deployed as a set of Docker containers to [Google Container Engine](https://cloud.google.com/container-engine) (GKE), which is a [Kubernetes](http://kubernetes.io) service for managing Docker clusters. GKE is for all intents and purposes Kubernetes, so read up on the latter in order to understand how MuzHack is deployed.
+
+#### Updating Deployed Resources
+In order to update a deployed resource, f.ex. a replication controller, use `kubectl apply`. For
+example, if web-controller.yaml has changed, issue the following command:
+`kubectl apply -f docker/podspecs/web-controller.yaml`.
