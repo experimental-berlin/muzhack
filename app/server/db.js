@@ -36,15 +36,12 @@ let connectToDb = (host, callback, attempt) => {
 
     logger.debug(`Successfully connected to RethinkDB host '${host}', attempt #${attempt}`)
     try {
-      return r.dbList().run(conn)
-        .then((existingDbs) => {
+      return r.tableList().run(conn)
+        .then((existingTables) => {
           let promise
-          if (!R.contains('muzhack', existingDbs)) {
-            logger.info(`Creating MuzHack database`)
-            return r.dbCreate('muzhack').run(conn)
-              .then(() => {
-                return r.db('muzhack').tableCreate('projects')
-              })
+          if (!R.contains('projects', existingTables)) {
+            logger.info(`Creating projects table`)
+            return r.tableCreate('projects').run(conn)
               .then(invokeCallback)
           } else {
             return invokeCallback()
