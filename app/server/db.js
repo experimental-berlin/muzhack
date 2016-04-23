@@ -42,6 +42,9 @@ let connectToDb = (host, callback, attempt) => {
           if (!R.contains('muzhack', existingDbs)) {
             logger.info(`Creating MuzHack database`)
             return r.dbCreate('muzhack').run(conn)
+              .then(() => {
+                return r.db('muzhack').tableCreate('projects')
+              })
               .then(invokeCallback)
           } else {
             return invokeCallback()
