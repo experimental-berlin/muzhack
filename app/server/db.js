@@ -21,9 +21,8 @@ let connectToDb = (host, callback, attempt) => {
     authKey: getEnvParam('RETHINKDB_AUTH_KEY', null),
     db: 'muzhack',
   }).then((conn) => {
-    logger.debug(`Successfully connected to RethinkDB host '${host}', attempt #${attempt}`)
-    logger.debug(`Invoking callback`)
-    try {
+    let invokeCallback = () => {
+      logger.debug(`Invoking callback`)
       return callback(conn)
         .then((result) => {
           closeConn(conn)
@@ -32,6 +31,21 @@ let connectToDb = (host, callback, attempt) => {
           closeConn(conn)
           logger.warn(`There was an error in the callback of withDb: '${error}'`, error.stack)
           throw new Error(`There was an error in the callback of withDb`)
+        })
+    }
+
+    logger.debug(`Successfully connected to RethinkDB host '${host}', attempt #${attempt}`)
+    try {
+      return r.dbList().run(conn)
+        .then((existingDbs) => {
+          let promise
+          if (!R.contains('muzhack', existingDbs)) {
+            logger.info(`Creating MuzHack database`)
+            return R.dbCreate('muzhack').run(conn)
+              .then(invokeCallback)
+          } else {
+            return invokeCallback()
+          }
         })
     } catch (error) {
       closeConn(conn)
