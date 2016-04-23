@@ -7,11 +7,13 @@ let path = require('path')
 let pug = require('pug')
 let immstruct = require('immstruct')
 let Boom = require('boom')
+let moment = require('moment')
 let Logger = require('js-logger-aknudsen')
 let logger = Logger.get('server')
 Logger.useDefaults({
   formatter: (messages, context) => {
-    messages.unshift(`${context.level.name} - [${context.name}]`)
+    let time = moment().format('HH:mm:ss')
+    messages.unshift(`${context.level.name} ${time} - [${context.name}]`)
   },
 })
 
