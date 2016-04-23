@@ -7,4 +7,4 @@ spec:
     - secretName: web-secret
   backend:
     serviceName: web
-    servicePort: 8080
+    servicePort: 80
