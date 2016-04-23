@@ -102,6 +102,6 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
         }
       })
     }, (error) => {
-      logger.error(`Failed to set up database`)
+      logger.error(`Failed to set up database: '${error}'`)
     })
 })
