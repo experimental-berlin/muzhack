@@ -41,7 +41,7 @@ let connectToDb = (host, callback, attempt) => {
           let promise
           if (!R.contains('muzhack', existingDbs)) {
             logger.info(`Creating MuzHack database`)
-            return R.dbCreate('muzhack').run(conn)
+            return r.dbCreate('muzhack').run(conn)
               .then(invokeCallback)
           } else {
             return invokeCallback()
