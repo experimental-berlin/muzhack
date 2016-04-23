@@ -26,11 +26,6 @@ spec:
             secretKeyRef:
               name: environment
               key: hapi-iron-password
-        - name: RETHINKDB_AUTH_KEY
-          valueFrom:
-            secretKeyRef:
-              name: environment
-              key: rethinkdb-auth-key
         - name: AWS_ACCESS_KEY
           valueFrom:
             secretKeyRef:
