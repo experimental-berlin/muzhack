@@ -1,13 +1,11 @@
-apiVersion: v1
-kind: ReplicationController
+apiVersion: extensions/v1beta1
+kind: Deployment
 metadata:
   name: web
   labels:
     app: web
 spec:
   replicas: 1
-  selector:
-    app: web
   template:
     metadata:
       labels:
@@ -21,6 +19,8 @@ spec:
         env:
         - name: APP_URI
           value: https://staging.muzhack.com
+        - name: RETHINKDB_HOST
+          value: rethinkdb-driver
         - name: HAPI_IRON_PASSWORD
           valueFrom:
             secretKeyRef:
