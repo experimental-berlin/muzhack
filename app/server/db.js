@@ -36,17 +36,27 @@ let connectToDb = (host, callback, attempt) => {
 
     logger.debug(`Successfully connected to RethinkDB host '${host}', attempt #${attempt}`)
     try {
-      return r.tableList().run(conn)
-        .then((existingTables) => {
-          if (!R.contains('projects', existingTables)) {
-            logger.info(`Creating projects table`)
-            return r.tableCreate('projects').run(conn)
-              .then(invokeCallback)
+      return r.dbList().run(conn)
+        .then((existingDbs) => {
+          if (!R.contains('muzhack', existingDbs)) {
+            logger.info(`Creating database muzhack`)
+            return r.dbCreate('muzhack').run(conn)
           } else {
-            logger.debug(`The projects table already exists`)
-            return invokeCallback()
+            logger.debug(`The muzhack database already exists`)
           }
         })
+        .then(() => {
+          return r.tableList().run(conn)
+            .then((existingTables) => {
+              if (!R.contains('projects', existingTables)) {
+                logger.info(`Creating projects table`)
+                return r.tableCreate('projects').run(conn)
+              } else {
+                logger.debug(`The projects table already exists`)
+              }
+            })
+        })
+        .then(invokeCallback)
     } catch (error) {
       closeConn(conn)
       logger.error(`There was an unhandled exception in the callback of withDb: '${error}'`,
