@@ -173,7 +173,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
         type: 'url',
         placeholder: 'website',
         // TODO
-        onChange: R.partial(updateFieldState, ['website', validationErrors.specialChars,]),
+        onChange: R.partial(updateFieldState, ['website', validationErrors.InvalidWebsite,]),
       }),
     ]),
     h('.button-group', [
