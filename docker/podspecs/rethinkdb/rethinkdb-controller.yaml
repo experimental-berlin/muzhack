@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     db: rethinkdb
-  name: rethinkdb-rc
+  name: rethinkdb
 spec:
   replicas: 1
   template:
@@ -15,6 +15,7 @@ spec:
       containers:
       - image: aknudsen/docker-kubernetes-rethinkdb:2.3
         name: rethinkdb
+        imagePullPolicy: Always
         env:
         - name: POD_NAMESPACE
           valueFrom:
@@ -28,8 +29,10 @@ spec:
         - containerPort: 29015
           name: cluster-port
         volumeMounts:
-        - mountPath: /data/rethinkdb_data
+        - mountPath: /data
           name: rethinkdb-storage
       volumes:
       - name: rethinkdb-storage
-        emptyDir: {}
+        gcePersistentDisk:
+          pdName: staging-disk
+          fsType: ext4
