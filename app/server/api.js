@@ -102,33 +102,34 @@ let createZip = (owner, projectId, projectParams) => {
     .then(() => {
       logger.debug(`All files added to zip`)
       logger.debug(`Generating zip...`)
-      let output = zip.generate({
+      return zip.generateAsync({
         type: 'nodebuffer',
         compression: 'DEFLATE',
       })
-
-      logger.debug(`Uploading zip file to S3...`)
-      let filePath = `u/${owner}/${projectId}/${projectId}.zip`
-      return new Promise((resolve, reject) => {
-        s3Client.putObject({
-          Key: filePath,
-          ACL: 'public-read',
-          Body: output,
-        }, (error, data) => {
-          if (error == null) {
-            //  TODO: Try to get URL from S3
-            let region = getEnvParam('S3_REGION')
-            let bucket = getEnvParam('S3_BUCKET')
-            let zipUrl = `https://s3.${region}.amazonaws.com/${bucket}/${filePath}`
-            logger.debug(`Uploaded zip file successfully to '${zipUrl}'`)
-            resolve({
-              url: zipUrl,
-              size: output.length,
+        .then((output) => {
+          logger.debug(`Uploading zip file to S3...`)
+          let filePath = `u/${owner}/${projectId}/${projectId}.zip`
+          return new Promise((resolve, reject) => {
+            s3Client.putObject({
+              Key: filePath,
+              ACL: 'public-read',
+              Body: output,
+            }, (error, data) => {
+              if (error == null) {
+                //  TODO: Try to get URL from S3
+                let region = getEnvParam('S3_REGION')
+                let bucket = getEnvParam('S3_BUCKET')
+                let zipUrl = `https://s3.${region}.amazonaws.com/${bucket}/${filePath}`
+                logger.debug(`Uploaded zip file successfully to '${zipUrl}'`)
+                resolve({
+                  url: zipUrl,
+                  size: output.length,
+                })
+              } else {
+                logger.warn(`Failed to upload zip file: '${error}':`, error.stack)
+                reject(error)
+              }
             })
-          } else {
-            logger.warn(`Failed to upload zip file: '${error}':`, error.stack)
-            reject(error)
-          }
         })
       })
     }, (error) => {
