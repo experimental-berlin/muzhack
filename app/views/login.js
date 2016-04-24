@@ -87,7 +87,9 @@ let SignUpForm = component('SignUpForm', (cursor) => {
     }
 
     let signupData = {errors: {},}
-    signupData.errors[name] = validation
+    if (validation != null) {
+      signupData.errors[name] = validation
+    }
     signupData[name] = event.target.value
     cursor = cursor.mergeDeep({
       login: {
@@ -188,7 +190,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
             let data = R.pick([
               'username', 'password', 'email', 'name', 'website',
             ], signupCursor.toJS())
-            if (cursor.cursor('signup').get('confirmPassword') !== data.password) {
+            if (signupCursor.get('passwordConfirm') !== data.password) {
               throw new Error(`Passwords don't match`)
             }
 
@@ -210,6 +212,8 @@ let SignUpForm = component('SignUpForm', (cursor) => {
                 logger.warn(`User signup failed: '${err}'`)
                 cursor.cursor('router').set('isLoading', false)
               })
+            } else {
+              logger.debug(`There are errors in the form`)
             }
         },
       }),

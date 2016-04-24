@@ -271,9 +271,13 @@ let hashPassword = (password) => {
 }
 
 module.exports.register = (server) => {
+  let ironPassword = getEnvParam('HAPI_IRON_PASSWORD')
+  if (ironPassword.length < 32) {
+    throw new Error(`$HAPI_IRON_PASSWORD must be at least 32 characters long`)
+  }
   server.register(require('hapi-auth-cookie'), (err) => {
     server.auth.strategy('session', 'cookie', 'try', {
-      password: getEnvParam('HAPI_IRON_PASSWORD'),
+      password: ironPassword,
       isSecure: false,
     })
   })
