@@ -1,5 +1,5 @@
 'use strict'
-let HtmlToReactParser = require('html-to-react/lib/parser')
+let HtmlToReactParser = require('../lib/html-to-react/lib/parser')
 let React = require('react')
 let {getSanitizingConverter,} = require('../lib/pagedown/Markdown.Sanitizer')
 let logger = require('js-logger-aknudsen').get('markdown')
