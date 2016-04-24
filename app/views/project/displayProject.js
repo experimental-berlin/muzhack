@@ -145,7 +145,7 @@ let BottomPad = component('BottomPad', {
       let cursor = this.props.cursor
       let activeTab = cursor.cursor(['projectStore',]).get('activeTab')
       if (cursor.cursor('displayProject').get('goToStore')) {
-        let domNode = React.findDOMNode(this)
+        let domNode = ReactDOM.findDOMNode(this)
         logger.debug(`Scrolling bottom pad into view`)
         domNode.scrollIntoView({behavior: 'smooth',})
         cursor.cursor('displayProject').set('goToStore', false)
