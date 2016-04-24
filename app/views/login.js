@@ -71,23 +71,23 @@ let updateFieldState = (cursor, names, ErrorType, event) => {
   }
   let name = names[0]
   let signupCursor = cursor.cursor(['login', 'signup',])
-  let errorsCursor = signupCursor.cursor('errors')
-  errorsCursor.update((current) => {
-    let remainingValues = R.map((property) => {
-      return signupCursor.get(property)
-    }, names.slice(1))
-    logger.debug(`Remaining values: '${remainingValues}'`, signupCursor.toJS())
-    let validation = new ErrorType(R.concat([event.target.value,], remainingValues))
-    if (validation.isInvalid) {
-      logger.debug(`Signup field '${name}' is invalid: '${validation.errorText}'`)
-      return current.set(name, validation)
-    } else {
-      logger.debug(`Signup field '${name}' is valid`)
-      return current.delete(name)
-    }
-  })
+  logger.debug(`Setting signup field '${name}': '${event.target.value}'`)
   signupCursor = signupCursor.set(name, event.target.value)
-  logger.debug(`Setting signup field '${name}': ${event.target.value}`)
+  let errorsCursor = signupCursor.cursor('errors')
+  let remainingValues = R.map((property) => {
+    return signupCursor.get(property)
+  }, names.slice(1))
+  logger.debug(`Remaining values: '${remainingValues}'`, signupCursor.toJS())
+  let validation = new ErrorType(R.concat([event.target.value,], remainingValues))
+  if (validation.isInvalid) {
+    logger.debug(`Signup field '${name}' is invalid: '${validation.errorText}'`)
+    errorsCursor.set(name, validation)
+  } else {
+    logger.debug(`Signup field '${name}' is valid`)
+    errorsCursor.set(name)
+  }
+
+  logger.debug(`After updating signup:`, signupCursor.toJS())
 }
 
 let SignUpForm = component('SignUpForm', (cursor) => {
@@ -147,9 +147,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
           type: 'email',
           placeholder: 'email',
           required: true,
-          onChange: (event) => {
-            cursor.cursor('signup').set('email', event.target.value)
-          },
+          onChange: R.partial(updateFieldState, [cursor, 'email', validationErrors.InvalidEmail,]),
         }),
       ]),
       h('.required', [
@@ -158,18 +156,15 @@ let SignUpForm = component('SignUpForm', (cursor) => {
           type: 'text',
           placeholder: 'name',
           required: true,
-          onChange: (event) => {
-            cursor.cursor('signup').set('name', event.target.value)
-          },
+          onChange: R.partial(updateFieldState, [cursor, 'name', validationErrors.InvalidName,]),
         }),
       ]),
       h('input#signup-website.account-website', {
         autofocus: true,
         type: 'url',
         placeholder: 'website',
-        onChange: (event) => {
-          cursor.cursor('signup').set('website', event.target.value)
-        },
+        // TODO
+        onChange: R.partial(updateFieldState, [cursor, 'website', validationErrors.specialChars,]),
       }),
     ]),
     h('.button-group', [
@@ -177,13 +172,14 @@ let SignUpForm = component('SignUpForm', (cursor) => {
         type: 'submit',
         value: 'Sign up',
         onClick: (event) => {
-          logger.debug(`Signing user up`)
+          let signupCursor = cursor.get('signup')
+          logger.debug(`Signing user up, values:`, signupCursor.toJS())
           event.preventDefault()
 
           if (R.isEmpty(errors)) {
             let data = R.pick([
               'username', 'password', 'email', 'name', 'website',
-            ], cursor.get('signup').toJS())
+            ], signupCursor.toJS())
             if (cursor.cursor('signup').get('confirmPassword') !== data.password) {
               throw new Error(`Passwords don't match`)
             }

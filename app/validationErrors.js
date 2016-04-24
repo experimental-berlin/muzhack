@@ -51,9 +51,30 @@ class InvalidPasswordConfirm extends ValidationError {
   }
 }
 
+class InvalidEmail extends ValidationError {
+  constructor(input) {
+    super(input, [Fns.isEmptyOrHasSpace,], 'Invalid email')
+  }
+}
+
+class InvalidName extends ValidationError {
+  constructor(input) {
+    super(input, [Fns.isEmptyOrHasSpace,], 'Invalid name')
+  }
+}
+
+class InvalidWebsite extends ValidationError {
+  constructor(input) {
+    super(input, [Fns.hasSpecialChars,], 'Invalid website')
+  }
+}
+
 module.exports = {
   ValidationError,
   InvalidUsername,
   InvalidPassword,
   InvalidPasswordConfirm,
+  InvalidEmail,
+  InvalidName,
+  InvalidWebsite,
 }
