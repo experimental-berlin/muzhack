@@ -65,32 +65,39 @@ let SignInForm = component('SignInForm', (cursor) => {
   ])
 })
 
-let updateFieldState = (cursor, names, ErrorType, event) => {
-  if (!R.isArrayLike(names)) {
-    names = [names,]
-  }
-  let name = names[0]
-  let signupCursor = cursor.cursor(['login', 'signup',])
-  logger.debug(`Setting signup field '${name}': '${event.target.value}'`)
-  signupCursor = signupCursor.set(name, event.target.value)
-  let errorsCursor = signupCursor.cursor('errors')
-  let remainingValues = R.map((property) => {
-    return signupCursor.get(property)
-  }, names.slice(1))
-  logger.debug(`Remaining values: '${remainingValues}'`, signupCursor.toJS())
-  let validation = new ErrorType(R.concat([event.target.value,], remainingValues))
-  if (validation.isInvalid) {
-    logger.debug(`Signup field '${name}' is invalid: '${validation.errorText}'`)
-    errorsCursor.set(name, validation)
-  } else {
-    logger.debug(`Signup field '${name}' is valid`)
-    errorsCursor.set(name)
-  }
-
-  logger.debug(`After updating signup:`, signupCursor.toJS())
-}
-
 let SignUpForm = component('SignUpForm', (cursor) => {
+  let updateFieldState = (names, ErrorType, event) => {
+    if (!R.isArrayLike(names)) {
+      names = [names,]
+    }
+    let name = names[0]
+    logger.debug(`Setting signup field '${name}': '${event.target.value}'`)
+
+    let signupCursor = cursor.cursor(['login', 'signup',])
+    let remainingValues = R.map((property) => {
+      return signupCursor.get(property)
+    }, names.slice(1))
+    logger.debug(`Remaining values: '${remainingValues}'`)
+    let validation = new ErrorType(R.concat([event.target.value,], remainingValues))
+    if (validation.isInvalid) {
+      logger.debug(`Signup field '${name}' is invalid: '${validation.errorText}'`)
+    } else {
+      logger.debug(`Signup field '${name}' is valid`)
+      validation = null
+    }
+
+    let signupData = {errors: {},}
+    signupData.errors[name] = validation
+    signupData[name] = event.target.value
+    cursor = cursor.mergeDeep({
+      login: {
+        signup: signupData,
+      },
+    })
+
+    logger.debug(`After updating signup:`, cursor.cursor(['login', 'signup',]).toJS())
+  }
+
   let errors = cursor.cursor(['login', 'signup', 'errors',]).toJS()
   return h('form#signup-form.pure-form.pure-form-stacked', {
     action: 'action',
@@ -110,7 +117,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
           placeholder: 'username',
           name: 'username',
           required: true,
-          onChange: R.partial(updateFieldState, [cursor, 'username',
+          onChange: R.partial(updateFieldState, ['username',
             validationErrors.InvalidUsername,]),
         }),
       ]),
@@ -122,7 +129,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
           type: 'password',
           'placeholder': 'password',
           required: true,
-          onChange: R.partial(updateFieldState, [cursor, 'password',
+          onChange: R.partial(updateFieldState, ['password',
             validationErrors.InvalidPassword,]),
         }),
       ]),
@@ -134,7 +141,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
           type: 'password',
           placeholder: 'confirm password',
           required: true,
-          onChange: R.partial(updateFieldState, [cursor, ['passwordConfirm',
+          onChange: R.partial(updateFieldState, [['passwordConfirm',
             'password',], validationErrors.InvalidPasswordConfirm,]),
         }),
       ]),
@@ -147,7 +154,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
           type: 'email',
           placeholder: 'email',
           required: true,
-          onChange: R.partial(updateFieldState, [cursor, 'email', validationErrors.InvalidEmail,]),
+          onChange: R.partial(updateFieldState, ['email', validationErrors.InvalidEmail,]),
         }),
       ]),
       h('.required', [
@@ -156,7 +163,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
           type: 'text',
           placeholder: 'name',
           required: true,
-          onChange: R.partial(updateFieldState, [cursor, 'name', validationErrors.InvalidName,]),
+          onChange: R.partial(updateFieldState, ['name', validationErrors.InvalidName,]),
         }),
       ]),
       h('input#signup-website.account-website', {
@@ -164,7 +171,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
         type: 'url',
         placeholder: 'website',
         // TODO
-        onChange: R.partial(updateFieldState, [cursor, 'website', validationErrors.specialChars,]),
+        onChange: R.partial(updateFieldState, ['website', validationErrors.specialChars,]),
       }),
     ]),
     h('.button-group', [
@@ -172,9 +179,10 @@ let SignUpForm = component('SignUpForm', (cursor) => {
         type: 'submit',
         value: 'Sign up',
         onClick: (event) => {
-          let signupCursor = cursor.get('signup')
-          logger.debug(`Signing user up, values:`, signupCursor.toJS())
           event.preventDefault()
+
+          let signupCursor = cursor.cursor(['login', 'signup',])
+          logger.debug(`Signing user up, values:`, signupCursor.toJS())
 
           if (R.isEmpty(errors)) {
             let data = R.pick([
