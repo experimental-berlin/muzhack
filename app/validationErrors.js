@@ -53,19 +53,19 @@ class InvalidPasswordConfirm extends ValidationError {
 
 class InvalidEmail extends ValidationError {
   constructor(input) {
-    super(input, [Fns.isEmptyOrHasSpace,], 'Invalid email')
+    super(input, [Fns.isEmpty,], 'Invalid email')
   }
 }
 
 class InvalidName extends ValidationError {
   constructor(input) {
-    super(input, [Fns.isEmptyOrHasSpace,], 'Invalid name')
+    super(input, [Fns.isEmpty,], 'Invalid name')
   }
 }
 
 class InvalidWebsite extends ValidationError {
   constructor(input) {
-    super(input, [Fns.hasSpecialChars,], 'Invalid website')
+    super(input, [Fns.isEmpty,], 'Invalid website')
   }
 }
 

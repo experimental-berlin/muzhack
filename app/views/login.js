@@ -213,7 +213,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
                 cursor.cursor('router').set('isLoading', false)
               })
             } else {
-              logger.debug(`There are errors in the form`)
+              logger.debug(`There are errors in the form:`, errors)
             }
         },
       }),
