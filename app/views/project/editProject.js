@@ -9,7 +9,6 @@ let userManagement = require('../../userManagement')
 let licenses = require('../../licenses')
 let {nbsp,} = require('../../specialChars')
 let ajax = require('../../ajax')
-let FocusingInput = require('../focusingInput')
 let {DescriptionEditor, InstructionsEditor, PicturesEditor,
   FilesEditor,} = require('./editors')
 let Loading = require('./loading')

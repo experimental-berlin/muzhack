@@ -11,7 +11,7 @@ module.exports = component('FocusingInput', {
     logger.debug('Giving focus to input node:', node)
     node.select()
   },
-}, ({id, value, placeholder, ref, classes, type, name, required, onChange, onEnter,}) => {
+}, ({id, value, refName, placeholder, classes, type, name, required, onChange, onEnter,}) => {
   return h('input', {
     id,
     className: S.join(' ', classes || []),
@@ -20,7 +20,7 @@ module.exports = component('FocusingInput', {
     placeholder,
     required,
     value,
-    ref,
+    ref: refName,
     onChange,
     onKeyUp: (event) => {
       if (event.keyCode === 13 && onEnter != null) {

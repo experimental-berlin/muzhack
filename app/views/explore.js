@@ -118,6 +118,7 @@ let SearchBox = component('SearchBox', function (cursor) {
     FocusingInput({
       id: 'explore-search-input', value: searchQuery, placeholder: 'Search MuzHack',
       ref: 'search',
+      refName: 'search',
       onChange: (event) => {
         let text = event.currentTarget.value
         logger.debug(`Search input detected`)
@@ -129,8 +130,9 @@ let SearchBox = component('SearchBox', function (cursor) {
       onClick: () => {
         logger.debug('Clear search clicked')
         setSearch(cursor, '')
-        logger.debug('Giving focus to search input')
-        ReactDOM.findDOMNode(this.refs.search).select()
+        let node = ReactDOM.findDOMNode(this.refs.search)
+        logger.debug('Giving focus to search input:', node)
+        node.select()
       },
     }) : null,
   ])
