@@ -89,7 +89,7 @@ module.exports = {
         logger.debug(`Replying with result:`, result)
         reply(result)
       }, (error) => {
-        logger.warn(`An error was caught: '${error.message}'`)
+        logger.error(`An error was caught: '${error.message}'`, error)
         reply(Boom.badImplementation())
       })
   },

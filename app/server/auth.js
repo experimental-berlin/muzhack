@@ -325,7 +325,7 @@ module.exports.register = (server) => {
                       `User's requested username is already taken: '${payload.username}'`)
                     return Boom.badRequest('Username is taken')
                   } else {
-                    logger.debug(
+                    logger.error(
                       `An error was encountered while adding new user: '${result.first_error}'`)
                     return Boom.badImplementation()
                   }
@@ -335,6 +335,8 @@ module.exports.register = (server) => {
               })
           })
         }, (err) => {
+          logger.error(
+            `An error was encountered while hashing password: '${err}'`, err)
           reply(Boom.badImplementation())
         })
     },
