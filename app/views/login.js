@@ -184,7 +184,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
           event.preventDefault()
 
           let signupCursor = cursor.cursor(['login', 'signup',])
-          logger.debug(`Signing user up, values:`, signupCursor.toJS())
+          logger.debug(`Signing user up`)
 
           if (R.isEmpty(errors)) {
             let data = R.pick([
