@@ -24,7 +24,16 @@ Logger.setHandler((messages, context) => {
     let appUri = getEnvParam('APP_URI')
     let emailAddress = `contact@muzhack.com`
     logger.debug(`Reporting error by email to '${emailAddress}'...`)
-    reportError(messages[0])
+    emailer.sendEmail({
+      emailAddress, name: `MuzHack Admin`,
+      subject: `Error Detected in MuzHack at ${appUri}`,
+      html: `<p>An error was detected in MuzHack, at ${appUri}</p>
+
+  <blockquote>
+  ${message}
+  </blockquote>
+  `,
+    })
   }
 })
 
@@ -34,19 +43,6 @@ let rendering = require('./server/rendering')
 let db = require('./server/db')
 let {getEnvParam,} = require('./server/environment')
 let emailer = require('./server/emailer')
-
-let reportError = (message) => {
-  emailer.sendEmail({
-    emailAddress, name: `MuzHack Admin`,
-    subject: `Error Detected in MuzHack at ${appUri}`,
-    html: `<p>An error was detected in MuzHack, at ${appUri}</p>
-
-<blockquote>
-${message}
-</blockquote>
-`,
-  })
-}
 
 process.on('uncaughtException', (error) => {
   logger.error(`An uncaught exception occurred: ${error}`, error.stack)
