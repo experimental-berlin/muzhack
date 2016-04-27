@@ -21,7 +21,7 @@ Logger.setHandler((messages, context) => {
   Logger.getDefaultHandler()(messages, context)
 
   if (context.level === Logger.ERROR) {
-    let appUrl = getEnvParam('APP_URL')
+    let appUri = getEnvParam('APP_URI')
     let emailAddress = `contact@muzhack.com`
     logger.debug(`Reporting error by email to '${emailAddress}'...`)
     reportError(messages[0])
@@ -38,8 +38,8 @@ let emailer = require('./server/emailer')
 let reportError = (message) => {
   emailer.sendEmail({
     emailAddress, name: `MuzHack Admin`,
-    subject: `Error Detected in MuzHack at ${appUrl}`,
-    html: `<p>An error was detected in MuzHack, at ${appUrl}</p>
+    subject: `Error Detected in MuzHack at ${appUri}`,
+    html: `<p>An error was detected in MuzHack, at ${appUri}</p>
 
 <blockquote>
 ${message}

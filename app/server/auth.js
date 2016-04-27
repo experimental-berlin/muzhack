@@ -124,8 +124,8 @@ ${token}`)
         .run(conn)
         .then(() => {
           logger.debug(`Sending email to '${user.email}' with password reset link...`)
-          let appUrl = getEnvParam('APP_URL')
-          let url = `${appUrl}/account/resetpassword/${token}"`
+          let appUri = getEnvParam('APP_URI')
+          let url = `${appUri}/account/resetpassword/${token}"`
           return emailer.sendEmail({
             emailAddress: user.email, name: user.name,
             subject: `How to reset your password on muzhack.com`,

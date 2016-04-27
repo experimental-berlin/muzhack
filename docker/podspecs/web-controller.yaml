@@ -21,6 +21,10 @@ spec:
           value: https://staging.muzhack.com
         - name: RETHINKDB_HOST
           value: rethinkdb-driver
+        - name: S3_BUCKET
+          value: staging.muzhack.com
+        - name: S3_REGION
+          value: eu-central-1
         - name: HAPI_IRON_PASSWORD
           valueFrom:
             secretKeyRef:
