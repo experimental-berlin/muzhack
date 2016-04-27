@@ -24,16 +24,7 @@ Logger.setHandler((messages, context) => {
     let appUrl = getEnvParam('APP_URL')
     let emailAddress = `contact@muzhack.com`
     logger.debug(`Reporting error by email to '${emailAddress}'...`)
-    emailer.sendEmail({
-      emailAddress, name: `MuzHack Admin`,
-      subject: `Error Detected in MuzHack at ${appUrl}`,
-      html: `<p>An error was detected in MuzHack, at ${appUrl}</p>
-
-  <blockquote>
-  ${messages[0]}
-  </blockquote>
-  `,
-    })
+    reportError(messages[0])
   }
 })
 
@@ -43,6 +34,24 @@ let rendering = require('./server/rendering')
 let db = require('./server/db')
 let {getEnvParam,} = require('./server/environment')
 let emailer = require('./server/emailer')
+
+let reportError = (message) => {
+  emailer.sendEmail({
+    emailAddress, name: `MuzHack Admin`,
+    subject: `Error Detected in MuzHack at ${appUrl}`,
+    html: `<p>An error was detected in MuzHack, at ${appUrl}</p>
+
+<blockquote>
+${message}
+</blockquote>
+`,
+  })
+}
+
+process.on('uncaughtException', (error) => {
+  logger.warn(`An uncaught exception occurred: ${error}`, error.stack)
+  reportError(error)
+})
 
 let server = new Hapi.Server({
   connections: {
