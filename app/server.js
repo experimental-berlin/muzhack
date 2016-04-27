@@ -49,8 +49,7 @@ ${message}
 }
 
 process.on('uncaughtException', (error) => {
-  logger.warn(`An uncaught exception occurred: ${error}`, error.stack)
-  reportError(error)
+  logger.error(`An uncaught exception occurred: ${error}`, error.stack)
 })
 
 let server = new Hapi.Server({
