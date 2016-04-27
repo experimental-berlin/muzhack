@@ -48,12 +48,15 @@ let connectToDb = (host, callback, attempt) => {
         .then(() => {
           return r.tableList().run(conn)
             .then((existingTables) => {
-              if (!R.contains('projects', existingTables)) {
-                logger.info(`Creating projects table`)
-                return r.tableCreate('projects').run(conn)
-              } else {
-                logger.debug(`The projects table already exists`)
-              }
+              return Promise.all(R.reject((x) => {return x == null}, R.map((tableName) => {
+                if (!R.contains(tableName, existingTables)) {
+                  logger.info(`Creating ${tableName} table`)
+                  return r.tableCreate(tableName).run(conn)
+                } else {
+                  logger.debug(`The ${tableName} table already exists`)
+                  return null
+                }
+              }, ['projects', 'users',])))
             })
         })
         .then(invokeCallback)
