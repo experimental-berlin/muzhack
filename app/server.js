@@ -30,7 +30,7 @@ Logger.setHandler((messages, context) => {
       html: `<p>An error was detected in MuzHack, at ${appUri}</p>
 
   <blockquote>
-  ${message}
+  ${messages[0]}
   </blockquote>
   `,
     })
@@ -76,7 +76,7 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
 
   server.ext('onRequest', (request, reply) => {
     // GKE health check
-    if (request.headers['user-agent'].toLowerCase().startsWith('googlehc')) {
+    if ((request.headers['user-agent'] || '').toLowerCase().startsWith('googlehc')) {
       return reply('Healthy')
     } else {
       if (request.headers['x-forwarded-proto'] === 'http') {
