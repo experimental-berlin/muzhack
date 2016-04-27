@@ -6,12 +6,12 @@ let logger = require('js-logger-aknudsen').get('auth')
 let {withDb,} = require('./db')
 let r = require('rethinkdb')
 let R = require('ramda')
-let mandrill = require('mandrill-api/mandrill')
 let base64url = require('base64url')
 let crypto = require('crypto')
 let moment = require('moment')
 
 let {getEnvParam,} = require('./environment')
+let emailer = require('./emailer')
 
 let logUserIn = (request, user) => {
   let username = user.id
@@ -123,48 +123,26 @@ ${token}`)
         })
         .run(conn)
         .then(() => {
-          let mandrillClient = new mandrill.Mandrill(getEnvParam('MANDRILL_SECRET'))
-          return new Promise((resolve, reject) => {
-            let email = user.email
-            let appUrl = getEnvParam('APP_URL')
-            logger.debug(`Sending email to '${user.email}' with password reset link...`)
-            let url = `${appUrl}/account/resetpassword/${token}"`
-            let message = {
-              html: `<p>Hello ${user.name},</p>
+          logger.debug(`Sending email to '${user.email}' with password reset link...`)
+          let appUrl = getEnvParam('APP_URL')
+          let url = `${appUrl}/account/resetpassword/${token}"`
+          return emailer.sendEmail({
+            emailAddress: user.email, name: user.name,
+            subject: `How to reset your password on muzhack.com`,
+            html: `<p>Hello ${user.name},</p>
 
-<p>
-To reset your password, simply click the link below.
-</p>
+  <p>
+  To reset your password, simply click the link below.
+  </p>
 
-<p>
-<a href="${url}">${url}</a>
-</p>
+  <p>
+  <a href="${url}">${url}</a>
+  </p>
 
-<p>
-Thanks.
-</p>
+  <p>
+  Thanks.
+  </p>
 `,
-              subject: `How to reset your password on muzhack.com`,
-              from_email: `contact@muzhack.com`,
-              from_name: `MuzHack`,
-              to: [{
-                email,
-                name: user.name,
-                type: 'to',
-              },],
-              headers: {
-                'Reply-To': `no-reply@muzhack.com`,
-              },
-            }
-            mandrillClient.messages.send({
-              message: message,
-              async: true,
-            }, () => {
-              logger.debug(`Sent email to '${email}' successfully`)
-              resolve()
-            }, (error) => {
-              reject(`A Mandrill error occurred: '${error.message}'`)
-            })
           })
         })
     })

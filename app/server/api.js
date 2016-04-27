@@ -756,7 +756,7 @@ module.exports.register = (server) => {
     path: 'logError',
     handler: (request, reply) => {
       let error = request.payload.error
-      logger.warn(`An error was logged on a client: ${error}:`, error.stack)
+      logger.error(`An error was logged on a client: ${error}:`, error.stack)
       reply()
     },
   })

@@ -17,11 +17,32 @@ Logger.useDefaults({
     messages.unshift(`${context.level.name} ${time} - [${context.name}]`)
   },
 })
+Logger.setHandler((messages, context) => {
+  Logger.getDefaultHandler()(messages, context)
+
+  if (context.level === Logger.ERROR) {
+    let appUrl = getEnvParam('APP_URL')
+    let emailAddress = `contact@muzhack.com`
+    logger.debug(`Reporting error by email to '${emailAddress}'...`)
+    emailer.sendEmail({
+      emailAddress, name: `MuzHack Admin`,
+      subject: `Error Detected in MuzHack at ${appUrl}`,
+      html: `<p>An error was detected in MuzHack, at ${appUrl}</p>
+
+  <blockquote>
+  ${messages[0]}
+  </blockquote>
+  `,
+    })
+  }
+})
 
 let auth = require('./server/auth')
 let api = require('./server/api')
 let rendering = require('./server/rendering')
 let db = require('./server/db')
+let {getEnvParam,} = require('./server/environment')
+let emailer = require('./server/emailer')
 
 let server = new Hapi.Server({
   connections: {
