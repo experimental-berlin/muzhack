@@ -44,5 +44,5 @@ MuzHack is deployed as a set of Docker containers to [Google Container Engine](h
 
 #### Updating Deployed Resources
 In order to update a deployed resource, f.ex. a replication controller, use `kubectl apply`. For
-example, if web-controller.yaml has changed, issue the following command:
-`kubectl apply -f docker/podspecs/web-controller.yaml`.
+example, if the staging web-controller.yaml has changed, issue the following command:
+`kubectl apply -f docker/staging/web-controller.yaml`.
