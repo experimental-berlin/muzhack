@@ -77,6 +77,7 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
   server.ext('onRequest', (request, reply) => {
     // GKE health check
     if ((request.headers['user-agent'] || '').toLowerCase().startsWith('googlehc')) {
+      logger.debug(`Received health check, path: ${request.path}`)
       return reply('Healthy')
     } else {
       if (request.headers['x-forwarded-proto'] === 'http') {
