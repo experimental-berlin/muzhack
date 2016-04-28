@@ -6,7 +6,6 @@ dist/
 .DS_Store
 run-server.sh
 __pycache__/
-docker/*/*-secret.yaml
 docker/production/
 docker/staging/
 docker/secrets.json
