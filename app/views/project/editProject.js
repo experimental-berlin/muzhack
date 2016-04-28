@@ -86,6 +86,7 @@ let DeleteProjectDialog = component('DeleteProjectDialog', (cursor) => {
   }
 
   let closeCallback = () => {
+    let editCursor = cursor.cursor('editProject')
     editCursor.set('showDeleteProjectDialog', false)
   }
 
