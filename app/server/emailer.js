@@ -22,7 +22,7 @@ module.exports = {
           'Reply-To': `no-reply@muzhack.com`,
         },
       }
-      logger.debug(`Sending email to '${emailAddress}', secret: '${getEnvParam('MANDRILL_SECRET')}'...`)
+      logger.debug(`Sending email to '${emailAddress}'...`)
       mandrillClient.messages.send({
         message: message,
         async: true,
