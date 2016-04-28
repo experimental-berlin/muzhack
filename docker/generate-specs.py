@@ -3,6 +3,7 @@
 import os.path
 import jinja2
 import json
+import base64
 
 
 def _render_template(fname, environment, context):
@@ -36,7 +37,14 @@ data = {
 }
 
 with open(os.path.join('docker', 'secrets.json'), 'rt') as f:
-    secrets = json.load(f)
+    secrets_raw = json.load(f)
+
+secrets = {}
+for environment, values_raw in secrets_raw.items():
+    secrets[environment] = {
+        k: base64.b64encode(bytes(v, 'utf-8')).decode() for
+        k, v in values_raw.items()
+    }
 
 for environment in ['staging', 'production', ]:
     dpath = os.path.join('docker', environment)
@@ -51,6 +59,7 @@ for environment in ['staging', 'production', ]:
         'rethinkdb/admin-service',
         'rethinkdb/admin-service',
         'rethinkdb/rethinkdb-controller',
+        'rethinkdb/driver-service',
     ]:
         _render_template(fname, environment, data)
 
