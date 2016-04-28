@@ -40,7 +40,15 @@ For the database we use [RethinkDB](https://www.rethinkdb.com/), a NoSQL technol
 5. Access the Webpack dev server at http://localhost:8080 in your browser. The app will automatically be refreshed when you make changes to the source code thanks to Webpack's hot reload feature.
 
 ### Deployment
-MuzHack is deployed as a set of Docker containers to [Google Container Engine](https://cloud.google.com/container-engine) (GKE), which is a [Kubernetes](http://kubernetes.io) service for managing Docker clusters. GKE is for all intents and purposes Kubernetes, so read up on the latter in order to understand how MuzHack is deployed.
+MuzHack is deployed as a set of Docker containers to
+[Google Container Engine](https://cloud.google.com/container-engine) (GKE), which is a
+[Kubernetes](http://kubernetes.io) service for managing Docker clusters. GKE is for all intents
+and purposes Kubernetes, so read up on the latter in order to understand how MuzHack is deployed.
+
+We are using two different clusters, staging and production. In order to work with each cluster,
+we use the local `kubectl` command; to configure which cluster kubectl operates on at any given
+time, issue the command `gcloud container clusters get-credentials $CLUSTER`, where $CLUSTER
+is the cluster in question (e.g. production or staging).
 
 #### Updating Deployed Resources
 In order to update a deployed resource, f.ex. a replication controller, use `kubectl apply`. For
