@@ -75,22 +75,17 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
   }
 
   server.ext('onRequest', (request, reply) => {
-    // GKE health check
-    if ((request.headers['user-agent'] || '').toLowerCase().startsWith('googlehc')) {
-      return reply('Healthy')
+    if (request.headers['x-forwarded-proto'] === 'http') {
+      logger.debug(`Redirecting to HTTPS, using $APP_URI: ${process.env.APP_URI}`)
+      return reply.redirect(Url.format({
+        protocol: 'https',
+        hostname: Url.parse(process.env.APP_URI).hostname,
+        pathname: request.url.path,
+        port: 443,
+      }))
     } else {
-      if (request.headers['x-forwarded-proto'] === 'http') {
-        logger.debug(`Redirecting to HTTPS, using $APP_URI: ${process.env.APP_URI}`)
-        return reply.redirect(Url.format({
-          protocol: 'https',
-          hostname: Url.parse(process.env.APP_URI).hostname,
-          pathname: request.url.path,
-          port: 443,
-        }))
-      } else {
-        logger.debug(`Not redirecting to HTTPS`)
-        reply.continue()
-      }
+      logger.debug(`Not redirecting to HTTPS`)
+      reply.continue()
     }
   })
 
@@ -134,6 +129,13 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
       } else {
         reply()
       }
+    },
+  })
+  server.route({
+    method: ['GET',],
+    path: '/healthz',
+    handler: (request, reply) => {
+      reply('Healthy')
     },
   })
 
