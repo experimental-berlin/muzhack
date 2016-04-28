@@ -2,6 +2,25 @@
 """Generate GKE spec files."""
 import os.path
 import jinja2
+import json
+
+
+def _render_template(fname, environment, context):
+    with open(os.path.join('docker/templates', fname + '.yaml'), 'rt') \
+            as f:
+        content = f.read()
+
+    jinja_env = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(searchpath='docker/templates'),
+        undefined=jinja2.StrictUndefined
+    )
+    template = jinja_env.get_template(fname + '.yaml')
+    output = template.render(**context[environment])
+
+    if not os.path.exists(os.path.join(dpath, os.path.dirname(fname))):
+        os.makedirs(os.path.join(dpath, os.path.dirname(fname)))
+    with open(os.path.join(dpath, fname + '.yaml'), 'wt') as f:
+        f.write(output + '\n')
 
 data = {
     'production': {
@@ -15,6 +34,9 @@ data = {
         's3Bucket': 'staging.muzhack.com',
     },
 }
+
+with open(os.path.join('docker', 'secrets.json'), 'rt') as f:
+    secrets = json.load(f)
 
 for environment in ['staging', 'production', ]:
     dpath = os.path.join('docker', environment)
@@ -30,14 +52,11 @@ for environment in ['staging', 'production', ]:
         'rethinkdb/admin-service',
         'rethinkdb/rethinkdb-controller',
     ]:
-        with open(os.path.join('docker/templates', fname + '.yaml'), 'rt') \
-                as f:
-            content = f.read()
+        _render_template(fname, environment, data)
 
-        template = jinja2.Template(content)
-        output = template.render(**data[environment])
-
-        if not os.path.exists(os.path.join(dpath, os.path.dirname(fname))):
-            os.makedirs(os.path.join(dpath, os.path.dirname(fname)))
-        with open(os.path.join(dpath, fname + '.yaml'), 'wt') as f:
-            f.write(output + '\n')
+    for fname in [
+        'env-secret',
+        'quay-io-secret',
+        'web-secret',
+    ]:
+        _render_template(fname, environment, secrets)
