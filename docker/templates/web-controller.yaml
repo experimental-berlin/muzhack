@@ -15,14 +15,14 @@ spec:
       - name: web
         image: quay.io/aknuds1/muzhack
         # Always pull latest version of image
-        imagePullPolicy: Always
+        imagePullPolicy: {{imagePullPolicy}}
         env:
         - name: APP_URI
-          value: https://staging.muzhack.com
+          value: {{appUri}}
         - name: RETHINKDB_HOST
           value: rethinkdb-driver
         - name: S3_BUCKET
-          value: staging.muzhack.com
+          value: {{s3Bucket}}
         - name: S3_REGION
           value: eu-central-1
         - name: HAPI_IRON_PASSWORD

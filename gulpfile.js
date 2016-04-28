@@ -38,6 +38,7 @@ gulp.task('default', () => {
     'javascript',
     'pug',
     'webpack',
-    'assets'
+    'assets',
+    'gke'
   )
 })
