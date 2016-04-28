@@ -67,18 +67,21 @@ let DeleteProjectDialog = component('DeleteProjectDialog', (cursor) => {
 
     editCursor.set('isWaiting', true)
 
+    let finalize = () => {
+      editCursor.mergeDeep({
+        'showDeleteProjectDialog': false,
+        'isWaiting': false,
+      })
+    }
+
     ajax.delete(`/api/projects/${project.owner}/${project.projectId}`)
       .then(() => {
         logger.debug(`Project successfully deleted '${qualifiedProjectId}'`)
         router.goTo('/')
+        finalize()
       }, (error) => {
         logger.warn(`Failed to delete project '${qualifiedProjectId}': ${error}`)
-      })
-      .finally(() => {
-        editCursor.mergeDeep({
-          'showDeleteProjectDialog': false,
-          'isWaiting': false,
-        })
+        finalize()
       })
   }
 
