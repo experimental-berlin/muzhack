@@ -1,6 +1,7 @@
 'use strict'
 let R = require('ramda')
 let logger = require('js-logger-aknudsen').get('sharedRouting')
+let TypedError = require('error/typed')
 
 let regex = require('./regex')
 
