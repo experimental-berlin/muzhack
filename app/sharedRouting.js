@@ -4,13 +4,11 @@ let logger = require('js-logger-aknudsen').get('sharedRouting')
 
 let regex = require('./regex')
 
-class NotFoundError extends Error {
-  constructor(message) {
-    super()
-    this.message = message
-  }
-}
-
+let notFoundError = TypedError({
+  type: 'Not Found',
+  statusCode: 404,
+  message: 'Path not found',
+})
 
 let loadData = (cursor, module) => {
   let routerState = cursor.cursor('router').toJS()
@@ -66,8 +64,8 @@ module.exports = {
     }, R.keys(routes))
     if (currentRoute == null) {
       logger.debug(
-        `Couldn't find route corresponding to path '${currentPath}', throwing NotFoundError`)
-      return Promise.reject(new NotFoundError())
+        `Couldn't find route corresponding to path '${currentPath}', throwing notFoundError`)
+      return Promise.reject(notFoundError())
     }
 
     let match = new RegExp(currentRoute).exec(currentPath)
@@ -116,5 +114,4 @@ module.exports = {
       return Promise.resolve([cursor, {},])
     }
   },
-  NotFoundError,
 }

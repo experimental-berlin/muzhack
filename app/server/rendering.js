@@ -12,7 +12,7 @@ let explore = require('../views/explore')
 let login = require('../views/login')
 let userProfile = require('../views/userProfile/userProfile')
 let App = require('../components/app')
-let {createRouterState, updateRouterState, NotFoundError,} = require('../sharedRouting')
+let {createRouterState, updateRouterState,} = require('../sharedRouting')
 let routeMap = require('../routeMap')
 let {getEnvParam,} = require('./environment')
 
@@ -85,7 +85,7 @@ let renderIndex = (request, reply) => {
         })
       }
     }, (error) => {
-      if (error instanceof NotFoundError) {
+      if (error.statusCode === 404) {
         logger.debug(`Current route not recognized`)
         reply(Boom.notFound())
       } else {
