@@ -1,0 +1,29 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    db: rethinkdb
+  name: rethinkdb-proxy
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        db: rethinkdb
+        role: replicas
+    spec:
+      containers:
+      - image: rethinkdb:2.3
+        name: rethinkdb
+        command: [ "rethinkdb", "proxy", "--bind", "all", "--join", "{{rethinkdbClusterHost1}}:29015", "--join", "{{rethinkdbClusterHost2}}:29015" ]
+        imagePullPolicy: Always
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        ports:
+        - containerPort: 28015
+          name: driver-port
+        - containerPort: 29015
+          name: cluster-port

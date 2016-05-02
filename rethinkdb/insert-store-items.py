@@ -9,6 +9,7 @@ def _error(msg):
     sys.stderr.write('{}\n'.format(msg))
     sys.exit(1)
 
+
 def _info(msg):
     sys.stdout.write('* {}\n'.format(msg))
     sys.stdout.flush()

@@ -14,13 +14,12 @@ spec:
       containers:
       - name: web
         image: quay.io/aknuds1/muzhack
-        # Always pull latest version of image
         imagePullPolicy: {{imagePullPolicy}}
         env:
         - name: APP_URI
           value: {{appUri}}
         - name: RETHINKDB_HOST
-          value: rethinkdb-driver
+          value: {{rethinkdbHost}}
         - name: S3_BUCKET
           value: {{s3Bucket}}
         - name: S3_REGION

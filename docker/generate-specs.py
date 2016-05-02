@@ -16,7 +16,8 @@ def _render_template(fname, environment, context):
         undefined=jinja2.StrictUndefined
     )
     template = jinja_env.get_template(fname + '.yaml')
-    output = template.render(**context[environment])
+    merged_context = {**context[environment], **{'environment': environment, }}
+    output = template.render(**merged_context)
 
     if not os.path.exists(os.path.join(dpath, os.path.dirname(fname))):
         os.makedirs(os.path.join(dpath, os.path.dirname(fname)))
@@ -25,14 +26,18 @@ def _render_template(fname, environment, context):
 
 data = {
     'production': {
-        'imagePullPolicy': 'IfNotPresent',
+        'imagePullPolicy': 'Always',  # TODO: Make into IfNotPresent
         'appUri': 'https://muzhack.com',
         's3Bucket': 'muzhack.com',
+        'rethinkdbHost': 'rethinkdb-proxy',
+        'rethinkdbClusterHost1': '146.148.4.75',
+        'rethinkdbClusterHost2': '130.211.80.79',
     },
     'staging': {
         'imagePullPolicy': 'Always',
         'appUri': 'https://staging.muzhack.com',
         's3Bucket': 'staging.muzhack.com',
+        'rethinkdbHost': 'rethinkdb-driver',
     },
 }
 
@@ -69,3 +74,9 @@ for environment in ['staging', 'production', ]:
         'web-secret',
     ]:
         _render_template(fname, environment, secrets)
+
+for fname in [
+    'rethinkdb/proxy-deployment',
+    'rethinkdb/proxy-service',
+]:
+    _render_template(fname, 'production', data)

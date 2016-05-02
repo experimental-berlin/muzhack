@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: l7-ingress
+  name: l7-ingress-{{environment}}
 spec:
   tls:
     - secretName: web-secret
