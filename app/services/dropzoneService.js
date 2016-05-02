@@ -88,7 +88,7 @@ class DropzoneService {
         numTries += 1
         logger.debug(`Backing up file '${file.name}', try #${numTries}...`)
         let uploader = new S3Uploader('files', {
-          folder: '${s3Folder}${getFolder(file)}',
+          folder: `${s3Folder}${getFolder(file)}`,
           isBackup: true,
         })
         uploader.send(file)
