@@ -78,5 +78,6 @@ for environment in ['staging', 'production', ]:
 for fname in [
     'rethinkdb/proxy-deployment',
     'rethinkdb/proxy-service',
+    'rethinkdb/backup',
 ]:
     _render_template(fname, 'production', data)

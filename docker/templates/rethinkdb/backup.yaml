@@ -1,0 +1,31 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    db: rethinkdb
+  name: rethinkdb-backup
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        db: rethinkdb
+        role: replicas
+    spec:
+      containers:
+      - image: quay.io/aknuds1/backup-rethinkdb
+        name: backup-rethinkdb
+        imagePullPolicy: Always
+        args:
+          - --host
+          - rethinkdb-proxy
+          - --file
+          - /data/rethinkdb-dump.tar.gz
+        volumeMounts:
+        - mountPath: /data
+          name: rethinkdb-storage
+      volumes:
+      - name: rethinkdb-storage
+        gcePersistentDisk:
+          pdName: rethinkdb-backup-disk
+          fsType: ext4

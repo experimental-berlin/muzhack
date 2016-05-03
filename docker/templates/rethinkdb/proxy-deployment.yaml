@@ -16,7 +16,7 @@ spec:
       - image: rethinkdb:2.3
         name: rethinkdb
         command: [ "rethinkdb", "proxy", "--bind", "all", "--join", "{{rethinkdbClusterHost1}}:29015", "--join", "{{rethinkdbClusterHost2}}:29015" ]
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
         - name: POD_NAMESPACE
           valueFrom:
