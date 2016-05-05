@@ -81,3 +81,5 @@ for fname in [
     'rethinkdb/backup',
 ]:
     _render_template(fname, 'production', data)
+
+_render_template('backup-secret', 'production', secrets)

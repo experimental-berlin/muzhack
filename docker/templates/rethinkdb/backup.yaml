@@ -1,26 +1,46 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
+  name: backup-rethinkdb
   labels:
-    db: rethinkdb
-  name: rethinkdb-backup
+    app: backup-rethinkdb
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        db: rethinkdb
-        role: replicas
+        app: backup-rethinkdb
     spec:
       containers:
-      - image: quay.io/aknuds1/backup-rethinkdb
-        name: backup-rethinkdb
+      - name: backup-rethinkdb
+        image: quay.io/aknuds1/backup-rethinkdb
         imagePullPolicy: Always
         args:
-          - --host
-          - rethinkdb-proxy
-          - --file
-          - /data/rethinkdb-dump.tar.gz
+          - --host=rethinkdb-proxy
+          - --file=/data/rethinkdb-dump.tar.gz
+          - --project_id=muzhack-1288
+          - --bucket=backup.muzhack.com
+        env:
+        - name: BACKUP_PRIVATE_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: backup
+              key: private-key-id
+        - name: BACKUP_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: backup
+              key: private-key
+        - name: BACKUP_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: backup
+              key: client-id
+        - name: BACKUP_CLIENT_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: backup
+              key: client-email
         volumeMounts:
         - mountPath: /data
           name: rethinkdb-storage
