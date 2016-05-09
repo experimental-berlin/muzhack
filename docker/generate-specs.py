@@ -30,8 +30,8 @@ data = {
         'appUri': 'https://muzhack.com',
         's3Bucket': 'muzhack.com',
         'rethinkdbHost': 'rethinkdb-proxy',
-        'rethinkdbClusterHost1': '146.148.4.75',
-        'rethinkdbClusterHost2': '130.211.80.79',
+        'rethinkdbClusterHost1': 'rethinkdb1',
+        'rethinkdbClusterHost2': 'rethinkdb2',
     },
     'staging': {
         'imagePullPolicy': 'Always',
