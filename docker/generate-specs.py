@@ -26,6 +26,7 @@ def _render_template(fname, environment, context):
 
 data = {
     'production': {
+        'imageTag': '1.1.3',
         'imagePullPolicy': 'Always',  # TODO: Make into IfNotPresent
         'appUri': 'https://muzhack.com',
         's3Bucket': 'muzhack.com',
@@ -34,6 +35,7 @@ data = {
         'rethinkdbClusterHost2': 'rethinkdb2',
     },
     'staging': {
+        'imageTag': 'latest',
         'imagePullPolicy': 'Always',
         'appUri': 'https://staging.muzhack.com',
         's3Bucket': 'staging.muzhack.com',
