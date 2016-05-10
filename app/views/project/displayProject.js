@@ -282,10 +282,11 @@ module.exports = {
     if (projectId == null) {
       throw new Error(`Project ID is undefined`)
     }
-    logger.debug(`Loading project ${params.owner}/${params.projectId}`)
+    let qualifiedProjectId = `${params.owner}/${params.projectId}`
+    logger.debug(`Loading project ${qualifiedProjectId}...`)
     return ajax.getJson(`/api/projects/${params.owner}/${params.projectId}`)
       .then((project) => {
-        logger.debug(`Loading project JSON succeeded:`, project)
+        logger.debug(`Loading project ${qualifiedProjectId} JSON succeeded:`, project)
         return {
           displayProject: {
             activeTab: 'description',
@@ -295,7 +296,7 @@ module.exports = {
           },
         }
       }, (error) => {
-        logger.warn(`Loading project JSON failed:`, error)
+        logger.warn(`Loading project ${qualifiedProjectId} JSON failed:`, error)
         throw error
       })
   },
