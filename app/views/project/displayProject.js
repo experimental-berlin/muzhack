@@ -295,7 +295,7 @@ module.exports = {
           },
         }
       }, (error) => {
-        logger.warn(`Loading project JSON failed: '${error}:'`, error.stack)
+        logger.warn(`Loading project JSON failed:`, error)
         throw error
       })
   },
