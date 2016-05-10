@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
       - name: web
-        image: quay.io/aknuds1/muzhack
+        image: quay.io/aknuds1/muzhack:1.1.0
         imagePullPolicy: {{imagePullPolicy}}
         env:
         - name: APP_URI
