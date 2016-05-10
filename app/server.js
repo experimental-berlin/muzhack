@@ -13,7 +13,7 @@ let Logger = require('js-logger-aknudsen')
 let logger = Logger.get('server')
 Logger.useDefaults({
   formatter: (messages, context) => {
-    let time = moment().format('HH:mm:ss')
+    let time = moment.utc().format('HH:mm:ss')
     messages.unshift(`${context.level.name} ${time} - [${context.name}]`)
   },
 })
@@ -37,11 +37,12 @@ ${stack}
       message = stack.replace(/\n/g, '<br>')
     }
 
+    let dateTimeStr = moment.utc().format('YYYY-MM-DD HH:mm:ss')
     logger.debug(`Reporting error by email to '${emailAddress}'...`)
     emailer.sendEmail({
       emailAddress, name: `MuzHack Admin`,
       subject: `Error Detected in MuzHack at ${appUri}`,
-      html: `<p>An error was detected in MuzHack, at ${appUri}</p>
+      html: `<p>${dateTimeStr} - an error was detected in MuzHack, at ${appUri}</p>
 
   <blockquote>
   ${message}
