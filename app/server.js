@@ -84,7 +84,30 @@ if (process.env.MUZHACK_URI == null) {
 
 auth.register(server)
 
-server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) => {
+let plugins = R.concat(
+  R.map((x) => {return require(x)}, ['inert', 'vision',]),
+  [
+    {
+      register: require('good'),
+      options: {
+        ops: {
+          interval: 1000,
+        },
+        reporters: {
+          console: [{
+            module: 'good-squeeze',
+            name: 'Squeeze',
+            args: [{ log: '*', response: '*', },],
+          }, {
+            module: 'good-console',
+          }, 'stdout',],
+        },
+      },
+    },
+  ]
+)
+
+server.register(plugins, (err) => {
   if (err != null) {
     throw err
   }
