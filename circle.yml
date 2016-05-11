@@ -3,6 +3,10 @@ machine:
     GCLOUD_PROJECT: $GCLOUD_PROJECTID
   services:
     - docker
+checkout:
+  post:
+    - git submodule sync --recursive
+    - git submodule update --init --recursive
 dependencies:
   pre:
     - echo $GCLOUD_KEY | base64 --decode > ${HOME}/client-secret.json
