@@ -103,7 +103,7 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
           port: 443,
         }))
       } else {
-        logger.debug(`Not redirecting to HTTPS`)
+        logger.debug(`Not redirecting to HTTPS, request URL: ${request.url}`)
         reply.continue()
       }
     }
