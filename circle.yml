@@ -1,0 +1,23 @@
+machine:
+    environment:
+        GCLOUD_PROJECT: $GCLOUD_PROJECTID
+    python:
+      version: 2.7.3
+  services:
+    - docker
+dependencies:
+  pre:
+    - echo $GCLOUD_KEY | base64 --decode > ${HOME}/client-secret.json
+    - gcloud --quiet components update app
+    - gcloud auth activate-service-account --key-file ${HOME}/client-secret.json
+    - gcloud config set project $GCLOUD_PROJECTID
+  cache_directories:
+    - ~/docker
+deployment:
+  test:
+    branch: master
+    commands:
+      - if [[ -e ~/docker/image-test.tar ]]; then docker load -i ~/docker/image-test.tar; fi
+      - docker build -t gcr.io/muzhack/muzhack-test docker/test
+      - mkdir -p ~/docker; docker save gcr.io/muzhack/muzhack-test > ~/docker/image-test.tar
+      - gcloud docker push gcr.io/muzhack/muzhack-test > /dev/null
