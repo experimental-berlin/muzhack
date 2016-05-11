@@ -22,4 +22,4 @@ deployment:
       - if [[ -e ~/docker/image-test.tar ]]; then docker load -i ~/docker/image-test.tar; fi
       - docker build -t gcr.io/muzhack/muzhack-test -f docker/test/Dockerfile .
       - mkdir -p ~/docker; docker save gcr.io/muzhack/muzhack-test > ~/docker/image-test.tar
-      - gcloud docker push gcr.io/muzhack/muzhack-test > /dev/null
+      - gcloud docker push gcr.io/muzhack/muzhack-test
