@@ -103,7 +103,7 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
           port: 443,
         }))
       } else {
-        logger.debug(`Not redirecting to HTTPS, dirname: ${__dirname}`)
+        logger.debug(`Not redirecting to HTTPS`)
         reply.continue()
       }
     }
@@ -126,7 +126,10 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
     method: ['GET',],
     path: '/bundle.js',
     handler: {
-      file: path.join(__dirname, '../bundle.js'),
+      file: {
+        path: path.join(__dirname, '../bundle.js'),
+        confine: false,
+      },
     },
   })
   server.route({
