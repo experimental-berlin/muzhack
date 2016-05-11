@@ -11,6 +11,8 @@ COPY package.json package.json
 # Turn off production mode, as we need to install dev dependencies
 ENV NODE_ENV=
 RUN npm install
+# Get rid of module version mismatches
+RUN npm rebuild
 RUN npm install -g gulp
 
 COPY ./ .
