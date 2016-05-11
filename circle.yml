@@ -1,8 +1,8 @@
 machine:
-    environment:
-        GCLOUD_PROJECT: $GCLOUD_PROJECTID
-    python:
-      version: 2.7.3
+  environment:
+    GCLOUD_PROJECT: $GCLOUD_PROJECTID
+  python:
+    version: 2.7.3
   services:
     - docker
 dependencies:
