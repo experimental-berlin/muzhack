@@ -24,17 +24,17 @@ Logger.setHandler((messages, context) => {
     let appUri = getEnvParam('APP_URI')
     let emailAddress = `contact@muzhack.com`
     let reason = messages[0]
-    let stack = messages[1]
+    let error = messages[1]
     let message
-    if (stack == null) {
-      stack = new Error().stack.replace(/\n/g, '<br>')
+    if (error == null) {
+      let stack = new Error().stack.replace(/\n/g, '<br>')
       message = `${reason}<br><br>
 
 Traceback:
 ${stack}
 `
     } else {
-      message = stack.replace(/\n/g, '<br>')
+      message = error.stack.replace(/\n/g, '<br>')
     }
 
     let dateTimeStr = moment.utc().format('YYYY-MM-DD HH:mm:ss')

@@ -71,7 +71,7 @@ let logIn = (request, reply) => {
                     bcrypt.compare(request.payload.password, user.password, (err, isValid) => {
                       if (!isValid) {
                         logger.debug(`Password not valid`)
-                        reject(Boom.badRequest('Invalid username or password'))
+                        resolve(Boom.badRequest('Invalid username or password'))
                       } else {
                         logUserIn(request, user)
                         let result = {username: user.username,}
