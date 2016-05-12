@@ -23,3 +23,10 @@ deployment:
       - docker build -t $EXTERNAL_REGISTRY_ENDPOINT/muzhack-test -f docker/test/Dockerfile .
       - mkdir -p ~/docker; docker save $EXTERNAL_REGISTRY_ENDPOINT/muzhack-test > ~/docker/image-test.tar
       - gcloud docker push $EXTERNAL_REGISTRY_ENDPOINT/muzhack-test
+  production:
+    branch: release
+    commands:
+      - if [[ -e ~/docker/image-production.tar ]]; then docker load -i ~/docker/image-production.tar; fi
+      - docker build -t $EXTERNAL_REGISTRY_ENDPOINT/muzhack .
+      - mkdir -p ~/docker; docker save $EXTERNAL_REGISTRY_ENDPOINT/muzhack > ~/docker/image.tar
+      - gcloud docker push $EXTERNAL_REGISTRY_ENDPOINT/muzhack
