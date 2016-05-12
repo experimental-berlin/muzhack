@@ -1,10 +1,6 @@
 'use strict'
 let webpack = require('webpack')
 
-var definePlugin = new webpack.DefinePlugin({
-  __IS_BROWSER__: true,
-})
-
 module.exports = {
   context: __dirname + '/app',
   entry: [
@@ -54,16 +50,11 @@ module.exports = {
       },
     ],
   },
-  debug: true,
-  devtool: '#cheap-module-eval-source-map',
+  debug: false,
   resolve: {
     root: ['/',],
     modulesDirectories: ['node_modules', 'lib',],
     extensions: ['', '.js',],
-    alias: {
-      // Workaround https://github.com/Reactive-Extensions/RxJS/issues/832, until it's fixed
-      'rx$': './node_modules/falcor/node_modules/rx/dist/rx.js',
-    },
   },
   devServer: {
     historyApiFallback: false,
@@ -71,5 +62,9 @@ module.exports = {
       '*': 'http://localhost:8000',
     },
   },
-  plugins: [definePlugin,],
+  plugins: [
+    new webpack.DefinePlugin({
+      __IS_BROWSER__: true,
+    }),
+  ],
 }
