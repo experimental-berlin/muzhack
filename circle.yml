@@ -24,7 +24,6 @@ deployment:
       - mkdir -p ~/docker; docker save $EXTERNAL_REGISTRY_ENDPOINT/muzhack-test > ~/docker/image-test.tar
       - gcloud docker push $EXTERNAL_REGISTRY_ENDPOINT/muzhack-test
   production:
-    branch: release
     tag: /v[0-9]+(\.[0-9]+)*/
     owner: muzhack
     commands:
