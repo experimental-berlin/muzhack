@@ -14,5 +14,5 @@ RUN npm install
 RUN npm install -g gulp
 
 COPY ./ .
-RUN ./node_modules/.bin/webpack -p
+RUN ./node_modules/.bin/webpack -p --devtool cheap-module-source-map
 RUN gulp
