@@ -17,10 +17,11 @@ let {withDb,} = require('./db')
 let {getEnvParam,} = require('./environment')
 let ajax = require('../ajax')
 let stripeApi = require('./api/stripeApi')
+let Yaml = require('yamljs')
 
 class Project {
   constructor({projectId, tags, owner, ownerName, title, created, pictures, licenseId,
-      description, instructions, files, zipFile,}) {
+      description, instructions, files, zipFile, gitHubRepository,}) {
     this.projectId = projectId
     this.tags = tags
     this.owner = owner
@@ -33,6 +34,7 @@ class Project {
     this.instructions = instructions
     this.files = files
     this.zipFile = zipFile
+    this.gitHubRepository = gitHubRepository
   }
 }
 
@@ -61,6 +63,9 @@ let downloadResource = (url, options) => {
       logger.debug(`Attempt #${numTries}`)
       request.get(url, {
         encoding: encoding,
+        headers: {
+          'User-Agent': 'request',
+        },
       }, (error, response, body) => {
         if (error == null && response.statusCode === 200) {
           logger.debug(`Downloaded '${url}' successfully`)
@@ -80,7 +85,9 @@ let downloadResource = (url, options) => {
   })
 }
 
-let createZip = (owner, projectId, projectParams) => {
+let createZip = (owner, projectParams) => {
+  let projectId = projectParams.projectId
+
   if (R.isEmpty(projectParams.files)) {
     logger.debug(`There are no files, not generating zip`)
     return Promise.resolve(null)
@@ -88,7 +95,6 @@ let createZip = (owner, projectId, projectParams) => {
 
   logger.debug('Generating zip...')
   let s3Client = getS3Client()
-  // TODO: Async
   let zip = new JSZip()
   let downloadPromises = R.map((file) => {
     return downloadResource(file.url)
@@ -138,40 +144,119 @@ let createZip = (owner, projectId, projectParams) => {
     })
 }
 
+let getProjectParamsForGitHubRepo = (projectParams) => {
+  let {gitHubOwner, gitHubProject,} = projectParams
+  let qualifiedRepoId = `${gitHubOwner}/${gitHubProject}`
+  let githHubAccessToken = process.env.GITHUB_ACCESS_TOKEN
+
+  let downloadFile = (path) => {
+    return downloadResource(
+        `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents/muzhack/${path}?` +
+        `access_token=${githHubAccessToken}`)
+      .then((fileJson) => {
+        let file = JSON.parse(fileJson)
+        return {
+          content: new Buffer(file.content, 'base64').toString(),
+        }
+      })
+  }
+
+  logger.debug(`Getting project parameters from GitHub repository '${qualifiedRepoId}'`)
+  let downloadPromises = [
+    downloadFile(`metadata.yaml`),
+    downloadFile(`description.md`),
+    downloadFile(`instructions.md`),
+  ]
+  return Promise.all(downloadPromises)
+    .then(([metadataFile, descriptionFile, instructionsFile,]) => {
+      let metadata = Yaml.parse(metadataFile.content)
+      logger.debug(`Downloaded all MuzHack data from GitHub repository '${qualifiedRepoId}'`)
+      logger.debug(`Metadata:`, metadata)
+      return R.merge(projectParams, {
+        id: metadata.projectId,
+        projectId: metadata.projectId,
+        title: metadata.title,
+        licenseId: metadata.licenseId,
+        tags: metadata.tags,
+        description: descriptionFile.content,
+        instructions: instructionsFile.content,
+        gitHubRepository: qualifiedRepoId,
+        // TODO
+        files: [],
+        // TODO
+        pictures: [],
+      })
+    }, (error) => {
+      logger.debug(
+        `Failed to get MuzHack project parameters from GitHub repository '${qualifiedRepoId}':`,
+        error)
+      throw new Error(
+        `Failed to get MuzHack project parameters from GitHub repository '${qualifiedRepoId}'`
+      )
+    })
+}
+
+let processProjectCreationParameters = (projectParams, owner, ownerName, reply) => {
+  logger.debug(`Got project parameters`, projectParams)
+  projectParams.projectId = projectParams.id
+  let qualifiedProjectId = `${owner}/${projectParams.projectId}`
+  verifyLicense(projectParams)
+
+  return createZip(owner, projectParams)
+    .then((zipFile) => {
+      let project = new Project(R.merge(projectParams, {
+        owner,
+        ownerName,
+        created: moment.utc().format(),
+        zipFile,
+      }))
+      withDb(reply, (conn) => {
+        logger.debug(`Creating project '${qualifiedProjectId}':`, project)
+        return r.table('projects')
+          .get(qualifiedProjectId)
+          .replace(R.merge(project, {
+            id: qualifiedProjectId,
+          }))
+          .run(conn)
+      })
+    }, (error) => {
+      logger.warn(`Failed to generate zip: ${error.message}:`, error.stack)
+      throw new error
+    })
+}
+
 let createProject = (request, reply) => {
   let projectParams = request.payload
   logger.debug(`Received request to create project:`, projectParams)
   let owner = request.params.owner
+  let ownerName = request.auth.credentials.name
   if (owner !== request.auth.credentials.username) {
     logger.debug(`User tried to create project for other user`)
     reply(Boom.unauthorized(
       `You are not allowed to create projects for others than your own user`))
   } else {
     let qualifiedProjectId = `${owner}/${projectParams.id}`
-    projectParams.projectId = projectParams.id
-    verifyLicense(projectParams)
-
-    createZip(owner, projectParams.id, projectParams)
-      .then((zipFile) => {
-        let project = new Project(R.merge(projectParams, {
-          owner: request.auth.credentials.username,
-          ownerName: request.auth.credentials.name,
-          created: moment.utc().format(),
-          zipFile,
-        }))
-        withDb(reply, (conn) => {
-          logger.debug(`Creating project '${qualifiedProjectId}':`, project)
-          return r.table('projects')
-            .get(qualifiedProjectId)
-            .replace(R.merge(project, {
-              id: qualifiedProjectId,
-            }))
-            .run(conn)
+    let isGitHubRepo = !S.isBlank(projectParams.gitHubOwner) &&
+      !S.isBlank(projectParams.gitHubProject)
+    let projectParamsPromise
+    if (isGitHubRepo) {
+      logger.debug(
+        `Creating project slaved to GitHub repository '${projectParams.gitHubOwner}/
+          ${projectParams.gitHubProject}`)
+      getProjectParamsForGitHubRepo(projectParams)
+        .then((newProjectParams) => {
+          return processProjectCreationParameters(newProjectParams, owner, ownerName, reply)
+        }, (error) => {
+          logger.warn(error.message)
+          reply(Boom.badRequest(error.message))
         })
-      }, (error) => {
-        logger.warn(`Failed to generate zip: ${error}:`, error.stack)
-        throw new Error(error)
-      })
+        .then(() => {}, (error) => {
+          logger.error(`An error occurred:`, error.stack)
+          reply(Boom.badImplementation())
+        })
+    } else {
+      processProjectCreationParameters(projectParams, owner, ownerName, reply)
+    }
   }
 }
 
@@ -237,7 +322,7 @@ let updateProject = (request, reply) => {
         })
     }
 
-    createZip(owner, projectId, projectParams)
+    createZip(owner, R.merge(projectParams, {projectId,}))
       .then((zipFile) => {
         withDb(reply, (conn) => {
           return r.table('projects').get(qualifiedProjectId).run(conn)

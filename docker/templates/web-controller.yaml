@@ -29,6 +29,11 @@ spec:
             secretKeyRef:
               name: environment
               key: hapi-iron-password
+        - name: GITHUB_ACCESS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: environment
+              key: github-access-token
         - name: AWS_ACCESS_KEY
           valueFrom:
             secretKeyRef:
