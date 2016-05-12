@@ -84,7 +84,8 @@ if (process.env.MUZHACK_URI == null) {
 
 auth.register(server)
 
-server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) => {
+let plugins = R.map((x) => {return require(x)}, ['inert', 'vision',])
+server.register(plugins, (err) => {
   if (err != null) {
     throw err
   }
@@ -126,7 +127,10 @@ server.register(R.map((x) => {return require(x)}, ['inert', 'vision',]), (err) =
     method: ['GET',],
     path: '/bundle.js',
     handler: {
-      file: path.join(__dirname, '../dist/bundle.js'),
+      file: {
+        path: path.join(__dirname, '../bundle.js'),
+        confine: false,
+      },
     },
   })
   server.route({
