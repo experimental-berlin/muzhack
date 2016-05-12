@@ -27,6 +27,6 @@ deployment:
     branch: release
     commands:
       - if [[ -e ~/docker/image-production.tar ]]; then docker load -i ~/docker/image-production.tar; fi
-      - docker build -t $EXTERNAL_REGISTRY_ENDPOINT/muzhack .
-      - mkdir -p ~/docker; docker save $EXTERNAL_REGISTRY_ENDPOINT/muzhack > ~/docker/image.tar
-      - gcloud docker push $EXTERNAL_REGISTRY_ENDPOINT/muzhack
+      - docker build -t $EXTERNAL_REGISTRY_ENDPOINT/muzhack:$CIRCLE_TAG .
+      - mkdir -p ~/docker; docker save $EXTERNAL_REGISTRY_ENDPOINT/muzhack:$CIRCLE_TAG > ~/docker/image.tar
+      - gcloud docker push $EXTERNAL_REGISTRY_ENDPOINT/muzhack:$CIRCLE_TAG
