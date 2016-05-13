@@ -123,36 +123,45 @@ let createZip = (owner, projectParams) => {
   return Promise.all(downloadPromises)
     .then(() => {
       logger.debug(`All files added to zip`)
-      logger.debug(`Generating zip...`)
-      return zip.generateAsync({
-        type: 'nodebuffer',
-        compression: 'DEFLATE',
-      })
-        .then((output) => {
-          logger.debug(`Uploading zip file to S3...`)
-          let filePath = `u/${owner}/${projectId}/${projectId}.zip`
-          return new Promise((resolve, reject) => {
-            s3Client.putObject({
-              Key: filePath,
-              ACL: 'public-read',
-              Body: output,
-            }, (error, data) => {
-              if (error == null) {
-                //  TODO: Try to get URL from S3
-                let region = getEnvParam('S3_REGION')
-                let bucket = getEnvParam('S3_BUCKET')
-                let zipUrl = `https://s3.${region}.amazonaws.com/${bucket}/${filePath}`
-                logger.debug(`Uploaded zip file successfully to '${zipUrl}'`)
-                resolve({
-                  url: zipUrl,
-                  size: output.length,
-                })
-              } else {
-                logger.warn(`Failed to upload zip file: '${error}':`, error.stack)
+      logger.debug(`Uploading zip file to Cloud Storage...`)
+      let bucketName = process.env.GCLOUD_BUCKET
+      let bucket = gcs.bucket(bucketName)
+      let cloudFilePath = `u/${owner}/${projectId}/${projectId}.zip`
+      let cloudFile = bucket.file(cloudFilePath)
+
+      return new Promise((resolve, reject) => {
+        return zip.generateNodeStream({
+          type: 'nodebuffer',
+          compression: 'DEFLATE',
+          streamFiles: true,
+        })
+          .pipe(cloudFile.createWriteStream())
+          .on('finish', () => {
+            logger.debug(`Uploading zip archive succeeded`)
+            cloudFile.makePublic((error) => {
+              if (error != null) {
+                logger.warn(`Making zip archive public failed`)
                 reject(error)
+              } else {
+                cloudFile.getMetadata((error, metadata) => {
+                  if (error != null) {
+                    logger.warn(`Failed to get zip metadata`, error)
+                    reject(error)
+                  } else {
+                    logger.debug(`Got zip metadata`, metadata)
+                    resolve({
+                      url: `https://storage.googleapis.com/${bucketName}/${cloudFilePath}`,
+                      size: metadata.size,
+                    })
+                  }
+                })
               }
             })
-        })
+          })
+          .on('error', (error) => {
+            logger.warn(`Failed to upload zip archive: ${error}`)
+            reject()
+          })
       })
     }, (error) => {
       logger.warn(`Failed to download files: '${error}'`)
@@ -190,10 +199,7 @@ let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
           })
           .on('finish', () => {
             logger.debug(`Successfully copied ${file.url} to Cloud Storage`)
-            cloudFile.acl.add({
-              entity: 'allUsers',
-              role: gcs.acl.READER_ROLE,
-            }, (err) => {
+            cloudFile.makePublic((err) => {
               if (err != null) {
                 reject(err)
               } else {
