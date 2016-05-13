@@ -34,7 +34,8 @@ Traceback:
 ${stack}
 `
     } else {
-      message = error.stack.replace(/\n/g, '<br>')
+      let stack = error.stack != null ? error.stack : error
+      message = stack.replace(/\n/g, '<br>')
     }
 
     let dateTimeStr = moment.utc().format('YYYY-MM-DD HH:mm:ss')
