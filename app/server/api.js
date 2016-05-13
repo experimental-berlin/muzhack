@@ -169,7 +169,7 @@ let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
 
       let performRequest = (numTries) => {
         logger.debug(`Attempt #${numTries} for ${file.url}`)
-        let cloudFilePath = `u/${owner}/${projectId}/${dirPath}/${file.path}`
+        let cloudFilePath = `u/${owner}/${projectId}/${dirPath}/${file.fullPath}`
         let cloudFile = bucket.file(cloudFilePath)
         request.get(file.url, {
           headers: {
@@ -197,7 +197,6 @@ let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
               if (err != null) {
                 reject(err)
               } else {
-                logger.debug(`Successfully shared file publicly`)
                 resolve(R.merge(file, {
                   url: `https://storage.googleapis.com/${bucketName}/${cloudFilePath}`,
                 }))
@@ -231,19 +230,31 @@ let getProjectParamsForGitHubRepo = (owner, projectParams) => {
   }
 
   let getDirectory = (path, recurse) => {
+    logger.debug(`Getting directory '${path}', recursively: ${recurse}...`)
     return downloadResource(
         `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents/muzhack/${path}?` +
         `access_token=${githHubAccessToken}`)
       .then((dirJson) => {
         let dir = JSON.parse(dirJson)
         if (R.isArrayLike(dir)) {
-          return R.map((file) => {
-            return {
+          let filePromises = R.map((file) => {
+            let rootDir = S.wordsDelim('/', path)[0]
+            return Promise.resolve({
               name: file.name,
               url: file.download_url,
-              path: file.path.replace(new RegExp(`^muzhack/${path}/`), ''),
-            }
-          }, R.filter((file) => {return file.type === 'file'}, dir))
+              fullPath: file.path.replace(new RegExp(`^muzhack/${rootDir}/`), ''),
+            })
+          }, R.filter((entry) => {return entry.type === 'file'}, dir))
+          let nestedFilePromises
+          if (recurse) {
+            let subDirs = R.filter((entry) => {return entry.type === 'dir'}, dir)
+            nestedFilePromises = R.map(
+              (subDir) => {return getDirectory(`${path}/${subDir.name}`, true)}, subDirs)
+          } else {
+            nestedFilePromises = []
+          }
+          return Promise.all(R.concat(filePromises, nestedFilePromises))
+            .then(R.flatten)
         } else {
           return []
         }
@@ -263,9 +274,7 @@ let getProjectParamsForGitHubRepo = (owner, projectParams) => {
     downloadFile(`description.md`),
     downloadFile(`instructions.md`),
   ]
-  let getDirPromises = R.map(getDirectory, [
-    'pictures', 'files',
-  ])
+  let getDirPromises = [getDirectory('pictures'), getDirectory('files', true),]
   return Promise.all(R.concat(downloadPromises, getDirPromises))
     .then(([metadataFile, descriptionFile, instructionsFile, gitHubPictures, gitHubFiles,]) => {
       let metadata = Yaml.parse(metadataFile.content)
@@ -325,7 +334,7 @@ let processProjectCreationParameters = (projectParams, owner, ownerName, reply) 
       })
     }, (error) => {
       logger.warn(`Failed to generate zip: ${error.message}:`, error.stack)
-      throw new error
+      throw error
     })
 }
 
