@@ -944,15 +944,9 @@ module.exports.register = (server) => {
             reply(Boom.badRequest())
           } else {
             logger.debug(`Got signed URL for file: ${signedUrl}`)
-            cloudFile.makePublic((error) => {
-              if (error != null) {
-                reply(Boom.badImplementation())
-              } else {
-                reply({
-                  signedUrl,
-                  url: `https://storage.googleapis.com/${bucketName}/${filePath}`,
-                })
-              }
+            reply({
+              signedUrl,
+              url: `https://storage.googleapis.com/${bucketName}/${filePath}`,
             })
           }
         })
