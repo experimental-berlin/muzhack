@@ -161,15 +161,16 @@ let createZip = (owner, projectParams) => {
 }
 
 let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
-  let bucket = gcs.bucket(process.env.GCLOUD_BUCKET)
+  let bucketName = process.env.GCLOUD_BUCKET
+  let bucket = gcs.bucket(bucketName)
   let copyPromises = R.map((file) => {
     return new Promise((resolve, reject) => {
       logger.debug(`Copying file to Cloud Storage: ${file.url}...`)
 
       let performRequest = (numTries) => {
         logger.debug(`Attempt #${numTries} for ${file.url}`)
-        let cloudFile = bucket.file(
-          `u/${owner}/${projectId}/${dirPath}/${file.path}`)
+        let cloudFilePath = `u/${owner}/${projectId}/${dirPath}/${file.path}`
+        let cloudFile = bucket.file(cloudFilePath)
         request.get(file.url, {
           headers: {
             'User-Agent': 'request',
@@ -197,16 +198,9 @@ let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
                 reject(err)
               } else {
                 logger.debug(`Successfully shared file publicly`)
-                cloudFile.getMetadata((err, fileMetadata, apiResponse) => {
-                  if (err != null) {
-                    reject(err)
-                  } else {
-                    logger.debug(`File metadata:`, fileMetadata)
-                    resolve(R.merge(file, {
-                      url: fileMetadata.mediaLink,
-                    }))
-                  }
-                })
+                resolve(R.merge(file, {
+                  url: `https://storage.googleapis.com/${bucketName}/${cloudFilePath}`,
+                }))
               }
             })
           })
