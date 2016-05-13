@@ -36,6 +36,7 @@ module.exports = class GoogleCloudStorageUploader {
           logger.debug(`Posting to ${gcloudSettings.signedUrl}`, file)
           request.open('PUT', gcloudSettings.signedUrl, true)
           request.setRequestHeader('content-type', 'ignore')
+          request.setRequestHeader('x-goog-acl', 'public-read')
           request.send(file)
         })
       }, (error) => {
