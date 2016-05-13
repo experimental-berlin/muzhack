@@ -10,7 +10,6 @@ let Aws = require('aws-sdk')
 let JSZip = require('jszip')
 let request = require('request')
 let CryptoJs = require('crypto-js')
-
 let licenses = require('../licenses')
 let {trimWhitespace,} = require('../stringUtils')
 let {withDb,} = require('./db')
@@ -18,6 +17,16 @@ let {getEnvParam,} = require('./environment')
 let ajax = require('../ajax')
 let stripeApi = require('./api/stripeApi')
 let Yaml = require('yamljs')
+let TypedError = require('error/typed')
+let gcloud = require('gcloud')
+
+let gcs = gcloud.storage({
+  projectId: process.env.GCLOUD_PROJECT_ID,
+  credentials: {
+    client_email: process.env.GCLOUD_CLIENT_EMAIL,
+    private_key: process.env.GCLOUD_PRIVATE_KEY,
+  },
+})
 
 class Project {
   constructor({projectId, tags, owner, ownerName, title, created, pictures, licenseId,
@@ -55,12 +64,17 @@ let getS3Client = () => {
   })
 }
 
+let notFoundError = TypedError({
+  type: 'notFound',
+  message: 'Resource not found',
+})
+
 let downloadResource = (url, options) => {
   logger.debug(`Downloading resource '${url}'...`)
   let {encoding,} = options || {}
   return new Promise((resolve, reject) => {
     let performRequest = (numTries) => {
-      logger.debug(`Attempt #${numTries}`)
+      logger.debug(`Attempt #${numTries} for ${url}`)
       request.get(url, {
         encoding: encoding,
         headers: {
@@ -70,9 +84,11 @@ let downloadResource = (url, options) => {
         if (error == null && response.statusCode === 200) {
           logger.debug(`Downloaded '${url}' successfully`)
           resolve(body)
+        } else if (response.statusCode === 404) {
+          reject(notFoundError())
         } else {
           if (numTries > 3) {
-            logger.warn(`Failed to download '${url}'`)
+            logger.warn(`Failed to download '${url}':`, error)
             reject(error)
           } else {
             performRequest(numTries + 1)
@@ -144,7 +160,66 @@ let createZip = (owner, projectParams) => {
     })
 }
 
-let getProjectParamsForGitHubRepo = (projectParams) => {
+let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
+  let bucket = gcs.bucket(process.env.GCLOUD_BUCKET)
+  let copyPromises = R.map((file) => {
+    return new Promise((resolve, reject) => {
+      logger.debug(`Copying file to Cloud Storage: ${file.url}...`)
+
+      let performRequest = (numTries) => {
+        logger.debug(`Attempt #${numTries} for ${file.url}`)
+        let cloudFile = bucket.file(
+          `u/${owner}/${projectId}/${dirPath}/${file.path}`)
+        request.get(file.url, {
+          headers: {
+            'User-Agent': 'request',
+          },
+        })
+          .pipe(cloudFile.createWriteStream())
+          .on('error', (err) => {
+            if (response.statusCode === 404) {
+              reject(notFoundError())
+            } else if (numTries > 3) {
+              logger.warn(`Failed to download '${url}':`, error)
+              reject(error)
+            } else {
+              // TODO: Wait
+              performRequest(numTries + 1)
+            }
+          })
+          .on('finish', () => {
+            logger.debug(`Successfully copied ${file.url} to Cloud Storage`)
+            cloudFile.acl.add({
+              entity: 'allUsers',
+              role: gcs.acl.READER_ROLE,
+            }, (err) => {
+              if (err != null) {
+                reject(err)
+              } else {
+                logger.debug(`Successfully shared file publicly`)
+                cloudFile.getMetadata((err, fileMetadata, apiResponse) => {
+                  if (err != null) {
+                    reject(err)
+                  } else {
+                    logger.debug(`File metadata:`, fileMetadata)
+                    resolve(R.merge(file, {
+                      url: fileMetadata.mediaLink,
+                    }))
+                  }
+                })
+              }
+            })
+          })
+      }
+
+      performRequest(1)
+    })
+  }, files)
+
+  return Promise.all(copyPromises)
+}
+
+let getProjectParamsForGitHubRepo = (owner, projectParams) => {
   let {gitHubOwner, gitHubProject,} = projectParams
   let qualifiedRepoId = `${gitHubOwner}/${gitHubProject}`
   let githHubAccessToken = process.env.GITHUB_ACCESS_TOKEN
@@ -161,35 +236,70 @@ let getProjectParamsForGitHubRepo = (projectParams) => {
       })
   }
 
+  let getDirectory = (path, recurse) => {
+    return downloadResource(
+        `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents/muzhack/${path}?` +
+        `access_token=${githHubAccessToken}`)
+      .then((dirJson) => {
+        let dir = JSON.parse(dirJson)
+        if (R.isArrayLike(dir)) {
+          return R.map((file) => {
+            return {
+              name: file.name,
+              url: file.download_url,
+              path: file.path.replace(new RegExp(`^muzhack/${path}/`), ''),
+            }
+          }, R.filter((file) => {return file.type === 'file'}, dir))
+        } else {
+          return []
+        }
+      }, (error) => {
+        if (error.type === 'notFound') {
+          logger.debug(`Couldn't find directory '${path}'`)
+          return []
+        } else {
+          throw error
+        }
+      })
+  }
+
   logger.debug(`Getting project parameters from GitHub repository '${qualifiedRepoId}'`)
   let downloadPromises = [
     downloadFile(`metadata.yaml`),
     downloadFile(`description.md`),
     downloadFile(`instructions.md`),
   ]
-  return Promise.all(downloadPromises)
-    .then(([metadataFile, descriptionFile, instructionsFile,]) => {
+  let getDirPromises = R.map(getDirectory, [
+    'pictures', 'files',
+  ])
+  return Promise.all(R.concat(downloadPromises, getDirPromises))
+    .then(([metadataFile, descriptionFile, instructionsFile, gitHubPictures, gitHubFiles,]) => {
       let metadata = Yaml.parse(metadataFile.content)
       logger.debug(`Downloaded all MuzHack data from GitHub repository '${qualifiedRepoId}'`)
       logger.debug(`Metadata:`, metadata)
-      return R.merge(projectParams, {
-        id: metadata.projectId,
-        projectId: metadata.projectId,
-        title: metadata.title,
-        licenseId: metadata.licenseId,
-        tags: metadata.tags,
-        description: descriptionFile.content,
-        instructions: instructionsFile.content,
-        gitHubRepository: qualifiedRepoId,
-        // TODO
-        files: [],
-        // TODO
-        pictures: [],
-      })
+      let copyPicturesPromise = copyFilesToCloudStorage(
+        gitHubPictures, 'pictures', owner, metadata.projectId)
+      let copyFilesPromise = copyFilesToCloudStorage(
+        gitHubFiles, 'files', owner, metadata.projectId)
+      return Promise.all([copyPicturesPromise, copyFilesPromise,])
+        .then(([pictures, files,]) => {
+          return R.merge(projectParams, {
+            id: metadata.projectId,
+            projectId: metadata.projectId,
+            title: metadata.title,
+            licenseId: metadata.licenseId,
+            tags: metadata.tags,
+            description: descriptionFile.content,
+            instructions: instructionsFile.content,
+            gitHubRepository: qualifiedRepoId,
+            files,
+            pictures,
+          })
+        })
     }, (error) => {
-      logger.debug(
+      logger.error(
         `Failed to get MuzHack project parameters from GitHub repository '${qualifiedRepoId}':`,
-        error)
+        error.stack)
       throw new Error(
         `Failed to get MuzHack project parameters from GitHub repository '${qualifiedRepoId}'`
       )
@@ -241,9 +351,9 @@ let createProject = (request, reply) => {
     let projectParamsPromise
     if (isGitHubRepo) {
       logger.debug(
-        `Creating project slaved to GitHub repository '${projectParams.gitHubOwner}/
-          ${projectParams.gitHubProject}`)
-      getProjectParamsForGitHubRepo(projectParams)
+        `Creating project slaved to GitHub repository '${projectParams.gitHubOwner}/` +
+          `${projectParams.gitHubProject}`)
+      getProjectParamsForGitHubRepo(owner, projectParams)
         .then((newProjectParams) => {
           return processProjectCreationParameters(newProjectParams, owner, ownerName, reply)
         }, (error) => {

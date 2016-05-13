@@ -35,6 +35,9 @@ data = {
         'rethinkdbHost': 'rethinkdb-proxy',
         'rethinkdbClusterHost1': 'rethinkdb1',
         'rethinkdbClusterHost2': 'rethinkdb2',
+        'gcloudBucket': 'muzhack.com',
+        'gcloudProjectId': 'muzhack-1288',
+        'gcloudClientEmail': 'muzhack@muzhack-1288.iam.gserviceaccount.com',
     },
     'staging': {
         'numReplicas': 1,
@@ -44,6 +47,9 @@ data = {
         'appUri': 'https://staging.muzhack.com',
         's3Bucket': 'staging.muzhack.com',
         'rethinkdbHost': 'rethinkdb-driver',
+        'gcloudBucket': 'staging.muzhack.com',
+        'gcloudProjectId': 'muzhack-1288',
+        'gcloudClientEmail': 'muzhack@muzhack-1288.iam.gserviceaccount.com',
     },
 }
 

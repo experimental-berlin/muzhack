@@ -24,6 +24,12 @@ spec:
           value: {{s3Bucket}}
         - name: S3_REGION
           value: eu-central-1
+        - name: GCLOUD_BUCKET
+          value: {{gcloudBucket}}
+        - name: GCLOUD_PROJECT_ID
+          value: {{gcloudProjectId}}
+        - name: GCLOUD_CLIENT_EMAIL
+          value: {{gcloudClientEmail}}
         - name: HAPI_IRON_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -34,6 +40,11 @@ spec:
             secretKeyRef:
               name: environment
               key: github-access-token
+        - name: GCLOUD_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: environment
+              key: gcloud-private-key
         - name: AWS_ACCESS_KEY
           valueFrom:
             secretKeyRef:
