@@ -4,7 +4,7 @@ let Dropzone = require('dropzone/src/dropzone.coffee')
 let S = require('underscore.string.fp')
 
 let editing = require('../editing')
-let S3Uploader = require('../s3Uploader')
+let GoogleCloudStorageUploader = require('../cloudStorageUploader')
 
 let monitoredDropzoneEvents = [
   'addedfile',
@@ -77,18 +77,18 @@ class DropzoneService {
   createDropzone(cssId, forPictures, existingFiles) {
     let uploadFiles = (files, {metadata, progressCallback,}) => {
       let processedFiles = []
-      let s3Folder = `${metadata.projectId}/files`
+      let cloudFolder = `${metadata.projectId}/files`
       if (metadata.owner == null || metadata.projectId == null) {
         throw new Error('data is missing owner/projectId')
       }
 
-      logger.debug(`Uploading files to folder '${s3Folder}'`)
+      logger.debug(`Uploading files to folder '${cloudFolder}'`)
 
       let backupFile = (file, downloadUrl, resolve, reject, numTries=0) => {
         numTries += 1
         logger.debug(`Backing up file '${file.name}', try #${numTries}...`)
-        let uploader = new S3Uploader('files', {
-          folder: `${s3Folder}${getFolder(file)}`,
+        let uploader = new GoogleCloudStorageUploader({
+          folder: `${cloudFolder}${getFolder(file)}`,
           isBackup: true,
         })
         uploader.send(file)
@@ -117,9 +117,9 @@ class DropzoneService {
 
       let realUploadFile = (file, resolve, reject, numTries) => {
         numTries += 1
-        let folder = `${s3Folder}${getFolder(file)}`
+        let folder = `${cloudFolder}${getFolder(file)}`
         logger.debug(`Uploading file '${file.fullPath}', try #${numTries}...`)
-        let uploader = new S3Uploader('files', {
+        let uploader = new GoogleCloudStorageUploader({
           folder: folder,
         })
         uploader.send(file)
@@ -157,17 +157,17 @@ class DropzoneService {
     let uploadPictures = (files, {metadata, progressCallback,}) => {
       let pictureDatas = []
       let pictures = []
-      let s3Folder = `${metadata.projectId}/pictures`
+      let cloudFolder = `${metadata.projectId}/pictures`
       if (metadata.owner == null || metadata.projectId == null) {
         throw new Error('data is missing owner/projectId')
       }
 
-      logger.debug(`Uploading pictures to folder '${s3Folder}'`)
-      let uploader = new S3Uploader('pictures', {
-        folder: s3Folder,
+      logger.debug(`Uploading pictures to folder '${cloudFolder}'`)
+      let uploader = new GoogleCloudStorageUploader({
+        folder: cloudFolder,
       })
-      let backupUploader = new S3Uploader('pictures-backup', {
-        folder: s3Folder,
+      let backupUploader = new GoogleCloudStorageUploader({
+        folder: cloudFolder,
         isBackup: true,
       })
 

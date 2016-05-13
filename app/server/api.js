@@ -1,6 +1,5 @@
 'use strict'
 let logger = require('js-logger-aknudsen').get('server.api')
-let AwsS3Form = require('aws-s3-form')
 let Boom = require('boom')
 let R = require('ramda')
 let S = require('underscore.string.fp')
@@ -21,10 +20,10 @@ let TypedError = require('error/typed')
 let gcloud = require('gcloud')
 
 let gcs = gcloud.storage({
-  projectId: process.env.GCLOUD_PROJECT_ID,
+  projectId: getEnvParam('GCLOUD_PROJECT_ID'),
   credentials: {
-    client_email: process.env.GCLOUD_CLIENT_EMAIL,
-    private_key: process.env.GCLOUD_PRIVATE_KEY,
+    client_email: getEnvParam(`GCLOUD_CLIENT_EMAIL`),
+    private_key: getEnvParam(`GCLOUD_PRIVATE_KEY`),
   },
 })
 
@@ -43,7 +42,7 @@ class Project {
     this.instructions = instructions
     this.files = files
     this.zipFile = zipFile
-    this.gitHubRepository = gitHubRepository
+    this.gitHubRepository = gitHubRepository || null
   }
 }
 
@@ -110,7 +109,6 @@ let createZip = (owner, projectParams) => {
   }
 
   logger.debug('Generating zip...')
-  let s3Client = getS3Client()
   let zip = new JSZip()
   let downloadPromises = R.map((file) => {
     return downloadResource(file.url)
@@ -124,11 +122,10 @@ let createZip = (owner, projectParams) => {
     .then(() => {
       logger.debug(`All files added to zip`)
       logger.debug(`Uploading zip file to Cloud Storage...`)
-      let bucketName = process.env.GCLOUD_BUCKET
+      let bucketName = getEnvParam(`GCLOUD_BUCKET`)
       let bucket = gcs.bucket(bucketName)
       let cloudFilePath = `u/${owner}/${projectId}/${projectId}.zip`
       let cloudFile = bucket.file(cloudFilePath)
-
       return new Promise((resolve, reject) => {
         return zip.generateNodeStream({
           type: 'nodebuffer',
@@ -170,12 +167,11 @@ let createZip = (owner, projectParams) => {
 }
 
 let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
-  let bucketName = process.env.GCLOUD_BUCKET
+  let bucketName = getEnvParam(`GCLOUD_BUCKET`)
   let bucket = gcs.bucket(bucketName)
   let copyPromises = R.map((file) => {
     return new Promise((resolve, reject) => {
       logger.debug(`Copying file to Cloud Storage: ${file.url}...`)
-
       let performRequest = (numTries) => {
         logger.debug(`Attempt #${numTries} for ${file.url}`)
         let cloudFilePath = `u/${owner}/${projectId}/${dirPath}/${file.fullPath}`
@@ -221,7 +217,7 @@ let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
 let getProjectParamsForGitHubRepo = (owner, projectParams) => {
   let {gitHubOwner, gitHubProject,} = projectParams
   let qualifiedRepoId = `${gitHubOwner}/${gitHubProject}`
-  let githHubAccessToken = process.env.GITHUB_ACCESS_TOKEN
+  let githHubAccessToken = getEnvParam(`GITHUB_ACCESS_TOKEN`)
 
   let downloadFile = (path) => {
     return downloadResource(
@@ -923,34 +919,42 @@ module.exports.register = (server) => {
   })
   routeApiMethod({
     method: ['GET',],
-    path: 's3Settings/{directive}',
+    path: 'gcloudStorageSettings',
     config: {
       auth: 'session',
       handler: (request, reply) => {
-        let {directive,} = request.params
-        let {key, isBackup,} = request.query
-        logger.debug(`Getting S3 form data for directive '${directive}'`)
-
-        let bucket = !isBackup ? getEnvParam('S3_BUCKET') : `backup.${getEnvParam('S3_BUCKET')}`
-        let keyPrefix = `u/${request.auth.credentials.username}/`
-        let region = getEnvParam('S3_REGION')
-        let s3Form = new AwsS3Form({
-          secure: true,
-          accessKeyId: getEnvParam('AWS_ACCESS_KEY'),
-          secretAccessKey: getEnvParam('AWS_SECRET_ACCESS_KEY'),
-          region,
-          bucket,
-          keyPrefix,
-          successActionStatus: 200,
-        })
-        let url = `https://s3.${region}.amazonaws.com/${bucket}/${keyPrefix}${key}`
-        logger.debug(`S3 URL to file:`, url)
-        let formData = s3Form.create(key)
-        reply({
-          bucket,
-          region,
-          url,
-          fields: formData.fields,
+        let {path,} = request.query
+        let isBackup = request.query.isBackup === 'true'
+        logger.debug(
+          `Getting Google Cloud Storage signed URL for path '${path}', is backup: ${isBackup}...`)
+        let nominalBucketName = getEnvParam('GCLOUD_BUCKET')
+        let bucketName = !isBackup ? nominalBucketName : `backup.${nominalBucketName}`
+        let bucket = gcs.bucket(bucketName)
+        let pathPrefix = `u/${request.auth.credentials.username}/`
+        let filePath = `${pathPrefix}${path}`
+        logger.debug(`File path: ${filePath}`)
+        let cloudFile = bucket.file(filePath)
+        cloudFile.getSignedUrl({
+          action: 'write',
+          expires: moment.utc().add(1, 'days').format(),
+          contentType: 'ignore',
+        }, (error, signedUrl) => {
+          if (error != null) {
+            logger.debug(`Failed to obtain signed URL for file`)
+            reply(Boom.badRequest())
+          } else {
+            logger.debug(`Got signed URL for file: ${signedUrl}`)
+            cloudFile.makePublic((error) => {
+              if (error != null) {
+                reply(Boom.badImplementation())
+              } else {
+                reply({
+                  signedUrl,
+                  url: `https://storage.googleapis.com/${bucketName}/${filePath}`,
+                })
+              }
+            })
+          }
         })
       },
     },
@@ -990,6 +994,7 @@ module.exports.register = (server) => {
           let dirPath = `u/${owner}/${request.params.id}`
           logger.debug(`Removing folder '${dirPath}'...`)
           logger.debug(`Listing folder contents...`)
+          let s3Client = getS3Client()
           return new Promise((resolve, reject) => {
             s3Client.listObjects({Prefix: `${dirPath}/`,}, (error, data) => {
               if (error == null) {
@@ -1038,7 +1043,6 @@ module.exports.register = (server) => {
               })
         }
 
-        let s3Client = getS3Client()
         let owner = request.params.owner
         let qualifiedProjectId = `${owner}/${request.params.id}`
 
@@ -1050,10 +1054,11 @@ module.exports.register = (server) => {
           withDb(reply, (conn) => {
             return r.table('projects').get(qualifiedProjectId).delete().run(conn)
               .then(() => {
-                return removeFolder()
-                  .then(() => {
-                    logger.debug(`Project '${qualifiedProjectId}' successfully deleted`)
-                  })
+                // TODO: Migrate to GCS
+                // return removeFolder()
+                //   .then(() => {
+                //     logger.debug(`Project '${qualifiedProjectId}' successfully deleted`)
+                //   })
               })
           })
         }
