@@ -1,12 +1,21 @@
 'use strict'
 let HtmlToReactParser = require('../lib/html-to-react/lib/parser')
 let React = require('react')
-let {getSanitizingConverter,} = require('../lib/pagedown/Markdown.Sanitizer')
+let MarkdownSanitizer = require('../lib/pagedown/Markdown.Sanitizer')
+let markdownExtra = require('../lib/pagedown/Markdown.Extra').Extra
 let logger = require('js-logger-aknudsen').get('markdown')
 let $ = require('jquery')
 let R = require('ramda')
 
 let editing = require('./editing')
+
+let getSanitizingConverter = () => {
+  let converter = MarkdownSanitizer.getSanitizingConverter()
+  markdownExtra.init(converter, {
+    extensions: 'all',
+  })
+  return converter
+}
 
 module.exports.convertMarkdown = (markdown) => {
   let converter = getSanitizingConverter()
