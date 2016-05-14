@@ -6,12 +6,29 @@ let r = require('rethinkdb')
 
 let {getEnvParam,} = require('./environment')
 
-let closeConn = (conn) => {
+let closeDbConnection = (conn) => {
   conn.close()
   logger.debug('Closed RethinkDB connection')
 }
 
-let connectToDb = (host, callback, attempt) => {
+let invokeCallbackWithConn = (callback) => {
+  return connectToDb()
+    .then((conn) => {
+      logger.debug(`Invoking callback`)
+      return callback(conn)
+        .then((result) => {
+          closeDbConnection(conn)
+          return result
+        }, (error) => {
+          closeDbConnection(conn)
+          logger.warn(`There was an error in the callback of withDb: '${error}'`, error.stack)
+          throw new Error(`There was an error in the callback of withDb`)
+        })
+    })
+}
+
+let connectToDb = (attempt) => {
+  let host = getEnvParam('RETHINKDB_HOST', 'localhost')
   if (attempt == null) {
     attempt = 1
   }
@@ -21,19 +38,6 @@ let connectToDb = (host, callback, attempt) => {
     authKey: getEnvParam('RETHINKDB_AUTH_KEY', null),
     db: 'muzhack',
   }).then((conn) => {
-    let invokeCallback = () => {
-      logger.debug(`Invoking callback`)
-      return callback(conn)
-        .then((result) => {
-          closeConn(conn)
-          return result
-        }, (error) => {
-          closeConn(conn)
-          logger.warn(`There was an error in the callback of withDb: '${error}'`, error.stack)
-          throw new Error(`There was an error in the callback of withDb`)
-        })
-    }
-
     logger.debug(`Successfully connected to RethinkDB host '${host}', attempt #${attempt}`)
     try {
       return r.dbList().run(conn)
@@ -57,11 +61,13 @@ let connectToDb = (host, callback, attempt) => {
                   return null
                 }
               }, ['projects', 'users',])))
+                .then(() => {
+                  return conn
+                })
             })
         })
-        .then(invokeCallback)
     } catch (error) {
-      closeConn(conn)
+      closeDbConnection(conn)
       logger.error(`There was an unhandled exception in the callback of withDb: '${error}'`,
         error.stack)
       throw new Error(`There was an unhandled exception in the callback of withDb`)
@@ -72,7 +78,7 @@ let connectToDb = (host, callback, attempt) => {
       logger.debug(`Waiting ${timeout} second(s) before attempting again to connect to DB...`)
       return new Promise((resolve, reject) => {
         setTimeout(() => {
-          connectToDb(host, callback, attempt + 1)
+          connectToDb(attempt + 1)
             .then(resolve, reject)
         }, timeout)
       })
@@ -85,9 +91,10 @@ let connectToDb = (host, callback, attempt) => {
 }
 
 module.exports = {
+  connectToDb,
+  closeDbConnection,
   withDb: (reply, callback) => {
-    let host = getEnvParam('RETHINKDB_HOST', 'localhost')
-    return connectToDb(host, callback)
+    return invokeCallbackWithConn(callback)
       .then((result) => {
         logger.debug(`Replying with result:`, result)
         reply(result)
@@ -100,7 +107,7 @@ module.exports = {
     let host = getEnvParam('RETHINKDB_HOST', 'localhost')
     logger.debug(`Setting up database...`)
     let indexes = ['owner',]
-    return connectToDb(host, (conn) => {
+    return invokeCallbackWithConn((conn) => {
       return r.table('projects').indexList()
         .run(conn)
         .then((existingIndexes) => {

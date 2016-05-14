@@ -5,19 +5,19 @@ let R = require('ramda')
 let S = require('underscore.string.fp')
 let moment = require('moment')
 let r = require('rethinkdb')
-let Aws = require('aws-sdk')
 let JSZip = require('jszip')
 let request = require('request')
 let CryptoJs = require('crypto-js')
 let licenses = require('../licenses')
 let {trimWhitespace,} = require('../stringUtils')
-let {withDb,} = require('./db')
+let {withDb, connectToDb, closeDbConnection,} = require('./db')
 let {getEnvParam,} = require('./environment')
 let ajax = require('../ajax')
 let stripeApi = require('./api/stripeApi')
 let Yaml = require('yamljs')
 let TypedError = require('error/typed')
 let gcloud = require('gcloud')
+let Promise = require('bluebird')
 
 let gcs = gcloud.storage({
   projectId: getEnvParam('GCLOUD_PROJECT_ID'),
@@ -214,28 +214,30 @@ let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
   return Promise.all(copyPromises)
 }
 
-let getProjectParamsForGitHubRepo = (owner, projectParams) => {
-  let {gitHubOwner, gitHubProject,} = projectParams
-  let qualifiedRepoId = `${gitHubOwner}/${gitHubProject}`
-  let githHubAccessToken = getEnvParam(`GITHUB_ACCESS_TOKEN`)
+let downloadFileFromGitHub = (gitHubOwner, gitHubProject, gitHubAccessToken, path) => {
+  return downloadResource(
+      `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents/muzhack/${path}?` +
+      `access_token=${gitHubAccessToken}`)
+    .then((fileJson) => {
+      let file = JSON.parse(fileJson)
+      return {
+        content: new Buffer(file.content, 'base64').toString(),
+      }
+    })
+}
 
-  let downloadFile = (path) => {
-    return downloadResource(
-        `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents/muzhack/${path}?` +
-        `access_token=${githHubAccessToken}`)
-      .then((fileJson) => {
-        let file = JSON.parse(fileJson)
-        return {
-          content: new Buffer(file.content, 'base64').toString(),
-        }
-      })
-  }
+let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProject) => {
+  let qualifiedRepoId = `${gitHubOwner}/${gitHubProject}`
+  let gitHubAccessToken = getEnvParam(`GITHUB_ACCESS_TOKEN`)
+
+  let downloadFile = R.partial(downloadFileFromGitHub, [gitHubOwner, gitHubProject,
+    gitHubAccessToken,])
 
   let getDirectory = (path, recurse) => {
     logger.debug(`Getting directory '${path}', recursively: ${recurse}...`)
     return downloadResource(
         `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents/muzhack/${path}?` +
-        `access_token=${githHubAccessToken}`)
+        `access_token=${gitHubAccessToken}`)
       .then((dirJson) => {
         let dir = JSON.parse(dirJson)
         if (R.isArrayLike(dir)) {
@@ -284,14 +286,17 @@ let getProjectParamsForGitHubRepo = (owner, projectParams) => {
       logger.debug(`Downloaded all MuzHack data from GitHub repository '${qualifiedRepoId}'`)
       logger.debug(`Metadata:`, metadata)
       let copyPicturesPromise = copyFilesToCloudStorage(
-        gitHubPictures, 'pictures', owner, metadata.projectId)
+        gitHubPictures, 'pictures', owner, projectId)
       let copyFilesPromise = copyFilesToCloudStorage(
-        gitHubFiles, 'files', owner, metadata.projectId)
+        gitHubFiles, 'files', owner, projectId)
+      if (projectId == null) {
+        projectId = metadata.projectId
+      }
       return Promise.all([copyPicturesPromise, copyFilesPromise,])
         .then(([pictures, files,]) => {
-          return R.merge(projectParams, {
-            id: metadata.projectId,
-            projectId: metadata.projectId,
+          return R.merge({gitHubOwner, gitHubProject,}, {
+            id: projectId,
+            projectId,
             title: metadata.title,
             licenseId: metadata.licenseId,
             tags: metadata.tags,
@@ -312,7 +317,7 @@ let getProjectParamsForGitHubRepo = (owner, projectParams) => {
     })
 }
 
-let processProjectCreationParameters = (projectParams, owner, ownerName, reply) => {
+let createProjectFromParameters = (projectParams, owner, ownerName, reply) => {
   logger.debug(`Got project parameters`, projectParams)
   projectParams.projectId = projectParams.id
   let qualifiedProjectId = `${owner}/${projectParams.projectId}`
@@ -334,6 +339,7 @@ let processProjectCreationParameters = (projectParams, owner, ownerName, reply) 
             id: qualifiedProjectId,
           }))
           .run(conn)
+            .then(() => {})
       })
     }, (error) => {
       logger.warn(`Failed to generate zip: ${error.message}:`, error.stack)
@@ -358,10 +364,11 @@ let createProject = (request, reply) => {
     if (isGitHubRepo) {
       logger.debug(
         `Creating project slaved to GitHub repository '${projectParams.gitHubOwner}/` +
-          `${projectParams.gitHubProject}`)
-      getProjectParamsForGitHubRepo(owner, projectParams)
+          `${projectParams.gitHubProject}:`)
+      getProjectParamsForGitHubRepo(owner, null, projectParams.gitHubOwner,
+          projectParams.gitHubProject)
         .then((newProjectParams) => {
-          return processProjectCreationParameters(newProjectParams, owner, ownerName, reply)
+          return createProjectFromParameters(newProjectParams, owner, ownerName, reply)
         }, (error) => {
           logger.warn(error.message)
           reply(Boom.badRequest(error.message))
@@ -371,9 +378,96 @@ let createProject = (request, reply) => {
           reply(Boom.badImplementation())
         })
     } else {
-      processProjectCreationParameters(projectParams, owner, ownerName, reply)
+      createProjectFromParameters(projectParams, owner, ownerName, reply)
     }
   }
+}
+
+let realUpdateProject = (owner, ownerName, projectId, projectParams, reply) => {
+  verifyLicense(projectParams)
+
+  let qualifiedProjectId = `${owner}/${projectId}`
+
+  let removeStaleFiles = (oldFiles, newFiles, fileType) => {
+    if (oldFiles == null) {
+      logger.debug(`Project has no old ${fileType}s - nothing to remove`)
+      return
+    }
+
+    let removedFiles = R.differenceWith(((a, b) => {
+      return a.url === b.url
+    }), oldFiles, newFiles)
+    if (!R.isEmpty(removedFiles)) {
+      logger.debug(
+        `Removing ${removedFiles.length} stale ${fileType}(s) (type: ${fileType}), old
+        files vs new files:`, oldFiles, newFiles)
+    } else {
+      logger.debug(`No ${fileType}s to remove`)
+      return
+    }
+
+    let filePaths = R.map((file) => {
+      let filePath = `u/${owner}/${projectId}/${fileType}s/${file.fullPath}`
+      return filePath
+    }, removedFiles)
+    let filePathsStr = S.join(', ', filePaths)
+    logger.debug(`Removing outdated ${fileType}s ${filePathsStr}`)
+    let bucketName = getEnvParam('GCLOUD_BUCKET')
+    let bucket = gcs.bucket(bucketName)
+    return Promise.map(filePaths, (filePath) => {
+      return new Promise((resolve, reject) => {
+        bucket.file(filePath).delete((error) => {
+          if (error == null || error.message.toLowerCase() === 'not found') {
+            resolve()
+          } else {
+            reject(error)
+          }
+        })
+      })
+    }, {concurrency: 10,})
+      .then(() => {
+        logger.debug(`Successfully removed ${fileType}(s) ${filePathsStr}`)
+      }, (error) => {
+        let msg = `Failed to remove ${fileType}(s) ${filePathsStr}: '${error}'`
+        logger.warn(`${msg}:`, error.stack)
+        throw new Error(msg)
+      })
+  }
+
+  createZip(owner, R.merge(projectParams, {projectId,}))
+    .then((zipFile) => {
+      withDb(reply, (conn) => {
+        return r.table('projects').get(qualifiedProjectId).run(conn)
+          .then((project) => {
+            if (project.gitHubRepository != null && projectParams.gitHubOwner == null) {
+              throw new Error(`Trying to update GitHub imported project directly`)
+            } else if (projectParams.gitHubOwner != null && project.gitHubRepository == null) {
+              throw new Error(`Trying to sync standalone project with GitHub`)
+            }
+
+            let removeStalePromises = [
+              removeStaleFiles(project.pictures, projectParams.pictures, 'picture'),
+              removeStaleFiles(project.files, projectParams.files, 'file'),
+            ]
+            return Promise.all(removeStalePromises)
+              .then(() => {
+                logger.debug(`Updating project in database`)
+                return r.table('projects').get(qualifiedProjectId)
+                  .replace(R.merge(projectParams, {
+                    id: qualifiedProjectId,
+                    owner,
+                    projectId,
+                    ownerName,
+                    created: moment.utc().format(), // TODO
+                    zipFile,
+                  })).run(conn)
+                    .then(() => {
+                      logger.debug(`Project successfully updated in database`)
+                    })
+              })
+          })
+      })
+    })
 }
 
 let updateProject = (request, reply) => {
@@ -383,90 +477,56 @@ let updateProject = (request, reply) => {
       `You are not allowed to update projects for others than your own user`))
   } else {
     let projectParams = request.payload
-    verifyLicense(projectParams)
     let projectId = request.params.id
-    let qualifiedProjectId = `${owner}/${projectId}`
+    let ownerName = request.auth.credentials.name
+
     logger.debug(`Received request to update project '${qualifiedProjectId}':`, projectParams)
-    let s3Client = getS3Client()
+    realUpdateProject(owner, ownerName, projectId, projectParams, reply)
+  }
+}
 
-    let removeStaleFiles = (oldFiles, newFiles, fileType) => {
-      if (oldFiles == null) {
-        logger.debug(`Project has no old ${fileType}s - nothing to remove`)
-        return
-      }
+let updateProjectFromGitHub = (repoOwner, repoName, reply) => {
+  let gitHubAccessToken = getEnvParam('GITHUB_ACCESS_TOKEN')
+  return downloadFileFromGitHub(repoOwner, repoName, gitHubAccessToken, 'metadata.yaml')
+    .then((metadata) => {
+      let {projectId,} = metadata
+      return connectToDb()
+        .then((conn) => {
+          let qualifiedRepoName = `${repoOwner}/${repoName}`
+          logger.debug(`Finding projects imported from GitHub repository ${qualifiedRepoName}`)
 
-      let removedFiles = R.differenceWith(((a, b) => {
-        return a.url === b.url
-      }), oldFiles, newFiles)
-      if (!R.isEmpty(removedFiles)) {
-        logger.debug(
-          `Removing ${removedFiles.length} stale ${fileType}(s) (type: ${fileType}), old
-          files vs new files:`, oldFiles, newFiles)
-      } else {
-        logger.debug(`No ${fileType}s to remove`)
-        return
-      }
+          return r.table('projects')
+            .filter((project) => {
+              return project('gitHubRepository').eq(qualifiedRepoName)
+            })
+            .run(conn)
+            .then((cursor) => {
+              return cursor.toArray()
+                .then((projects) => {
+                  closeDbConnection(conn)
 
-      let filePaths = R.map((file) => {
-        let filePath = `u/${owner}/${projectId}/${fileType}s/${file.fullPath}`
-        return filePath
-      }, removedFiles)
-      let filePathsStr = S.join(', ', filePaths)
-      logger.debug(`Removing outdated ${fileType}s ${filePathsStr}`)
-      return new Promise((resolve, reject) => {
-        s3Client.deleteObjects({
-          Delete: {
-            Objects: R.map((filePath) => {
-              return {
-                Key: filePath,
-              }
-            }, filePaths),
-          },
-        }, (error, data) => {
-          if (error == null) {
-            resolve(data)
-          } else {
-            reject(error)
-          }
-        })
-      })
-        .then(() => {
-          logger.debug(`Successfully removed ${fileType}(s) ${filePathsStr}`)
-        }, (error) => {
-          logger.warn(`Failed to remove ${fileType}(s) ${filePathsStr}: '${error}':`,
-            error.stack)
-        })
-    }
-
-    createZip(owner, R.merge(projectParams, {projectId,}))
-      .then((zipFile) => {
-        withDb(reply, (conn) => {
-          return r.table('projects').get(qualifiedProjectId).run(conn)
-            .then((project) => {
-              let removeStalePromises = [
-                removeStaleFiles(project.pictures, projectParams.pictures, 'picture'),
-                removeStaleFiles(project.files, projectParams.files, 'file'),
-              ]
-              return Promise.all(removeStalePromises)
-                .then(() => {
-                  logger.debug(`Updating project in database`)
-                  return r.table('projects').get(qualifiedProjectId)
-                    .replace(R.merge(projectParams, {
-                      id: qualifiedProjectId,
-                      owner: request.auth.credentials.username,
-                      projectId: request.params.id,
-                      ownerName: request.auth.credentials.name,
-                      created: moment.utc().format(), // TODO
-                      zipFile,
-                    })).run(conn)
-                      .then(() => {
-                        logger.debug(`Project successfully updated in database`)
+                  return Promise.mapSeries(projects, (project) => {
+                    logger.debug(
+                      `Syncing project ${project.owner}/${project.projectId} with GitHub...`)
+                    return getProjectParamsForGitHubRepo(project.owner, project.projectId, repoOwner,
+                        repoName)
+                      .then((projectParams) => {
+                        return realUpdateProject(project.owner, project.ownerName, project.projectId,
+                          projectParams, reply)
                       })
+                  }, projects)
+                }, () => {
+                  closeDbConnection(conn)
                 })
-          })
+            })
         })
     })
-  }
+      .then(() => {
+        logger.debug(`Finished syncing projects with GitHub`)
+      }, (error) => {
+        logger.error(`Syncing projects with GitHub failed:`, error)
+        reply(Boom.badImplementation())
+      })
 }
 
 let verifyDiscourseSso = (request, reply) => {
@@ -980,6 +1040,25 @@ module.exports.register = (server) => {
     config: {
       auth: 'session',
       handler: updateProject,
+    },
+  })
+  routeApiMethod({
+    method: ['POST',],
+    path: 'webhooks/github',
+    config: {
+      handler: (request, reply) => {
+        let req = request.raw.req
+        let event = req.headers['x-github-event']
+        if (event === 'push') {
+          logger.debug(`Handling GitHub push notification`, request.payload)
+          let [repoName, repoOwner,] = [request.payload.name, request.payload.owner.name,]
+          logger.debug(`Repository is ${repoOwner}/${repoName}`)
+          updateProjectFromGitHub(repoOwner, repoName, reply)
+        } else {
+          logger.debug(`Unrecognized event from GitHub: '${event}'`)
+          reply()
+        }
+      },
     },
   })
   routeApiMethod({
