@@ -95,3 +95,36 @@ rendered-markdown()
     max-height 600px
     background-color code-background-color
     margin-bottom 1em
+
+  table
+    //  Remove spacing between table cells (from Normalize.css)
+    border-collapse collapse
+    border-spacing 0
+    empty-cells show
+    border 1px solid #cbcbcb
+
+    caption
+      color #000
+      font italic 85%/1 arial, sans-serif
+      padding 1em 0
+      text-align center
+
+    td, th
+      border-left 1px solid #cbcbcb // inner column border
+      border-width 0 0 0 1px
+      font-size inherit
+      margin 0
+      overflow visible
+      padding 0.5em 1em
+
+    td:first-child, th:first-child
+      border-left-width 0
+
+    thead
+      background-color #e0e0e0
+      color #000
+      text-align left
+      vertical-align bottom
+
+    td
+      background-color transparent
