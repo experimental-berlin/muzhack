@@ -245,6 +245,7 @@ let getProjectParamsForGitHubRepo = (owner, projectParams) => {
               name: file.name,
               url: file.download_url,
               fullPath: file.path.replace(new RegExp(`^muzhack/${rootDir}/`), ''),
+              size: file.size,
             })
           }, R.filter((entry) => {return entry.type === 'file'}, dir))
           let nestedFilePromises
