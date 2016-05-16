@@ -347,6 +347,48 @@ let createProjectFromParameters = (projectParams, owner, ownerName, reply) => {
     })
 }
 
+let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
+  logger.debug(
+    `Creating project slaved to GitHub repository '${projectParams.gitHubOwner}/` +
+      `${projectParams.gitHubProject}:`)
+  let {gitHubOwner, gitHubProject,} = projectParams
+  getProjectParamsForGitHubRepo(owner, null, gitHubOwner, gitHubProject)
+    .then((newProjectParams) => {
+      return createProjectFromParameters(newProjectParams, owner, ownerName, reply)
+    }, (error) => {
+      logger.warn(error.message)
+      reply(Boom.badRequest(error.message))
+    })
+    .then(() => {
+      let appEnvironment = getEnvParam(`APP_ENVIRONMENT`, null)
+      if (appEnvironment === 'production' || appEnvironment === 'staging') {
+        logger.debug(`Installing webhook at GitHub`)
+        let gitHubAccessToken = getEnvParam(`GITHUB_ACCESS_TOKEN`)
+        return ajax.postJson(
+          `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/hooks?access_token=` +
+          `${gitHubAccessToken}`,
+          {
+            name: `MuzHack`,
+            active: true,
+            config: {
+              url: callbackUrl,
+              content_type: 'json',
+            },
+          })
+          .then(() => {
+            logger.debug(
+              `Successfully installed GitHub webhook for ${gitHubOwner}/${gitHubProject}`)
+          }, (error) => {
+            logger.warn(`Failed to install GitHub webhook for ${gitHubOwner}/${gitHubProject}`)
+            throw error
+          })
+      }
+    }, (error) => {
+      logger.error(`An error occurred:`, error.stack)
+      reply(Boom.badImplementation())
+    })
+}
+
 let createProject = (request, reply) => {
   let projectParams = request.payload
   logger.debug(`Received request to create project:`, projectParams)
@@ -360,23 +402,8 @@ let createProject = (request, reply) => {
     let qualifiedProjectId = `${owner}/${projectParams.id}`
     let isGitHubRepo = !S.isBlank(projectParams.gitHubOwner) &&
       !S.isBlank(projectParams.gitHubProject)
-    let projectParamsPromise
     if (isGitHubRepo) {
-      logger.debug(
-        `Creating project slaved to GitHub repository '${projectParams.gitHubOwner}/` +
-          `${projectParams.gitHubProject}:`)
-      getProjectParamsForGitHubRepo(owner, null, projectParams.gitHubOwner,
-          projectParams.gitHubProject)
-        .then((newProjectParams) => {
-          return createProjectFromParameters(newProjectParams, owner, ownerName, reply)
-        }, (error) => {
-          logger.warn(error.message)
-          reply(Boom.badRequest(error.message))
-        })
-        .then(() => {}, (error) => {
-          logger.error(`An error occurred:`, error.stack)
-          reply(Boom.badImplementation())
-        })
+      createProjectFromGitHub(owner, ownerName, projectParams, reply)
     } else {
       createProjectFromParameters(projectParams, owner, ownerName, reply)
     }

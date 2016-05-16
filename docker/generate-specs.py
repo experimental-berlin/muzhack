@@ -26,6 +26,7 @@ def _render_template(fname, environment, context):
 
 data = {
     'production': {
+        'appEnvironment': 'production',
         'numReplicas': 2,
         'imageVariant': '',
         'imageTag': 'v1.1.9',
@@ -40,6 +41,7 @@ data = {
         'gcloudClientEmail': 'muzhack@muzhack-1288.iam.gserviceaccount.com',
     },
     'staging': {
+        'appEnvironment': 'staging',
         'numReplicas': 1,
         'imageVariant': '-test',
         'imageTag': 'latest',
