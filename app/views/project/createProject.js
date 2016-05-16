@@ -67,7 +67,8 @@ let createProject = (cursor) => {
       })
 }
 
-let renderCreateStandaloneProject = (createCursor) => {
+let renderCreateStandaloneProject = (cursor) => {
+  let createCursor = cursor.cursor('createProject')
   let input = createCursor.toJS()
   return [
     h('.input-group', [
@@ -182,7 +183,7 @@ let CreateProjectPad = component('CreateProjectPad', (cursor) => {
       'GitHub',
     ]),
     h('#project-inputs', shouldCreateStandalone ?
-      renderCreateStandaloneProject(createCursor) : renderCreateProjectFromGitHub(createCursor)),
+      renderCreateStandaloneProject(cursor) : renderCreateProjectFromGitHub(createCursor)),
     ])
 })
 
