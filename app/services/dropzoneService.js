@@ -222,7 +222,7 @@ class DropzoneService {
               return pictures
             }
           }, (error) => {
-            logger.warn(`Failed to back up picture '${file.name}': '${error}'`)
+            logger.warn(`Failed to back up picture '${file.name}':`, error)
             if (numTries <= 3) {
               logger.info('Retrying backup')
               return backupPicture(blob, file, downloadUrl, numTries)

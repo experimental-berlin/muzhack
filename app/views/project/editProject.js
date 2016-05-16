@@ -50,7 +50,7 @@ let editProject = (cursor) => {
           router.goTo(`/u/${qualifiedProjectId}`)
         }, (error) => {
           editCursor = editCursor.set('isWaiting', false)
-            logger.warn(`Failed to update project '${qualifiedProjectId}' on server: ${reason}`)
+            logger.warn(`Failed to update project '${qualifiedProjectId}' on server:`, error)
         })
     }, (error) => {
       logger.warn(`Uploading files/pictures failed: ${error}`, error.stack)
