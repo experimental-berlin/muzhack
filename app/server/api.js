@@ -345,10 +345,6 @@ let createProjectFromParameters = (projectParams, owner, ownerName, reply) => {
     })
 }
 
-let detachGitHubAccount = () => {
-  
-}
-
 let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
   logger.debug(
     `Creating project slaved to GitHub repository '${projectParams.gitHubOwner}/` +
@@ -397,7 +393,7 @@ let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
               }, (error) => {
                 logger.warn(
                   `Failed to install GitHub webhook for ${gitHubOwner}/${gitHubProject}:`, error)
-                detachGitHubAccount(user)
+                // TODO: Detach GitHub account in case token is invalid
                 throw error
               })
           })
