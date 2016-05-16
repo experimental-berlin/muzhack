@@ -214,10 +214,11 @@ let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
   return Promise.all(copyPromises)
 }
 
-let downloadFileFromGitHub = (gitHubOwner, gitHubProject, gitHubAccessToken, path) => {
+let downloadFileFromGitHub = (gitHubOwner, gitHubProject, path) => {
+  let [clientId, clientSecret,] = getGitHubCredentials()
   return downloadResource(
       `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents/muzhack/${path}?` +
-      `access_token=${gitHubAccessToken}`)
+      `client_id=${clientId}&client_secret=${clientSecret}`)
     .then((fileJson) => {
       let file = JSON.parse(fileJson)
       return {
@@ -228,16 +229,14 @@ let downloadFileFromGitHub = (gitHubOwner, gitHubProject, gitHubAccessToken, pat
 
 let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProject) => {
   let qualifiedRepoId = `${gitHubOwner}/${gitHubProject}`
-  let gitHubAccessToken = getEnvParam(`GITHUB_ACCESS_TOKEN`)
-
-  let downloadFile = R.partial(downloadFileFromGitHub, [gitHubOwner, gitHubProject,
-    gitHubAccessToken,])
+  let downloadFile = R.partial(downloadFileFromGitHub, [gitHubOwner, gitHubProject,])
+  let [gitHubClientId, gitHubClientSecret,] = getGitHubCredentials()
 
   let getDirectory = (path, recurse) => {
     logger.debug(`Getting directory '${path}', recursively: ${recurse}...`)
     return downloadResource(
         `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents/muzhack/${path}?` +
-        `access_token=${gitHubAccessToken}`)
+        `client_id=${gitHubClientId}&client_secret=${gitHubClientSecret}`)
       .then((dirJson) => {
         let dir = JSON.parse(dirJson)
         if (R.isArrayLike(dir)) {
@@ -363,10 +362,10 @@ let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
       let appEnvironment = getEnvParam(`APP_ENVIRONMENT`, null)
       if (appEnvironment === 'production' || appEnvironment === 'staging') {
         logger.debug(`Installing webhook at GitHub`)
-        let gitHubAccessToken = getEnvParam(`GITHUB_ACCESS_TOKEN`)
+        let [gitHubClientId, gitHubClientSecret,] = getGitHubCredentials()
         return ajax.postJson(
-          `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/hooks?access_token=` +
-          `${gitHubAccessToken}`,
+          `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/hooks?` +
+          `client_id=${gitHubClientId}&client_secret=${gitHubClientSecret}`,
           {
             name: `MuzHack`,
             active: true,
@@ -512,9 +511,12 @@ let updateProject = (request, reply) => {
   }
 }
 
+let getGitHubCredentials = () => {
+  return [getEnvParam('GITHUB_CLIENT_ID'), getEnvParam('GITHUB_CLIENT_SECRET'),]
+}
+
 let updateProjectFromGitHub = (repoOwner, repoName, reply) => {
-  let gitHubAccessToken = getEnvParam('GITHUB_ACCESS_TOKEN')
-  return downloadFileFromGitHub(repoOwner, repoName, gitHubAccessToken, 'metadata.yaml')
+  return downloadFileFromGitHub(repoOwner, repoName, 'metadata.yaml')
     .then((metadata) => {
       let {projectId,} = metadata
       return connectToDb()
