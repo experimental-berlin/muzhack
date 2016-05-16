@@ -523,7 +523,7 @@ let updateProject = (request, reply) => {
     let projectId = request.params.id
     let ownerName = request.auth.credentials.name
 
-    logger.debug(`Received request to update project '${qualifiedProjectId}':`, projectParams)
+    logger.debug(`Received request to update project '${owner}/${projectId}':`, projectParams)
     realUpdateProject(owner, ownerName, projectId, projectParams, reply)
   }
 }
