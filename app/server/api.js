@@ -338,7 +338,6 @@ let createProjectFromParameters = (projectParams, owner, ownerName, reply) => {
             id: qualifiedProjectId,
           }))
           .run(conn)
-            .then(() => {})
       })
     }, (error) => {
       logger.warn(`Failed to generate zip: ${error.message}:`, error.stack)
@@ -362,25 +361,44 @@ let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
       let appEnvironment = getEnvParam(`APP_ENVIRONMENT`, null)
       if (appEnvironment === 'production' || appEnvironment === 'staging') {
         logger.debug(`Installing webhook at GitHub`)
-        let [gitHubClientId, gitHubClientSecret,] = getGitHubCredentials()
-        return ajax.postJson(
-          `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/hooks?` +
-          `client_id=${gitHubClientId}&client_secret=${gitHubClientSecret}`,
-          {
-            name: `MuzHack`,
-            active: true,
-            config: {
-              url: callbackUrl,
-              content_type: 'json',
-            },
+        db.connectToDb()
+          .then((conn) => {
+            getUserWithConn(owner, conn)
+              .then((user) => {
+                db.closeDbConnection(conn)
+                return user
+              }, (error) => {
+                db.closeDbConnection(conn)
+                throw error
+              })
           })
-          .then(() => {
-            logger.debug(
-              `Successfully installed GitHub webhook for ${gitHubOwner}/${gitHubProject}`)
-          }, (error) => {
-            logger.warn(`Failed to install GitHub webhook for ${gitHubOwner}/${gitHubProject}`)
-            throw error
+          .then((user) => {
+            let [gitHubClientId, gitHubClientSecret,] = getGitHubCredentials()
+            let callbackUrl = `${getEnvParam('APP_URI')}/api/webhooks/github/${gitHubOwner}/` +
+              `${gitHubProject}`
+            return ajax.postJson(
+              `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/hooks?` +
+              `access_token=${user.gitHubAccessToken}`,
+              {
+                name: `MuzHack`,
+                active: true,
+                config: {
+                  url: callbackUrl,
+                  content_type: 'json',
+                },
+              })
+              .then(() => {
+                logger.debug(
+                  `Successfully installed GitHub webhook for ${gitHubOwner}/${gitHubProject}`)
+              }, (error) => {
+                logger.warn(
+                  `Failed to install GitHub webhook for ${gitHubOwner}/${gitHubProject}:`, error)
+                // TODO: Detach GitHub account in case token is invalid
+                throw error
+              })
           })
+      } else {
+        logger.debug(`Not installing GitHub webhook, since we aren't in a support environment`)
       }
     }, (error) => {
       logger.error(`An error occurred:`, error.stack)
@@ -398,7 +416,6 @@ let createProject = (request, reply) => {
     reply(Boom.unauthorized(
       `You are not allowed to create projects for others than your own user`))
   } else {
-    let qualifiedProjectId = `${owner}/${projectParams.id}`
     let isGitHubRepo = !S.isBlank(projectParams.gitHubOwner) &&
       !S.isBlank(projectParams.gitHubProject)
     if (isGitHubRepo) {
@@ -1073,16 +1090,16 @@ module.exports.register = (server) => {
   })
   routeApiMethod({
     method: ['POST',],
-    path: 'webhooks/github',
+    path: 'webhooks/github/{gitHubOwner}/{gitHubProject}',
     config: {
       handler: (request, reply) => {
         let req = request.raw.req
         let event = req.headers['x-github-event']
         if (event === 'push') {
           logger.debug(`Handling GitHub push notification`, request.payload)
-          let [repoName, repoOwner,] = [request.payload.name, request.payload.owner.name,]
-          logger.debug(`Repository is ${repoOwner}/${repoName}`)
-          updateProjectFromGitHub(repoOwner, repoName, reply)
+          let {gitHubOwner, gitHubProject,} = request.params
+          logger.debug(`Repository is ${gitHubOwner}/${gitHubProject}`)
+          updateProjectFromGitHub(gitHubOwner, gitHubProject, reply)
         } else {
           logger.debug(`Unrecognized event from GitHub: '${event}'`)
           reply()

@@ -45,7 +45,7 @@ module.exports = {
         let topCoordinate = window.screenY + (window.innerHeight - 470) / 2;
         let temp;
         let returnUrl = (temp = /^[a-z]+:\/\/[^\/]*/.exec(windowLocation)) != null ?
-        temp[0] : undefined;
+          temp[0] : undefined;
         let authUrl = authEndpoint + '/1/authorize?' + $.param({
           'return_url': returnUrl,
           'callback_method': 'postMessage',

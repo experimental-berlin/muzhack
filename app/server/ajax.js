@@ -17,7 +17,9 @@ module.exports = (uri, method, payloadJson, resolve, reject) => {
     uri,
     body: payloadJson,
     headers: {
+      'User-Agent': 'request',
       'Content-type': 'application/json',
+      'Accept': 'application/json',
     },
   }, (error, response, body) => {
     if (error == null && response.statusCode === 200) {
