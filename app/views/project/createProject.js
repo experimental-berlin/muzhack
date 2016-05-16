@@ -65,13 +65,11 @@ let createProject = (cursor) => {
         logger.warn(`Uploading files/pictures failed: ${error}`, error.stack)
         cursor.cursor('createProject').set('isWaiting', false)
       })
-
 }
 
-let CreateProjectPad = component('CreateProjectPad', (cursor) => {
-  let createCursor = cursor.cursor('createProject')
+let renderCreateStandaloneProject = (createCursor) => {
   let input = createCursor.toJS()
-  return h('#create-project-pad', [
+  return [
     h('.input-group', [
       FocusingInput({
         id: 'id-input', placeholder: 'Project ID',
@@ -84,6 +82,7 @@ let CreateProjectPad = component('CreateProjectPad', (cursor) => {
     ]),
     h('.input-group', [
       h('input#title-input', {
+        type: 'text',
         placeholder: 'Project title',
         value: input.title,
         onChange: (event) => {
@@ -94,6 +93,7 @@ let CreateProjectPad = component('CreateProjectPad', (cursor) => {
     ]),
     h('.input-group', [
       h('input#tags-input', {
+        type: 'text',
         placeholder: 'Project tags',
         value: input.tagsString,
         onChange: (event) => {
@@ -149,7 +149,41 @@ let CreateProjectPad = component('CreateProjectPad', (cursor) => {
         },
       }, 'Cancel'),
     ]),
-  ])
+  ]
+}
+
+let renderCreateProjectFromGitHub = (input) => {
+
+}
+
+let CreateProjectPad = component('CreateProjectPad', (cursor) => {
+  let createCursor = cursor.cursor('createProject')
+  let shouldCreateStandalone = createCursor.get('shouldCreateStandalone')
+  return h('#create-project-pad', [
+    h('.input-group', [
+      h('input', {
+        type: 'radio', name: 'projectType', checked: shouldCreateStandalone,
+        onChange: () => {
+          logger.debug(`Standalone project creation selected`)
+          createCursor.set('shouldCreateStandalone', true)
+        },
+      }),
+      nbsp,
+      'Standalone',
+      nbsp,
+      h('input', {
+        type: 'radio', name: 'projectType', checked: !shouldCreateStandalone,
+        onChange: () => {
+          logger.debug(`GitHub project creation selected`)
+          createCursor.set('shouldCreateStandalone', false)
+        },
+      }),
+      nbsp,
+      'GitHub',
+    ]),
+    h('#project-inputs', shouldCreateStandalone ?
+      renderCreateStandaloneProject(createCursor) : renderCreateProjectFromGitHub(createCursor)),
+    ])
 })
 
 module.exports = {
@@ -167,6 +201,7 @@ module.exports = {
       createProject: {
         isWaiting: false,
         licenseId: 'cc-by-4.0',
+        shouldCreateStandalone: true,
       },
     }
   },

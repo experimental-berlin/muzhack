@@ -105,6 +105,7 @@ let EditProjectPad = component('EditProjectPad', (cursor) => {
     showDialog ? DeleteProjectDialog(cursor) : null,
     h('.input-group', [
       h('input#title-input', {
+        type: 'text',
         placeholder: 'Project title', value: project.title,
         onChange: (event) => {
           logger.debug(`Project title changed:`, event.target.value)
@@ -115,6 +116,7 @@ let EditProjectPad = component('EditProjectPad', (cursor) => {
     ]),
     h('.input-group', [
       h('input#tags-input', {
+        type: 'text',
         placeholder: 'Project tags', value: project.tagsString,
         onChange: (event) => {
           logger.debug(`Project tags changed:`, event.target.value)
