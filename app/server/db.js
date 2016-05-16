@@ -21,8 +21,9 @@ let invokeCallbackWithConn = (callback) => {
           return result
         }, (error) => {
           closeDbConnection(conn)
-          logger.warn(`There was an error in the callback of withDb: '${error}'`, error.stack)
-          throw new Error(`There was an error in the callback of withDb`)
+          logger.warn(`There was an error in the callback of withDb: '${error.message}'`,
+            error.stack)
+          throw new Error(`There was an error in the callback of withDb: ${error.message}`)
         })
     })
 }
