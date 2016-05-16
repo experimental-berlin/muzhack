@@ -8,6 +8,7 @@ metadata:
 spec:
   containers:
   - image: aknudsen/docker-kubernetes-rethinkdb:2.3
+    imagePullPolicy: Always
     name: rethinkdb
     env:
     - name: POD_NAMESPACE
