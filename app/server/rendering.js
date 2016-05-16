@@ -56,6 +56,7 @@ let renderIndex = (request, reply) => {
     loggedInUser: request.auth.isAuthenticated ? request.auth.credentials : null,
     trelloKey: getEnvParam('TRELLO_KEY'),
     stripeKey: getEnvParam('STRIPE_PUBLISHABLE_KEY'),
+    gitHubClientId: getEnvParam('GITHUB_CLIENT_ID'),
   }).cursor()
   cursor = cursor.mergeDeep({
     router: createRouterState(routeMap),

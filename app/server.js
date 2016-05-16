@@ -59,6 +59,7 @@ let rendering = require('./server/rendering')
 let db = require('./server/db')
 let {getEnvParam,} = require('./server/environment')
 let emailer = require('./server/emailer')
+let ajax = require('./ajax')
 
 process.on('uncaughtException', (error) => {
   logger.error(`An uncaught exception occurred`, error.stack)
@@ -119,6 +120,27 @@ server.register(plugins, (err) => {
     },
   })
 
+  server.route({
+    method: ['GET',],
+    path: '/u/{user}/attach/github',
+    handler: (request, reply) => {
+      let {user,} = request.params
+      let {code, state,} = request.query
+      // TODO: Verify that state corresponds to what we initiated the OAuth token request with
+      let clientId = getEnvParam('GITHUB_CLIENT_ID')
+      let clientSecret = getEnvParam('GITHUB_CLIENT_SECRET')
+      logger.debug(`Requesting OAuth data from GitHub for user '${user}'`)
+      ajax.getJson(`https://github.com/login/oauth/access_token?` +
+        `client_id=${clientId}&client_secret=${clientSecret}&state=${state}&code=${code}`)
+        .then((data) => {
+          logger.debug(`Received OAuth data from GitHub for user '${user}':`, data)
+          // TODO: Store OAuth data
+          reply.redirect(`${getEnvParam('APP_URI')}/u/${user}`)
+        }, (error) => {
+          reply(Boom.badRequest())
+        })
+    },
+  })
   server.route({
     method: ['GET',],
     path: '/{path*}',
