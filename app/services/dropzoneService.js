@@ -84,68 +84,68 @@ class DropzoneService {
 
       logger.debug(`Uploading files to folder '${cloudFolder}'`)
 
-      let backupFile = (file, downloadUrl, resolve, reject, numTries=0) => {
+      let backupFile = (file, downloadUrl, numTries=0) => {
         numTries += 1
         logger.debug(`Backing up file '${file.name}', try #${numTries}...`)
         let uploader = new GoogleCloudStorageUploader({
           folder: `${cloudFolder}${getFolder(file)}`,
           isBackup: true,
         })
-        uploader.send(file)
+        return uploader.send(file)
           .then(() => {
             logger.debug(`Succeeded in backing up file '${file.name}'`)
             file.url = downloadUrl
             file.status = Dropzone.SUCCESS
             processedFiles.push(file)
             if (!R.isEmpty(files)) {
-              uploadOneFile(resolve, reject)
+              return uploadOneFile()
             } else {
               logger.debug('Finished uploading files:', processedFiles)
-              resolve(processedFiles)
+              return processedFiles
             }
           }, (error) => {
             logger.warn(`Failed to back up file '${file.name}': '${error.message}'`)
             if (numTries <= 3) {
               logger.info('Retrying backup')
-              backupFile(file, downloadUrl, resolve, reject, numTries)
+              return backupFile(file, downloadUrl, numTries)
             } else {
               logger.warn(`Giving up backup of file since we've already tried ${numTries} times`)
-              reject(error.message)
+              throw error
             }
           })
       }
 
-      let realUploadFile = (file, resolve, reject, numTries) => {
+      let realUploadFile = (file,  numTries) => {
         numTries += 1
         let folder = `${cloudFolder}${getFolder(file)}`
         logger.debug(`Uploading file '${file.fullPath}', try #${numTries}...`)
         let uploader = new GoogleCloudStorageUploader({
           folder: folder,
         })
-        uploader.send(file)
+        return uploader.send(file)
           .then((downloadUrl) => {
-            backupFile(file, downloadUrl, resolve, reject)
+            return backupFile(file, downloadUrl)
           }, (error) => {
             logger.warn(`Failed to upload file '${file.fullPath}': '${error.message}'`)
             if (numTries <= 3) {
               logger.info('Retrying upload')
-              realUploadFile(file, resolve, reject, numTries)
+              return realUploadFile(file, numTries)
             } else {
               logger.warn(`Giving up since we've already tried ${numTries} times`)
-              reject(error.message)
+              throw error
             }
           })
       }
 
-      let uploadOneFile = (resolve, reject) => {
+      let uploadOneFile = () => {
         let file = files.shift()
         logger.debug(`Uploading file:`, file)
         progressCallback(file.fullPath)
-        realUploadFile(file, resolve, reject, 0)
+        return realUploadFile(file, 0)
       }
 
       logger.debug('Uploading files...', files)
-      return new Promise(uploadOneFile)
+      return uploadOneFile
         .catch((error) => {
           R.forEach((file) => {
             file.status = Dropzone.ERROR
@@ -186,92 +186,91 @@ class DropzoneService {
         })
       }
 
-      let processOnePicture = (resolve, reject) => {
+      let processOnePicture = () => {
         let file = files.shift()
         logger.debug(`Processing picture '${file.name}'`)
-        processImage(file, 500, 409)
+        return processImage(file, 500, 409)
           .then((dataUri) => {
             let match = /^data:([^;]+);base64,(.+)$/.exec(dataUri)
             if (match == null) {
-              reject(
+              throw new Error(
                 `processImage for file '${file.name}' returned data URI on wrong format: '${dataUri}'`
               )
             } else {
               pictureDatas.push([file, match[1], match[2],])
               if (!R.isEmpty(files)) {
-                processOnePicture(resolve, reject)
+                return processOnePicture()
               } else {
                 logger.debug('Finished processing pictures successfully')
-                resolve()
               }
             }
           })
       }
 
-      let backupPicture = (blob, file, downloadUrl, resolve, reject, numTries) => {
+      let backupPicture = (blob, file, downloadUrl, numTries) => {
         numTries += 1
         logger.debug(`Backing up picture '${file.name}', try #${numTries}...`)
-        backupUploader.send(blob)
+        return backupUploader.send(blob)
           .then(() => {
             file.url = downloadUrl
             file.status = Dropzone.SUCCESS
             pictures.push(file)
             if (!R.isEmpty(pictureDatas)) {
-              uploadOnePicture(resolve, reject)
+              return uploadOnePicture()
             } else {
               logger.debug('Finished uploading pictures, URLs:', pictures)
-              resolve(pictures)
+              return pictures
             }
           }, (error) => {
             logger.warn(`Failed to back up picture '${file.name}': '${error}'`)
             if (numTries <= 3) {
               logger.info('Retrying backup')
-              backupPicture(blob, file, downloadUrl, resolve, reject, numTries)
+              return backupPicture(blob, file, downloadUrl, numTries)
             } else {
               logger.warn(`Giving up since we've already tried ${numTries} times`)
-              reject(error.message)
+              throw error
             }
           })
       }
 
-      let uploadPicture = (blob, file, type, resolve, reject, numTries) => {
+      let uploadPicture = (blob, file, type, numTries) => {
         numTries += 1
         logger.debug(`Uploading picture '${file.name}', type '${type}', try #${numTries}...`)
-        uploader.send(blob)
+        return uploader.send(blob)
           .then((downloadUrl) => {
-            backupPicture(blob, file, downloadUrl, resolve, reject, 0)
+            return backupPicture(blob, file, downloadUrl, 0)
           }, (error) => {
-            logger.warn(`Failed to upload picture '${file.name}': '${error}'`)
+            logger.warn(`Failed to upload picture '${file.name}': `, error)
             if (numTries <= 3) {
               logger.info('Retrying upload')
-              uploadPicture(blob, file, type, resolve, reject, numTries)
+              return uploadPicture(blob, file, type, numTries)
             } else {
               logger.warn(`Giving up since we've already tried ${numTries} times`)
-              reject(error.message)
+              throw error
             }
           })
       }
 
-      let uploadOnePicture = (resolve, reject) => {
+      let uploadOnePicture = () => {
         let numTries = 0
         let [file, type, b64,] = pictureDatas.shift()
         let blob = b64ToBlob(b64, type)
         blob.name = file.name
         progressCallback(file.fullPath)
-        uploadPicture(blob, file, type, resolve, reject, 0)
+        return uploadPicture(blob, file, type, 0)
       }
 
       logger.debug('Processing pictures...')
-      return new Promise(processOnePicture)
+      return processOnePicture()
         .then(() => {
           logger.debug('Uploading pictures...')
-          return new Promise(uploadOnePicture)
+          return uploadOnePicture()
         })
         .catch((error) => {
           R.forEach((file) => {
             file.status = Dropzone.ERROR
           }, files)
-          logger.error(`Failed to upload pictures: ${error}`)
+          logger.error(`Failed to upload pictures:`, error)
           throw new Error(`Failed to upload pictures: ${error}`)
         })
     }
