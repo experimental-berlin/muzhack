@@ -1100,53 +1100,19 @@ module.exports.register = (server) => {
           let dirPath = `u/${owner}/${request.params.id}`
           logger.debug(`Removing folder '${dirPath}'...`)
           logger.debug(`Listing folder contents...`)
-          let s3Client = getS3Client()
           return new Promise((resolve, reject) => {
-            s3Client.listObjects({Prefix: `${dirPath}/`,}, (error, data) => {
+            let bucketName = getEnvParam(`GCLOUD_BUCKET`)
+            let bucket = gcs.bucket(bucketName)
+            bucket.deleteFiles({
+              force: true,
+            }, (error) => {
               if (error == null) {
-                resolve(data.Contents)
+                resolve()
               } else {
-                logger.warn(`Failed to list folder '${dirPath}': '${error}':`, error.stack)
                 reject(error)
               }
             })
           })
-            .then((objects) => {
-              logger.debug(`Successfully listed folder contents:`, objects)
-              if (R.isEmpty(objects)) {
-                logger.debug(`Nothing to remove`)
-                return Promise.resolve()
-              }
-
-              let toDelete = R.map((o) => {
-                return {Key: o.Key,}
-              }, objects)
-              logger.debug(`Deleting folder contents...`)
-              return new Promise((resolve, reject) => {
-                s3Client.deleteObjects({
-                  Delete: {
-                    Objects: toDelete,
-                  },
-                }, (error, data) => {
-                  if (error == null) {
-                    resolve(data)
-                  } else {
-                    reject(error)
-                  }
-                })
-              })
-                .then(() => {
-                  logger.debug(`Successfully removed ${objects.length} object(s)`)
-                  // API will list max 1000 objects
-                  if (objects.length === 1000) {
-                    logger.debug('We hit max number of listed objects, deleting recursively')
-                    return removeFolder()
-                  }
-                }, (error) => {
-                  logger.warn(`Failed to remove ${objects.length} object(s): '${error}':`,
-                    error.stack)
-                })
-              })
         }
 
         let owner = request.params.owner
@@ -1159,12 +1125,9 @@ module.exports.register = (server) => {
         } else {
           withDb(reply, (conn) => {
             return r.table('projects').get(qualifiedProjectId).delete().run(conn)
+              .then(removeFolder)
               .then(() => {
-                // TODO: Migrate to GCS
-                // return removeFolder()
-                //   .then(() => {
-                //     logger.debug(`Project '${qualifiedProjectId}' successfully deleted`)
-                //   })
+                logger.debug(`Project '${qualifiedProjectId}' successfully deleted`)
               })
           })
         }
