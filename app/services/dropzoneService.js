@@ -145,7 +145,7 @@ class DropzoneService {
       }
 
       logger.debug('Uploading files...', files)
-      return uploadOneFile
+      return uploadOneFile()
         .catch((error) => {
           R.forEach((file) => {
             file.status = Dropzone.ERROR
