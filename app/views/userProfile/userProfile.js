@@ -125,7 +125,7 @@ module.exports = {
           },
         }
       }, (error) => {
-        logger.warn(`Loading user JSON failed: '${error}'`)
+        logger.warn(`Loading user JSON failed: '${error.message}'`)
         throw new Error(error)
       })
   },
