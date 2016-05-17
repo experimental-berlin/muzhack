@@ -159,9 +159,10 @@ let renderCreateProjectFromGitHub = (input) => {
 
 let CreateProjectPad = component('CreateProjectPad', (cursor) => {
   let createCursor = cursor.cursor('createProject')
+  let gitHubAccessToken = createCursor.get('gitHubAccessToken')
   let shouldCreateStandalone = createCursor.get('shouldCreateStandalone')
   return h('#create-project-pad', [
-    h('.input-group', [
+    gitHubAccessToken != null ? h('.input-group', [
       h('input', {
         type: 'radio', name: 'projectType', checked: shouldCreateStandalone,
         onChange: () => {
@@ -181,7 +182,7 @@ let CreateProjectPad = component('CreateProjectPad', (cursor) => {
       }),
       nbsp,
       'GitHub',
-    ]),
+    ]) : null,
     h('#project-inputs', shouldCreateStandalone ?
       renderCreateStandaloneProject(cursor) : renderCreateProjectFromGitHub(createCursor)),
     ])
@@ -198,12 +199,32 @@ module.exports = {
     }
   },
   loadData: (cursor) => {
-    return {
+    let state = {
       createProject: {
         isWaiting: false,
         licenseId: 'cc-by-4.0',
         shouldCreateStandalone: true,
       },
+    }
+
+    let loggedInUser = userManagement.getLoggedInUser(cursor)
+    if (loggedInUser != null) {
+      logger.debug(`Loading logged in user ${loggedInUser.username}...`)
+      return ajax.getJson(`/api/users/${loggedInUser.username}`)
+        .then((user) => {
+          logger.debug(`Loading user ${user.username} JSON succeeded:`, user)
+          state = R.mergeWith(R.merge, state, {
+            createProject: {
+              gitHubAccessToken: user.gitHubAccessToken,
+            },
+          })
+          return state
+        }, (error) => {
+          logger.warn(`Loading user ${loggedInUser.username} JSON failed:`, error)
+          throw error
+        })
+    } else {
+      return state
     }
   },
 }
