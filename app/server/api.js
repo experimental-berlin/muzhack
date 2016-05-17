@@ -419,7 +419,8 @@ let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
         logger.debug(`Replying with:`, returnValue)
         reply(returnValue)
       }
-    }, (error) => {
+    })
+    .catch((error) => {
       logger.error(`An error occurred:`, error.stack)
       reply(Boom.badImplementation())
     })
