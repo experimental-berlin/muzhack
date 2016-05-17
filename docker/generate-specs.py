@@ -74,8 +74,7 @@ for environment in ['staging', 'production', ]:
         'l7-ingress',
         'web-controller',
         'web-service',
-        'rethinkdb/rethinkdb-controller',
-        'rethinkdb/service',
+        'rethinkdb/staging',
     ]:
         _render_template(fname, environment, data)
 
