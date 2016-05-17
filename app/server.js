@@ -131,47 +131,46 @@ server.register(plugins, (err) => {
       let clientSecret = getEnvParam('GITHUB_CLIENT_SECRET')
       logger.debug(`Requesting OAuth data from GitHub for user '${username}'`)
       ajax.getJson(`https://github.com/login/oauth/access_token?` +
-        `client_id=${clientId}&client_secret=${clientSecret}&state=${state}&code=${code}`)
+          `client_id=${clientId}&client_secret=${clientSecret}&state=${state}&code=${code}`)
         .then((accessTokenData) => {
           logger.debug(`Received OAuth data from GitHub for user '${username}'`)
-          let accessToken = accessTokenData.access_token
-          ajax.getJson(`https://api.github.com/user`, {
-            Authorization: `token ${accessToken}`,
+          return ajax.getJson(`https://api.github.com/user`, {
+            Authorization: `token ${accessTokenData.accessToken}`,
           })
-            .then((accountData) => {
-              return db.connectToDb()
-                .then((conn) => {
-                  logger.debug(`Updating user '${username}' with GitHub access token and username:`, {
-                    accessToken,
-                    login: accountData.login,
-                  })
-                  return r.table('users')
-                    .get(username)
-                    .update({
-                      'gitHubAccessToken': accessToken,
-                      'gitHubAccount': accountData.login,
-                    })
-                    .run(conn)
-                    .then(() => {
-                      db.closeDbConnection(conn)
-                      let redirectUrl = `${getEnvParam('APP_URI')}/u/${username}`
-                      logger.debug(`Redirecting to ${redirectUrl}`)
-                      reply.redirect(redirectUrl)
-                    }, (error) => {
-                      db.closeDbConnection(conn)
-                      throw error
-                    })
+        }, (error) => {
+          logger.warn(`Failed to obtain GitHub access token:`, error)
+          reply(Boom.badRequest(`Couldn't get GitHub access token`))
+        })
+        .then((accountData) => {
+          return db.connectToDb()
+            .then((conn) => {
+              logger.debug(`Updating user '${username}' with GitHub access token and username:`, {
+                accessToken,
+                login: accountData.login,
+              })
+              return r.table('users')
+                .get(username)
+                .update({
+                  'gitHubAccessToken': accessToken,
+                  'gitHubAccount': accountData.login,
                 })
-            }, (error) => {
-              logger.warn(`Failed to obtain GitHub user data`)
-            })
-            .then(() => {}, (error) => {
-              logger.error(`Error:`, error.stack)
-              reply(Boom.badImplementation())
+                .run(conn)
+                .then(() => {
+                  let redirectUrl = `${getEnvParam('APP_URI')}/u/${username}`
+                  logger.debug(`Redirecting to ${redirectUrl}`)
+                  reply.redirect(redirectUrl)
+                })
+                .finally(() => {
+                  db.closeDbConnection(conn)
+                })
             })
         }, (error) => {
-          logger.warn(`Failed to obtain GitHub access token`)
-          reply(Boom.badRequest())
+          logger.warn(`Failed to obtain GitHub user data:`, error.stack)
+          throw error
+        })
+        .then(() => {}, (error) => {
+          logger.error(`Error:`, error.stack)
+          reply(Boom.badImplementation())
         })
     },
   })
