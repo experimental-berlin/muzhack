@@ -5,7 +5,6 @@ let Hapi = require('hapi')
 let R = require('ramda')
 let path = require('path')
 let pug = require('pug')
-let immstruct = require('immstruct')
 let Boom = require('boom')
 let moment = require('moment')
 let r = require('rethinkdb')
@@ -134,9 +133,11 @@ server.register(plugins, (err) => {
       ajax.getJson(`https://github.com/login/oauth/access_token?` +
         `client_id=${clientId}&client_secret=${clientSecret}&state=${state}&code=${code}`)
         .then((accessTokenData) => {
-          logger.debug(`Received OAuth data from GitHub for user '${username}':`, accessTokenData)
+          logger.debug(`Received OAuth data from GitHub for user '${username}'`)
           let accessToken = accessTokenData.access_token
-          ajax.getJson(`https://api.github.com/user?access_token=${accessToken}`)
+          ajax.getJson(`https://api.github.com/user`, {
+            Authorization: `token ${accessToken}`
+          })
             .then((accountData) => {
               return db.connectToDb()
                 .then((conn) => {

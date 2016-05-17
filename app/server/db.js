@@ -100,7 +100,7 @@ module.exports = {
         logger.debug(`Replying with result:`, result)
         reply(result)
       }, (error) => {
-        logger.error(`An error was caught: '${error.message}'`, error)
+        logger.error(`An error was caught: '${error.message}'`, error.stack)
         reply(Boom.badImplementation())
       })
   },

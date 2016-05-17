@@ -6,6 +6,7 @@ let logger = require('js-logger-aknudsen').get('createProject')
 let S = require('underscore.string.fp')
 let React = require('react')
 let ReactAutoComplete = React.createFactory(require('@arve.knudsen/react-autocomplete'))
+let immstruct = require('immstruct')
 
 let userManagement = require('../../userManagement')
 let licenses = require('../../licenses')
@@ -15,6 +16,7 @@ let ajax = require('../../ajax')
 let Loading = require('./loading')
 let {DescriptionEditor, InstructionsEditor, PicturesEditor,
   FilesEditor,} = require('./editors')
+let Promise = require('bluebird')
 
 let uploadProject
 let router
@@ -53,20 +55,37 @@ let createProject = (cursor) => {
         files,
       }
       logger.debug(`Creating project '${qualifiedProjectId}'...:`, data)
-      cursor.cursor('createProject').set('isWaiting', 'Saving project...')
+      cursor.cursor('createProject').set('isLoading', 'Saving project...')
       ajax.postJson(`/api/projects/${username}`, data)
         .then(() => {
           logger.info(`Successfully created project '${qualifiedProjectId}' on server`)
           router.goTo(`/u/${qualifiedProjectId}`)
         }, (error) => {
-          cursor.cursor('createProject').set('isWaiting', false)
+          cursor.cursor('createProject').set('isLoading', false)
           logger.warn(`Failed to create project '${qualifiedProjectId}' on server: ${error}`,
             error.stack)
         })
       }, (error) => {
         logger.warn(`Uploading files/pictures failed: ${error}`, error.stack)
-        cursor.cursor('createProject').set('isWaiting', false)
+        cursor.cursor('createProject').set('isLoading', false)
       })
+}
+
+let createProjectFromGitHub = (cursor) => {
+  let createCursor = cursor.cursor('createProject')
+  let repositoryName = createCursor.get(`gitHubRepositoryName`)
+  let username = userManagement.getLoggedInUser(cursor).username
+  let [gitHubOwner, gitHubProject,] = S.wordsDelim('/', repositoryName)
+  ajax.postJson(`/api/projects/${username}`, {
+    gitHubOwner,
+    gitHubProject,
+  })
+    .then(({qualifiedProjectId,}) => {
+      logger.info(
+        `Successfully created project '${qualifiedProjectId}' from GitHub repository` +
+          `'${repositoryName}' on server`)
+      router.goTo(`/u/${qualifiedProjectId}`)
+    })
 }
 
 let renderCreateStandaloneProject = (cursor) => {
@@ -135,11 +154,11 @@ let renderCreateStandaloneProject = (cursor) => {
       h('button#create-project.pure-button.pure-button-primary', {
         onClick: () => {
           logger.debug(`Create button clicked`, createCursor)
-          createCursor = createCursor.set('isWaiting', 'Creating project...')
+          createCursor = createCursor.set('isLoading', 'Creating project...')
           try {
             createProject(cursor)
           } catch (error) {
-            createCursor.set('isWaiting', false)
+            createCursor.set('isLoading', false)
             throw error
           }
         },
@@ -157,25 +176,39 @@ let renderCreateStandaloneProject = (cursor) => {
 
 let AutoComplete = component('AutoComplete', (cursor) => {
   let showSuggestions = false
+  let createCursor = cursor.cursor('createProject')
+  let isLoading = !!createCursor.get(`isLoadingGitHubRepositories`)
+  let gitHubRepositories = createCursor.cursor(`gitHubRepositories`).toJS()
+  let autoCompleteValue = createCursor.get('gitHubRepositoryName', '')
+  let autoCompleteItems = R.filter(S.include(autoCompleteValue),
+    R.map(R.prop('full_name'), gitHubRepositories))
+  logger.debug(`GitHub repositories:`, autoCompleteItems)
+  logger.debug(
+    `Rendering AutoComplete, is loading: ${isLoading}`)
   return ReactAutoComplete({
-    labelText: `Choose a repository`,
-    value: '',
-    items: [
-      'item1',
-      'item2',
-    ],
-    getItemValue: (item) => {
-      return item
+    inputProps: {name: 'repository', placeholder: `GitHub repository`,},
+    ref: 'autocomplete',
+    value: autoCompleteValue,
+    items: autoCompleteItems,
+    getItemValue: R.identity,
+    onSelect: (value) => {
+      logger.debug(`Repository selected: '${value}'`)
+      createCursor.set(`gitHubRepositoryName`, value)
     },
-    onSelect: (value, item) => {
-      logger.debug(`On select`)
-    },
-    onChange: (event, item) => {
-      logger.debug(`On change`)
+    onChange: (event, value) => {
+      createCursor.set('gitHubRepositoryName', value)
     },
     renderItem: (item, isHighlighted) => {
       return h('.autocomplete-item', {
-        style: '', // TODO
+        style: isHighlighted ? {
+          color: 'white',
+          background: 'hsl(200, 50%, 50%)',
+          padding: '2px 6px',
+          cursor: 'default',
+        } : {
+          padding: '2px 6px',
+          cursor: 'default',
+        },
         key: item,
         id: item,
       }, item)
@@ -185,20 +218,23 @@ let AutoComplete = component('AutoComplete', (cursor) => {
 
 let renderCreateProjectFromGitHub = (cursor) => {
   let createCursor = cursor.cursor('createProject')
-  let input = createCursor.toJS()
   return [
     h('.input-group', [
-      AutoComplete(createCursor),
+      AutoComplete(cursor),
     ]),
     h('#create-buttons.button-group', [
       h('button#create-project.pure-button.pure-button-primary', {
         onClick: () => {
           logger.debug(`Create button clicked`, createCursor)
-          createCursor = createCursor.set('isWaiting', 'Creating project...')
+          cursor = cursor.mergeDeep({
+            createProject: {
+              isLoading: 'Creating project...',
+            },
+          })
           try {
-            createProject(cursor)
+            createProjectFromGitHub(cursor)
           } catch (error) {
-            createCursor.set('isWaiting', false)
+            createCursor.set('isLoading', false)
             throw error
           }
         },
@@ -212,6 +248,38 @@ let renderCreateProjectFromGitHub = (cursor) => {
       }, 'Cancel'),
     ]),
   ]
+}
+
+let loadGitHubRepositories = () => {
+  let getGitHubJson = (url) => {
+    return ajax.getJson(url, null, {headers: {
+      Authorization: `token ${gitHubAccessToken}`,
+    },})
+  }
+
+  let cursor = immstruct.instance('state').reference().cursor()
+  logger.debug(`Loading GitHub repositories...`)
+  let createCursor = cursor.cursor(`createProject`)
+  let gitHubAccessToken = createCursor.get('gitHubAccessToken')
+  return getGitHubJson(`https://api.github.com/user`)
+    .then((gitHubUser) => {
+      logger.debug(`Successfully got GitHub user: ${gitHubUser.login}`)
+      logger.debug(`Getting user's repositories and organizations...`)
+      return Promise.map([gitHubUser.repos_url, gitHubUser.organizations_url,], getGitHubJson)
+        .then(([repositories, organizations,]) => {
+          return Promise.map(organizations, (organization) => {
+            return getGitHubJson(organization.repos_url)
+          })
+            .then(R.flatten)
+            .then((orgRepositories) => {
+              let allRepositories = R.concat(repositories, orgRepositories)
+              createCursor.mergeDeep({
+                gitHubRepositories: allRepositories,
+                isLoadingGitHubRepositories: false,
+              })
+            })
+        })
+    })
 }
 
 let CreateProjectPad = component('CreateProjectPad', (cursor) => {
@@ -234,7 +302,11 @@ let CreateProjectPad = component('CreateProjectPad', (cursor) => {
         type: 'radio', name: 'projectType', checked: !shouldCreateStandalone,
         onChange: () => {
           logger.debug(`GitHub project creation selected`)
-          createCursor.set('shouldCreateStandalone', false)
+          createCursor.mergeDeep({
+            shouldCreateStandalone: false,
+            isLoadingGitHubRepositories: true,
+          })
+          loadGitHubRepositories()
         },
       }),
       nbsp,
@@ -249,7 +321,7 @@ module.exports = {
   requiresLogin: true,
   render: (cursor) => {
     let createCursor = cursor.cursor('createProject')
-    if (!createCursor.get('isWaiting')) {
+    if (!createCursor.get('isLoading')) {
       return CreateProjectPad(cursor)
     } else {
       return Loading(createCursor)
@@ -258,9 +330,10 @@ module.exports = {
   loadData: (cursor) => {
     let state = {
       createProject: {
-        isWaiting: false,
+        isLoading: false,
         licenseId: 'cc-by-4.0',
         shouldCreateStandalone: true,
+        gitHubRepositories: [],
       },
     }
 

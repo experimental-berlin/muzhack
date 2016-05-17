@@ -6,21 +6,22 @@ let R = require('ramda')
 let {resolveWithResponse,} = require('../ajaxUtils')
 let {getEnvParam,} = require('./environment')
 
-module.exports = (uri, method, payloadJson, resolve, reject) => {
+module.exports = (uri, method, payloadJson, options, resolve, reject) => {
   if (uri.startsWith('/')) {
     uri = `${getEnvParam('MUZHACK_URI')}${uri}`
   }
 
+  let extendedHeaders = R.merge({
+    'User-Agent': 'request',
+    'Content-Type': 'application/json;charset=UTF-8',
+    'Accept': 'application/json',
+  }, options.headers || {})
   logger.debug(`Making ${method} request to '${uri}', JSON:`, payloadJson)
   request({
     method,
     uri,
     body: payloadJson,
-    headers: {
-      'User-Agent': 'request',
-      'Content-type': 'application/json',
-      'Accept': 'application/json',
-    },
+    extendedHeaders,
   }, (error, response, body) => {
     if (error == null && response.statusCode === 200) {
       resolveWithResponse(body, resolve, reject)

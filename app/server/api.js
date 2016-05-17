@@ -316,7 +316,7 @@ let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProjec
     })
 }
 
-let createProjectFromParameters = (projectParams, owner, ownerName, reply) => {
+let createProjectFromParameters = (projectParams, owner, ownerName) => {
   logger.debug(`Got project parameters`, projectParams)
   projectParams.projectId = projectParams.id
   let qualifiedProjectId = `${owner}/${projectParams.projectId}`
@@ -330,18 +330,64 @@ let createProjectFromParameters = (projectParams, owner, ownerName, reply) => {
         created: moment.utc().format(),
         zipFile,
       }))
-      withDb(reply, (conn) => {
-        logger.debug(`Creating project '${qualifiedProjectId}':`, project)
-        return r.table('projects')
-          .get(qualifiedProjectId)
-          .replace(R.merge(project, {
+      return connectToDb()
+        .then((conn) => {
+          logger.debug(`Creating project '${qualifiedProjectId}':`, project)
+          let extendedProject = R.merge(project, {
             id: qualifiedProjectId,
-          }))
-          .run(conn)
-      })
+          })
+          return r.table('projects')
+            .get(qualifiedProjectId)
+            .replace(extendedProject)
+            .run(conn)
+            .then(() => {
+              return extendedProject
+            })
+            .finally(() => {
+              closeDbConnection(conn)
+            })
+        })
     }, (error) => {
       logger.warn(`Failed to generate zip: ${error.message}:`, error.stack)
       throw error
+    })
+}
+
+let installGitHubWebhook = (owner, gitHubOwner, gitHubProject) => {
+  return connectToDb()
+    .then((conn) => {
+      return getUserWithConn(owner, conn)
+        .finally(() => {
+          closeDbConnection(conn)
+        })
+    })
+    .then((user) => {
+      let [gitHubClientId, gitHubClientSecret,] = getGitHubCredentials()
+      let callbackUrl = `${getEnvParam('APP_URI')}/api/webhooks/github/${gitHubOwner}/` +
+        `${gitHubProject}`
+      return ajax.postJson(
+        `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/hooks`,
+        {
+          name: `MuzHack`,
+          active: true,
+          config: {
+            url: callbackUrl,
+            content_type: 'json',
+          },
+        }, {
+          headers: {
+            Authorization: `token ${user.gitHubAccessToken}`,
+          },
+        })
+        .then(() => {
+          logger.debug(
+            `Successfully installed GitHub webhook for ${gitHubOwner}/${gitHubProject}`)
+        }, (error) => {
+          logger.warn(
+            `Failed to install GitHub webhook for ${gitHubOwner}/${gitHubProject}:`, error)
+          // TODO: Detach GitHub account in case token is invalid
+          throw error
+        })
     })
 }
 
@@ -352,53 +398,26 @@ let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
   let {gitHubOwner, gitHubProject,} = projectParams
   getProjectParamsForGitHubRepo(owner, null, gitHubOwner, gitHubProject)
     .then((newProjectParams) => {
-      return createProjectFromParameters(newProjectParams, owner, ownerName, reply)
+      return createProjectFromParameters(newProjectParams, owner, ownerName)
     }, (error) => {
       logger.warn(error.message)
       reply(Boom.badRequest(error.message))
     })
-    .then(() => {
+    .then((project) => {
       let appEnvironment = getEnvParam(`APP_ENVIRONMENT`, null)
+      let returnValue = {
+        qualifiedProjectId: `${project.id}`,
+      }
       if (appEnvironment === 'production' || appEnvironment === 'staging') {
         logger.debug(`Installing webhook at GitHub`)
-        db.connectToDb()
-          .then((conn) => {
-            getUserWithConn(owner, conn)
-              .then((user) => {
-                db.closeDbConnection(conn)
-                return user
-              }, (error) => {
-                db.closeDbConnection(conn)
-                throw error
-              })
-          })
-          .then((user) => {
-            let [gitHubClientId, gitHubClientSecret,] = getGitHubCredentials()
-            let callbackUrl = `${getEnvParam('APP_URI')}/api/webhooks/github/${gitHubOwner}/` +
-              `${gitHubProject}`
-            return ajax.postJson(
-              `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/hooks?` +
-              `access_token=${user.gitHubAccessToken}`,
-              {
-                name: `MuzHack`,
-                active: true,
-                config: {
-                  url: callbackUrl,
-                  content_type: 'json',
-                },
-              })
-              .then(() => {
-                logger.debug(
-                  `Successfully installed GitHub webhook for ${gitHubOwner}/${gitHubProject}`)
-              }, (error) => {
-                logger.warn(
-                  `Failed to install GitHub webhook for ${gitHubOwner}/${gitHubProject}:`, error)
-                // TODO: Detach GitHub account in case token is invalid
-                throw error
-              })
+        return installGitHubWebhook(owner, gitHubOwner, gitHubProject)
+          .then(() => {
+            reply(returnValue)
           })
       } else {
-        logger.debug(`Not installing GitHub webhook, since we aren't in a support environment`)
+        logger.debug(`Not installing GitHub webhook, since we aren't in a supported environment`)
+        logger.debug(`Replying with:`, returnValue)
+        reply(returnValue)
       }
     }, (error) => {
       logger.error(`An error occurred:`, error.stack)
@@ -421,7 +440,10 @@ let createProject = (request, reply) => {
     if (isGitHubRepo) {
       createProjectFromGitHub(owner, ownerName, projectParams, reply)
     } else {
-      createProjectFromParameters(projectParams, owner, ownerName, reply)
+      createProjectFromParameters(projectParams, owner, ownerName)
+        .then(() => {
+          reply()
+        })
     }
   }
 }
@@ -665,6 +687,10 @@ let search = (request, reply) => {
 }
 
 let getUserWithConn = (username, conn) => {
+  if (username == null) {
+    throw new Error(`username is null`)
+  }
+  logger.debug(`Getting user '${username}'...`)
   return r.table('users')
     .get(username)
     .merge((user) => {
@@ -1082,7 +1108,7 @@ module.exports.register = (server) => {
     method: ['POST',],
     path: 'logError',
     handler: (request, reply) => {
-      let error = request.payload.error
+      let error = request.payload.error || {}
       logger.error(`An error was logged on a client: ${error.message}:`, error.stack)
       reply()
     },
