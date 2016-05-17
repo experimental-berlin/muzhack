@@ -22,7 +22,7 @@ module.exports = (uri, method, payloadJson, options, resolve, reject) => {
     method,
     uri,
     body: payloadJson,
-    extendedHeaders,
+    headers: extendedHeaders,
   }, (error, response, body) => {
     if (error == null && response.statusCode === 200) {
       resolveWithResponse(body, resolve, reject)
