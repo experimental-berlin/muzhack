@@ -66,11 +66,11 @@ module.exports = component('VCard', ({cursor, user,}) => {
             logger.debug(`Getting GitHub access token...`)
             let array = new Uint32Array(48)
             crypto.getRandomValues(array)
-            let appUri = cursor.get('appUri')
+            let appUri = S.rtrim('/', cursor.get('appUri'))
             let state = array.join('')
             let uriParameters = {
               client_id: cursor.get('gitHubClientId'),
-              redirect_uri: `${appUri}/${userProfileUrl}/attach/github`,
+              redirect_uri: `${appUri}${userProfileUrl}/attach/github`,
               state,
               scope: 'admin:repo_hook',
             }
