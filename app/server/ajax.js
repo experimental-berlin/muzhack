@@ -17,7 +17,6 @@ module.exports = (uri, method, payloadJson, options, resolve, reject) => {
     'Accept': 'application/json',
   }, options.headers || {})
   logger.debug(`Making ${method} request to '${uri}', JSON:`, payloadJson)
-  logger.debug(`Headers:`, extendedHeaders)
   request({
     method,
     uri,

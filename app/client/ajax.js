@@ -25,9 +25,7 @@ module.exports = (absPath, method, payloadJson, options, resolve, reject) => {
   let extendedHeaders = R.merge({
     'Content-Type': 'application/json;charset=UTF-8',
   }, options.headers || {})
-  logger.debug(`Sending request headers:`, extendedHeaders)
   R.forEach(([key, value,]) => {
-    logger.debug(`Setting header ${key}=${value}`)
     request.setRequestHeader(key, value)
   }, R.toPairs(extendedHeaders))
   if (payloadJson != null) {
