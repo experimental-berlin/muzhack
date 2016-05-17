@@ -49,6 +49,7 @@ let renderIndex = (request, reply) => {
   immstruct.clear()
   let cursor = immstruct('state', {
     search: '',
+    appUri: getEnvParam('APP_URI'),
     login: login.createState(),
     explore: explore.createState(),
     userProfile: userProfile.createState(),
