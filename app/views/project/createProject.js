@@ -4,6 +4,8 @@ let h = require('react-hyperscript')
 let R = require('ramda')
 let logger = require('js-logger-aknudsen').get('createProject')
 let S = require('underscore.string.fp')
+let React = require('react')
+let ReactAutoComplete = React.createFactory(require('@arve.knudsen/react-autocomplete'))
 
 let userManagement = require('../../userManagement')
 let licenses = require('../../licenses')
@@ -153,8 +155,63 @@ let renderCreateStandaloneProject = (cursor) => {
   ]
 }
 
-let renderCreateProjectFromGitHub = (input) => {
+let AutoComplete = component('AutoComplete', (cursor) => {
+  let showSuggestions = false
+  return ReactAutoComplete({
+    labelText: `Choose a repository`,
+    value: '',
+    items: [
+      'item1',
+      'item2',
+    ],
+    getItemValue: (item) => {
+      return item
+    },
+    onSelect: (value, item) => {
+      logger.debug(`On select`)
+    },
+    onChange: (event, item) => {
+      logger.debug(`On change`)
+    },
+    renderItem: (item, isHighlighted) => {
+      return h('.autocomplete-item', {
+        style: '', // TODO
+        key: item,
+        id: item,
+      }, item)
+    },
+  })
+})
 
+let renderCreateProjectFromGitHub = (cursor) => {
+  let createCursor = cursor.cursor('createProject')
+  let input = createCursor.toJS()
+  return [
+    h('.input-group', [
+      AutoComplete(createCursor),
+    ]),
+    h('#create-buttons.button-group', [
+      h('button#create-project.pure-button.pure-button-primary', {
+        onClick: () => {
+          logger.debug(`Create button clicked`, createCursor)
+          createCursor = createCursor.set('isWaiting', 'Creating project...')
+          try {
+            createProject(cursor)
+          } catch (error) {
+            createCursor.set('isWaiting', false)
+            throw error
+          }
+        },
+      }, 'Create'),
+      h('button#cancel-create.pure-button', {
+        onClick: () => {
+          logger.debug(`Cancel button clicked`)
+          // TODO: Ask user if there are modifications
+          router.goTo('/')
+        },
+      }, 'Cancel'),
+    ]),
+  ]
 }
 
 let CreateProjectPad = component('CreateProjectPad', (cursor) => {
@@ -184,7 +241,7 @@ let CreateProjectPad = component('CreateProjectPad', (cursor) => {
       'GitHub',
     ]) : null,
     h('#project-inputs', shouldCreateStandalone ?
-      renderCreateStandaloneProject(cursor) : renderCreateProjectFromGitHub(createCursor)),
+      renderCreateStandaloneProject(cursor) : renderCreateProjectFromGitHub(cursor)),
     ])
 })
 

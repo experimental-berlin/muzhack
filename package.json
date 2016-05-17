@@ -50,6 +50,7 @@
     "webpack-dev-server": "^1.12.1"
   },
   "dependencies": {
+    "@arve.knudsen/react-autocomplete": "^1.0.1",
     "base64url": "^1.0.5",
     "bcrypt": "^0.8.5",
     "bluebird": "^3.3.5",
