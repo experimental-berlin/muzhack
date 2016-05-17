@@ -368,7 +368,7 @@ let installGitHubWebhook = (owner, gitHubOwner, gitHubProject) => {
       return ajax.postJson(
         `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/hooks`,
         {
-          name: `MuzHack`,
+          name: `web`,
           active: true,
           config: {
             url: callbackUrl,
