@@ -26,7 +26,7 @@ module.exports = (uri, method, payloadJson, options, resolve, reject) => {
     if (error == null && response.statusCode === 200) {
       resolveWithResponse(body, resolve, reject)
     } else {
-      logger.debug(`Ajax request failed`)
+      logger.debug(`Ajax request failed, status code: ${response.statusCode}`)
       let reason = error == null ? body : error
       if (typeof reason === 'string') {
         try {
