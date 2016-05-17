@@ -678,6 +678,8 @@ let getUserWithConn = (username, conn) => {
 
 let getUser = (request, reply) => {
   let {username,} = request.params
+  let isLoggedInUser = request.auth.credentials != null && username ===
+    request.auth.credentials.username
   withDb(reply, (conn) => {
     logger.debug(`Getting user '${username}'`)
     return getUserWithConn(username, conn)
@@ -703,12 +705,25 @@ let getUser = (request, reply) => {
           }, scUploads)
           return Promise.all(scPromises)
             .then((embeddables) => {
-              let extendedUser = R.merge(user, {
+              let restrictedAttributes = [
+                'id',
+                'password',
+              ]
+              if (!isLoggedInUser) {
+                restrictedAttributes = R.concat(restrictedAttributes, [
+                  'gitHubAccessToken',
+                  'gitHubAccount',
+                ])
+              }
+              let extendedUser = R.merge(R.omit(restrictedAttributes, user), {
                 soundCloud: {
                   uploads: R.filter((x) => x != null, embeddables),
                 },
               })
               logger.debug(`Returning user:`, extendedUser)
+              if (!isLoggedInUser) {
+                logger.debug(`Filtering out the following properties:`, restrictedAttributes)
+              }
               return extendedUser
             }, (error) => {
               logger.error(`An error occurred:`, error)
