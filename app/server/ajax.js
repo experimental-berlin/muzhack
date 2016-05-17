@@ -23,7 +23,7 @@ module.exports = (uri, method, payloadJson, options, resolve, reject) => {
     body: payloadJson,
     headers: extendedHeaders,
   }, (error, response, body) => {
-    if (error == null && response.statusCode === 200) {
+    if (error == null && response.statusCode >= 200 && response.statusCode < 300) {
       resolveWithResponse(body, resolve, reject)
     } else {
       logger.debug(`Ajax request failed, status code: ${response.statusCode}`)

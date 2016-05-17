@@ -11,7 +11,7 @@ module.exports = (absPath, method, payloadJson, options, resolve, reject) => {
   request.onreadystatechange = () => {
     if (request.readyState === XMLHttpRequest.DONE) {
       logger.debug('Received response from server:', request)
-      if (request.status === 200) {
+      if (request.status >= 200 && request.status < 300) {
         resolveWithResponse(request.responseText, resolve, reject)
       } else {
         logger.debug(`Response was not successful: ${request.status}`)
