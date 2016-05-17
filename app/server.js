@@ -135,8 +135,8 @@ server.register(plugins, (err) => {
         .then((accessTokenData) => {
           let accessToken = accessTokenData.access_token
           logger.debug(`Received OAuth data from GitHub for user '${username}'`)
-          return ajax.getJson(`https://api.github.com/user`, {
-            Authorization: `token ${accessToken}`,
+          return ajax.getJson(`https://api.github.com/user`, null, {
+            headers: {Authorization: `token ${accessToken}`,},
           })
             .then((accountData) => {
               return db.connectToDb()
