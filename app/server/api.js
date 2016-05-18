@@ -584,13 +584,14 @@ let updateProjectFromGitHub = (repoOwner, repoName, reply) => {
         .then((conn) => {
           let qualifiedRepoName = `${repoOwner}/${repoName}`
           logger.debug(`Finding projects imported from GitHub repository ${qualifiedRepoName}`)
-
           return r.table('projects')
             .filter((project) => {
               return project('gitHubRepository').eq(qualifiedRepoName)
             })
             .run(conn)
-            .then(R.pipe(R.prop('toArray'), R.call))
+            .then((cursor) => {
+              return cursor.toArray()
+            })
             .then((projects) => {
               return Promise.mapSeries(projects, (project) => {
                 logger.debug(
