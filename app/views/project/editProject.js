@@ -95,14 +95,33 @@ let DeleteProjectDialog = component('DeleteProjectDialog', (cursor) => {
   return notification.question(title, message, yesCallback, closeCallback)
 })
 
-let EditProjectPad = component('EditProjectPad', (cursor) => {
+let EditGitHubProject = component('EditGitHubProject', (cursor) => {
+  return h('#edit-project', [
+    h('#edit-buttons.button-group', [
+      h('button#cancel-edit.pure-button', {
+        onClick: () => {
+          logger.debug(`Cancel button clicked`)
+          let project = cursor.cursor(['editProject', 'project',]).toJS()
+          // TODO: Ask user if there are modifications
+          router.goTo(`/u/${project.owner}/${project.projectId}`)
+        },
+      }, 'Cancel'),
+      h('a#remove-project', {
+        href: '#',
+        onClick: () => {
+          logger.debug(`Asked to remove project`)
+          cursor.cursor('editProject').set('showDeleteProjectDialog', true)
+        },
+      }, 'Remove this project'),
+    ]),
+  ])
+})
+
+let EditNonGitHubProject = component('EditNonGitHubProject', (cursor) => {
   let editCursor = cursor.cursor('editProject')
   let projectCursor = editCursor.cursor('project')
   let project = projectCursor.toJS()
-  let showDialog = !!editCursor.get('showDeleteProjectDialog')
-
-  return h('#edit-project-pad', [
-    showDialog ? DeleteProjectDialog(cursor) : null,
+  return h('#edit-project', [
     h('.input-group', [
       h('input#title-input', {
         type: 'text',
@@ -183,6 +202,19 @@ let EditProjectPad = component('EditProjectPad', (cursor) => {
         },
       }, 'Remove this project'),
     ]),
+  ])
+})
+
+let EditProjectPad = component('EditProjectPad', (cursor) => {
+  let editCursor = cursor.cursor('editProject')
+  let showDialog = !!editCursor.get('showDeleteProjectDialog')
+  let project = editCursor.cursor('project').toJS()
+  let isFromGitHub = project.gitHubRepository != null
+  logger.debug(`Project being edited is from GitHub: ${isFromGitHub}`)
+
+  return h('#edit-project-pad', [
+    showDialog ? DeleteProjectDialog(cursor) : null,
+    isFromGitHub ? EditGitHubProject(cursor) : EditNonGitHubProject(cursor),
   ])
 })
 

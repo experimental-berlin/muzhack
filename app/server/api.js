@@ -593,6 +593,7 @@ let updateProjectFromGitHub = (repoOwner, repoName, reply) => {
               return cursor.toArray()
             })
             .then((projects) => {
+              logger.debug(`Syncing ${projects.length} project(s) with GitHub repositories...`)
               return Promise.mapSeries(projects, (project) => {
                 logger.debug(
                   `Syncing project ${project.owner}/${project.projectId} with GitHub...`)
@@ -1242,12 +1243,18 @@ module.exports.register = (server) => {
           withDb(reply, (conn) => {
             return r.table('projects').get(qualifiedProjectId).run(conn)
               .then((project) => {
-                return r.table('projects').get(qualifiedProjectId).delete().run(conn)
-                  .then(removeFolder)
-                  .then(removeWebhook)
-                  .then(() => {
-                    logger.debug(`Project '${qualifiedProjectId}' successfully deleted`)
-                  })
+                if (project != null) {
+                  return r.table('projects').get(qualifiedProjectId).delete().run(conn)
+                    .then(removeFolder)
+                    .then(() => {
+                      removeWebhook(project)
+                    })
+                    .then(() => {
+                      logger.debug(`Project '${qualifiedProjectId}' successfully deleted`)
+                    })
+                } else {
+                  logger.debug(`Project '${qualifiedProjectId}' wasn't found`)
+                }
               })
           })
         }
