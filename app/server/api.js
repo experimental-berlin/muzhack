@@ -363,7 +363,6 @@ let installGitHubWebhook = (owner, gitHubOwner, gitHubProject) => {
         })
     })
     .then((user) => {
-      let [gitHubClientId, gitHubClientSecret,] = getGitHubCredentials()
       let callbackUrl = `${getEnvParam('APP_URI')}/api/webhooks/github/${gitHubOwner}/` +
         `${gitHubProject}`
       return ajax.postJson(
@@ -382,9 +381,10 @@ let installGitHubWebhook = (owner, gitHubOwner, gitHubProject) => {
             Authorization: `token ${user.gitHubAccessToken}`,
           },
         })
-        .then(() => {
+        .then((createResults) => {
           logger.debug(
             `Successfully installed GitHub webhook for ${gitHubOwner}/${gitHubProject}`)
+          return createResults.id
         }, (error) => {
           logger.warn(
             `Failed to install GitHub webhook for ${gitHubOwner}/${gitHubProject}:`, error)
@@ -414,8 +414,26 @@ let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
       if (appEnvironment === 'production' || appEnvironment === 'staging') {
         logger.debug(`Installing webhook at GitHub`)
         return installGitHubWebhook(owner, gitHubOwner, gitHubProject)
-          .then(() => {
-            reply(returnValue)
+          .then((webhookId) => {
+            if (webhookId != null) {
+              logger.debug(`Setting GitHub webhook ID on project`)
+              return connectToDb()
+                .then((conn) => {
+                  return r.table('projects').get(project.id)
+                    .merge(() => {
+                      return {
+                        gitHubWebhookId: webhookId,
+                      }
+                    })
+                    .run(conn)
+                    .then(() => {
+                      reply(returnValue)
+                    })
+                    .finally(() => {
+                      closeDbConnection(conn)
+                    })
+                })
+            }
           })
       } else {
         logger.debug(`Not installing GitHub webhook, since we aren't in a supported environment`)
@@ -572,24 +590,21 @@ let updateProjectFromGitHub = (repoOwner, repoName, reply) => {
               return project('gitHubRepository').eq(qualifiedRepoName)
             })
             .run(conn)
-            .then((cursor) => {
-              return cursor.toArray()
-                .then((projects) => {
-                  closeDbConnection(conn)
-
-                  return Promise.mapSeries(projects, (project) => {
-                    logger.debug(
-                      `Syncing project ${project.owner}/${project.projectId} with GitHub...`)
-                    return getProjectParamsForGitHubRepo(project.owner, project.projectId, repoOwner,
-                        repoName)
-                      .then((projectParams) => {
-                        return realUpdateProject(project.owner, project.ownerName, project.projectId,
-                          projectParams, reply)
-                      })
-                  }, projects)
-                }, () => {
-                  closeDbConnection(conn)
-                })
+            .then(R.pipe(R.prop('toArray'), R.call))
+            .then((projects) => {
+              return Promise.mapSeries(projects, (project) => {
+                logger.debug(
+                  `Syncing project ${project.owner}/${project.projectId} with GitHub...`)
+                return getProjectParamsForGitHubRepo(project.owner, project.projectId, repoOwner,
+                    repoName)
+                  .then((projectParams) => {
+                    return realUpdateProject(project.owner, project.ownerName, project.projectId,
+                      projectParams, reply)
+                  })
+              }, projects)
+            })
+            .finally(() => {
+              closeDbConnection(conn)
             })
         })
     })
@@ -1026,6 +1041,44 @@ let getProject = (request, reply) => {
   })
 }
 
+let removeWebhook = (project) => {
+  let appEnvironment = getEnvParam('APP_ENVIRONMENT')
+  let {gitHubOwner, gitHubProject, gitHubWebhookId,} = project
+  if (appEnvironment === 'production' || appEnvironment === 'staging') {
+    if (gitHubOwner != null && gitHubProject != null && gitHubWebhookId != null) {
+      logger.debug(`Deleting webhook for ${gitHubOwner}/${gitHubProject} at GitHub`)
+      return connectToDb()
+        .then((conn) => {
+          return getUserWithConn(owner, conn)
+            .finally(() => {
+              closeDbConnection(conn)
+            })
+        })
+        .then((user) => {
+          return ajax.deleteJson(
+            `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/hooks/${gitHubWebhookId}`,
+            {
+              headers: {
+                Authorization: `token ${user.gitHubAccessToken}`,
+              },
+            })
+            .then(() => {
+              logger.debug(
+                `Successfully deleted GitHub webhook for ${gitHubOwner}/${gitHubProject}`)
+            }, (error) => {
+              logger.debug(
+                `Failed to delete GitHub webhook for ${gitHubOwner}/${gitHubProject}:`, error)
+              // TODO: Detach GitHub account in case token is invalid
+            })
+        })
+    } else {
+      logger.debug(`Project isn't synced to GitHub, so not deleting webhook`)
+    }
+  } else {
+    logger.debug(`Not deleting GitHub webhook, since we aren't in a supported environment`)
+  }
+}
+
 module.exports.register = (server) => {
   let routeApiMethod = (options) => {
     let path = `/api/${options.path}`
@@ -1186,10 +1239,14 @@ module.exports.register = (server) => {
             `You are not allowed to delete projects for others than your own user`))
         } else {
           withDb(reply, (conn) => {
-            return r.table('projects').get(qualifiedProjectId).delete().run(conn)
-              .then(removeFolder)
-              .then(() => {
-                logger.debug(`Project '${qualifiedProjectId}' successfully deleted`)
+            return r.table('projects').get(qualifiedProjectId).run(conn)
+              .then((project) => {
+                return r.table('projects').get(qualifiedProjectId).delete().run(conn)
+                  .then(removeFolder)
+                  .then(removeWebhook)
+                  .then(() => {
+                    logger.debug(`Project '${qualifiedProjectId}' successfully deleted`)
+                  })
               })
           })
         }
