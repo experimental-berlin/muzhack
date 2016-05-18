@@ -383,7 +383,10 @@ let installGitHubWebhook = (owner, gitHubOwner, gitHubProject) => {
         })
         .then((createResults) => {
           logger.debug(
-            `Successfully installed GitHub webhook for ${gitHubOwner}/${gitHubProject}`)
+            `Successfully installed GitHub webhook for ${gitHubOwner}/${gitHubProject}:`, createResults)
+          if (createResults.id == null) {
+            throw new Error(`Couldn't get webhook ID`)
+          }
           return createResults.id
         }, (error) => {
           logger.warn(
@@ -415,25 +418,23 @@ let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
         logger.debug(`Installing webhook at GitHub`)
         return installGitHubWebhook(owner, gitHubOwner, gitHubProject)
           .then((webhookId) => {
-            if (webhookId != null) {
-              logger.debug(`Setting GitHub webhook ID on project`)
-              return connectToDb()
-                .then((conn) => {
-                  return r.table('projects').get(project.id)
-                    .merge(() => {
-                      return {
-                        gitHubWebhookId: webhookId,
-                      }
-                    })
-                    .run(conn)
-                    .then(() => {
-                      reply(returnValue)
-                    })
-                    .finally(() => {
-                      closeDbConnection(conn)
-                    })
-                })
-            }
+            logger.debug(`Setting GitHub webhook ID on project: ${webhookId}`)
+            return connectToDb()
+              .then((conn) => {
+                return r.table('projects').get(project.id)
+                  .merge(() => {
+                    return {
+                      gitHubWebhookId: webhookId,
+                    }
+                  })
+                  .run(conn)
+                  .then(() => {
+                    reply(returnValue)
+                  })
+                  .finally(() => {
+                    closeDbConnection(conn)
+                  })
+              })
           })
       } else {
         logger.debug(`Not installing GitHub webhook, since we aren't in a supported environment`)
@@ -1074,7 +1075,7 @@ let removeWebhook = (project) => {
             })
         })
     } else {
-      logger.debug(`Project isn't synced to GitHub, so not deleting webhook:`, project)
+      logger.debug(`Project isn't imported from GitHub, so not deleting webhook:`, project)
     }
   } else {
     logger.debug(`Not deleting GitHub webhook, since we aren't in a supported environment`)
