@@ -1058,7 +1058,7 @@ let removeWebhook = (project, owner) => {
             })
         })
         .then((user) => {
-          return ajax.deleteJson(
+          return ajax.delete(
             `https://api.github.com/repos/${gitHubRepository}/hooks/${gitHubWebhookId}`,
             {
               headers: {
