@@ -1074,7 +1074,7 @@ let removeWebhook = (project) => {
             })
         })
     } else {
-      logger.debug(`Project isn't synced to GitHub, so not deleting webhook`)
+      logger.debug(`Project isn't synced to GitHub, so not deleting webhook:`, project)
     }
   } else {
     logger.debug(`Not deleting GitHub webhook, since we aren't in a supported environment`)
