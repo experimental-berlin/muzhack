@@ -171,10 +171,11 @@ let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
   let bucket = gcs.bucket(bucketName)
   let copyPromises = R.map((file) => {
     return new Promise((resolve, reject) => {
-      logger.debug(`Copying file to Cloud Storage: ${file.url}...`)
+      let cloudFilePath = `u/${owner}/${projectId}/${dirPath}/${file.fullPath}`
+      logger.debug(`Copying file to Cloud Storage: ${file.url} -> ${cloudFilePath}...`)
+
       let performRequest = (numTries) => {
         logger.debug(`Attempt #${numTries} for ${file.url}`)
-        let cloudFilePath = `u/${owner}/${projectId}/${dirPath}/${file.fullPath}`
         let cloudFile = bucket.file(cloudFilePath)
         request.get(file.url, {
           headers: {
@@ -284,13 +285,13 @@ let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProjec
       let metadata = Yaml.parse(metadataFile.content)
       logger.debug(`Downloaded all MuzHack data from GitHub repository '${qualifiedRepoId}'`)
       logger.debug(`Metadata:`, metadata)
+      if (projectId == null) {
+        projectId = metadata.projectId
+      }
       let copyPicturesPromise = copyFilesToCloudStorage(
         gitHubPictures, 'pictures', owner, projectId)
       let copyFilesPromise = copyFilesToCloudStorage(
         gitHubFiles, 'files', owner, projectId)
-      if (projectId == null) {
-        projectId = metadata.projectId
-      }
       return Promise.all([copyPicturesPromise, copyFilesPromise,])
         .then(([pictures, files,]) => {
           return R.merge({gitHubOwner, gitHubProject,}, {
