@@ -1045,10 +1045,10 @@ let getProject = (request, reply) => {
 
 let removeWebhook = (project) => {
   let appEnvironment = getEnvParam('APP_ENVIRONMENT')
-  let {gitHubOwner, gitHubProject, gitHubWebhookId,} = project
+  let {gitHubRepository, gitHubWebhookId,} = project
   if (appEnvironment === 'production' || appEnvironment === 'staging') {
-    if (gitHubOwner != null && gitHubProject != null && gitHubWebhookId != null) {
-      logger.debug(`Deleting webhook for ${gitHubOwner}/${gitHubProject} at GitHub`)
+    if (gitHubRepository != null && gitHubWebhookId != null) {
+      logger.debug(`Deleting webhook for ${gitHubRepository} at GitHub`)
       return connectToDb()
         .then((conn) => {
           return getUserWithConn(owner, conn)
@@ -1058,7 +1058,7 @@ let removeWebhook = (project) => {
         })
         .then((user) => {
           return ajax.deleteJson(
-            `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/hooks/${gitHubWebhookId}`,
+            `https://api.github.com/repos/${gitHubRepository}/hooks/${gitHubWebhookId}`,
             {
               headers: {
                 Authorization: `token ${user.gitHubAccessToken}`,
@@ -1066,10 +1066,10 @@ let removeWebhook = (project) => {
             })
             .then(() => {
               logger.debug(
-                `Successfully deleted GitHub webhook for ${gitHubOwner}/${gitHubProject}`)
+                `Successfully deleted GitHub webhook for ${gitHubRepository}`)
             }, (error) => {
               logger.debug(
-                `Failed to delete GitHub webhook for ${gitHubOwner}/${gitHubProject}:`, error)
+                `Failed to delete GitHub webhook for ${gitHubRepository}:`, error)
               // TODO: Detach GitHub account in case token is invalid
             })
         })
