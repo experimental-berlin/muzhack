@@ -1044,7 +1044,7 @@ let getProject = (request, reply) => {
   })
 }
 
-let removeWebhook = (project) => {
+let removeWebhook = (project, owner) => {
   let appEnvironment = getEnvParam('APP_ENVIRONMENT')
   let {gitHubRepository, gitHubWebhookId,} = project
   if (appEnvironment === 'production' || appEnvironment === 'staging') {
@@ -1248,7 +1248,7 @@ module.exports.register = (server) => {
                   return r.table('projects').get(qualifiedProjectId).delete().run(conn)
                     .then(removeFolder)
                     .then(() => {
-                      removeWebhook(project)
+                      return removeWebhook(project, owner)
                     })
                     .then(() => {
                       logger.debug(`Project '${qualifiedProjectId}' successfully deleted`)
