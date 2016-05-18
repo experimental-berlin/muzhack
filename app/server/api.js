@@ -418,10 +418,11 @@ let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
         logger.debug(`Installing webhook at GitHub`)
         return installGitHubWebhook(owner, gitHubOwner, gitHubProject)
           .then((webhookId) => {
-            logger.debug(`Setting GitHub webhook ID on project: ${webhookId}`)
+            logger.debug(`Setting GitHub webhook ID on project ${project.id}: ${webhookId}`)
             return connectToDb()
               .then((conn) => {
-                return r.table('projects').get(project.id)
+                return r.table('projects')
+                  .get(project.id)
                   .merge(() => {
                     return {
                       gitHubWebhookId: webhookId,
@@ -429,6 +430,7 @@ let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
                   })
                   .run(conn)
                   .then(() => {
+                    logger.debug(`Successfully set webhook ID on project, returning:`, returnValue)
                     reply(returnValue)
                   })
                   .finally(() => {
