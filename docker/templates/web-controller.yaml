@@ -82,16 +82,6 @@ spec:
             secretKeyRef:
               name: environment
               key: stripe-publishable-key
-        - name: CERTBOT_CHALLENGE_PATH
-          valueFrom:
-            secretKeyRef:
-              name: environment
-              key: certbot-challenge-path
-        - name: CERTBOT_CHALLENGE_REPLY
-          valueFrom:
-            secretKeyRef:
-              name: environment
-              key: certbot-challenge-reply
         ports:
         - name: http-server
           containerPort: 80
