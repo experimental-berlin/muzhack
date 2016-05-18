@@ -120,6 +120,9 @@ server.register(plugins, (err) => {
     },
   })
 
+  let certBotPath = getEnvParam('CERTBOT_CHALLENGE_PATH')
+  let certBotReply = getEnvParam('CERTBOT_CHALLENGE_REPLY')
+
   server.route({
     method: ['GET',],
     path: '/u/{user}/attach/github',
@@ -189,6 +192,13 @@ server.register(plugins, (err) => {
         path: path.join(__dirname, '../bundle.js'),
         confine: false,
       },
+    },
+  })
+  server.route({
+    method: ['GET',],
+    path: `.well-known/acme-challenge/${certBotPath}`,
+    handler: (request, reply) => {
+      reply(certBotReply)
     },
   })
   server.route({
