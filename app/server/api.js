@@ -430,8 +430,18 @@ let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
                   })
                   .run(conn)
                   .then(() => {
-                    logger.debug(`Successfully set webhook ID on project, returning:`, returnValue)
-                    reply(returnValue)
+                    return r.table('projects')
+                      .get(project.id)
+                      .run(conn)
+                      .then((project) => {
+                        if (project.gitHubWebhookId != null) {
+                          logger.error(`gitHubWebhookId == null`, project)
+                          throw new Error(`gitHubWebhookId == null`)
+                        } else {
+                          logger.debug(`Successfully set webhook ID on project, returning:`, returnValue)
+                          reply(returnValue)
+                        }
+                      })
                   })
                   .finally(() => {
                     closeDbConnection(conn)
