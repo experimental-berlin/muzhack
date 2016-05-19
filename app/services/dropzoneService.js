@@ -2,6 +2,7 @@
 let R = require('ramda')
 let Dropzone = require('dropzone/src/dropzone.coffee')
 let S = require('underscore.string.fp')
+let Promise = require('bluebird')
 
 let editing = require('../editing')
 let GoogleCloudStorageUploader = require('../cloudStorageUploader')
@@ -175,11 +176,34 @@ class DropzoneService {
         return new Promise((resolve, reject) => {
           let img = new Image()
           img.onload = () => {
+            logger.debug(`Processing image file '${file.name}'...`)
             let canvas = document.createElement('canvas')
+            let targetAspectRatio = width / height
+            let sourceAspectRatio = img.width / img.height
+            let targetWidth
+            let targetHeight
+            let horizontalOffset = 0
+            let verticalOffset = 0
+            if (sourceAspectRatio > targetAspectRatio) {
+              logger.debug(`Will pad the image vertically`)
+              let multiplier = width / img.width
+              targetWidth = width
+              targetHeight = multiplier * img.height
+              verticalOffset = (height - targetHeight) / 2
+            } else if (sourceAspectRatio < targetAspectRatio) {
+              logger.debug(`Will pad the image horizontally`)
+              let multiplier = height / img.height
+              targetWidth = multiplier * img.width
+              targetHeight = height
+              horizontalOffset = (width - targetWidth) / 2
+            }
             canvas.width = width
             canvas.height = height
             let ctx = canvas.getContext('2d')
-            ctx.drawImage(img, 0, 0, width, height)
+            ctx.fillStyle = 'white'
+            ctx.fillRect(0, 0, width, height)
+            ctx.drawImage(img, 0, 0, img.width, img.height, horizontalOffset, verticalOffset,
+              targetWidth, targetHeight)
             resolve(canvas.toDataURL('image/png'))
           }
           img.src = URL.createObjectURL(file)
