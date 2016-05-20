@@ -75,9 +75,8 @@ for environment in ['staging', 'production', ]:
         'web-controller',
         'web-service',
         'rethinkdb/staging',
-        'redis/bootstrap/master',
-        'redis/post-bootstrap/redis',
-        'redis/post-bootstrap/sentinel',
+        'redis/master',
+        'redis/slave',
     ]:
         _render_template(fname, environment, data)
 
