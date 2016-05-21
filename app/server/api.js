@@ -18,6 +18,7 @@ let Yaml = require('yamljs')
 let TypedError = require('error/typed')
 let gcloud = require('gcloud')
 let Promise = require('bluebird')
+let BullQueue = require('bull')
 
 let gcs = gcloud.storage({
   projectId: getEnvParam('GCLOUD_PROJECT_ID'),
@@ -228,12 +229,58 @@ let downloadFileFromGitHub = (gitHubOwner, gitHubProject, path) => {
     })
 }
 
+let unresolvedPicturePromises = {}
+
+let processPicturesFromGitHub = Promise.method((copyPicturesPromise) => {
+  let queue = BullQueue('Picture processing', 6379, 'localhost')
+  queue
+    .on('failed', (job, error) => {
+      logger.warn(`Processing of picture ${job.data} failed:`, error)
+      let unresolvedPromise = unresolvedPicturePromises[job.data]
+      if (unresolvedPromise != null) {
+        unresolvedPromise.reject(error)
+      }
+    })
+
+  queue.process(Promise.method((job) => {
+    let pictureUrl = job.data
+    logger.debug(`Processing picture`, pictureUrl)
+    let unresolvedPromise = unresolvedPicturePromises[pictureUrl]
+    if (unresolvedPromise == null) {
+      logger.debug(`There is no promise corresponding to picture ${pictureUrl}, ignoring`)
+    } else {
+      // TODO: Download picture
+      // TODO: Process picture into smaller sizes
+      // TODO: Upload smaller sizes to Cloud Storage
+      return Promise.resolve(pictureUrl)
+        .then(() => {
+          logger.debug(`Finished processing picture ${pictureUrl}`)
+          unresolvedPromise.resolve(unresolvedPromise.picture)
+          return pictureUrl
+        })
+    }
+  }))
+
+    return Promise.map(copyPicturesPromise, (picture) => {
+      return new Promise((resolve, reject) => {
+        unresolvedPicturePromises[picture.url] = {resolve, reject, picture,}
+        queue.add(picture.url)
+        logger.debug(`Added picture ${picture.url} to queue`)
+      })
+    })
+      .finally(() => {
+        logger.debug(`Closing queue`)
+        queue.close()
+      })
+})
+
 let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProject) => {
   let qualifiedRepoId = `${gitHubOwner}/${gitHubProject}`
   let downloadFile = R.partial(downloadFileFromGitHub, [gitHubOwner, gitHubProject,])
   let [gitHubClientId, gitHubClientSecret,] = getGitHubCredentials()
 
   let getDirectory = (path, recurse) => {
+    recurse = !!recurse
     logger.debug(`Getting directory '${path}', recursively: ${recurse}...`)
     return downloadResource(
         `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents/muzhack/${path}?` +
@@ -292,7 +339,8 @@ let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProjec
         gitHubPictures, 'pictures', owner, projectId)
       let copyFilesPromise = copyFilesToCloudStorage(
         gitHubFiles, 'files', owner, projectId)
-      return Promise.all([copyPicturesPromise, copyFilesPromise,])
+      let processPicturesPromise = processPicturesFromGitHub(copyPicturesPromise)
+      return Promise.all([processPicturesPromise, copyFilesPromise,])
         .then(([pictures, files,]) => {
           return R.merge({gitHubOwner, gitHubProject,}, {
             id: projectId,
@@ -405,42 +453,44 @@ let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
   getProjectParamsForGitHubRepo(owner, null, gitHubOwner, gitHubProject)
     .then((newProjectParams) => {
       return createProjectFromParameters(newProjectParams, owner, ownerName)
+        .then((project) => {
+          let returnValue = {
+            qualifiedProjectId: `${project.id}`,
+          }
+          let appEnvironment = getEnvParam(`APP_ENVIRONMENT`, null)
+          if (appEnvironment === 'production' || appEnvironment === 'staging') {
+            logger.debug(`Installing webhook at GitHub`)
+            return installGitHubWebhook(owner, gitHubOwner, gitHubProject)
+              .then((webhookId) => {
+                logger.debug(`Setting GitHub webhook ID on project ${project.id}: ${webhookId}`)
+                return connectToDb()
+                  .then((conn) => {
+                    return r.table('projects')
+                      .get(project.id)
+                      .update({
+                        gitHubWebhookId: webhookId,
+                      })
+                      .run(conn)
+                      .then(() => {
+                        logger.debug(`Successfully set webhook ID on project, returning:`,
+                          returnValue)
+                        reply(returnValue)
+                      })
+                      .finally(() => {
+                        closeDbConnection(conn)
+                      })
+                  })
+              })
+          } else {
+            logger.debug(
+              `Not installing GitHub webhook, since we aren't in a supported environment`)
+            logger.debug(`Replying with:`, returnValue)
+            reply(returnValue)
+          }
+        })
     }, (error) => {
       logger.warn(error.message)
       reply(Boom.badRequest(error.message))
-    })
-    .then((project) => {
-      let appEnvironment = getEnvParam(`APP_ENVIRONMENT`, null)
-      let returnValue = {
-        qualifiedProjectId: `${project.id}`,
-      }
-      if (appEnvironment === 'production' || appEnvironment === 'staging') {
-        logger.debug(`Installing webhook at GitHub`)
-        return installGitHubWebhook(owner, gitHubOwner, gitHubProject)
-          .then((webhookId) => {
-            logger.debug(`Setting GitHub webhook ID on project ${project.id}: ${webhookId}`)
-            return connectToDb()
-              .then((conn) => {
-                return r.table('projects')
-                  .get(project.id)
-                  .update({
-                    gitHubWebhookId: webhookId,
-                  })
-                  .run(conn)
-                  .then(() => {
-                    logger.debug(`Successfully set webhook ID on project, returning:`, returnValue)
-                    reply(returnValue)
-                  })
-                  .finally(() => {
-                    closeDbConnection(conn)
-                  })
-              })
-          })
-      } else {
-        logger.debug(`Not installing GitHub webhook, since we aren't in a supported environment`)
-        logger.debug(`Replying with:`, returnValue)
-        reply(returnValue)
-      }
     })
     .catch((error) => {
       logger.error(`An error occurred:`, error.stack)
