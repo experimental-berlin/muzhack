@@ -1,3 +1,2 @@
 rethinkdb
-boto3
 jinja2
