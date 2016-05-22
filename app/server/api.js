@@ -455,19 +455,25 @@ let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
     })
 }
 
-let createProjectFromClientApp = (projectParams, owner, ownerName, reply) => {
+let processPicturesFromProjectParams = Promise.method((projectParams, owner) => {
   let pictures = R.map((picture) => {
     let projectId = projectParams.projectId || projectParams.id
     return R.merge(picture, {
       cloudPath: `u/${owner}/${projectId}/pictures/${picture.name}`,
     })
   }, projectParams.pictures)
-  Promise.map(pictures, R.partial(ajax.postJson,
-      ['http://localhost:10000/jobs',]))
+  return Promise.map(pictures, R.partial(ajax.postJson, ['http://localhost:10000/jobs',]))
     .then((pictures) => {
-      return createProjectFromParameters(R.merge(projectParams, {
+      return R.merge(projectParams, {
         pictures,
-      }), owner, ownerName)
+      })
+    })
+})
+
+let createProjectFromClientApp = (projectParams, owner, ownerName, reply) => {
+  processPicturesFromProjectParams(projectParams, owner)
+    .then((newProjectParams) => {
+      return createProjectFromParameters(newProjectParams, owner, ownerName)
         .then(() => {
           reply()
         })
@@ -596,7 +602,14 @@ let updateProject = (request, reply) => {
     let ownerName = request.auth.credentials.name
 
     logger.debug(`Received request to update project '${owner}/${projectId}':`, projectParams)
-    realUpdateProject(owner, ownerName, projectId, projectParams, reply)
+    projectParams.projectId = projectId
+    processPicturesFromProjectParams(projectParams, owner)
+      .then((newProjectParams) => {
+        realUpdateProject(owner, ownerName, projectId, newProjectParams, reply)
+      }, (error) => {
+        logger.error(`Processing pictures failed:`, error.stack)
+        reply(Boom.badImplementation())
+      })
   }
 }
 

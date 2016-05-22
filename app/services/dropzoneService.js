@@ -312,9 +312,7 @@ class DropzoneService {
     }, mutatingDropzoneEvents)
     if (!R.isEmpty(existingFiles || [])) {
       let description = forPictures ? 'picture' : 'file'
-      let picker = forPictures ? (x) => {
-        return R.merge(x, {name: x.url,})
-      } : (x) => {
+      let picker = forPictures ? R.identity : (x) => {
         return R.merge(x, {name: x.filename,})
       }
       let fileObjs = R.map(picker, existingFiles)
