@@ -455,6 +455,29 @@ let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
     })
 }
 
+let createProjectFromClientApp = (projectParams, owner, ownerName, reply) => {
+  let pictures = R.map((picture) => {
+    let projectId = projectParams.projectId || projectParams.id
+    return R.merge(picture, {
+      cloudPath: `u/${owner}/${projectId}/pictures/${picture.name}`,
+    })
+  }, projectParams.pictures)
+  Promise.map(pictures, R.partial(ajax.postJson,
+      ['http://localhost:10000/jobs',]))
+    .then((pictures) => {
+      return createProjectFromParameters(R.merge(projectParams, {
+        pictures,
+      }), owner, ownerName)
+        .then(() => {
+          reply()
+        })
+    })
+    .catch((error) => {
+     logger.error(`Caught error while creating project per request from client app:`, error.stack)
+     reply(Boom.badImplementation())
+   })
+}
+
 let createProject = (request, reply) => {
   let projectParams = request.payload
   logger.debug(`Received request to create project:`, projectParams)
@@ -470,10 +493,7 @@ let createProject = (request, reply) => {
     if (isGitHubRepo) {
       createProjectFromGitHub(owner, ownerName, projectParams, reply)
     } else {
-      createProjectFromParameters(projectParams, owner, ownerName)
-        .then(() => {
-          reply()
-        })
+      createProjectFromClientApp(projectParams, owner, ownerName, reply)
     }
   }
 }
