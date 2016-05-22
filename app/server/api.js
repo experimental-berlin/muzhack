@@ -1249,6 +1249,7 @@ module.exports.register = (server) => {
             let bucketName = getEnvParam(`GCLOUD_BUCKET`)
             let bucket = gcs.bucket(bucketName)
             bucket.deleteFiles({
+              prefix: `${dirPath}/`,
               force: true,
             }, (error) => {
               if (error == null) {
