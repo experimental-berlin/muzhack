@@ -19,6 +19,7 @@ except IOError:
 for k, v in settings.iteritems():
     os.environ[k] = v
 
+subprocess.Popen(['./services/image-processor/image-processor.py', ])
 try:
     subprocess.check_call(
         ['./node_modules/.bin/babel-node', '--harmony_destructuring', '.', ])

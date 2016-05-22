@@ -9,6 +9,7 @@ let Boom = require('boom')
 let moment = require('moment')
 let r = require('rethinkdb')
 let Url = require('url')
+let Promise = require('bluebird')
 let Logger = require('js-logger-aknudsen')
 let logger = Logger.get('server')
 Logger.useDefaults({
@@ -51,6 +52,11 @@ ${stack}
   `,
     })
   }
+})
+
+Promise.config({
+  longStackTraces: true,
+  cancellation: true,
 })
 
 let auth = require('./server/auth')

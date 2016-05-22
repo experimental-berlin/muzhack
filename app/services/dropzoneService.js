@@ -172,40 +172,37 @@ class DropzoneService {
         isBackup: true,
       })
 
-      let processImage = (file, width, height) => {
+      let processImage = (file) => {
         return new Promise((resolve, reject) => {
+          let maxSize = 1200
           let img = new Image()
           img.onload = () => {
             logger.debug(`Processing image file '${file.name}'...`)
             let canvas = document.createElement('canvas')
-            let targetAspectRatio = width / height
-            let sourceAspectRatio = img.width / img.height
             let targetWidth
             let targetHeight
-            let horizontalOffset = 0
-            let verticalOffset = 0
-            if (sourceAspectRatio > targetAspectRatio) {
-              logger.debug(`Will pad the image vertically`)
-              let multiplier = width / img.width
-              targetWidth = width
-              targetHeight = multiplier * img.height
-              verticalOffset = (height - targetHeight) / 2
-            } else if (sourceAspectRatio < targetAspectRatio) {
-              logger.debug(`Will pad the image horizontally`)
-              let multiplier = height / img.height
-              targetWidth = multiplier * img.width
-              targetHeight = height
-              horizontalOffset = (width - targetWidth) / 2
+            if (img.width > maxSize || img.height > maxSize) {
+              logger.debug(`Image dimensions exceed max size (${maxSize} pixels), reducing size`)
+              if (img.width > img.height) {
+                let multiplier = maxSize / img.width
+                targetWidth = maxSize
+                targetHeight = multiplier * img.height
+              } else {
+                let multiplier = maxSize / img.height
+                targetHeight = maxSize
+                targetWidth = multiplier * img.width
+              }
+              canvas.width = targetWidth
+              canvas.height = targetHeight
+            } else {
+              canvas.width = img.width
+              canvas.height = img.height
             }
-            canvas.width = width
-            canvas.height = height
             let ctx = canvas.getContext('2d')
-            ctx.fillStyle = 'white'
-            ctx.fillRect(0, 0, width, height)
-            ctx.drawImage(img, 0, 0, img.width, img.height, horizontalOffset, verticalOffset,
-              targetWidth, targetHeight)
+            ctx.drawImage(img, 0, 0, targetWidth, targetHeight)
             resolve(canvas.toDataURL('image/png'))
           }
+
           img.src = URL.createObjectURL(file)
         })
       }
@@ -213,7 +210,7 @@ class DropzoneService {
       let processOnePicture = () => {
         let file = files.shift()
         logger.debug(`Processing picture '${file.name}'`)
-        return processImage(file, 500, 409)
+        return processImage(file)
           .then((dataUri) => {
             let match = /^data:([^;]+);base64,(.+)$/.exec(dataUri)
             if (match == null) {
@@ -315,9 +312,7 @@ class DropzoneService {
     }, mutatingDropzoneEvents)
     if (!R.isEmpty(existingFiles || [])) {
       let description = forPictures ? 'picture' : 'file'
-      let picker = forPictures ? (x) => {
-        return R.merge(x, {name: x.url,})
-      } : (x) => {
+      let picker = forPictures ? R.identity : (x) => {
         return R.merge(x, {name: x.filename,})
       }
       let fileObjs = R.map(picker, existingFiles)

@@ -90,13 +90,13 @@ let TopPad = component('TopPad', (cursor) => {
           },
         }, [
           h('.thumbnail-wrapper', [
-            h('img', {src: picture.url,}),
+            h('img', {src: picture.thumbNailUrl,}),
           ]),
         ])
       }, project.pictures)),
       h('#displayed-image', [
         h('img', {
-          src: mainPicture != null ? mainPicture.url : null
+          src: mainPicture != null ? mainPicture.mainUrl : null
         ,}),
       ]),
     ]),

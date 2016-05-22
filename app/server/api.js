@@ -117,7 +117,7 @@ let createZip = (owner, projectParams) => {
         zip.file(file.fullPath, content)
       })
   }, projectParams.files)
-  logger.debug(`Waiting on download promises:`, downloadPromises)
+  logger.debug(`Waiting on ${downloadPromises.length} download promise(s)`)
   return Promise.all(downloadPromises)
     .then(() => {
       logger.debug(`All files added to zip`)
@@ -202,6 +202,7 @@ let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
               } else {
                 resolve(R.merge(file, {
                   url: `https://storage.googleapis.com/${bucketName}/${cloudFilePath}`,
+                  cloudPath: cloudFilePath,
                 }))
               }
             })
@@ -228,12 +229,14 @@ let downloadFileFromGitHub = (gitHubOwner, gitHubProject, path) => {
     })
 }
 
+let unresolvedPicturePromises = {}
+
 let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProject) => {
   let qualifiedRepoId = `${gitHubOwner}/${gitHubProject}`
   let downloadFile = R.partial(downloadFileFromGitHub, [gitHubOwner, gitHubProject,])
   let [gitHubClientId, gitHubClientSecret,] = getGitHubCredentials()
 
-  let getDirectory = (path, recurse) => {
+  let getDirectory = (path, recurse=false) => {
     logger.debug(`Getting directory '${path}', recursively: ${recurse}...`)
     return downloadResource(
         `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents/muzhack/${path}?` +
@@ -292,7 +295,9 @@ let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProjec
         gitHubPictures, 'pictures', owner, projectId)
       let copyFilesPromise = copyFilesToCloudStorage(
         gitHubFiles, 'files', owner, projectId)
-      return Promise.all([copyPicturesPromise, copyFilesPromise,])
+      let processPicturesPromise = Promise.map(copyPicturesPromise, R.partial(ajax.postJson,
+          ['http://localhost:10000/jobs',]))
+      return Promise.all([processPicturesPromise, copyFilesPromise,])
         .then(([pictures, files,]) => {
           return R.merge({gitHubOwner, gitHubProject,}, {
             id: projectId,
@@ -405,47 +410,78 @@ let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
   getProjectParamsForGitHubRepo(owner, null, gitHubOwner, gitHubProject)
     .then((newProjectParams) => {
       return createProjectFromParameters(newProjectParams, owner, ownerName)
+        .then((project) => {
+          let returnValue = {
+            qualifiedProjectId: `${project.id}`,
+          }
+          let appEnvironment = getEnvParam(`APP_ENVIRONMENT`, null)
+          if (appEnvironment === 'production' || appEnvironment === 'staging') {
+            logger.debug(`Installing webhook at GitHub`)
+            return installGitHubWebhook(owner, gitHubOwner, gitHubProject)
+              .then((webhookId) => {
+                logger.debug(`Setting GitHub webhook ID on project ${project.id}: ${webhookId}`)
+                return connectToDb()
+                  .then((conn) => {
+                    return r.table('projects')
+                      .get(project.id)
+                      .update({
+                        gitHubWebhookId: webhookId,
+                      })
+                      .run(conn)
+                      .then(() => {
+                        logger.debug(`Successfully set webhook ID on project, returning:`,
+                          returnValue)
+                        reply(returnValue)
+                      })
+                      .finally(() => {
+                        closeDbConnection(conn)
+                      })
+                  })
+              })
+          } else {
+            logger.debug(
+              `Not installing GitHub webhook, since we aren't in a supported environment`)
+            logger.debug(`Replying with:`, returnValue)
+            reply(returnValue)
+          }
+        })
     }, (error) => {
       logger.warn(error.message)
       reply(Boom.badRequest(error.message))
-    })
-    .then((project) => {
-      let appEnvironment = getEnvParam(`APP_ENVIRONMENT`, null)
-      let returnValue = {
-        qualifiedProjectId: `${project.id}`,
-      }
-      if (appEnvironment === 'production' || appEnvironment === 'staging') {
-        logger.debug(`Installing webhook at GitHub`)
-        return installGitHubWebhook(owner, gitHubOwner, gitHubProject)
-          .then((webhookId) => {
-            logger.debug(`Setting GitHub webhook ID on project ${project.id}: ${webhookId}`)
-            return connectToDb()
-              .then((conn) => {
-                return r.table('projects')
-                  .get(project.id)
-                  .update({
-                    gitHubWebhookId: webhookId,
-                  })
-                  .run(conn)
-                  .then(() => {
-                    logger.debug(`Successfully set webhook ID on project, returning:`, returnValue)
-                    reply(returnValue)
-                  })
-                  .finally(() => {
-                    closeDbConnection(conn)
-                  })
-              })
-          })
-      } else {
-        logger.debug(`Not installing GitHub webhook, since we aren't in a supported environment`)
-        logger.debug(`Replying with:`, returnValue)
-        reply(returnValue)
-      }
     })
     .catch((error) => {
       logger.error(`An error occurred:`, error.stack)
       reply(Boom.badImplementation())
     })
+}
+
+let processPicturesFromProjectParams = Promise.method((projectParams, owner) => {
+  let pictures = R.map((picture) => {
+    let projectId = projectParams.projectId || projectParams.id
+    return R.merge(picture, {
+      cloudPath: `u/${owner}/${projectId}/pictures/${picture.name}`,
+    })
+  }, projectParams.pictures)
+  return Promise.map(pictures, R.partial(ajax.postJson, ['http://localhost:10000/jobs',]))
+    .then((pictures) => {
+      return R.merge(projectParams, {
+        pictures,
+      })
+    })
+})
+
+let createProjectFromClientApp = (projectParams, owner, ownerName, reply) => {
+  processPicturesFromProjectParams(projectParams, owner)
+    .then((newProjectParams) => {
+      return createProjectFromParameters(newProjectParams, owner, ownerName)
+        .then(() => {
+          reply()
+        })
+    })
+    .catch((error) => {
+     logger.error(`Caught error while creating project per request from client app:`, error.stack)
+     reply(Boom.badImplementation())
+   })
 }
 
 let createProject = (request, reply) => {
@@ -463,10 +499,7 @@ let createProject = (request, reply) => {
     if (isGitHubRepo) {
       createProjectFromGitHub(owner, ownerName, projectParams, reply)
     } else {
-      createProjectFromParameters(projectParams, owner, ownerName)
-        .then(() => {
-          reply()
-        })
+      createProjectFromClientApp(projectParams, owner, ownerName, reply)
     }
   }
 }
@@ -569,7 +602,14 @@ let updateProject = (request, reply) => {
     let ownerName = request.auth.credentials.name
 
     logger.debug(`Received request to update project '${owner}/${projectId}':`, projectParams)
-    realUpdateProject(owner, ownerName, projectId, projectParams, reply)
+    projectParams.projectId = projectId
+    processPicturesFromProjectParams(projectParams, owner)
+      .then((newProjectParams) => {
+        realUpdateProject(owner, ownerName, projectId, newProjectParams, reply)
+      }, (error) => {
+        logger.error(`Processing pictures failed:`, error.stack)
+        reply(Boom.badImplementation())
+      })
   }
 }
 
