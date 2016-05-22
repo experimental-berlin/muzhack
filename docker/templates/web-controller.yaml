@@ -85,5 +85,31 @@ spec:
         ports:
         - name: http-server
           containerPort: 80
-      imagePullSecrets:
-      - name: quay.io
+      - name: image-processor
+        image: eu.gcr.io/muzhack-1288/image-processor{{imageVariant}}:{{imageTag}}
+        imagePullPolicy: {{imagePullPolicy}}
+        env:
+        - name: GCLOUD_BUCKET
+          value: {{gcloudBucket}}
+        - name: GCLOUD_PROJECT_ID
+          value: {{gcloudProjectId}}
+        - name: GCLOUD_CLIENT_EMAIL
+          value: {{gcloudClientEmail}}
+        - name: GCLOUD_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: environment
+              key: gcloud-client-id
+        - name: GCLOUD_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: environment
+              key: gcloud-private-key
+        - name: GCLOUD_PRIVATE_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: environment
+              key: gcloud-private-key-id
+        ports:
+        - name: web-service
+          containerPort: 10000

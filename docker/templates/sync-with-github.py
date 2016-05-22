@@ -17,7 +17,6 @@ cl_parser = argparse.ArgumentParser(description='Sync with GitHub projects')
 cl_parser.add_argument('--host', help='Database host', default='localhost')
 args = cl_parser.parse_args()
 
-
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.DEBUG)
 _logger = logging.getLogger()
 
