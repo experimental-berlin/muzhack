@@ -117,7 +117,7 @@ let createZip = (owner, projectParams) => {
         zip.file(file.fullPath, content)
       })
   }, projectParams.files)
-  logger.debug(`Waiting on download promises:`, downloadPromises)
+  logger.debug(`Waiting on ${downloadPromises.length} download promise(s)`)
   return Promise.all(downloadPromises)
     .then(() => {
       logger.debug(`All files added to zip`)
