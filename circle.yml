@@ -15,6 +15,9 @@ dependencies:
     - gcloud config set project $GCLOUD_PROJECTID
   cache_directories:
     - ~/docker
+test:
+  override:
+    - echo "No tests so far"
 deployment:
   test:
     branch: master
