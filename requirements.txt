@@ -1,6 +1,2 @@
 rethinkdb
 jinja2
-aiohttp
-cchardet
-oauth2client
-pillow
