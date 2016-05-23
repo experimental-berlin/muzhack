@@ -19,6 +19,11 @@ let TypedError = require('error/typed')
 let gcloud = require('gcloud')
 let Promise = require('bluebird')
 
+let getCloudStorageUrl = (bucketName, path) => {
+  let encodedPath = path.replace(/#/, '%23')
+  return `https://storage.googleapis.com/${bucketName}/${encodedPath}`
+}
+
 let gcs = gcloud.storage({
   projectId: getEnvParam('GCLOUD_PROJECT_ID'),
   credentials: {
@@ -84,6 +89,7 @@ let downloadResource = (url, options) => {
           logger.debug(`Downloaded '${url}' successfully`)
           resolve(body)
         } else if (response.statusCode === 404) {
+          logger.debug(`Couldn't find resource ${url}`)
           reject(notFoundError())
         } else {
           if (numTries > 3) {
@@ -147,7 +153,7 @@ let createZip = (owner, projectParams) => {
                   } else {
                     logger.debug(`Got zip metadata`, metadata)
                     resolve({
-                      url: `https://storage.googleapis.com/${bucketName}/${cloudFilePath}`,
+                      url: getCloudStorageUrl(bucketName, cloudFilePath),
                       size: metadata.size,
                     })
                   }
@@ -161,7 +167,7 @@ let createZip = (owner, projectParams) => {
           })
       })
     }, (error) => {
-      logger.warn(`Failed to download files: '${error}'`)
+      logger.warn(`Failed to download files:`, error.stack)
       throw new Error(error)
     })
 }
@@ -201,7 +207,7 @@ let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
                 reject(err)
               } else {
                 resolve(R.merge(file, {
-                  url: `https://storage.googleapis.com/${bucketName}/${cloudFilePath}`,
+                  url: getCloudStorageUrl(bucketName, cloudFilePath),
                   cloudPath: cloudFilePath,
                 }))
               }
@@ -1197,7 +1203,7 @@ module.exports.register = (server) => {
             logger.debug(`Got signed URL for file: ${signedUrl}`)
             reply({
               signedUrl,
-              url: `https://storage.googleapis.com/${bucketName}/${filePath}`,
+              url: getCloudStorageUrl(bucketName, filePath),
             })
           }
         })
