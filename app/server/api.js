@@ -17,6 +17,8 @@ let {withDb,} = require('./db')
 let {getEnvParam,} = require('./environment')
 let ajax = require('../ajax')
 let stripeApi = require('./api/stripeApi')
+let {notFoundError,} = require('../errors')
+
 
 class Project {
   constructor({projectId, tags, owner, ownerName, title, created, pictures, licenseId,
@@ -360,11 +362,15 @@ let search = (request, reply) => {
 let getUserWithConn = (username, conn) => {
   return r.table('users')
     .get(username)
-    .merge((user) => {
-      return {
-        'projects': r.table('projects').getAll(username, {index: 'owner',})
-          .coerceTo('array'),
-      }
+    .do((user) => {
+      return r.branch(
+        user.eq(null),
+        null,
+        user.merge({
+          'projects': r.table('projects').getAll(username, {index: 'owner',})
+            .coerceTo('array'),
+        })
+      )
     })
     .run(conn)
 }
