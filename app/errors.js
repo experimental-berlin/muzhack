@@ -1,5 +1,11 @@
 'use strict'
 let logger = require('js-logger-aknudsen').get('errors')
+let TypedError = require('error/typed')
+
+let notFoundError = TypedError({
+  type: 'notFound',
+  message: 'Resource not found',
+})
 
 class ValidationError extends Error {
   constructor(message) {
@@ -9,5 +15,6 @@ class ValidationError extends Error {
 }
 
 module.exports = {
+  notFoundError,
   ValidationError,
 }

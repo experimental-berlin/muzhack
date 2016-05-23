@@ -2,6 +2,7 @@
 let logger = require('js-logger-aknudsen').get('client.ajax')
 let S = require('underscore.string.fp')
 let R = require('ramda')
+let {notFoundError,} = require('../errors')
 
 let {resolveWithResponse,} = require('../ajaxUtils')
 
@@ -15,8 +16,12 @@ module.exports = (absPath, method, payloadJson, options, resolve, reject) => {
         resolveWithResponse(request.responseText, resolve, reject)
       } else {
         logger.debug(`Response was not successful: ${request.status}`)
-        let result = !S.isBlank(request.responseText) ? JSON.parse(request.responseText) : ''
-        reject(result)
+        if (request.status === 404) {
+          reject(notFoundError())
+        } else {
+          let result = !S.isBlank(request.responseText) ? JSON.parse(request.responseText) : ''
+          reject(result)
+        }
       }
     }
   }

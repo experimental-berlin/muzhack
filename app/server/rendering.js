@@ -87,7 +87,7 @@ let renderIndex = (request, reply) => {
         })
       }
     }, (error) => {
-      if (error.statusCode === 404) {
+      if (error.statusCode === 404 || error.type === 'notFound') {
         logger.debug(`Current route not recognized`)
         reply(Boom.notFound())
       } else {

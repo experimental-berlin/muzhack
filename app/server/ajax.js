@@ -5,6 +5,7 @@ let R = require('ramda')
 
 let {resolveWithResponse,} = require('../ajaxUtils')
 let {getEnvParam,} = require('./environment')
+let {notFoundError,} = require('../errors')
 
 module.exports = (uri, method, payloadJson, options, resolve, reject) => {
   if (uri.startsWith('/')) {
@@ -27,18 +28,22 @@ module.exports = (uri, method, payloadJson, options, resolve, reject) => {
       resolveWithResponse(body, resolve, reject)
     } else {
       logger.debug(`Ajax request failed, status code: ${response.statusCode}`)
-      let reason = error == null ? body : error
-      if (typeof reason === 'string') {
-        try {
-          logger.debug(`Trying to parse request body as JSON`)
-          reason = JSON.parse(reason)
-          logger.debug(`Successfully parsed request body as JSON`)
-        } catch (e) {
-          logger.debug(`Couldn't parse body as JSON`)
+      if (response.statusCode === 404) {
+        reject(notFoundError())
+      } else {
+        let reason = error == null ? body : error
+        if (typeof reason === 'string') {
+          try {
+            logger.debug(`Trying to parse request body as JSON`)
+            reason = JSON.parse(reason)
+            logger.debug(`Successfully parsed request body as JSON`)
+          } catch (e) {
+            logger.debug(`Couldn't parse body as JSON`)
+          }
         }
+        logger.debug(`There was an error in handling the request:`, reason)
+        reject(reason)
       }
-      logger.debug(`There was an error in handling the request:`, reason)
-      reject(reason)
     }
   })
 }

@@ -15,9 +15,10 @@ let {getEnvParam,} = require('./environment')
 let ajax = require('../ajax')
 let stripeApi = require('./api/stripeApi')
 let Yaml = require('yamljs')
-let TypedError = require('error/typed')
 let gcloud = require('gcloud')
 let Promise = require('bluebird')
+
+let {notFoundError,} = require('../errors')
 
 let getCloudStorageUrl = (bucketName, path) => {
   let encodedPath = path.replace(/#/, '%23')
@@ -761,11 +762,15 @@ let getUserWithConn = (username, conn) => {
   logger.debug(`Getting user '${username}'...`)
   return r.table('users')
     .get(username)
-    .merge((user) => {
-      return {
-        'projects': r.table('projects').getAll(username, {index: 'owner',})
-          .coerceTo('array'),
-      }
+    .do((user) => {
+      return r.branch(
+        user.eq(null),
+        null,
+        user.merge({
+          'projects': r.table('projects').getAll(username, {index: 'owner',})
+            .coerceTo('array'),
+        })
+      )
     })
     .run(conn)
 }
