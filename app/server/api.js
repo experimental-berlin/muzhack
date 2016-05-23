@@ -69,11 +69,6 @@ let getS3Client = () => {
   })
 }
 
-let notFoundError = TypedError({
-  type: 'notFound',
-  message: 'Resource not found',
-})
-
 let downloadResource = (url, options) => {
   logger.debug(`Downloading resource '${url}'...`)
   let {encoding,} = options || {}
