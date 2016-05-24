@@ -281,14 +281,14 @@ let verifyDiscourseSso = (request, reply) => {
   logger.debug(`Got sig ${gotSig}`)
   if (gotSig === sig) {
     let rawPayload = new Buffer(payload, 'base64').toString()
-    let m = /nonce=(.+)/.exec(rawPayload)
+    let m = /nonce=([^&]+)/.exec(rawPayload)
     if (m == null) {
       logger.warn(`Payload in bad format:`, rawPayload)
-      reply(boom.badRequest(`Payload in bad format`))
+      reply(Boom.badRequest(`Payload in bad format`))
     } else {
       let nonce = m[1]
-      let rawRespPayload = `nonce=${nonce}&email=${user.email}&
-external_id=${user.username}&username=${user.username}&name=${user.name}`
+      let rawRespPayload = `nonce=${nonce}&email=${user.email}&` +
+        `external_id=${user.username}&username=${user.username}&name=${user.name}`
       logger.debug(`Responding with payload '${rawRespPayload}'`)
       let respPayload = new Buffer(rawRespPayload).toString('base64')
       let respSig = CryptoJs.HmacSHA256(respPayload, secret).toString(CryptoJs.enc.Hex)
