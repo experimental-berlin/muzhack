@@ -1,6 +1,6 @@
 {
   "name": "muzhack",
-  "version": "1.1.15",
+  "version": "1.1.16",
   "description": "Open platform for publishing of music hardware projects.",
   "main": "app/server.js",
   "scripts": {
@@ -54,6 +54,7 @@
     "aws-sdk": "^2.3.10",
     "base64url": "^1.0.5",
     "bcrypt": "^0.8.5",
+    "bluebird": "^3.4.0",
     "crypto-js": "^3.1.5",
     "ent": "^2.2.0",
     "error": "^7.0.2",

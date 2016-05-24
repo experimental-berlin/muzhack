@@ -9,6 +9,7 @@ let immstruct = require('immstruct')
 let Boom = require('boom')
 let moment = require('moment')
 let Url = require('url')
+let Promise = require('bluebird')
 let Logger = require('js-logger-aknudsen')
 let logger = Logger.get('server')
 Logger.useDefaults({
@@ -61,6 +62,11 @@ let emailer = require('./server/emailer')
 
 process.on('uncaughtException', (error) => {
   logger.error(`An uncaught exception occurred`, error.stack)
+})
+
+Promise.config({
+  longStackTraces: true,
+  cancellation: true,
 })
 
 let server = new Hapi.Server({
