@@ -19,6 +19,7 @@ let Promise = require('bluebird')
 
 let {withDb, connectToDb, closeDbConnection,} = require('./db')
 let {notFoundError,} = require('../errors')
+
 let getCloudStorageUrl = (bucketName, path) => {
   let encodedPath = path.replace(/#/, '%23')
   return `https://storage.googleapis.com/${bucketName}/${encodedPath}`
@@ -751,7 +752,7 @@ let search = (request, reply) => {
       .then((projectsCursor) => {
         return projectsCursor.toArray()
           .then((projects) => {
-            logger.debug(`Found ${projects.length} project(s):`, projects)
+            logger.debug(`Found ${projects.length} project(s)`)
             return projects
           }, (error) => {
             logger.warn(`Failed to iterate projects: '${error}'`, error.stack)

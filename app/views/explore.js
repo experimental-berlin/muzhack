@@ -49,7 +49,7 @@ let Results = component('Results', (cursor) => {
     return h('p', 'Searching...')
   } else {
     let projectsCursor = exploreCursor.cursor('projects')
-    logger.debug('Have got search results:', projectsCursor.toJS())
+    logger.debug(`Got ${projectsCursor.toJS().length} search results`)
     let projectElems = projectsCursor.map(createProjectElement).toJS()
     return projectsCursor.isEmpty() ? h('p', 'No projects were found, please try again.') :
       Packery({
@@ -64,7 +64,7 @@ let Results = component('Results', (cursor) => {
 let searchAsync = (cursor, query) => {
   return ajax.getJson('/api/search', {query: query || '',})
     .then((projects) => {
-      logger.debug(`Searching succeeded:`, projects)
+      logger.debug(`Searching succeeded`)
       return projects
     }, (reason) => {
       logger.warn('Searching failed:', reason)
@@ -109,7 +109,7 @@ let performSearch = (cursor) => {
 
 let SearchBox = component('SearchBox', function (cursor) {
   let searchQuery = cursor.cursor('explore').get('search')
-  logger.debug(`SearchBox rendering, query: '${searchQuery}'`, cursor.toJS())
+  logger.debug(`SearchBox rendering, query: '${searchQuery}'`)
   let hasSearchQuery = !S.isBlank(searchQuery)
   return h('.search-box', [
     h('span#explore-do-search.search-icon.icon-search.muted', {
@@ -169,7 +169,7 @@ module.exports = {
     }
 
     let exploreCursor = cursor.cursor('explore')
-    logger.debug(`Explore state:`, exploreCursor.toJS())
+    // logger.debug(`Explore state:`, exploreCursor.toJS())
     return h('.pure-g', [
       h('.pure-u-1', [
         h('#explore-pad', [

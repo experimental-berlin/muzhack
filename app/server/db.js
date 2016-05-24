@@ -85,7 +85,7 @@ module.exports = {
   withDb: Promise.method((reply, callback) => {
     return invokeCallbackWithConn(callback)
       .then((result) => {
-        logger.debug(`Replying with result:`, result)
+        // logger.debug(`Replying with result:`, result)
         reply(result)
       }, (error) => {
         logger.error(`An error was caught: '${error.message}'`, error.stack)

@@ -5,6 +5,7 @@ let h = require('react-hyperscript')
 let ajax = require('../ajax')
 
 module.exports = {
+  shouldRenderServerSide: false,
   redirectIfLoggedOut: true,
   render: () => {
     return h('p', 'Logging out...')
