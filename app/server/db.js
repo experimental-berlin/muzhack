@@ -2,6 +2,7 @@
 let logger = require('js-logger-aknudsen').get('db')
 let Boom = require('boom')
 let R = require('ramda')
+let Promise = require('bluebird')
 let r = require('rethinkdb')
 
 let {getEnvParam,} = require('./environment')
@@ -11,24 +12,18 @@ let closeDbConnection = (conn) => {
   logger.debug('Closed RethinkDB connection')
 }
 
-let invokeCallbackWithConn = (callback) => {
+let invokeCallbackWithConn = Promise.method((callback) => {
   return connectToDb()
     .then((conn) => {
       logger.debug(`Invoking callback`)
       return callback(conn)
-        .then((result) => {
+        .finally(() => {
           closeDbConnection(conn)
-          return result
-        }, (error) => {
-          closeDbConnection(conn)
-          logger.warn(`There was an error in the callback of withDb: '${error.message}'`,
-            error.stack)
-          throw new Error(`There was an error in the callback of withDb: ${error.message}`)
         })
     })
-}
+})
 
-let connectToDb = (attempt) => {
+let connectToDb = Promise.method((attempt) => {
   let host = getEnvParam('RETHINKDB_HOST', 'localhost')
   if (attempt == null) {
     attempt = 1
@@ -40,39 +35,32 @@ let connectToDb = (attempt) => {
     db: 'muzhack',
   }).then((conn) => {
     logger.debug(`Successfully connected to RethinkDB host '${host}', attempt #${attempt}`)
-    try {
-      return r.dbList().run(conn)
-        .then((existingDbs) => {
-          if (!R.contains('muzhack', existingDbs)) {
-            logger.info(`Creating database muzhack`)
-            return r.dbCreate('muzhack').run(conn)
-          } else {
-            logger.debug(`The muzhack database already exists`)
-          }
-        })
-        .then(() => {
-          return r.tableList().run(conn)
-            .then((existingTables) => {
-              return Promise.all(R.reject((x) => {return x == null}, R.map((tableName) => {
-                if (!R.contains(tableName, existingTables)) {
-                  logger.info(`Creating ${tableName} table`)
-                  return r.tableCreate(tableName).run(conn)
-                } else {
-                  logger.debug(`The ${tableName} table already exists`)
-                  return null
-                }
-              }, ['projects', 'users',])))
-                .then(() => {
-                  return conn
-                })
-            })
-        })
-    } catch (error) {
-      closeDbConnection(conn)
-      logger.error(`There was an unhandled exception in the callback of withDb: '${error}'`,
-        error.stack)
-      throw new Error(`There was an unhandled exception in the callback of withDb`)
-    }
+    return r.dbList().run(conn)
+      .then((existingDbs) => {
+        if (!R.contains('muzhack', existingDbs)) {
+          logger.info(`Creating database muzhack`)
+          return r.dbCreate('muzhack').run(conn)
+        } else {
+          logger.debug(`The muzhack database already exists`)
+        }
+      })
+      .then(() => {
+        return r.tableList().run(conn)
+          .then((existingTables) => {
+            return Promise.all(R.reject((x) => {return x == null}, R.map((tableName) => {
+              if (!R.contains(tableName, existingTables)) {
+                logger.info(`Creating ${tableName} table`)
+                return r.tableCreate(tableName).run(conn)
+              } else {
+                logger.debug(`The ${tableName} table already exists`)
+                return null
+              }
+            }, ['projects', 'users',])))
+          })
+      })
+      .then(() => {
+        return conn
+      })
   }, (error) => {
     if (attempt < 5) {
       let timeout = attempt * 0.5
@@ -89,12 +77,12 @@ let connectToDb = (attempt) => {
       throw new Error(`Failed to connect to RethinkDB after ${attempt} attempts: '${error}'`)
     }
   })
-}
+})
 
 module.exports = {
   connectToDb,
   closeDbConnection,
-  withDb: (reply, callback) => {
+  withDb: Promise.method((reply, callback) => {
     return invokeCallbackWithConn(callback)
       .then((result) => {
         logger.debug(`Replying with result:`, result)
@@ -103,8 +91,8 @@ module.exports = {
         logger.error(`An error was caught: '${error.message}'`, error.stack)
         reply(Boom.badImplementation())
       })
-  },
-  setUp: () => {
+  }),
+  setUp: Promise.method(() => {
     let host = getEnvParam('RETHINKDB_HOST', 'localhost')
     logger.debug(`Setting up database...`)
     let indexes = ['owner',]
@@ -126,5 +114,5 @@ module.exports = {
             })
       })
     })
-  },
+  }),
 }
