@@ -36,10 +36,10 @@ data = {
         'rethinkdbHost': 'rethinkdb-proxy',
         'rethinkdbClusterHost1': 'rethinkdb1',
         'rethinkdbClusterHost2': 'rethinkdb2',
+        'discourseUrl': 'http://forums.muzhack.com',
         'gcloudBucket': 'muzhack.com',
         'gcloudProjectId': 'muzhack-1288',
-        'gcloudClientEmail': 'muzhack@muzhack-1288.iam.gserviceaccount.com',
-        'discourseUrl': 'https://forums.muzhack.com',
+        'gcloudClientEmail': 'muzhack@muzhack-1288.iam.gserviceaccount.com'
     },
     'staging': {
         'appEnvironment': 'staging',
@@ -50,10 +50,10 @@ data = {
         'appUri': 'https://staging.muzhack.com',
         's3Bucket': 'staging.muzhack.com',
         'rethinkdbHost': 'rethinkdb-driver',
+        'discourseUrl': 'http://forums.muzhack.com',
         'gcloudBucket': 'staging.muzhack.com',
         'gcloudProjectId': 'muzhack-1288',
-        'gcloudClientEmail': 'muzhack@muzhack-1288.iam.gserviceaccount.com',
-        'discourseUrl': 'https://forums.muzhack.com',
+        'gcloudClientEmail': 'muzhack@muzhack-1288.iam.gserviceaccount.com'
     },
 }
 
