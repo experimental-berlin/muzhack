@@ -54,11 +54,6 @@ ${stack}
   }
 })
 
-Promise.config({
-  longStackTraces: true,
-  cancellation: true,
-})
-
 let auth = require('./server/auth')
 let api = require('./server/api')
 let rendering = require('./server/rendering')
@@ -69,6 +64,11 @@ let ajax = require('./ajax')
 
 process.on('uncaughtException', (error) => {
   logger.error(`An uncaught exception occurred`, error.stack)
+})
+
+Promise.config({
+  longStackTraces: true,
+  cancellation: true,
 })
 
 let server = new Hapi.Server({

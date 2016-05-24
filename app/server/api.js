@@ -8,9 +8,9 @@ let r = require('rethinkdb')
 let JSZip = require('jszip')
 let request = require('request')
 let CryptoJs = require('crypto-js')
+let Promise = require('bluebird')
 let licenses = require('../licenses')
 let {trimWhitespace,} = require('../stringUtils')
-let {withDb, connectToDb, closeDbConnection,} = require('./db')
 let {getEnvParam,} = require('./environment')
 let ajax = require('../ajax')
 let stripeApi = require('./api/stripeApi')
@@ -18,8 +18,8 @@ let Yaml = require('yamljs')
 let gcloud = require('gcloud')
 let Promise = require('bluebird')
 
+let {withDb, connectToDb, closeDbConnection,} = require('./db')
 let {notFoundError,} = require('../errors')
-
 let getCloudStorageUrl = (bucketName, path) => {
   let encodedPath = path.replace(/#/, '%23')
   return `https://storage.googleapis.com/${bucketName}/${encodedPath}`
@@ -663,33 +663,47 @@ let updateProjectFromGitHub = (repoOwner, repoName, reply) => {
 
 let verifyDiscourseSso = (request, reply) => {
   let {payload, sig,} = request.payload
-  let user = request.auth.credentials
+  let authedUser = request.auth.credentials
   logger.debug(`Verifying Discourse SSO parameters`)
-  let secret = getEnvParam('SSO_SECRET')
-  let discourseUrl = getEnvParam('DISCOURSE_URL')
-  logger.debug(`Calling Hmac:`, {payload, secret,})
-  let gotSig = CryptoJs.HmacSHA256(payload, secret).toString(CryptoJs.enc.Hex)
-  logger.debug(`Got sig ${gotSig}`)
-  if (gotSig === sig) {
-    let rawPayload = new Buffer(payload, 'base64').toString()
-    let m = /nonce=([^&]+)/.exec(rawPayload)
-    if (m == null) {
-      logger.warn(`Payload in bad format:`, rawPayload)
-      reply(Boom.badRequest(`Payload in bad format`))
-    } else {
-      let nonce = m[1]
-      let rawRespPayload = `nonce=${nonce}&email=${user.email}&` +
-        `external_id=${user.username}&username=${user.username}&name=${user.name}`
-      logger.debug(`Responding with payload '${rawRespPayload}'`)
-      let respPayload = new Buffer(rawRespPayload).toString('base64')
-      let respSig = CryptoJs.HmacSHA256(respPayload, secret).toString(CryptoJs.enc.Hex)
-      reply([respPayload, respSig, discourseUrl,])
-    }
-  } else {
-    let msg = `Payload signature isn't as expected`
-    logger.warn(msg)
-    reply(Boom.badRequest(msg))
-  }
+
+  connectToDb()
+    .then((conn) => {
+      return getUserWithConn(authedUser.username, conn)
+        .finally(() => {
+          closeDbConnection(conn)
+        })
+    })
+    .then((user) => {
+      let secret = getEnvParam('SSO_SECRET')
+      let discourseUrl = getEnvParam('DISCOURSE_URL')
+      logger.debug(`Calling Hmac with payload:`, payload)
+      let gotSig = CryptoJs.HmacSHA256(payload, secret).toString(CryptoJs.enc.Hex)
+      logger.debug(`Got sig ${gotSig}`)
+      if (gotSig === sig) {
+        let rawPayload = new Buffer(payload, 'base64').toString()
+        let m = /nonce=([^&]+)/.exec(rawPayload)
+        if (m == null) {
+          logger.warn(`Payload in bad format:`, rawPayload)
+          reply(Boom.badRequest(`Payload in bad format`))
+        } else {
+          let nonce = m[1]
+          let rawRespPayload = `nonce=${nonce}&email=${user.email}&` +
+            `external_id=${user.username}&username=${user.username}&name=${user.name}`
+          logger.debug(`Responding with payload '${rawRespPayload}'`)
+          let respPayload = new Buffer(rawRespPayload).toString('base64')
+          let respSig = CryptoJs.HmacSHA256(respPayload, secret).toString(CryptoJs.enc.Hex)
+          reply([respPayload, respSig, discourseUrl,])
+        }
+      } else {
+        let msg = `Payload signature isn't as expected`
+        logger.warn(msg)
+        reply(Boom.badRequest(msg))
+      }
+    })
+    .catch((error) => {
+      logger.error(`An error was caught in verifyDiscourseSso:`, error.stack)
+      reply(Boom.badRequest())
+    })
 }
 
 let search = (request, reply) => {
