@@ -379,8 +379,6 @@ let installGitHubWebhook = (owner, gitHubOwner, gitHubProject) => {
           config: {
             url: callbackUrl,
             content_type: 'json',
-            // TODO: Turn back on once muzhack.com certificates is accepted by GitHub
-            insecure_ssl: '1',
           },
         }, {
           headers: {
