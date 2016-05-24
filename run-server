@@ -4,6 +4,14 @@ import json
 import sys
 import os
 import subprocess
+import atexit
+
+
+def _cleanup():
+    _proc.terminate()
+
+
+atexit.register(_cleanup)
 
 
 def _error(msg):
@@ -19,6 +27,7 @@ except IOError:
 for k, v in settings.iteritems():
     os.environ[k] = v
 
+_proc = subprocess.Popen(['./services/image-processor/image-processor.py', ])
 try:
     subprocess.check_call(
         ['./node_modules/.bin/babel-node', '--harmony_destructuring', '.', ])

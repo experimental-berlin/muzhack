@@ -77,7 +77,7 @@ module.exports = {
         logger.debug(`Invoking callback`)
         return callback(conn)
           .then((result) => {
-            logger.debug(`Replying with result:`, result)
+        // logger.debug(`Replying with result:`, result)
             reply(result)
           }, (error) => {
             logger.error(`An error was caught in the callback of withDb: '${error.message}'`, error)

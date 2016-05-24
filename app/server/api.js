@@ -364,7 +364,7 @@ let search = (request, reply) => {
       .then((projectsCursor) => {
         return projectsCursor.toArray()
           .then((projects) => {
-            logger.debug(`Found ${projects.length} project(s):`, projects)
+            logger.debug(`Found ${projects.length} project(s)`)
             return projects
           }, (error) => {
             logger.warn(`Failed to iterate projects: '${error}'`, error.stack)

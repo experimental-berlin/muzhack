@@ -12,10 +12,11 @@ let moment = require('moment')
 
 let {getEnvParam,} = require('./environment')
 let emailer = require('./emailer')
+let {requestHandler,} = require('./requestHandler')
 
 let logUserIn = (request, user) => {
   let username = user.id
-  request.cookieAuth.set({username, name: user.name,})
+  request.cookieAuth.set({username, name: user.name, email: user.email,})
   logger.debug(`Successfully logged user '${username}' in`)
 }
 
@@ -253,6 +254,7 @@ module.exports.register = (server) => {
   if (ironPassword.length < 32) {
     throw new Error(`$HAPI_IRON_PASSWORD must be at least 32 characters long`)
   }
+
   server.register(require('hapi-auth-cookie'), (err) => {
     server.auth.strategy('session', 'cookie', 'try', {
       password: ironPassword,
@@ -332,10 +334,17 @@ module.exports.register = (server) => {
   server.route({
     method: ['GET',],
     path: '/api/logout',
-    handler: (request, reply) => {
-      logger.debug(`Logging user out`)
-      request.cookieAuth.clear()
-      reply()
+    config: {
+      handler: requestHandler((request, reply) => {
+        if (request.auth.credentials != null) {
+          logger.debug(`Logging user out`)
+          request.cookieAuth.clear()
+        } else {
+          logger.debug(`User is already logged out`)
+        }
+        
+        reply()
+      }),
     },
   })
 }

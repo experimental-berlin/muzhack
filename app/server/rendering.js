@@ -46,6 +46,7 @@ let getInitialRouterState = (request) => {
 }
 
 let renderIndex = (request, reply) => {
+  logger.debug(`Rendering SPA index, user is logged in: ${request.auth.credentials != null}`)
   immstruct.clear()
   let cursor = immstruct('state', {
     search: '',
