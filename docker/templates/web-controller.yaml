@@ -32,6 +32,8 @@ spec:
           value: {{gcloudProjectId}}
         - name: GCLOUD_CLIENT_EMAIL
           value: {{gcloudClientEmail}}
+        - name: DISCOURSE_URL
+          value: {{discourseUrl}}
         - name: HAPI_IRON_PASSWORD
           valueFrom:
             secretKeyRef:

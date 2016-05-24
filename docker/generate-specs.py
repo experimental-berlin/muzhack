@@ -39,6 +39,7 @@ data = {
         'gcloudBucket': 'muzhack.com',
         'gcloudProjectId': 'muzhack-1288',
         'gcloudClientEmail': 'muzhack@muzhack-1288.iam.gserviceaccount.com',
+        'discourseUrl': 'https://forums.muzhack.com',
     },
     'staging': {
         'appEnvironment': 'staging',
@@ -52,6 +53,7 @@ data = {
         'gcloudBucket': 'staging.muzhack.com',
         'gcloudProjectId': 'muzhack-1288',
         'gcloudClientEmail': 'muzhack@muzhack-1288.iam.gserviceaccount.com',
+        'discourseUrl': 'https://forums.muzhack.com',
     },
 }
 
