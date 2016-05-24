@@ -35,6 +35,7 @@ data = {
         'rethinkdbHost': 'rethinkdb-proxy',
         'rethinkdbClusterHost1': 'rethinkdb1',
         'rethinkdbClusterHost2': 'rethinkdb2',
+        'discourseUrl': 'https://forums.muzhack.com',
     },
     'staging': {
         'numReplicas': 1,
@@ -44,6 +45,7 @@ data = {
         'appUri': 'https://staging.muzhack.com',
         's3Bucket': 'staging.muzhack.com',
         'rethinkdbHost': 'rethinkdb-driver',
+        'discourseUrl': 'https://forums.muzhack.com',
     },
 }
 
