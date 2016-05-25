@@ -218,15 +218,22 @@ let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
   return Promise.all(copyPromises)
 }
 
-let downloadFileFromGitHub = (gitHubOwner, gitHubProject, path) => {
+let downloadFileFromGitHub = (gitHubOwner, gitHubProject, path, isRequired=true) => {
   let [clientId, clientSecret,] = getGitHubCredentials()
+  let uri = `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents/muzhack/${path}`
   return downloadResource(
-      `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents/muzhack/${path}?` +
-      `client_id=${clientId}&client_secret=${clientSecret}`)
+      `${uri}?client_id=${clientId}&client_secret=${clientSecret}`)
     .then((fileJson) => {
       let file = JSON.parse(fileJson)
       return {
         content: new Buffer(file.content, 'base64').toString(),
+      }
+    }, (error) => {
+      if (error.type === 'notFound' && !isRequired) {
+        logger.debug(`Resource ${uri} not found, returning null since this file is not required`)
+        return null
+      } else {
+        throw error
       }
     })
 }
@@ -283,13 +290,21 @@ let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProjec
     downloadFile(`metadata.yaml`),
     downloadFile(`description.md`),
     downloadFile(`instructions.md`),
+    downloadFile(`bom.yaml`),
   ]
   let getDirPromises = [getDirectory('pictures'), getDirectory('files', true),]
   return Promise.all(R.concat(downloadPromises, getDirPromises))
-    .then(([metadataFile, descriptionFile, instructionsFile, gitHubPictures, gitHubFiles,]) => {
+    .then(([metadataFile, descriptionFile, instructionsFile, bomFile, gitHubPictures,
+        gitHubFiles,]) => {
       let metadata = Yaml.parse(metadataFile.content)
       logger.debug(`Downloaded all MuzHack data from GitHub repository '${qualifiedRepoId}'`)
       logger.debug(`Metadata:`, metadata)
+      if (bomFile != null) {
+        let bom = Yaml.parse(bomFile.content)
+        logger.debug(`BOM:`, bom)
+      } else {
+        logger.debug(`No BOM file`)
+      }
       if (projectId == null) {
         projectId = metadata.projectId
       }
