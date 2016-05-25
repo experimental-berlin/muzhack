@@ -28,7 +28,7 @@ data = {
     'production': {
         'numReplicas': 2,
         'imageVariant': '',
-        'imageTag': 'v1.1.21',
+        'imageTag': 'v1.1.22',
         'imagePullPolicy': 'IfNotPresent',
         'appUri': 'https://muzhack.com',
         's3Bucket': 'muzhack.com',

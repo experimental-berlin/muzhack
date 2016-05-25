@@ -17,7 +17,6 @@ module.exports = {
     return (isBlank || hasSpace)
   },
   hasSpecialChars: (input) => {
-    let val = R.toLower(input)
     logger.debug(`Checking '${input}' for special chars`)
     let match = R.match(/[a-z_]/gi, input)
     logger.debug(`Match:`, match)
