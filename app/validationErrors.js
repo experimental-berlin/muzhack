@@ -25,7 +25,7 @@ class InvalidUsername extends ValidationError {
   constructor(input) {
     super(
       input,
-      [Fns.isEmptyOrHasSpace, Fns.hasSpecialChars,],
+      [Fns.isBlankOrHasSpace, Fns.hasSpecialChars,],
       'Invalid username, please use only a-z, A-Z ,_.'
     )
   }
@@ -35,7 +35,7 @@ class InvalidPassword extends ValidationError {
   constructor(input) {
     super(
       input,
-      [Fns.isEmptyOrHasSpace,],
+      [Fns.isBlankOrHasSpace,],
       'Invalid password, it cannot contain whitespace.'
     )
   }
@@ -53,19 +53,19 @@ class InvalidPasswordConfirm extends ValidationError {
 
 class InvalidEmail extends ValidationError {
   constructor(input) {
-    super(input, [Fns.isEmpty,], 'Invalid email')
+    super(input, [Fns.isBlank,], 'Invalid email')
   }
 }
 
 class InvalidName extends ValidationError {
   constructor(input) {
-    super(input, [Fns.isEmpty,], 'Invalid name')
+    super(input, [Fns.isBlank,], 'Invalid name')
   }
 }
 
 class InvalidWebsite extends ValidationError {
   constructor(input) {
-    super(input, [Fns.isEmpty,], 'Invalid website')
+    super(input, [Fns.isBlank,], 'Invalid website')
   }
 }
 
