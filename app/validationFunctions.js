@@ -7,19 +7,12 @@ module.exports = {
   isBlank: S.isBlank,
   isBlankOrHasSpace: (input) => {
     let isBlank = S.isBlank(input)
-    if (isBlank) {
-      logger.debug(`Input is blank: '${input}'`)
-    }
     let hasSpace = input.indexOf(' ') > -1
-    if (hasSpace) {
-      logger.debug(`Input has space: '${input}'`)
-    }
     return (isBlank || hasSpace)
   },
   hasSpecialChars: (input) => {
-    logger.debug(`Checking '${input}' for special chars`)
+    let val = R.toLower(input)
     let match = R.match(/[a-z_]/gi, input)
-    logger.debug(`Match:`, match)
     return match.length !== input.length
   },
   areNotTheSame: (inputA, inputB) => {
