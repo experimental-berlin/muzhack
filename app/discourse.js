@@ -33,7 +33,7 @@ module.exports = {
       logger.debug(`Received bad parameters from Discourse SSO request`)
       return {
         discourse: {
-          error: `Bad parameters from Discourse SSO request`,
+          error: new Error(`Bad parameters from Discourse SSO request`),
         },
       }
     } else {

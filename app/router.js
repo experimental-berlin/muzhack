@@ -36,6 +36,7 @@ let redirectIfNecessary = (cursor) => {
   let routes = cursor.cursor(['router', 'routes',]).toJS()
   let route = getCurrentRoute(routes)
   let options = routes[route]
+
   if (typeof options === 'function') {
     logger.debug(`Route has no options`)
     return
@@ -67,6 +68,11 @@ let redirectIfNecessary = (cursor) => {
         return
       } else  {
         logger.debug(`Route requires user being logged in - redirecting to login page...`)
+        let link = document.createElement('a')
+        link.href = document.location
+        let hash = link.hash || ''
+        let query = link.search || ''
+        cursor = cursor.set('redirectToAfterLogin', `${link.pathname}${query}${hash}`)
         goTo('/login')
         return true
       }
