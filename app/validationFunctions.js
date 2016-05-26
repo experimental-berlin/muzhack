@@ -12,7 +12,7 @@ module.exports = {
   },
   hasSpecialChars: (input) => {
     let val = R.toLower(input)
-    let match = R.match(/[a-z_]/gi, input)
+    let match = R.match(/[a-z_0-9]/gi, input)
     return match.length !== input.length
   },
   areNotTheSame: (inputA, inputB) => {

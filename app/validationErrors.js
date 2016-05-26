@@ -26,7 +26,7 @@ class InvalidUsername extends ValidationError {
     super(
       input,
       [Fns.isBlankOrHasSpace, Fns.hasSpecialChars,],
-      'Invalid username, please use only a-z, A-Z ,_.'
+      'Invalid username, please use only a-z, A-Z, 0-9, _.'
     )
   }
 }
