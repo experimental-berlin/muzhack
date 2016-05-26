@@ -1,9 +1,11 @@
 'use strict'
+let logger = require('js-logger-aknudsen').get('validationFunctions')
 let Fns = require('./validationFunctions')
 let R = require('ramda')
 
 class ValidationError {
-  constructor(input, validators=[], errorText) {
+  constructor(name, input, validators=[], errorText) {
+    this.name = name
     this.input = input
     this.validators = validators
     this._errorText = errorText
@@ -14,9 +16,16 @@ class ValidationError {
   }
 
   get isInvalid() {
-    let errors = this.validators.map((fn) => {
-      return this.input instanceof Array ? fn(...this.input) : fn(this.input)
-    })
+    let errors = R.map((fn) => {
+      logger.debug(`${this.name}: Checking whether invalid, input(s):`, this.input)
+      let result = this.input instanceof Array ? fn(...this.input) : fn(this.input)
+      if (result) {
+        logger.debug(`Invalid`)
+      } else {
+        logger.debug(`Valid`)
+      }
+      return result
+    }, this.validators)
     return R.any(v => v, errors)
   }
 }
@@ -24,6 +33,7 @@ class ValidationError {
 class InvalidUsername extends ValidationError {
   constructor(input) {
     super(
+      'InvalidUsername',
       input,
       [Fns.isBlankOrHasSpace, Fns.hasSpecialChars,],
       'Invalid username, please use only a-z, A-Z ,_.'
@@ -34,6 +44,7 @@ class InvalidUsername extends ValidationError {
 class InvalidPassword extends ValidationError {
   constructor(input) {
     super(
+      'InvalidPassword',
       input,
       [Fns.isBlankOrHasSpace,],
       'Invalid password, it cannot contain whitespace.'
@@ -44,6 +55,7 @@ class InvalidPassword extends ValidationError {
 class InvalidPasswordConfirm extends ValidationError {
   constructor(inputs) {
     super(
+      'InvalidPasswordConfirm',
       inputs,
       [Fns.areNotTheSame,],
       'The passwords do not match'
@@ -53,19 +65,19 @@ class InvalidPasswordConfirm extends ValidationError {
 
 class InvalidEmail extends ValidationError {
   constructor(input) {
-    super(input, [Fns.isBlank,], 'Invalid email')
+    super('InvalidEmail', input, [Fns.isBlank,], 'Invalid email')
   }
 }
 
 class InvalidName extends ValidationError {
   constructor(input) {
-    super(input, [Fns.isBlank,], 'Invalid name')
+    super('InvalidName', input, [Fns.isBlank,], 'Invalid name')
   }
 }
 
 class InvalidWebsite extends ValidationError {
   constructor(input) {
-    super(input, [Fns.isBlank,], 'Invalid website')
+    super('InvalidWebsite', input, [Fns.isBlank,], 'Invalid website')
   }
 }
 

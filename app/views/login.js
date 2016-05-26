@@ -4,6 +4,7 @@ let component = require('omniscient')
 let immutable = require('immutable')
 let logger = require('js-logger-aknudsen').get('login')
 let R = require('ramda')
+let immstruct = require('immstruct')
 
 let {nbsp,} = require('../specialChars')
 let ajax = require('../ajax')
@@ -65,41 +66,44 @@ let SignInForm = component('SignInForm', (cursor) => {
   ])
 })
 
-let SignUpForm = component('SignUpForm', (cursor) => {
-  let updateFieldState = (names, ErrorType, event) => {
-    if (!R.isArrayLike(names)) {
-      names = [names,]
-    }
-    let name = names[0]
-    logger.debug(`Setting signup field '${name}': '${event.target.value}'`)
+let updateFieldState = (names, ErrorType, event) => {
+  if (!R.isArrayLike(names)) {
+    names = [names,]
+  }
+  let name = names[0]
+  logger.debug(`Setting signup field '${name}': '${event.target.value}'`)
 
-    let signupCursor = cursor.cursor(['login', 'signup',])
-    let remainingValues = R.map((property) => {
-      return signupCursor.get(property)
-    }, names.slice(1))
-    logger.debug(`Remaining values: '${remainingValues}'`)
-    let validation = new ErrorType(R.concat([event.target.value,], remainingValues))
-    if (validation.isInvalid) {
-      logger.debug(`Signup field '${name}' is invalid: '${validation.errorText}'`)
-    } else {
-      logger.debug(`Signup field '${name}' is valid`)
-      validation = null
-    }
-
-    let signupData = {errors: {},}
-    if (validation != null) {
-      signupData.errors[name] = validation
-    }
-    signupData[name] = event.target.value
-    cursor = cursor.mergeDeep({
-      login: {
-        signup: signupData,
-      },
-    })
-
-    logger.debug(`After updating signup:`, cursor.cursor(['login', 'signup',]).toJS())
+  let cursor = immstruct.instance('state').reference().cursor()
+  let signupCursor = cursor.cursor(['login', 'signup',])
+  let remainingValues = R.map((property) => {
+    return signupCursor.get(property)
+  }, names.slice(1))
+  logger.debug(`Remaining values: '${remainingValues}'`)
+  let validation = new ErrorType(R.concat([event.target.value,], remainingValues))
+  if (validation.isInvalid) {
+    logger.debug(`Signup field '${name}' is invalid: '${validation.errorText}'`)
+  } else {
+    logger.debug(`Signup field '${name}' is valid`)
+    validation = null
   }
 
+  signupCursor = signupCursor.update((current) => {
+    current = current.set(name, event.target.value)
+    if (validation != null) {
+      logger.debug(`Updating error state for field '${name}':`, validation)
+      current = current.setIn(['errors', name,], validation)
+    } else {
+      logger.debug(`Removing validation error for field '${name}'`)
+      current = current.deleteIn(['errors', name,])
+    }
+
+    return current
+  })
+
+  logger.debug(`After updating signup:`, signupCursor.toJS())
+}
+
+let SignUpForm = component('SignUpForm', (cursor) => {
   let errors = cursor.cursor(['login', 'signup', 'errors',]).toJS()
   return h('form#signup-form.pure-form.pure-form-stacked', {
     action: 'action',
