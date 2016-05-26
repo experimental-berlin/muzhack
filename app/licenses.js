@@ -50,4 +50,29 @@ module.exports = {
     icons: ['creative-commons', 'creative-commons-attribution',
       'creative-commons-noncommercial-us', 'creative-commons-sharealike',],
   },
+  'gpl-v3': {
+    name: 'GPL v3',
+    url: 'http://www.gnu.org/licenses/gpl-3.0.html',
+    icons: [],
+  },
+  'gpl-v2': {
+    name: 'GPL v2',
+    url: 'http://www.gnu.de/documents/gpl-2.0.en.html',
+    icons: [],
+  },
+  'mit': {
+    name: 'MIT License',
+    url: 'https://opensource.org/licenses/MIT',
+    icons: [],
+  },
+  'apache-v2': {
+    name: 'Apache License v2.0',
+    url: 'http://www.apache.org/licenses/LICENSE-2.0',
+    icons: [],
+  },
+  'Custom license': {
+    name: 'Custom licensing scheme - see project description',
+    url: '',
+    icons: [],
+  },
 }
