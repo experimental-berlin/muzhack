@@ -720,7 +720,7 @@ let search = (request, reply) => {
 
       let tag = trimWhitespace(m[0].slice(1, -1))
       logger.debug(`Found tag '${tag}'`)
-      tags.push(tag)
+      tags.push(tag.toLowerCase())
       queryWithoutTags += ' ' + query.slice(offset, m.index)
       offset = reTag.lastIndex
     }
@@ -744,7 +744,7 @@ let search = (request, reply) => {
         let pred = project('projectId').match(regex).or(project('title').match(regex))
           .or(project('owner').match(regex))
         R.forEach((tag) => {
-          pred = pred.and(project('tags').contains(tag))
+          pred = pred.and(project('tags').contains((t) => {return t.downcase().eq(tag)}))
         }, tags)
         return pred
       })
