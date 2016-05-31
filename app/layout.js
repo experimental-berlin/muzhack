@@ -126,6 +126,9 @@ let Footer = component('Footer', () => {
       h('a.social-link', {href: 'https://twitter.com/muzhack', target: '_blank',}, [
         h('span.icon-twitter'),
       ]),
+      h('a.social-link', {href: 'https://www.facebook.com/muzhack', target: '_blank',}, [
+        h('span.icon-facebook2'),
+      ]),
       h('a.social-link', {href: 'https://github.com/muzhack/muzhack', target: '_blank',}, [
         h('span.icon-github'),
       ]),
