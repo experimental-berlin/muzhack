@@ -61,6 +61,21 @@ let GoToStore = component('GoToStore', (cursor) => {
   ])
 })
 
+let FacebookLike = component('FacebookLike', (cursor) => {
+  let projectCursor = cursor.cursor(['displayProject', 'project',])
+  let owner = projectCursor.get(`owner`)
+  let projectId = projectCursor.get(`projectId`)
+  let pageUrl = `${cursor.get('appUri')}/u/${owner}/${projectId}`
+  logger.debug(`Generating like button for project page '${pageUrl}'`)
+  return h('.fb-like', {
+    'data-href': pageUrl,
+    'data-layout': 'standard',
+    'data-action': 'like',
+    'data-show-faces': 'true',
+    'data-share': 'true',
+  })
+})
+
 let TopPad = component('TopPad', (cursor) => {
   let projectCursor = cursor.cursor(['displayProject', 'project',])
   let project = projectCursor.toJS()
@@ -99,6 +114,9 @@ let TopPad = component('TopPad', (cursor) => {
           src: mainPicture != null ? mainPicture.url : null
         ,}),
       ]),
+    ]),
+    h('#social-controls', [
+      FacebookLike(cursor),
     ]),
   ])
 })
