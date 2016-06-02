@@ -329,14 +329,24 @@ let sanitizeProjectParams = (projectParams) => {
   let projectId = trimWhitespace(projectParams.id)
   if (!/^[a-z0-9_-]+$/.test(projectId)) {
     logger.debug(`Invalid project ID: '${projectId}'`)
-    throw new Error(`Project ID can only consist of lowercase alphanumeric characters, _ or -`)
+    throw new Error(`Project IDs must consist of lowercase alphanumeric characters, _ or -`)
   }
 
   verifyLicense(projectParams)
 
+  let tags = R.map((tag) => {
+    tag = trimWhitespace(tag)
+    if (!/^[a-z0-9-]+$/.test(tag)) {
+      logger.debug(`Invalid tag detected '${tag}'`)
+      throw new Error(`Tags must consist of lowercase alphanumeric characters or dashes`)
+    }
+    return tag
+  }, projectParams.tags)
+
   return R.merge(projectParams, {
     id: projectId,
     projectId,
+    tags,
   })
 }
 
