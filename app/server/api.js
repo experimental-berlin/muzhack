@@ -324,11 +324,26 @@ let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProjec
     })
 }
 
+let sanitizeProjectParams = (projectParams) => {
+  logger.debug(`Sanitizing project parameters`)
+  let projectId = trimWhitespace(projectParams.id)
+  if (!/^[a-z0-9_-]+$/.test(projectId)) {
+    logger.debug(`Invalid project ID: '${projectId}'`)
+    throw new Error(`Project ID can only consist of lowercase alphanumeric characters, _ or -`)
+  }
+
+  verifyLicense(projectParams)
+
+  return R.merge(projectParams, {
+    id: projectId,
+    projectId,
+  })
+}
+
 let createProjectFromParameters = (projectParams, owner, ownerName) => {
   logger.debug(`Got project parameters`, projectParams)
-  projectParams.projectId = projectParams.id
+  projectParams = sanitizeProjectParams(projectParams)
   let qualifiedProjectId = `${owner}/${projectParams.projectId}`
-  verifyLicense(projectParams)
 
   return createZip(owner, projectParams)
     .then((zipFile) => {
