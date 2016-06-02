@@ -37,10 +37,6 @@ module.exports = component('VCard', ({cursor, user,}) => {
     h('#user-name', user.name),
     h('#user-username.muted', user.username),
     h('hr'),
-    h('#user-email.vcard-detail', [
-      h('span.icon-envelop3', nbsp),
-      h('span', user.email),
-    ]),
     !S.isBlank(user.website) ? h('#user-website.vcard-detail', [
       h('span.icon-link', nbsp),
       h('a', {href: user.website, target: '_blank',}, user.website),
