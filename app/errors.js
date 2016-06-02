@@ -7,14 +7,14 @@ let notFoundError = TypedError({
   message: 'Resource not found',
 })
 
-class ValidationError extends Error {
-  constructor(message) {
-    super()
-    this.message = message
-  }
+let validationError = (message) => {
+  return TypedError({
+    type: 'validation',
+    message,
+  })()
 }
 
 module.exports = {
   notFoundError,
-  ValidationError,
+  validationError,
 }

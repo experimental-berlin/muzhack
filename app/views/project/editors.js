@@ -7,7 +7,7 @@ let S = require('underscore.string.fp')
 
 let {markdownService,} = require('../../markdown')
 let {trimWhitespace,} = require('../../stringUtils')
-let {ValidationError,} = require('../../errors')
+let {validationError,} = require('../../errors')
 let userManagement = require('../../userManagement')
 
 let dropzoneService
@@ -98,17 +98,17 @@ let getParameters = (input, cursor) => {
     throw new Error(`licenseId is null`)
   }
   if (S.isBlank(title) || R.isEmpty(tags)) {
-    throw new ValidationError('Fields not correctly filled in')
+    throw validationError('Fields not correctly filled in')
   }
   if (S.isBlank(description)) {
-    throw new ValidationError('Description must be filled in')
+    throw validationError('Description must be filled in')
   }
   if (S.isBlank(instructions)) {
-    throw new ValidationError('Instructions must be filled in')
+    throw validationError('Instructions must be filled in')
   }
   let allPictures = pictureDropzone.getAcceptedFiles()
   if (R.isEmpty(allPictures)) {
-    throw new ValidationError('There must be at least one picture')
+    throw validationError('There must be at least one picture')
   }
   let queuedPictures = pictureDropzone.getQueuedFiles()
   let queuedFiles = fileDropzone.getQueuedFiles()

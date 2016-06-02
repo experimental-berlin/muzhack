@@ -19,6 +19,7 @@ let Promise = require('bluebird')
 
 let {withDb, connectToDb, closeDbConnection,} = require('./db')
 let {notFoundError,} = require('../errors')
+let {InvalidProjectId,} = require('../validationErrors')
 
 let getCloudStorageUrl = (bucketName, path) => {
   let encodedPath = path.replace(/#/, '%23')
@@ -327,9 +328,10 @@ let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProjec
 let sanitizeProjectParams = (projectParams) => {
   logger.debug(`Sanitizing project parameters`)
   let projectId = trimWhitespace(projectParams.id)
-  if (!/^[a-z0-9_-]+$/.test(projectId)) {
+  let validator = new InvalidProjectId(projectId)
+  if (validator.isInvalid) {
     logger.debug(`Invalid project ID: '${projectId}'`)
-    throw new Error(`Project IDs must consist of lowercase alphanumeric characters, _ or -`)
+    throw new Error(validator.errorText)
   }
 
   verifyLicense(projectParams)

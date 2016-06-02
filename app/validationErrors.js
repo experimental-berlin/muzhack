@@ -7,6 +7,9 @@ class ValidationError {
   constructor(name, input, validators=[], errorText) {
     this.name = name
     this.input = input
+    if (!R.isArrayLike(validators)) {
+      validators = [validators,]
+    }
     this.validators = validators
     this._errorText = errorText
   }
@@ -35,8 +38,10 @@ class InvalidUsername extends ValidationError {
     super(
       'InvalidUsername',
       input,
-      [Fns.isBlankOrHasSpace, Fns.hasSpecialChars,],
-      'Invalid username, please use only a-z, A-Z, 0-9, _.'
+      (input) => {
+        return /^[a-z_\-0-9]+$/.test(input)
+      },
+      'Invalid username, please use only a-z, 0-9, _, -.'
     )
   }
 }
@@ -81,6 +86,19 @@ class InvalidWebsite extends ValidationError {
   }
 }
 
+class InvalidProjectId extends ValidationError {
+  constructor(input) {
+    super(
+      'InvalidProjectId',
+      input,
+      (input) => {
+        return !/^[a-z_\-0-9]+$/.test(input)
+      },
+      'Invalid project ID, please use only a-z, 0-9, _, -.'
+    )
+  }
+}
+
 module.exports = {
   ValidationError,
   InvalidUsername,
@@ -89,4 +107,5 @@ module.exports = {
   InvalidEmail,
   InvalidName,
   InvalidWebsite,
+  InvalidProjectId,
 }
