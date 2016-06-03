@@ -251,10 +251,30 @@ let renderCreateProjectFromGitHub = (cursor) => {
 }
 
 let loadGitHubRepositories = () => {
-  let getGitHubJson = (url) => {
-    return ajax.getJson(url, null, {headers: {
-      Authorization: `token ${gitHubAccessToken}`,
-    },})
+  let getPagedListFromGitHub = (url) => {
+    let recurse = (pageUrl, allResults) => {
+      return getGitHubJson(pageUrl, {includeResponse: true,})
+        .spread((results, response) => {
+          let linkHeader = response.headers.Link || ''
+          let matches = R.match(/<([^>]+)>; rel="next"/, linkHeader)
+          if (!R.isEmpty(matches)) {
+            let nextUrl = matches[1]
+            logger.debug(`GitHub indicates we need to fetch more results: ${nextUrl}`)
+            return recurse(nextUrl, R.concat(allResults, results))
+          } else {
+            return R.concat(allResults, results)
+          }
+        })
+    }
+    
+    return recurse(url, [])
+  }
+
+  let getGitHubJson = (url, includeResponse) => {
+    return ajax.getJson(url, null, {
+      headers: {Authorization: `token ${gitHubAccessToken}`,},
+      includeResponse,
+    })
   }
 
   let cursor = immstruct.instance('state').reference().cursor()
@@ -265,10 +285,11 @@ let loadGitHubRepositories = () => {
     .then((gitHubUser) => {
       logger.debug(`Successfully got GitHub user: ${gitHubUser.login}`)
       logger.debug(`Getting user's repositories and organizations...`)
-      return Promise.map([gitHubUser.repos_url, gitHubUser.organizations_url,], getGitHubJson)
+      return Promise.map([gitHubUser.repos_url, gitHubUser.organizations_url,],
+          getPagedListFromGitHub)
         .then(([repositories, organizations,]) => {
           return Promise.map(organizations, (organization) => {
-            return getGitHubJson(organization.repos_url)
+            return getPagedListFromGitHub(organization.repos_url)
           })
             .then(R.flatten)
             .then((orgRepositories) => {

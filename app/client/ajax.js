@@ -13,7 +13,17 @@ module.exports = (absPath, method, payloadJson, options, resolve, reject) => {
     if (request.readyState === XMLHttpRequest.DONE) {
       logger.debug('Received response from server:', request)
       if (request.status >= 200 && request.status < 300) {
-        resolveWithResponse(request.responseText, resolve, reject)
+        let headersStr = request.getAllResponseHeaders()
+        let headers = R.fromPairs(
+          R.map((headerStr) => {
+            let matches = R.match(/(.+): (.+)/, headerStr)
+            return [matches[1], matches[2],]
+          }, S.wordsDelim('\n', headersStr))
+        )
+        let response = {
+          headers,
+        }
+        resolveWithResponse(request.responseText, response, resolve, reject)
       } else {
         logger.debug(`Response was not successful: ${request.status}`)
         if (request.status === 404) {

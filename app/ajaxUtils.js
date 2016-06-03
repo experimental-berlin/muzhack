@@ -3,7 +3,7 @@ let logger = require('js-logger-aknudsen').get('ajaxUtils')
 let S = require('underscore.string.fp')
 
 module.exports = {
-  resolveWithResponse: (json, resolve, reject) => {
+  resolveWithResponse: (json, response, resolve, reject) => {
     if (!S.isBlank(json)) {
       let result
       try {
@@ -14,9 +14,9 @@ module.exports = {
         return
       }
 
-      resolve(result)
+      resolve([result, response,])
     } else {
-      resolve()
+      resolve([undefined, response,])
     }
   },
 }
