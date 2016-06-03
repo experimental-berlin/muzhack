@@ -3,7 +3,7 @@ let logger = require('js-logger-aknudsen').get('validationFunctions')
 let Fns = require('./validationFunctions')
 let R = require('ramda')
 
-class ValidationError {
+class Validator {
   constructor(name, input, validators=[], errorText) {
     this.name = name
     this.input = input
@@ -33,7 +33,7 @@ class ValidationError {
   }
 }
 
-class InvalidUsername extends ValidationError {
+class InvalidUsername extends Validator {
   constructor(input) {
     super(
       'InvalidUsername',
@@ -46,7 +46,7 @@ class InvalidUsername extends ValidationError {
   }
 }
 
-class InvalidPassword extends ValidationError {
+class InvalidPassword extends Validator {
   constructor(input) {
     super(
       'InvalidPassword',
@@ -57,7 +57,7 @@ class InvalidPassword extends ValidationError {
   }
 }
 
-class InvalidPasswordConfirm extends ValidationError {
+class InvalidPasswordConfirm extends Validator {
   constructor(inputs) {
     super(
       'InvalidPasswordConfirm',
@@ -68,25 +68,25 @@ class InvalidPasswordConfirm extends ValidationError {
   }
 }
 
-class InvalidEmail extends ValidationError {
+class InvalidEmail extends Validator {
   constructor(input) {
     super('InvalidEmail', input, [Fns.isBlank,], 'Invalid email')
   }
 }
 
-class InvalidName extends ValidationError {
+class InvalidName extends Validator {
   constructor(input) {
     super('InvalidName', input, [Fns.isBlank,], 'Invalid name')
   }
 }
 
-class InvalidWebsite extends ValidationError {
+class InvalidWebsite extends Validator {
   constructor(input) {
     super('InvalidWebsite', input, [Fns.isBlank,], 'Invalid website')
   }
 }
 
-class InvalidProjectId extends ValidationError {
+class InvalidProjectId extends Validator {
   constructor(input) {
     super(
       'InvalidProjectId',
@@ -100,7 +100,7 @@ class InvalidProjectId extends ValidationError {
 }
 
 module.exports = {
-  ValidationError,
+  Validator,
   InvalidUsername,
   InvalidPassword,
   InvalidPasswordConfirm,

@@ -18,8 +18,9 @@ let gcloud = require('gcloud')
 let Promise = require('bluebird')
 
 let {withDb, connectToDb, closeDbConnection,} = require('./db')
-let {notFoundError,} = require('../errors')
-let {InvalidProjectId,} = require('../validationErrors')
+let {notFoundError, validationError,} = require('../errors')
+let {InvalidProjectId,} = require('../validators')
+let {requestHandler,} = require('./requestHandler')
 
 let getCloudStorageUrl = (bucketName, path) => {
   let encodedPath = path.replace(/#/, '%23')
@@ -331,7 +332,7 @@ let sanitizeProjectParams = (projectParams) => {
   let validator = new InvalidProjectId(projectId)
   if (validator.isInvalid) {
     logger.debug(`Invalid project ID: '${projectId}'`)
-    throw new Error(validator.errorText)
+    throw validationError(validator.errorText)
   }
 
   verifyLicense(projectParams)
@@ -340,7 +341,7 @@ let sanitizeProjectParams = (projectParams) => {
     tag = trimWhitespace(tag)
     if (!/^[a-z0-9-]+$/.test(tag)) {
       logger.debug(`Invalid tag detected '${tag}'`)
-      throw new Error(`Tags must consist of lowercase alphanumeric characters or dashes`)
+      throw validationError(`Tags must consist of lowercase alphanumeric characters or dashes`)
     }
     return tag
   }, projectParams.tags)
@@ -476,10 +477,6 @@ let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
       logger.warn(error.message)
       reply(Boom.badRequest(error.message))
     })
-    .catch((error) => {
-      logger.error(`An error occurred:`, error.stack)
-      reply(Boom.badImplementation())
-    })
 }
 
 let processPicturesFromProjectParams = Promise.method((projectParams, owner) => {
@@ -498,20 +495,16 @@ let processPicturesFromProjectParams = Promise.method((projectParams, owner) => 
 })
 
 let createProjectFromClientApp = (projectParams, owner, ownerName, reply) => {
-  processPicturesFromProjectParams(projectParams, owner)
+  return processPicturesFromProjectParams(projectParams, owner)
     .then((newProjectParams) => {
       return createProjectFromParameters(newProjectParams, owner, ownerName)
         .then(() => {
           reply()
         })
     })
-    .catch((error) => {
-     logger.error(`Caught error while creating project per request from client app:`, error.stack)
-     reply(Boom.badImplementation())
-   })
 }
 
-let createProject = (request, reply) => {
+let createProject = requestHandler((request, reply) => {
   let projectParams = request.payload
   logger.debug(`Received request to create project:`, projectParams)
   let owner = request.params.owner
@@ -524,12 +517,12 @@ let createProject = (request, reply) => {
     let isGitHubRepo = !S.isBlank(projectParams.gitHubOwner) &&
       !S.isBlank(projectParams.gitHubProject)
     if (isGitHubRepo) {
-      createProjectFromGitHub(owner, ownerName, projectParams, reply)
+      return createProjectFromGitHub(owner, ownerName, projectParams, reply)
     } else {
-      createProjectFromClientApp(projectParams, owner, ownerName, reply)
+      return createProjectFromClientApp(projectParams, owner, ownerName, reply)
     }
   }
-}
+})
 
 let realUpdateProject = (owner, ownerName, projectId, projectParams, reply) => {
   verifyLicense(projectParams)

@@ -11,6 +11,7 @@ let validationError = (message) => {
   return TypedError({
     type: 'validation',
     message,
+    statusCode: 400,
   })()
 }
 

@@ -10,7 +10,7 @@ let {nbsp,} = require('../specialChars')
 let ajax = require('../ajax')
 let FocusingInput = require('./focusingInput')
 let router = require('../router')
-let validationErrors = require('../validationErrors')
+let validators = require('../validators')
 
 if (__IS_BROWSER__) {
   require('./login.styl')
@@ -124,7 +124,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
           name: 'username',
           required: true,
           onChange: R.partial(updateFieldState, ['username',
-            validationErrors.InvalidUsername,]),
+            validators.InvalidUsername,]),
         }),
       ]),
       h('span.form-error-message',
@@ -136,7 +136,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
           'placeholder': 'password',
           required: true,
           onChange: R.partial(updateFieldState, ['password',
-            validationErrors.InvalidPassword,]),
+            validators.InvalidPassword,]),
         }),
       ]),
       h('span.form-error-message',
@@ -148,7 +148,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
           placeholder: 'confirm password',
           required: true,
           onChange: R.partial(updateFieldState, [['passwordConfirm',
-            'password',], validationErrors.InvalidPasswordConfirm,]),
+            'password',], validators.InvalidPasswordConfirm,]),
         }),
       ]),
       h('span.form-error-message',
@@ -160,7 +160,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
           type: 'email',
           placeholder: 'email',
           required: true,
-          onChange: R.partial(updateFieldState, ['email', validationErrors.InvalidEmail,]),
+          onChange: R.partial(updateFieldState, ['email', validators.InvalidEmail,]),
         }),
       ]),
       h('.required', [
@@ -169,7 +169,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
           type: 'text',
           placeholder: 'name',
           required: true,
-          onChange: R.partial(updateFieldState, ['name', validationErrors.InvalidName,]),
+          onChange: R.partial(updateFieldState, ['name', validators.InvalidName,]),
         }),
       ]),
       h('input#signup-website.account-website', {
@@ -177,7 +177,7 @@ let SignUpForm = component('SignUpForm', (cursor) => {
         type: 'url',
         placeholder: 'website',
         // TODO
-        onChange: R.partial(updateFieldState, ['website', validationErrors.InvalidWebsite,]),
+        onChange: R.partial(updateFieldState, ['website', validators.InvalidWebsite,]),
       }),
     ]),
     h('.button-group', [
