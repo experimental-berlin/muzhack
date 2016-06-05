@@ -77,21 +77,24 @@
     position absolute
     top 0
     left 0
-    -webkit-animation bounce 2.0s infinite ease-in-out
-    animation bounce 2.0s infinite ease-in-out
+    
+    -webkit-animation sk-double-bounce 2.0s infinite ease-in-out
+    animation sk-double-bounce 2.0s infinite ease-in-out
+    -webkit-animation-delay -1.0s
+    animation-delay -1.0s
 
-@-webkit-keyframes bounce {
-  0%, 100% {
-    -webkit-transform: scale(0);
-            transform: scale(0); }
-  50% {
-    -webkit-transform: scale(1);
-            transform: scale(1); } }
+@-webkit-keyframes sk-double-bounce
+  0%, 100%
+    -webkit-transform scale(0)
+    transform scale(0)
+  50%
+    -webkit-transform scale(1)
+    transform scale(1)
 
-@keyframes bounce {
-  0%, 100% {
-    -webkit-transform: scale(0);
-            transform: scale(0); }
-  50% {
-    -webkit-transform: scale(1);
-            transform: scale(1); } }
+@keyframes sk-double-bounce
+  0%, 100%
+    -webkit-transform scale(0)
+    transform scale(0)
+  50%
+    -webkit-transform scale(1)
+    transform scale(1)
