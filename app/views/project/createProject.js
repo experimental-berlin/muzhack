@@ -34,7 +34,7 @@ if (__IS_BROWSER__) {
   require('../dropzone.styl')
 }
 
-let createProject = (cursor) => {
+let createProject = Promise.method((cursor) => {
   let createCursor = cursor.cursor('createProject')
   let input = createCursor.toJS()
   let username = userManagement.getLoggedInUser(cursor).username
@@ -44,7 +44,7 @@ let createProject = (cursor) => {
     owner: username,
   })
 
-  uploadProject(inputExtended, createCursor, cursor)
+  return uploadProject(inputExtended, createCursor, cursor)
     .then(({title, description, instructions, tags, licenseId, username, pictureFiles,
         files,}) => {
       logger.debug(`Picture files:`, pictureFiles)
@@ -76,14 +76,15 @@ let createProject = (cursor) => {
         logger.warn(`Uploading files/pictures failed: ${error}`, error.stack)
         cursor.cursor('createProject').set('isLoading', false)
       })
-}
+})
 
-let createProjectFromGitHub = (cursor) => {
+let createProjectFromGitHub = Promise.method((cursor) => {
   let createCursor = cursor.cursor('createProject')
   let repositoryName = createCursor.getIn([`gitHub`, `gitHubRepositoryName`,])
   let username = userManagement.getLoggedInUser(cursor).username
   let [gitHubOwner, gitHubProject,] = S.wordsDelim('/', repositoryName)
-  ajax.postJson(`/api/projects/${username}`, {
+  logger.debug(`Creating project from GitHub on server...`)
+  return ajax.postJson(`/api/projects/${username}`, {
     gitHubOwner,
     gitHubProject,
   })
@@ -93,7 +94,7 @@ let createProjectFromGitHub = (cursor) => {
           `'${repositoryName}' on server`)
       router.goTo(`/u/${qualifiedProjectId}`)
     })
-}
+})
 
 let inputChangeHandler = (fieldName, handler) => {
   return editAndCreateProject.inputChangeHandler(fieldName, 'createProject', handler)
@@ -254,13 +255,16 @@ let renderCreateStandaloneProject = (cursor) => {
       h('button#create-project.pure-button.pure-button-primary', {
         onClick: () => {
           logger.debug(`Create button clicked`, createCursor)
-          createCursor = createCursor.set('isLoading', 'Creating project...')
-          try {
-            createProject(cursor)
-          } catch (error) {
-            createCursor.set('isLoading', false)
-            throw error
-          }
+          createCursor = createCursor.update((current) => {
+            current = current.set('isLoading', 'Creating project...')
+            current = current.set(`failureBanner`, null)
+            return current
+          })
+          createProject(cursor)
+            .catch((error) => {
+              createCursor.set('isLoading', false)
+              throw error
+            })
         },
         disabled: !input.isReady,
       }, 'Create'),
@@ -352,18 +356,25 @@ let renderCreateProjectFromGitHub = (cursor) => {
     h('#create-buttons.button-group', [
       h('button#create-project.pure-button.pure-button-primary', {
         onClick: () => {
-          logger.debug(`Create button clicked`, createCursor)
+          logger.debug(`Create button clicked`)
           cursor = cursor.mergeDeep({
             createProject: {
               isLoading: 'Creating project...',
+              failureBanner: null,
             },
           })
-          try {
-            createProjectFromGitHub(cursor)
-          } catch (error) {
-            createCursor.set('isLoading', false)
-            throw error
-          }
+          createProjectFromGitHub(cursor)
+            .catch((error) => {
+              let repositoryName = createCursor.getIn([`gitHub`, `gitHubRepositoryName`,])
+              logger.debug(
+                `Creating project from GitHub repository '${repositoryName}' failed on server:`,
+                  error)
+              createCursor.update((current) => {
+                current = current.set('isLoading', false)
+                current = current.set(`failureBanner`, error.message)
+                return current
+              })
+            })
         },
         disabled: !input.gitHub.isReady,
       }, 'Create'),
@@ -437,7 +448,9 @@ let CreateProjectPad = component('CreateProjectPad', (cursor) => {
   let createCursor = cursor.cursor('createProject')
   let gitHubAccessToken = createCursor.get('gitHubAccessToken')
   let shouldCreateStandalone = createCursor.get('shouldCreateStandalone')
+  let failureBanner = createCursor.get('failureBanner')
   return h('#create-project-pad', [
+    failureBanner != null ? h('#failure-banner', failureBanner) : null,
     gitHubAccessToken != null ? h('.input-group', [
       h('input', {
         type: 'radio', name: 'projectType', checked: shouldCreateStandalone,

@@ -236,12 +236,24 @@ let installGitHubWebhook = (owner, gitHubOwner, gitHubProject) => {
     })
 }
 
-let createProjectFromGitHub = (owner, ownerName, projectParams) => {
-  logger.debug(
-    `Creating project slaved to GitHub repository '${projectParams.gitHubOwner}/` +
-      `${projectParams.gitHubProject}:`)
-  let {gitHubOwner, gitHubProject,} = projectParams
-  getProjectParamsForGitHubRepo(owner, null, gitHubOwner, gitHubProject)
+let realCreateProjectFromGitHub = Promise.method((owner, ownerName, newProjectParams) => {
+  let {projectId,} = newProjectParams
+  let copyPicturesPromise = copyFilesToCloudStorage(
+    newProjectParams.gitHubPictures, 'pictures', owner, projectId)
+  let copyFilesPromise = copyFilesToCloudStorage(
+    newProjectParams.gitHubFiles, 'files', owner, projectId)
+  let processPicturesPromise = Promise.map(copyPicturesPromise, R.partial(ajax.postJson,
+      ['http://localhost:10000/jobs',]))
+  return Promise.all([processPicturesPromise, copyFilesPromise,])
+    .then(([pictures, files,]) => {
+      newProjectParams = R.merge(
+        R.pickBy((key) => {
+          return !R.contains(key, ['gitHubFiles', 'gitHubPictures',])
+        }, newProjectParams),
+        {pictures, files,}
+      )
+      return newProjectParams
+    })
     .then((newProjectParams) => {
       return createProjectFromParameters(newProjectParams, owner, ownerName)
         .then((project) => {
@@ -280,6 +292,21 @@ let createProjectFromGitHub = (owner, ownerName, projectParams) => {
           }
         })
     })
+})
+
+let createProjectFromGitHub = (owner, ownerName, projectParams) => {
+  logger.debug(
+    `Creating project slaved to GitHub repository '${projectParams.gitHubOwner}/` +
+      `${projectParams.gitHubProject}:`)
+  let {gitHubOwner, gitHubProject,} = projectParams
+  return getProjectParamsForGitHubRepo(owner, null, gitHubOwner, gitHubProject)
+    .then((newProjectParams) => {
+      return createProjectPlaceholder(owner, newProjectParams)
+        .then(() => {
+          return realCreateProjectFromGitHub(owner, ownerName, newProjectParams)
+            .catch(R.partial(removeProjectPlaceholder, [owner, newProjectParams,]))
+        })
+    })
 }
 
 let processPicturesFromProjectParams = Promise.method((projectParams, owner) => {
@@ -297,10 +324,29 @@ let processPicturesFromProjectParams = Promise.method((projectParams, owner) => 
     })
 })
 
+let removeProjectPlaceholder = (owner, projectParams, error) => {
+  let qualifiedProjectId = `${owner}/${projectParams.id}`
+  logger.debug(
+    `Creating project ${qualifiedProjectId} failed, removing placeholder`)
+  return connectToDb()
+    .then((conn) => {
+      logger.debug(`Deleting placeholder project ${qualifiedProjectId}...`)
+      return r.table('projects')
+        .get(qualifiedProjectId)
+        .delete()
+        .run(conn)
+    })
+    .finally(() => {
+      throw error
+    })
+}
+
 let createProjectFromClientApp = (owner, ownerName, projectParams) => {
-  return processPicturesFromProjectParams(projectParams, owner)
-    .then((newProjectParams) => {
-      return createProjectFromParameters(newProjectParams, owner, ownerName)
+  return createProjectPlaceholder(owner, projectParams)
+    .then(() => {
+      return processPicturesFromProjectParams(projectParams, owner)
+        .then(R.curryN(3, createProjectFromParameters)(R.__, owner, ownerName))
+        .catch(R.partial(removeProjectPlaceholder, [owner, projectParams,]))
     })
 }
 
@@ -314,37 +360,19 @@ let createProject = (request, reply) => {
     reply(Boom.unauthorized(
       `You are not allowed to create projects for others than your own user`))
   } else {
-    return createProjectPlaceholder(owner, projectParams)
-      .then(() => {
-        let qualifiedProjectId = `${owner}/${projectParams.id}`
-        let isGitHubRepo = !S.isBlank(projectParams.gitHubOwner) &&
-          !S.isBlank(projectParams.gitHubProject)
-        let func
-        if (isGitHubRepo) {
-          func = createProjectFromGitHub
-        } else {
-          func = createProjectFromClientApp
-        }
-        return Promise.method(func)(owner, ownerName, projectParams)
-          .then((value) => {
-              logger.debug(`Creating project ${qualifiedProjectId} succeeded, not removing placeholder`)
-              reply(value)
-            }, (error) => {
-              logger.debug(
-                `Creating project ${qualifiedProjectId} failed, removing placeholder`)
-              return connectToDb()
-                .then((conn) => {
-                  logger.debug(`Deleting placeholder project ${qualifiedProjectId}...`)
-                  return r.table('projects')
-                    .get(qualifiedProjectId)
-                    .delete()
-                    .run(conn)
-                })
-                .finally(() => {
-                  throw error
-                })
-            })
-          })
+    let isGitHubRepo = !S.isBlank(projectParams.gitHubOwner) &&
+      !S.isBlank(projectParams.gitHubProject)
+    let qualifiedProjectId = `${owner}/${projectParams.id}`
+    let func
+    if (isGitHubRepo) {
+      func = createProjectFromGitHub
+    } else {
+      func = createProjectFromClientApp
+    }
+    return Promise.method(func)(owner, ownerName, projectParams)
+      .then((value) => {
+        reply(value)
+      })
   }
 }
 
@@ -687,27 +715,18 @@ let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProjec
       if (projectId == null) {
         projectId = metadata.projectId
       }
-      let copyPicturesPromise = copyFilesToCloudStorage(
-        gitHubPictures, 'pictures', owner, projectId)
-      let copyFilesPromise = copyFilesToCloudStorage(
-        gitHubFiles, 'files', owner, projectId)
-      let processPicturesPromise = Promise.map(copyPicturesPromise, R.partial(ajax.postJson,
-          ['http://localhost:10000/jobs',]))
-      return Promise.all([processPicturesPromise, copyFilesPromise,])
-        .then(([pictures, files,]) => {
-          return R.merge({gitHubOwner, gitHubProject,}, {
-            id: projectId,
-            projectId,
-            title: metadata.title,
-            licenseId: metadata.licenseId,
-            tags: metadata.tags,
-            description: descriptionFile.content,
-            instructions: instructionsFile.content,
-            gitHubRepository: qualifiedRepoId,
-            files,
-            pictures,
-          })
-        })
+      return R.merge({gitHubOwner, gitHubProject,}, {
+        id: projectId,
+        projectId,
+        title: metadata.title,
+        licenseId: metadata.licenseId,
+        tags: metadata.tags,
+        description: descriptionFile.content,
+        instructions: instructionsFile.content,
+        gitHubRepository: qualifiedRepoId,
+        gitHubFiles,
+        gitHubPictures,
+      })
     }, (error) => {
       logger.error(
         `Failed to get MuzHack project parameters from GitHub repository '${qualifiedRepoId}':`,
