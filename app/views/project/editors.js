@@ -117,9 +117,6 @@ let getParameters = (input, cursor) => {
   if (S.isBlank(description)) {
     throw validationError('Description must be filled in')
   }
-  if (S.isBlank(instructions)) {
-    throw validationError('Instructions must be filled in')
-  }
   let allPictures = pictureDropzone.getAcceptedFiles()
   if (R.isEmpty(allPictures)) {
     throw validationError('There must be at least one picture')

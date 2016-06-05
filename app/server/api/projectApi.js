@@ -386,8 +386,9 @@ let realUpdateProject = (owner, ownerName, projectId, projectParams, reply) => {
     let filePathsStr = S.join(', ', filePaths)
     logger.debug(`Removing outdated ${fileType}s ${filePathsStr}`)
     let bucket = getStorageBucket()
-    return Promise.map(filePaths, R.pipe(bucket.file, R.curryN(2, boundPromisify)('delete'),
-        R.call), {concurrency: 10,})
+    let boundFile = R.bind(bucket.file, bucket)
+    return Promise.map(filePaths, R.pipe(boundFile,
+        R.curryN(2, boundPromisify)('delete'), R.call), {concurrency: 10,})
       .then(() => {
         logger.debug(`Successfully removed ${fileType}(s) ${filePathsStr}`)
       }, (error) => {
