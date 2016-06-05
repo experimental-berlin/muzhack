@@ -11,7 +11,7 @@ let {nbsp,} = require('../../specialChars')
 let ajax = require('../../ajax')
 let {DescriptionEditor, InstructionsEditor, PicturesEditor,
   FilesEditor,} = require('./editors')
-let Loading = require('./loading')
+let {Loading,} = require('./loading')
 let notification = require('../notification')
 
 let router
@@ -161,7 +161,7 @@ let EditNonGitHubProject = component('EditNonGitHubProject', (cursor) => {
       DescriptionEditor(projectCursor),
     ]),
     h('#pictures-editor', [
-      PicturesEditor(projectCursor),
+      PicturesEditor({cursor: projectCursor,}),
     ]),
     h('#instructions-editor', [
       InstructionsEditor(projectCursor),

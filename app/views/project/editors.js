@@ -10,9 +10,11 @@ let {trimWhitespace,} = require('../../stringUtils')
 let {validationError,} = require('../../errors')
 let userManagement = require('../../userManagement')
 
-let dropzoneService
+let dropzoneService, mutatingDropzoneEvents
 if (__IS_BROWSER__) {
-  dropzoneService = require('../../services/dropzoneService')
+  let dropzoneServiceModule = require('../../services/dropzoneService')
+  dropzoneService = dropzoneServiceModule.dropzoneService
+  mutatingDropzoneEvents = dropzoneServiceModule.mutatingDropzoneEvents
 
   require('dropzone/src/dropzone.scss')
   require('../dropzone.styl')
@@ -58,11 +60,23 @@ let pictureDropzone = null
 
 let PicturesEditor = component('PicturesEditor', {
   componentDidMount: function () {
-    let pictures = this.cursor.cursor('pictures').toJS()
-    logger.debug('PicturesEditor did mount, pictures:', pictures)
+    let pictures = this.props.cursor.cursor('pictures').toJS()
     pictureDropzone = dropzoneService.createDropzone('picture-dropzone', true, pictures)
+    logger.debug('PicturesEditor did mount, pictures:', pictures)
+
+    if (this.props.changeHandler != null) {
+      R.forEach((event) => {
+        pictureDropzone.on(event, () => {
+          this.props.changeHandler({
+            target: {
+              value: pictureDropzone.getQueuedFiles(),
+            },
+          })
+        })
+      }, mutatingDropzoneEvents)
+    }
   },
-}, () => {
+}, (props) => {
   return h('div', [
     h('h2', 'Pictures'),
     h('#picture-dropzone.dropzone'),

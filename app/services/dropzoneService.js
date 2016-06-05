@@ -325,4 +325,7 @@ class DropzoneService {
   }
 }
 
-module.exports = new DropzoneService()
+module.exports = {
+  dropzoneService: new DropzoneService(),
+  mutatingDropzoneEvents,
+}

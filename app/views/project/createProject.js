@@ -254,12 +254,14 @@ let renderCreateStandaloneProject = (cursor) => {
       DescriptionEditor(createCursor),
       renderFieldError(errors, 'description'),
     ]),
-    h('#pictures-editor', {
-      onChange: inputChangeHandler('pictures', (event, createCursor) => {
-        logger.debug(`Pictures changed:`, event.target.value)
+    h('#pictures-editor', [
+      PicturesEditor({
+        cursor: createCursor,
+        changeHandler: inputChangeHandler('pictures', (event, createCursor) => {
+          logger.debug(`Pictures changed:`, event.target.value)
+          return R.isEmpty(event.target.value) ? `At least one picture must be supplied` : null
+        }),
       }),
-    }, [
-      PicturesEditor(createCursor),
       renderFieldError(errors, 'pictures'),
     ]),
     h('#instructions-editor', [
