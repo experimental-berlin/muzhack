@@ -29,7 +29,9 @@ module.exports = (absPath, method, payloadJson, options, resolve, reject) => {
         if (request.status === 404) {
           reject(notFoundError())
         } else {
-          let result = !S.isBlank(request.responseText) ? JSON.parse(request.responseText) : ''
+          let result = new Error(!S.isBlank(request.responseText) ?
+            JSON.parse(request.responseText).message : '')
+          logger.debug(`Rejecting with:`, result)
           reject(result)
         }
       }

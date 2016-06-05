@@ -15,8 +15,9 @@ let ajax = require('../ajax')
 let {getEnvParam,} = require('./environment')
 let {withDb, connectToDb, closeDbConnection,} = require('./db')
 let {requestHandler,} = require('./requestHandler')
-let {createProject, updateProject, getProject, deleteProject,} = require('./api/project')
+let {createProject, updateProject, getProject, deleteProject,} = require('./api/projectApi')
 let {trimWhitespace,} = require('../stringUtils')
+let {getUserWithConn,} = require('./api/apiUtils')
 
 let getCloudStorageUrl = (bucketName, path) => {
   let encodedPath = path.replace(/#/, '%23')

@@ -4,16 +4,34 @@ let Boom = require('boom')
 let S = require('underscore.string.fp')
 let JSZip = require('jszip')
 let R = require('ramda')
+let r = require('rethinkdb')
 let request = require('request')
 let Yaml = require('yamljs')
 let Promise = require('bluebird')
+let gcloud = require('gcloud')
+let moment = require('moment')
 
-let licenses = require('../licenses')
-let {trimWhitespace,} = require('../stringUtils')
+let licenses = require('../../licenses')
+let {trimWhitespace,} = require('../../stringUtils')
 let {getEnvParam,} = require('../environment')
-let {InvalidProjectId,} = require('../validators')
-let {withDb, connectToDb, closeDbConnection,} = require('./db')
-let {notFoundError, validationError,} = require('../errors')
+let {InvalidProjectId,} = require('../../validators')
+let {withDb, connectToDb, closeDbConnection,} = require('../db')
+let {notFoundError, validationError,} = require('../../errors')
+let {getUserWithConn,} = require('./apiUtils')
+let ajax = require('../../ajax')
+
+let getCloudStorageUrl = (bucketName, path) => {
+  let encodedPath = path.replace(/#/, '%23')
+  return `https://storage.googleapis.com/${bucketName}/${encodedPath}`
+}
+
+let gcs = gcloud.storage({
+  projectId: getEnvParam('GCLOUD_PROJECT_ID'),
+  credentials: {
+    client_email: getEnvParam(`GCLOUD_CLIENT_EMAIL`),
+    private_key: getEnvParam(`GCLOUD_PRIVATE_KEY`),
+  },
+})
 
 let getProject = (request, reply) => {
   let {owner, projectId,} = request.params
@@ -757,5 +775,5 @@ module.exports = {
   getProject,
   createProject,
   deleteProject,
-  uploadProject,
+  updateProject,
 }

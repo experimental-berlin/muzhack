@@ -21,3 +21,7 @@ let getUserWithConn = (username, conn) => {
     })
     .run(conn)
 }
+
+module.exports = {
+  getUserWithConn,
+}
