@@ -50,6 +50,7 @@
     "webpack-dev-server": "^1.12.1"
   },
   "dependencies": {
+    "@arve.knudsen/react-autocomplete": "^1.0.1",
     "aws-s3-form": "^0.3.2",
     "aws-sdk": "^2.3.10",
     "base64url": "^1.0.5",
