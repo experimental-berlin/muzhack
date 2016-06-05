@@ -148,32 +148,34 @@ let renderCreateStandaloneProject = (cursor) => {
           logger.debug(`Project ID changed: '${projectId}'`)
           createCursor = createCursor.set('id', projectId)
 
-          let projectIdValidator = new InvalidProjectId(projectId)
-          if (projectIdValidator.isInvalid) {
-            return projectIdValidator.errorText
+          if (S.isBlank(projectId)) {
+            return `ID must be filled in`
           } else {
-            if (!S.isBlank(projectId)) {
-              return new Promise((resolve, reject) => {
-                checkProjectIdTimeout = setTimeout(() => {
-                  createCursor.set(`isCheckingId`, true)
-                  logger.debug(`Checking whether project ID ${projectId} is available`)
-                  ajax.getJson(`/api/isProjectIdAvailable?projectId=${projectId}`)
-                    .then((isAvailable) => {
-                      if (isAvailable) {
-                        logger.debug(`Project ID ${projectId} is available`)
-                        resolve()
-                      } else {
-                        logger.debug(`Project ID ${projectId} is not available`)
-                        resolve(`ID ${projectId} is not available`)
-                      }
-                    }, reject)
-                    .finally(() => {
-                      createCursor.set(`isCheckingId`, false)
-                    })
-                }, 500)
-              })
+            let projectIdValidator = new InvalidProjectId(projectId)
+            if (projectIdValidator.isInvalid) {
+              return projectIdValidator.errorText
             } else {
-              return `ID must be filled in`
+              if (!S.isBlank(projectId)) {
+                return new Promise((resolve, reject) => {
+                  checkProjectIdTimeout = setTimeout(() => {
+                    createCursor.set(`isCheckingId`, true)
+                    logger.debug(`Checking whether project ID ${projectId} is available`)
+                    ajax.getJson(`/api/isProjectIdAvailable?projectId=${projectId}`)
+                      .then((isAvailable) => {
+                        if (isAvailable) {
+                          logger.debug(`Project ID ${projectId} is available`)
+                          resolve()
+                        } else {
+                          logger.debug(`Project ID ${projectId} is not available`)
+                          resolve(`ID ${projectId} is not available`)
+                        }
+                      }, reject)
+                      .finally(() => {
+                        createCursor.set(`isCheckingId`, false)
+                      })
+                  }, 500)
+                })
+              }
             }
           }
         }),
