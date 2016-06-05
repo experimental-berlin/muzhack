@@ -15,7 +15,14 @@ let validationError = (message) => {
   })()
 }
 
+let alreadyExistsError = TypedError({
+  type: 'alreadyExists',
+  message: 'Resource already exists',
+  statusCode: 400,
+})
+
 module.exports = {
   notFoundError,
   validationError,
+  alreadyExistsError,
 }

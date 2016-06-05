@@ -16,11 +16,12 @@ let {trimWhitespace,} = require('../../stringUtils')
 let {getEnvParam,} = require('../environment')
 let {InvalidProjectId,} = require('../../validators')
 let {withDb, connectToDb, closeDbConnection,} = require('../db')
-let {notFoundError, validationError,} = require('../../errors')
+let {notFoundError, validationError, alreadyExistsError,} = require('../../errors')
 let {getUserWithConn,} = require('./apiUtils')
 let ajax = require('../../ajax')
 
-let getCloudStorageUrl = (bucketName, path) => {
+let getCloudStorageUrl = (path) => {
+  let bucketName = getEnvParam(`GCLOUD_BUCKET`)
   let encodedPath = path.replace(/#/, '%23')
   return `https://storage.googleapis.com/${bucketName}/${encodedPath}`
 }
@@ -33,14 +34,21 @@ let gcs = gcloud.storage({
   },
 })
 
+let getStorageBucket = () => {
+  let bucketName = getEnvParam(`GCLOUD_BUCKET`)
+  return gcs.bucket(bucketName)
+}
+
 let getProject = (request, reply) => {
   let {owner, projectId,} = request.params
   let qualifiedProjectId = `${owner}/${projectId}`
   logger.debug(`Getting project '${qualifiedProjectId}'`)
   withDb(reply, (conn) => {
-    return r.table('projects').get(qualifiedProjectId).run(conn)
+    return r.table('projects')
+      .get(qualifiedProjectId)
+      .run(conn)
       .then((project) => {
-        if (project != null) {
+        if (project != null && !project.placeholder) {
           logger.debug(`Found project '${qualifiedProjectId}':`, project)
           return project
         } else {
@@ -73,8 +81,7 @@ let createZip = (owner, projectParams) => {
     .then(() => {
       logger.debug(`All files added to zip`)
       logger.debug(`Uploading zip file to Cloud Storage...`)
-      let bucketName = getEnvParam(`GCLOUD_BUCKET`)
-      let bucket = gcs.bucket(bucketName)
+      let bucket = getStorageBucket()
       let cloudFilePath = `u/${owner}/${projectId}/${projectId}.zip`
       let cloudFile = bucket.file(cloudFilePath)
       return new Promise((resolve, reject) => {
@@ -98,7 +105,7 @@ let createZip = (owner, projectParams) => {
                   } else {
                     logger.debug(`Got zip metadata`, metadata)
                     resolve({
-                      url: getCloudStorageUrl(bucketName, cloudFilePath),
+                      url: getCloudStorageUrl(cloudFilePath),
                       size: metadata.size,
                     })
                   }
@@ -114,6 +121,41 @@ let createZip = (owner, projectParams) => {
     }, (error) => {
       logger.warn(`Failed to download files:`, error.stack)
       throw new Error(error)
+    })
+}
+
+let createProjectPlaceholder = (owner, projectParams) => {
+  let qualifiedProjectId = `${owner}/${projectParams.id}`
+  logger.debug(`Creating placeholder in database for project ${qualifiedProjectId}...`)
+  return connectToDb()
+    .then((conn) => {
+      return r.table('projects')
+        .insert({
+          id: qualifiedProjectId,
+          placeholder: true,
+        }, {
+          conflict: 'error',
+        })
+        .run(conn)
+        .then((result) => {
+          if (result.errors === 0) {
+            logger.debug(`Successfully inserted placeholder for project ${qualifiedProjectId}`)
+          } else {
+            if (result.first_error.startsWith(`Duplicate primary key`)) {
+              logger.debug(`Project ${qualifiedProjectId} already exists in database`)
+              throw alreadyExistsError()
+            } else {
+              logger.warn(
+                `Encountered error while inserting placeholder for project ` +
+                `${qualifiedProjectId}:`, result.first_error)
+              throw new Error(
+                `Encountered error while inserting placeholder for project ${qualifiedProjectId}`)
+            }
+          }
+        })
+        .finally(() => {
+          closeDbConnection(conn)
+        })
     })
 }
 
@@ -194,7 +236,7 @@ let installGitHubWebhook = (owner, gitHubOwner, gitHubProject) => {
     })
 }
 
-let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
+let createProjectFromGitHub = (owner, ownerName, projectParams) => {
   logger.debug(
     `Creating project slaved to GitHub repository '${projectParams.gitHubOwner}/` +
       `${projectParams.gitHubProject}:`)
@@ -223,7 +265,7 @@ let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
                       .then(() => {
                         logger.debug(`Successfully set webhook ID on project, returning:`,
                           returnValue)
-                        reply(returnValue)
+                        return returnValue
                       })
                       .finally(() => {
                         closeDbConnection(conn)
@@ -234,12 +276,9 @@ let createProjectFromGitHub = (owner, ownerName, projectParams, reply) => {
             logger.debug(
               `Not installing GitHub webhook, since we aren't in a supported environment`)
             logger.debug(`Replying with:`, returnValue)
-            reply(returnValue)
+            return returnValue
           }
         })
-    }, (error) => {
-      logger.warn(error.message)
-      reply(Boom.badRequest(error.message))
     })
 }
 
@@ -258,13 +297,10 @@ let processPicturesFromProjectParams = Promise.method((projectParams, owner) => 
     })
 })
 
-let createProjectFromClientApp = (projectParams, owner, ownerName, reply) => {
+let createProjectFromClientApp = (owner, ownerName, projectParams) => {
   return processPicturesFromProjectParams(projectParams, owner)
     .then((newProjectParams) => {
       return createProjectFromParameters(newProjectParams, owner, ownerName)
-        .then(() => {
-          reply()
-        })
     })
 }
 
@@ -278,14 +314,46 @@ let createProject = (request, reply) => {
     reply(Boom.unauthorized(
       `You are not allowed to create projects for others than your own user`))
   } else {
-    let isGitHubRepo = !S.isBlank(projectParams.gitHubOwner) &&
-      !S.isBlank(projectParams.gitHubProject)
-    if (isGitHubRepo) {
-      return createProjectFromGitHub(owner, ownerName, projectParams, reply)
-    } else {
-      return createProjectFromClientApp(projectParams, owner, ownerName, reply)
-    }
+    return createProjectPlaceholder(owner, projectParams)
+      .then(() => {
+        let qualifiedProjectId = `${owner}/${projectParams.id}`
+        let isGitHubRepo = !S.isBlank(projectParams.gitHubOwner) &&
+          !S.isBlank(projectParams.gitHubProject)
+        let func
+        if (isGitHubRepo) {
+          func = createProjectFromGitHub
+        } else {
+          func = createProjectFromClientApp
+        }
+        return Promise.method(func)(owner, ownerName, projectParams)
+          .then((value) => {
+              logger.debug(`Creating project ${qualifiedProjectId} succeeded, not removing placeholder`)
+              reply(value)
+            }, (error) => {
+              logger.debug(
+                `Creating project ${qualifiedProjectId} failed, removing placeholder`)
+              return connectToDb()
+                .then((conn) => {
+                  logger.debug(`Deleting placeholder project ${qualifiedProjectId}...`)
+                  return r.table('projects')
+                    .get(qualifiedProjectId)
+                    .delete()
+                    .run(conn)
+                })
+                .finally(() => {
+                  throw error
+                })
+            })
+          })
   }
+}
+
+let boundPromisify = (methodName, context) => {
+  let method = context[methodName]
+  if (method == null) {
+    throw new Error(`Object has no method '${methodName}'`)
+  }
+  return Promise.promisify(method, {context,})
 }
 
 let realUpdateProject = (owner, ownerName, projectId, projectParams, reply) => {
@@ -317,19 +385,9 @@ let realUpdateProject = (owner, ownerName, projectId, projectParams, reply) => {
     }, removedFiles)
     let filePathsStr = S.join(', ', filePaths)
     logger.debug(`Removing outdated ${fileType}s ${filePathsStr}`)
-    let bucketName = getEnvParam('GCLOUD_BUCKET')
-    let bucket = gcs.bucket(bucketName)
-    return Promise.map(filePaths, (filePath) => {
-      return new Promise((resolve, reject) => {
-        bucket.file(filePath).delete((error) => {
-          if (error == null || error.message.toLowerCase() === 'not found') {
-            resolve()
-          } else {
-            reject(error)
-          }
-        })
-      })
-    }, {concurrency: 10,})
+    let bucket = getStorageBucket()
+    return Promise.map(filePaths, R.pipe(bucket.file, R.curryN(2, boundPromisify)('delete'),
+        R.call), {concurrency: 10,})
       .then(() => {
         logger.debug(`Successfully removed ${fileType}(s) ${filePathsStr}`)
       }, (error) => {
@@ -342,7 +400,9 @@ let realUpdateProject = (owner, ownerName, projectId, projectParams, reply) => {
   createZip(owner, R.merge(projectParams, {projectId,}))
     .then((zipFile) => {
       withDb(reply, (conn) => {
-        return r.table('projects').get(qualifiedProjectId).run(conn)
+        return r.table('projects')
+          .get(qualifiedProjectId)
+          .run(conn)
           .then((project) => {
             if (project.gitHubRepository != null && projectParams.gitHubOwner == null) {
               throw new Error(`Trying to update GitHub imported project directly`)
@@ -357,7 +417,8 @@ let realUpdateProject = (owner, ownerName, projectId, projectParams, reply) => {
             return Promise.all(removeStalePromises)
               .then(() => {
                 logger.debug(`Updating project in database`)
-                return r.table('projects').get(qualifiedProjectId)
+                return r.table('projects')
+                  .get(qualifiedProjectId)
                   .replace(R.merge(projectParams, {
                     id: qualifiedProjectId,
                     owner,
@@ -502,8 +563,7 @@ let downloadResource = (url, options) => {
 }
 
 let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
-  let bucketName = getEnvParam(`GCLOUD_BUCKET`)
-  let bucket = gcs.bucket(bucketName)
+  let bucket = getStorageBucket()
   let copyPromises = R.map((file) => {
     return new Promise((resolve, reject) => {
       let cloudFilePath = `u/${owner}/${projectId}/${dirPath}/${file.fullPath}`
@@ -536,7 +596,7 @@ let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
                 reject(err)
               } else {
                 resolve(R.merge(file, {
-                  url: getCloudStorageUrl(bucketName, cloudFilePath),
+                  url: getCloudStorageUrl(cloudFilePath),
                   cloudPath: cloudFilePath,
                 }))
               }
@@ -727,20 +787,8 @@ let deleteProject = (request, reply) => {
     let dirPath = `u/${owner}/${request.params.id}`
     logger.debug(`Removing folder '${dirPath}'...`)
     logger.debug(`Listing folder contents...`)
-    return new Promise((resolve, reject) => {
-      let bucketName = getEnvParam(`GCLOUD_BUCKET`)
-      let bucket = gcs.bucket(bucketName)
-      bucket.deleteFiles({
-        prefix: `${dirPath}/`,
-        force: true,
-      }, (error) => {
-        if (error == null) {
-          resolve()
-        } else {
-          reject(error)
-        }
-      })
-    })
+    let bucket = getStorageBucket()
+    return boundPromisify('deleteFiles', bucket)({prefix: `${dirPath}/`, force: true,})
   }
 
   let owner = request.params.owner
@@ -752,7 +800,9 @@ let deleteProject = (request, reply) => {
       `You are not allowed to delete projects for others than your own user`))
   } else {
     withDb(reply, (conn) => {
-      return r.table('projects').get(qualifiedProjectId).run(conn)
+      return r.table('projects')
+        .get(qualifiedProjectId)
+        .run(conn)
         .then((project) => {
           if (project != null) {
             return r.table('projects').get(qualifiedProjectId).delete().run(conn)
