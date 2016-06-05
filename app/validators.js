@@ -99,6 +99,19 @@ class InvalidProjectId extends Validator {
   }
 }
 
+class InvalidTag extends Validator {
+  constructor(input) {
+    super(
+      `InvalidTag`,
+      input,
+      (input) => {
+        return !/^[a-z\-0-9.]+$/.test(input)
+      },
+      'Invalid tag, please use only a-z, 0-9, ., -,.'
+    )
+  }
+}
+
 module.exports = {
   Validator,
   InvalidUsername,
@@ -108,4 +121,5 @@ module.exports = {
   InvalidName,
   InvalidWebsite,
   InvalidProjectId,
+  InvalidTag,
 }

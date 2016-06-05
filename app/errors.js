@@ -21,8 +21,17 @@ let alreadyExistsError = TypedError({
   statusCode: 400,
 })
 
+let badRequest = (message) => {
+  return TypedError({
+   type: 'badRequest',
+   message,
+   statusCode: 400,
+ })
+}
+
 module.exports = {
   notFoundError,
   validationError,
   alreadyExistsError,
+  badRequest,
 }

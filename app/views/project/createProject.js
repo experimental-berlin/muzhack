@@ -7,6 +7,7 @@ let S = require('underscore.string.fp')
 let React = require('react')
 let ReactAutoComplete = React.createFactory(require('@arve.knudsen/react-autocomplete'))
 let immstruct = require('immstruct')
+let Promise = require('bluebird')
 
 let userManagement = require('../../userManagement')
 let licenses = require('../../licenses')
@@ -16,7 +17,8 @@ let ajax = require('../../ajax')
 let Loading = require('./loading')
 let {DescriptionEditor, InstructionsEditor, PicturesEditor,
   FilesEditor,} = require('./editors')
-let Promise = require('bluebird')
+let {trimWhitespace,} = require('../../stringUtils')
+let {InvalidProjectId, InvalidTag,} = require('../../validators')
 
 let uploadProject
 let router
@@ -34,12 +36,15 @@ let createProject = (cursor) => {
   let createCursor = cursor.cursor('createProject')
   let input = createCursor.toJS()
   let username = userManagement.getLoggedInUser(cursor).username
+
   let inputExtended = R.merge(input, {
     projectId: input.id,
     owner: username,
   })
+
   uploadProject(inputExtended, createCursor, cursor)
-    .then(({title, description, instructions, tags, licenseId, username, pictureFiles, files,}) => {
+    .then(({title, description, instructions, tags, licenseId, username, pictureFiles,
+        files,}) => {
       logger.debug(`Picture files:`, pictureFiles)
       logger.debug(`Files:`, files)
       logger.debug(`title: ${title}, description: ${description}, tags: ${S.join(`,`, tags)}`)
@@ -88,43 +93,133 @@ let createProjectFromGitHub = (cursor) => {
     })
 }
 
+let renderFieldError = (errors, fieldName) => {
+  let errorText = errors[fieldName]
+  return errorText != null ? h(`#${fieldName}-error.field-error`, `* ${errorText}`) : null
+}
+
+let inputChangeHandler = (fieldName, handler) => {
+  return (event) => {
+    let createCursor = immstruct.instance('state').reference().cursor('createProject')
+    createCursor.set('isReady', false)
+    let promise = Promise.method(handler)(event, createCursor)
+    if (promise.then == null) {
+      // A non-promise was returned
+      promise = Promise.resolve(promise)
+    }
+    promise.then((validationError) => {
+      logger.debug(`Input change handler completed, validation error: ${validationError}`)
+      createCursor = immstruct.instance('state').reference().cursor('createProject')
+      logger.debug(`Create cursor:`, createCursor.toJS())
+      createCursor.update((current) => {
+        let errors = R.defaultTo({}, current.get('errors'))
+        logger.debug(`Current validation errors:`, errors)
+        if (validationError != null) {
+          errors[fieldName] = validationError
+        } else {
+          delete errors[fieldName]
+        }
+        logger.debug(`Setting validation errors:`, errors)
+        current = current.set('errors', errors)
+        current = current.set('isReady', R.isEmpty(errors))
+        return current
+      })
+    })
+  }
+}
+
+let checkProjectIdTimeout = null
+
 let renderCreateStandaloneProject = (cursor) => {
   let createCursor = cursor.cursor('createProject')
   let input = createCursor.toJS()
+  let errors = R.defaultTo({}, input.errors)
+  logger.debug(`Rendering validation errors:`, errors)
   return [
     h('.input-group', [
       FocusingInput({
         id: 'id-input', placeholder: 'Project ID',
         value: input.id,
-        onChange: (event) => {
-          logger.debug(`Project ID changed: '${event.target.value}'`)
-          createCursor.set('id', event.target.value)
-        },
+        onChange: inputChangeHandler('id', (event, createCursor) => {
+          let projectId = trimWhitespace(event.target.value)
+          logger.debug(`Project ID changed: '${projectId}'`)
+          createCursor.set('id', projectId)
+
+          return new Promise((resolve, reject) => {
+            if (checkProjectIdTimeout != null) {
+              clearTimeout(checkProjectIdTimeout)
+            }
+
+            if (!S.isBlank(projectId)) {
+              let projectIdValidator = new InvalidProjectId(projectId)
+              if (projectIdValidator.isInvalid) {
+                resolve(projectIdValidator.errorText)
+              } else {
+                checkProjectIdTimeout = setTimeout(() => {
+                  logger.debug(`Checking whether project ID ${projectId} is available`)
+                  ajax.getJson(`/api/isProjectIdAvailable?projectId=${projectId}`)
+                    .then((isAvailable) => {
+                      logger.debug(`Project ID ${projectId} is available: ${isAvailable}`)
+                      resolve()
+                    }, reject)
+                }, 500)
+              }
+            } else {
+              resolve(`ID must be filled in`)
+            }
+          })
+        }),
       }),
+      renderFieldError(errors, 'id'),
     ]),
     h('.input-group', [
       h('input#title-input', {
         type: 'text',
         placeholder: 'Project title',
         value: input.title,
-        onChange: (event) => {
-          logger.debug(`Project title changed: '${event.target.value}'`)
-          createCursor.set('title', event.target.value)
-        },
+        onChange: inputChangeHandler('title', (event, createCursor) => {
+          let title = trimWhitespace(event.target.value)
+          logger.debug(`Project title changed: '${title}'`)
+          createCursor.set('title', title)
+          if (S.isBlank(title)) {
+            return `Title must be filled in`
+          } else {
+            return null
+          }
+        }),
       }),
+      renderFieldError(errors, 'title'),
     ]),
     h('.input-group', [
       h('input#tags-input', {
         type: 'text',
         placeholder: 'Project tags',
         value: input.tagsString,
-        onChange: (event) => {
+        onChange: inputChangeHandler('tags', (event, createCursor) => {
           logger.debug(`Project tags changed: '${event.target.value}'`)
-          createCursor.set('tagsString', event.target.value)
-        },
+          let tagsString = event.target.value
+          createCursor.set('tagsString', tagsString)
+          let tags = R.reject(
+            S.isBlank,
+            R.map(trimWhitespace, S.wordsDelim(`,`, tagsString))
+          )
+          if (R.isEmpty(tags)) {
+            logger.debug(`No tags supplied`)
+            return `No tags supplied`
+          } else {
+            logger.debug(`Checking tags for validity:`, tags)
+            let validator = R.find(R.prop('isInvalid'), R.map(R.construct(InvalidTag), tags))
+            if (validator != null) {
+              return validator.errorText
+            } else {
+              return null
+            }
+          }
+        }),
       }),
       nbsp,
       h('span.icon-tags2'),
+      renderFieldError(errors, 'tags'),
     ]),
     h('.input-group', [
       h('select#license-select', {
@@ -138,11 +233,23 @@ let renderCreateStandaloneProject = (cursor) => {
         return h('option', {value: id,}, license.name)
       }, R.toPairs(licenses))),
     ]),
-    h('#description-editor', [
+    h('#description-editor',  {
+      onChange: inputChangeHandler('description', (event, createCursor) => {
+        let description = trimWhitespace(event.target.value)
+        logger.debug(`Description changed:`, description)
+        return S.isBlank(description) ? `Description must be filled in` : null
+      }),
+    }, [
       DescriptionEditor(createCursor),
+      renderFieldError(errors, 'description'),
     ]),
-    h('#pictures-editor', [
+    h('#pictures-editor', {
+      onChange: inputChangeHandler('pictures', (event, createCursor) => {
+        logger.debug(`Pictures changed:`, event.target.value)
+      }),
+    }, [
       PicturesEditor(createCursor),
+      renderFieldError(errors, 'pictures'),
     ]),
     h('#instructions-editor', [
       InstructionsEditor(createCursor),
@@ -162,6 +269,7 @@ let renderCreateStandaloneProject = (cursor) => {
             throw error
           }
         },
+        disabled: !input.isReady,
       }, 'Create'),
       h('button#cancel-create.pure-button', {
         onClick: () => {
@@ -266,7 +374,7 @@ let loadGitHubRepositories = () => {
           }
         })
     }
-    
+
     return recurse(url, [])
   }
 
@@ -355,6 +463,7 @@ module.exports = {
         licenseId: 'cc-by-4.0',
         shouldCreateStandalone: true,
         gitHubRepositories: [],
+        isReady: false,
       },
     }
 

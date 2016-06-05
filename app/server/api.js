@@ -18,6 +18,7 @@ let {requestHandler,} = require('./requestHandler')
 let {createProject, updateProject, getProject, deleteProject,} = require('./api/projectApi')
 let {trimWhitespace,} = require('../stringUtils')
 let {getUserWithConn,} = require('./api/apiUtils')
+let {badRequest,} = require('../errors')
 
 let getCloudStorageUrl = (bucketName, path) => {
   let encodedPath = path.replace(/#/, '%23')
@@ -548,7 +549,7 @@ module.exports.register = (server) => {
     method: ['POST',],
     path: 'webhooks/github/{gitHubOwner}/{gitHubProject}',
     config: {
-      handler: (request, reply) => {
+      handler: requestHandler((request, reply) => {
         let req = request.raw.req
         let event = req.headers['x-github-event']
         if (event === 'push') {
@@ -560,7 +561,7 @@ module.exports.register = (server) => {
           logger.debug(`Unrecognized event from GitHub: '${event}'`)
           reply()
         }
-      },
+      }),
     },
   })
   routeApiMethod({
@@ -584,6 +585,31 @@ module.exports.register = (server) => {
     path: 'stripe/checkout',
     config: {
       handler: stripeApi.stripeCheckout,
+    },
+  })
+  routeApiMethod({
+    method: ['GET',],
+    path: 'isProjectIdAvailable',
+    config: {
+      auth: 'session',
+      handler: requestHandler((request, reply) => {
+        let {projectId,} = request.query
+        if (projectId == null) {
+          throw badRequest(`projectId parameter must be supplied`)
+        }
+
+        let authedUser = request.auth.credentials
+        let qualifiedProjectId = `${authedUser.username}/${projectId}`
+        logger.debug(`Handling request as to whether ${qualifiedProjectId} is available`)
+        withDb(reply, (conn) => {
+          return r.table('projects')
+            .get(qualifiedProjectId)
+            .run(conn)
+            .then((project) => {
+              return project == null
+            })
+        })
+      }),
     },
   })
 }
