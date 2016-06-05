@@ -36,7 +36,6 @@ let redirectIfNecessary = (cursor) => {
   let routes = cursor.cursor(['router', 'routes',]).toJS()
   let route = getCurrentRoute(routes)
   let options = routes[route]
-
   if (typeof options === 'function') {
     logger.debug(`Route has no options`)
     return

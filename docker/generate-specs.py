@@ -26,9 +26,11 @@ def _render_template(fname, environment, context):
 
 data = {
     'production': {
+        'appEnvironment': 'production',
         'numReplicas': 2,
         'imageVariant': '',
         'imageTag': 'v1.1.28',
+        'imageProcessorImageTag': 'v1.1.14',
         'imagePullPolicy': 'IfNotPresent',
         'appUri': 'https://muzhack.com',
         's3Bucket': 'muzhack.com',
@@ -36,16 +38,24 @@ data = {
         'rethinkdbClusterHost1': 'rethinkdb1',
         'rethinkdbClusterHost2': 'rethinkdb2',
         'discourseUrl': 'http://forums.muzhack.com',
+        'gcloudBucket': 'muzhack.com',
+        'gcloudProjectId': 'muzhack-1288',
+        'gcloudClientEmail': 'muzhack@muzhack-1288.iam.gserviceaccount.com'
     },
     'staging': {
+        'appEnvironment': 'staging',
         'numReplicas': 1,
         'imageVariant': '-test',
         'imageTag': 'latest',
+        'imageProcessorImageTag': 'latest',
         'imagePullPolicy': 'Always',
         'appUri': 'https://staging.muzhack.com',
         's3Bucket': 'staging.muzhack.com',
         'rethinkdbHost': 'rethinkdb-driver',
         'discourseUrl': 'http://forums.muzhack.com',
+        'gcloudBucket': 'staging.muzhack.com',
+        'gcloudProjectId': 'muzhack-1288',
+        'gcloudClientEmail': 'muzhack@muzhack-1288.iam.gserviceaccount.com'
     },
 }
 
@@ -68,11 +78,7 @@ for environment in ['staging', 'production', ]:
         'l7-ingress',
         'web-controller',
         'web-service',
-        'rethinkdb/admin-pod',
-        'rethinkdb/admin-service',
-        'rethinkdb/admin-service',
-        'rethinkdb/rethinkdb-controller',
-        'rethinkdb/driver-service',
+        'rethinkdb/staging',
     ]:
         _render_template(fname, environment, data)
 

@@ -16,6 +16,8 @@ spec:
         image: eu.gcr.io/muzhack-1288/muzhack{{imageVariant}}:{{imageTag}}
         imagePullPolicy: {{imagePullPolicy}}
         env:
+        - name: APP_ENVIRONMENT
+          value: {{appEnvironment}}
         - name: APP_URI
           value: {{appUri}}
         - name: RETHINKDB_HOST
@@ -24,6 +26,12 @@ spec:
           value: {{s3Bucket}}
         - name: S3_REGION
           value: eu-central-1
+        - name: GCLOUD_BUCKET
+          value: {{gcloudBucket}}
+        - name: GCLOUD_PROJECT_ID
+          value: {{gcloudProjectId}}
+        - name: GCLOUD_CLIENT_EMAIL
+          value: {{gcloudClientEmail}}
         - name: DISCOURSE_URL
           value: {{discourseUrl}}
         - name: HAPI_IRON_PASSWORD
@@ -31,6 +39,21 @@ spec:
             secretKeyRef:
               name: environment
               key: hapi-iron-password
+        - name: GITHUB_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: environment
+              key: github-client-id
+        - name: GITHUB_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: environment
+              key: github-client-secret
+        - name: GCLOUD_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: environment
+              key: gcloud-private-key
         - name: AWS_ACCESS_KEY
           valueFrom:
             secretKeyRef:
@@ -64,5 +87,31 @@ spec:
         ports:
         - name: http-server
           containerPort: 80
-      imagePullSecrets:
-      - name: quay.io
+      - name: image-processor
+        image: eu.gcr.io/muzhack-1288/image-processor{{imageVariant}}:{{imageProcessorImageTag}}
+        imagePullPolicy: {{imagePullPolicy}}
+        env:
+        - name: GCLOUD_BUCKET
+          value: {{gcloudBucket}}
+        - name: GCLOUD_PROJECT_ID
+          value: {{gcloudProjectId}}
+        - name: GCLOUD_CLIENT_EMAIL
+          value: {{gcloudClientEmail}}
+        - name: GCLOUD_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: environment
+              key: gcloud-client-id
+        - name: GCLOUD_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: environment
+              key: gcloud-private-key
+        - name: GCLOUD_PRIVATE_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: environment
+              key: gcloud-private-key-id
+        ports:
+        - name: web-service
+          containerPort: 10000

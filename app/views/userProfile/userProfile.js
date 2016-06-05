@@ -167,7 +167,7 @@ module.exports = {
     return h('#user-pad', [
       h('.pure-g', [
         h('.pure-u-1-4', [
-          VCard(user),
+          VCard({cursor, user,}),
         ]),
         h('.pure-u-3-4', [
           h('ul.tabs', {role: 'tablist',}, R.map((profileTab) => {

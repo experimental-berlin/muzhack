@@ -12,6 +12,17 @@ let closeDbConnection = (conn) => {
   logger.debug('Closed RethinkDB connection')
 }
 
+let invokeCallbackWithConn = Promise.method((callback) => {
+  return connectToDb()
+    .then((conn) => {
+      logger.debug(`Invoking callback`)
+      return callback(conn)
+        .finally(() => {
+          closeDbConnection(conn)
+        })
+    })
+})
+
 let connectToDb = Promise.method((attempt) => {
   let host = getEnvParam('RETHINKDB_HOST', 'localhost')
   if (attempt == null) {
@@ -71,48 +82,37 @@ let connectToDb = Promise.method((attempt) => {
 module.exports = {
   connectToDb,
   closeDbConnection,
-  withDb: (reply, callback) => {
-    return connectToDb()
-      .then((conn) => {
-        logger.debug(`Invoking callback`)
-        return callback(conn)
-          .then((result) => {
+  withDb: Promise.method((reply, callback) => {
+    return invokeCallbackWithConn(callback)
+      .then((result) => {
         // logger.debug(`Replying with result:`, result)
-            reply(result)
-          }, (error) => {
-            logger.error(`An error was caught in the callback of withDb: '${error.message}'`, error)
-            reply(Boom.badImplementation())
-          })
-          .finally(() => {
-            closeDbConnection(conn)
-          })
+        reply(result)
+      }, (error) => {
+        logger.error(`An error was caught: '${error.message}'`, error.stack)
+        reply(Boom.badImplementation())
       })
-  },
-  setUp: () => {
+  }),
+  setUp: Promise.method(() => {
     let host = getEnvParam('RETHINKDB_HOST', 'localhost')
     logger.debug(`Setting up database...`)
     let indexes = ['owner',]
-    return connectToDb()
-      .then((conn) => {
-        return r.table('projects').indexList()
-          .run(conn)
-          .then((existingIndexes) => {
-            let indexPromises = R.map((index) => {
-              logger.debug(`Creating index '${index}'...`)
+    return invokeCallbackWithConn((conn) => {
+      return r.table('projects').indexList()
+        .run(conn)
+        .then((existingIndexes) => {
+          let indexPromises = R.map((index) => {
+            logger.debug(`Creating index '${index}'...`)
+            return r.table('projects')
+              .indexCreate(index)
+              .run(conn)
+          }, R.difference(indexes, existingIndexes))
+          return Promise.all(indexPromises)
+            .then(() => {
               return r.table('projects')
-                .indexCreate(index)
+                .indexWait()
                 .run(conn)
-            }, R.difference(indexes, existingIndexes))
-            return Promise.all(indexPromises)
-              .then(() => {
-                return r.table('projects')
-                  .indexWait()
-                  .run(conn)
-              })
-        })
-        .finally(() => {
-          closeDbConnection(conn)
-        })
+            })
       })
-  },
+    })
+  }),
 }

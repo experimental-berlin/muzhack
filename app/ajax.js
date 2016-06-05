@@ -2,8 +2,9 @@
 let logger = require('js-logger-aknudsen').get('ajax')
 let R = require('ramda')
 let S = require('underscore.string.fp')
+let Promise = require('bluebird')
 
-let ajax = (method, uri, params, payload) => {
+let ajax = (method, uri, params, payload, options={}) => {
   let paramStr = S.join('&', R.map(([param, value,]) => {
     return `${encodeURIComponent(param)}=${encodeURIComponent(value || '')}`
   }, R.toPairs(params || {})))
@@ -14,25 +15,32 @@ let ajax = (method, uri, params, payload) => {
   return new Promise((resolve, reject) => {
     if (__IS_BROWSER__) {
       let clientAjax = require('./client/ajax')
-      clientAjax(absPath, method, payloadJson, resolve, reject)
+      clientAjax(absPath, method, payloadJson, options, resolve, reject)
     } else {
       let serverAjax = require('./server/ajax')
-      serverAjax(absPath, method, payloadJson, resolve, reject)
+      serverAjax(absPath, method, payloadJson, options, resolve, reject)
     }
   })
+    .spread((result, response) => {
+      if (options.includeResponse) {
+        return [result, response,]
+      } else {
+        return result
+      }
+    })
 }
 
 module.exports = {
-  getJson: (path, params) => {
-    return ajax('get', path, params)
+  getJson: (path, params, options) => {
+    return ajax('get', path, params, null, options)
   },
-  postJson: (path, payload) => {
-    return ajax('post', path, null, payload)
+  postJson: (path, payload, options) => {
+    return ajax('post', path, null, payload, options)
   },
-  putJson: (path, payload) => {
-    return ajax('put', path, null, payload)
+  putJson: (path, payload, options) => {
+    return ajax('put', path, null, payload, options)
   },
-  delete: (path) => {
-    return ajax('delete', path)
+  delete: (path, options) => {
+    return ajax('delete', path, null, null, options)
   },
 }

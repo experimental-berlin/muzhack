@@ -1,275 +1,37 @@
 'use strict'
 let logger = require('js-logger-aknudsen').get('server.api')
-let AwsS3Form = require('aws-s3-form')
 let Boom = require('boom')
 let R = require('ramda')
 let S = require('underscore.string.fp')
 let moment = require('moment')
 let r = require('rethinkdb')
-let Aws = require('aws-sdk')
 let JSZip = require('jszip')
 let request = require('request')
-let CryptoJs = require('crypto-js')
+let gcloud = require('gcloud')
 let Promise = require('bluebird')
 
-let licenses = require('../licenses')
-let {trimWhitespace,} = require('../stringUtils')
-let {withDb,} = require('./db')
-let {getEnvParam,} = require('./environment')
-let ajax = require('../ajax')
 let stripeApi = require('./api/stripeApi')
-let {notFoundError,} = require('../errors')
-let {connectToDb, closeDbConnection,} = require('./db')
+let ajax = require('../ajax')
+let {getEnvParam,} = require('./environment')
+let {withDb, connectToDb, closeDbConnection,} = require('./db')
+let {requestHandler,} = require('./requestHandler')
+let {createProject, updateProject, getProject, deleteProject,} = require('./api/projectApi')
+let {trimWhitespace,} = require('../stringUtils')
+let {getUserWithConn,} = require('./api/apiUtils')
+let {badRequest,} = require('../errors')
 
-class Project {
-  constructor({projectId, tags, owner, ownerName, title, created, pictures, licenseId,
-      description, instructions, files, zipFile,}) {
-    this.projectId = projectId
-    this.tags = tags
-    this.owner = owner
-    this.ownerName = ownerName
-    this.title = title
-    this.created = created
-    this.pictures = pictures
-    this.licenseId = licenseId
-    this.description = description
-    this.instructions = instructions
-    this.files = files
-    this.zipFile = zipFile
-  }
+let getCloudStorageUrl = (bucketName, path) => {
+  let encodedPath = path.replace(/#/, '%23')
+  return `https://storage.googleapis.com/${bucketName}/${encodedPath}`
 }
 
-let verifyLicense = (projectParams) => {
-  if (licenses[projectParams.licenseId] == null) {
-    throw new Error(`Invalid license '${projectParams.licenseId}'`)
-  }
-}
-
-let getS3Client = () => {
-  return new Aws.S3({
-    accessKeyId: getEnvParam('AWS_ACCESS_KEY'),
-    secretAccessKey: getEnvParam('AWS_SECRET_ACCESS_KEY'),
-    region: getEnvParam('S3_REGION'),
-    params: {
-      Bucket: getEnvParam('S3_BUCKET'),
-    },
-  })
-}
-
-let downloadResource = (url, options) => {
-  logger.debug(`Downloading resource '${url}'...`)
-  let {encoding,} = options || {}
-  return new Promise((resolve, reject) => {
-    let performRequest = (numTries) => {
-      logger.debug(`Attempt #${numTries}`)
-      request.get(url, {
-        encoding: encoding,
-      }, (error, response, body) => {
-        if (error == null && response.statusCode === 200) {
-          logger.debug(`Downloaded '${url}' successfully`)
-          resolve(body)
-        } else {
-          if (numTries > 3) {
-            logger.warn(`Failed to download '${url}'`)
-            reject(error)
-          } else {
-            performRequest(numTries + 1)
-          }
-        }
-      })
-    }
-
-    performRequest(1)
-  })
-}
-
-let createZip = (owner, projectId, projectParams) => {
-  if (R.isEmpty(projectParams.files)) {
-    logger.debug(`There are no files, not generating zip`)
-    return Promise.resolve(null)
-  }
-
-  logger.debug('Generating zip...')
-  let s3Client = getS3Client()
-  // TODO: Async
-  let zip = new JSZip()
-  let downloadPromises = R.map((file) => {
-    return downloadResource(file.url)
-      .then((content) => {
-        logger.debug(`Adding file '${file.fullPath}' to zip`)
-        zip.file(file.fullPath, content)
-      })
-  }, projectParams.files)
-  logger.debug(`Waiting on download promises:`, downloadPromises)
-  return Promise.all(downloadPromises)
-    .then(() => {
-      logger.debug(`All files added to zip`)
-      logger.debug(`Generating zip...`)
-      return zip.generateAsync({
-        type: 'nodebuffer',
-        compression: 'DEFLATE',
-      })
-        .then((output) => {
-          logger.debug(`Uploading zip file to S3...`)
-          let filePath = `u/${owner}/${projectId}/${projectId}.zip`
-          return new Promise((resolve, reject) => {
-            s3Client.putObject({
-              Key: filePath,
-              ACL: 'public-read',
-              Body: output,
-            }, (error, data) => {
-              if (error == null) {
-                //  TODO: Try to get URL from S3
-                let region = getEnvParam('S3_REGION')
-                let bucket = getEnvParam('S3_BUCKET')
-                let zipUrl = `https://s3.${region}.amazonaws.com/${bucket}/${filePath}`
-                logger.debug(`Uploaded zip file successfully to '${zipUrl}'`)
-                resolve({
-                  url: zipUrl,
-                  size: output.length,
-                })
-              } else {
-                logger.warn(`Failed to upload zip file: '${error}':`, error.stack)
-                reject(error)
-              }
-            })
-        })
-      })
-    }, (error) => {
-      logger.warn(`Failed to download files: '${error}'`)
-      throw new Error(error)
-    })
-}
-
-let createProject = (request, reply) => {
-  let projectParams = request.payload
-  logger.debug(`Received request to create project:`, projectParams)
-  let owner = request.params.owner
-  if (owner !== request.auth.credentials.username) {
-    logger.debug(`User tried to create project for other user`)
-    reply(Boom.unauthorized(
-      `You are not allowed to create projects for others than your own user`))
-  } else {
-    let qualifiedProjectId = `${owner}/${projectParams.id}`
-    projectParams.projectId = projectParams.id
-    verifyLicense(projectParams)
-
-    createZip(owner, projectParams.id, projectParams)
-      .then((zipFile) => {
-        let project = new Project(R.merge(projectParams, {
-          owner: request.auth.credentials.username,
-          ownerName: request.auth.credentials.name,
-          created: moment.utc().format(),
-          zipFile,
-        }))
-        withDb(reply, (conn) => {
-          logger.debug(`Creating project '${qualifiedProjectId}':`, project)
-          return r.table('projects')
-            .get(qualifiedProjectId)
-            .replace(R.merge(project, {
-              id: qualifiedProjectId,
-            }))
-            .run(conn)
-        })
-      }, (error) => {
-        logger.warn(`Failed to generate zip: ${error}:`, error.stack)
-        throw new Error(error)
-      })
-  }
-}
-
-let updateProject = (request, reply) => {
-  let owner = request.params.owner
-  if (owner !== request.auth.credentials.username) {
-    reply(Boom.unauthorized(
-      `You are not allowed to update projects for others than your own user`))
-  } else {
-    let projectParams = request.payload
-    verifyLicense(projectParams)
-    let projectId = request.params.id
-    let qualifiedProjectId = `${owner}/${projectId}`
-    logger.debug(`Received request to update project '${qualifiedProjectId}':`, projectParams)
-    let s3Client = getS3Client()
-
-    let removeStaleFiles = (oldFiles, newFiles, fileType) => {
-      if (oldFiles == null) {
-        logger.debug(`Project has no old ${fileType}s - nothing to remove`)
-        return
-      }
-
-      let removedFiles = R.differenceWith(((a, b) => {
-        return a.url === b.url
-      }), oldFiles, newFiles)
-      if (!R.isEmpty(removedFiles)) {
-        logger.debug(
-          `Removing ${removedFiles.length} stale ${fileType}(s) (type: ${fileType}), old
-          files vs new files:`, oldFiles, newFiles)
-      } else {
-        logger.debug(`No ${fileType}s to remove`)
-        return
-      }
-
-      let filePaths = R.map((file) => {
-        let filePath = `u/${owner}/${projectId}/${fileType}s/${file.fullPath}`
-        return filePath
-      }, removedFiles)
-      let filePathsStr = S.join(', ', filePaths)
-      logger.debug(`Removing outdated ${fileType}s ${filePathsStr}`)
-      return new Promise((resolve, reject) => {
-        s3Client.deleteObjects({
-          Delete: {
-            Objects: R.map((filePath) => {
-              return {
-                Key: filePath,
-              }
-            }, filePaths),
-          },
-        }, (error, data) => {
-          if (error == null) {
-            resolve(data)
-          } else {
-            reject(error)
-          }
-        })
-      })
-        .then(() => {
-          logger.debug(`Successfully removed ${fileType}(s) ${filePathsStr}`)
-        }, (error) => {
-          logger.warn(`Failed to remove ${fileType}(s) ${filePathsStr}: '${error}':`,
-            error.stack)
-        })
-    }
-
-    createZip(owner, projectId, projectParams)
-      .then((zipFile) => {
-        withDb(reply, (conn) => {
-          return r.table('projects').get(qualifiedProjectId).run(conn)
-            .then((project) => {
-              let removeStalePromises = [
-                removeStaleFiles(project.pictures, projectParams.pictures, 'picture'),
-                removeStaleFiles(project.files, projectParams.files, 'file'),
-              ]
-              return Promise.all(removeStalePromises)
-                .then(() => {
-                  logger.debug(`Updating project in database`)
-                  return r.table('projects').get(qualifiedProjectId)
-                    .replace(R.merge(projectParams, {
-                      id: qualifiedProjectId,
-                      owner: request.auth.credentials.username,
-                      projectId: request.params.id,
-                      ownerName: request.auth.credentials.name,
-                      created: moment.utc().format(), // TODO
-                      zipFile,
-                    })).run(conn)
-                      .then(() => {
-                        logger.debug(`Project successfully updated in database`)
-                      })
-                })
-          })
-        })
-    })
-  }
-}
+let gcs = gcloud.storage({
+  projectId: getEnvParam('GCLOUD_PROJECT_ID'),
+  credentials: {
+    client_email: getEnvParam(`GCLOUD_CLIENT_EMAIL`),
+    private_key: getEnvParam(`GCLOUD_PRIVATE_KEY`),
+  },
+})
 
 let verifyDiscourseSso = (request, reply) => {
   let {payload, sig,} = request.payload
@@ -374,24 +136,10 @@ let search = (request, reply) => {
   })
 }
 
-let getUserWithConn = (username, conn) => {
-  return r.table('users')
-    .get(username)
-    .do((user) => {
-      return r.branch(
-        user.eq(null),
-        null,
-        user.merge({
-          'projects': r.table('projects').getAll(username, {index: 'owner',})
-            .coerceTo('array'),
-        })
-      )
-    })
-    .run(conn)
-}
-
 let getUser = (request, reply) => {
   let {username,} = request.params
+  let isLoggedInUser = request.auth.credentials != null && username ===
+    request.auth.credentials.username
   withDb(reply, (conn) => {
     logger.debug(`Getting user '${username}'`)
     return getUserWithConn(username, conn)
@@ -417,12 +165,25 @@ let getUser = (request, reply) => {
           }, scUploads)
           return Promise.all(scPromises)
             .then((embeddables) => {
-              let extendedUser = R.merge(user, {
+              let restrictedAttributes = [
+                'id',
+                'password',
+              ]
+              if (!isLoggedInUser) {
+                restrictedAttributes = R.concat(restrictedAttributes, [
+                  'gitHubAccessToken',
+                  'gitHubAccount',
+                ])
+              }
+              let extendedUser = R.merge(R.omit(restrictedAttributes, user), {
                 soundCloud: {
                   uploads: R.filter((x) => x != null, embeddables),
                 },
               })
               logger.debug(`Returning user:`, extendedUser)
+              if (!isLoggedInUser) {
+                logger.debug(`Filtering out the following properties:`, restrictedAttributes)
+              }
               return extendedUser
             }, (error) => {
               logger.error(`An error occurred:`, error)
@@ -677,24 +438,6 @@ let getOtherTrelloBoards = (request, reply) => {
     })
 }
 
-let getProject = (request, reply) => {
-  let {owner, projectId,} = request.params
-  let qualifiedProjectId = `${owner}/${projectId}`
-  logger.debug(`Getting project '${qualifiedProjectId}'`)
-  withDb(reply, (conn) => {
-    return r.table('projects').get(qualifiedProjectId).run(conn)
-      .then((project) => {
-        if (project != null) {
-          logger.debug(`Found project '${qualifiedProjectId}':`, project)
-          return project
-        } else {
-          logger.debug(`Could not find project '${qualifiedProjectId}'`)
-          return Boom.notFound()
-        }
-      })
-  })
-}
-
 module.exports.register = (server) => {
   let routeApiMethod = (options) => {
     let path = `/api/${options.path}`
@@ -711,7 +454,7 @@ module.exports.register = (server) => {
   routeApiMethod({
     method: ['GET',],
     path: 'projects/{owner}/{projectId}',
-    handler: getProject,
+    handler: requestHandler(getProject),
   })
   routeApiMethod({
     method: ['GET',],
@@ -740,34 +483,39 @@ module.exports.register = (server) => {
   })
   routeApiMethod({
     method: ['GET',],
-    path: 's3Settings/{directive}',
+    path: 'gcloudStorageSettings',
     config: {
       auth: 'session',
       handler: (request, reply) => {
-        let {directive,} = request.params
-        let {key, isBackup,} = request.query
-        logger.debug(`Getting S3 form data for directive '${directive}'`)
-
-        let bucket = !isBackup ? getEnvParam('S3_BUCKET') : `backup.${getEnvParam('S3_BUCKET')}`
-        let keyPrefix = `u/${request.auth.credentials.username}/`
-        let region = getEnvParam('S3_REGION')
-        let s3Form = new AwsS3Form({
-          secure: true,
-          accessKeyId: getEnvParam('AWS_ACCESS_KEY'),
-          secretAccessKey: getEnvParam('AWS_SECRET_ACCESS_KEY'),
-          region,
-          bucket,
-          keyPrefix,
-          successActionStatus: 200,
-        })
-        let url = `https://s3.${region}.amazonaws.com/${bucket}/${keyPrefix}${key}`
-        logger.debug(`S3 URL to file:`, url)
-        let formData = s3Form.create(key)
-        reply({
-          bucket,
-          region,
-          url,
-          fields: formData.fields,
+        let {path,} = request.query
+        let isBackup = request.query.isBackup === 'true'
+        logger.debug(
+          `Getting Google Cloud Storage signed URL for path '${path}', is backup: ${isBackup}...`)
+        let nominalBucketName = getEnvParam('GCLOUD_BUCKET')
+        let bucketName = !isBackup ? nominalBucketName : `backup.${nominalBucketName}`
+        let bucket = gcs.bucket(bucketName)
+        let pathPrefix = `u/${request.auth.credentials.username}/`
+        let filePath = `${pathPrefix}${path}`
+        logger.debug(`File path: ${filePath}`)
+        let cloudFile = bucket.file(filePath)
+        cloudFile.getSignedUrl({
+          action: 'write',
+          expires: moment.utc().add(1, 'days').format(),
+          contentType: 'ignore',
+          // Workaround for bug in gcloud-node, where extensionHeaders is prepended to resource
+          // in signature
+          extensionHeaders: 'x-goog-acl:public-read\n',
+        }, (error, signedUrl) => {
+          if (error != null) {
+            logger.debug(`Failed to obtain signed URL for file`)
+            reply(Boom.badRequest())
+          } else {
+            logger.debug(`Got signed URL for file: ${signedUrl}`)
+            reply({
+              signedUrl,
+              url: getCloudStorageUrl(bucketName, filePath),
+            })
+          }
         })
       },
     },
@@ -776,8 +524,8 @@ module.exports.register = (server) => {
     method: ['POST',],
     path: 'logError',
     handler: (request, reply) => {
-      let error = request.payload.error
-      logger.error(`An error was logged on a client: ${error}:`, error.stack)
+      let error = request.payload.error || {}
+      logger.error(`An error was logged on a client: ${error.message}:`, error.stack)
       reply()
     },
   })
@@ -786,7 +534,7 @@ module.exports.register = (server) => {
     path: 'projects/{owner}',
     config: {
       auth: 'session',
-      handler: createProject,
+      handler: requestHandler(createProject),
     },
   })
   routeApiMethod({
@@ -794,7 +542,26 @@ module.exports.register = (server) => {
     path: 'projects/{owner}/{id}',
     config: {
       auth: 'session',
-      handler: updateProject,
+      handler: requestHandler(updateProject),
+    },
+  })
+  routeApiMethod({
+    method: ['POST',],
+    path: 'webhooks/github/{gitHubOwner}/{gitHubProject}',
+    config: {
+      handler: requestHandler((request, reply) => {
+        let req = request.raw.req
+        let event = req.headers['x-github-event']
+        if (event === 'push') {
+          logger.debug(`Handling GitHub push notification`, request.payload)
+          let {gitHubOwner, gitHubProject,} = request.params
+          logger.debug(`Repository is ${gitHubOwner}/${gitHubProject}`)
+          updateProjectFromGitHub(gitHubOwner, gitHubProject, reply)
+        } else {
+          logger.debug(`Unrecognized event from GitHub: '${event}'`)
+          reply()
+        }
+      }),
     },
   })
   routeApiMethod({
@@ -802,79 +569,7 @@ module.exports.register = (server) => {
     path: 'projects/{owner}/{id}',
     config: {
       auth: 'session',
-      handler: (request, reply) => {
-        let removeFolder = () => {
-          let dirPath = `u/${owner}/${request.params.id}`
-          logger.debug(`Removing folder '${dirPath}'...`)
-          logger.debug(`Listing folder contents...`)
-          return new Promise((resolve, reject) => {
-            s3Client.listObjects({Prefix: `${dirPath}/`,}, (error, data) => {
-              if (error == null) {
-                resolve(data.Contents)
-              } else {
-                logger.warn(`Failed to list folder '${dirPath}': '${error}':`, error.stack)
-                reject(error)
-              }
-            })
-          })
-            .then((objects) => {
-              logger.debug(`Successfully listed folder contents:`, objects)
-              if (R.isEmpty(objects)) {
-                logger.debug(`Nothing to remove`)
-                return Promise.resolve()
-              }
-
-              let toDelete = R.map((o) => {
-                return {Key: o.Key,}
-              }, objects)
-              logger.debug(`Deleting folder contents...`)
-              return new Promise((resolve, reject) => {
-                s3Client.deleteObjects({
-                  Delete: {
-                    Objects: toDelete,
-                  },
-                }, (error, data) => {
-                  if (error == null) {
-                    resolve(data)
-                  } else {
-                    reject(error)
-                  }
-                })
-              })
-                .then(() => {
-                  logger.debug(`Successfully removed ${objects.length} object(s)`)
-                  // API will list max 1000 objects
-                  if (objects.length === 1000) {
-                    logger.debug('We hit max number of listed objects, deleting recursively')
-                    return removeFolder()
-                  }
-                }, (error) => {
-                  logger.warn(`Failed to remove ${objects.length} object(s): '${error}':`,
-                    error.stack)
-                })
-              })
-        }
-
-        let s3Client = getS3Client()
-        let owner = request.params.owner
-        let qualifiedProjectId = `${owner}/${request.params.id}`
-
-        logger.debug(`Received request to delete project '${qualifiedProjectId}'`)
-        if (owner !== request.auth.credentials.username) {
-          reply(Boom.unauthorized(
-            `You are not allowed to delete projects for others than your own user`))
-        } else {
-          withDb(reply, (conn) => {
-            return r.table('projects').get(qualifiedProjectId).delete().run(conn)
-              .then(() => {
-                return removeFolder()
-                  .then(() => {
-                    logger.debug(`Project '${qualifiedProjectId}' successfully deleted`)
-                  })
-              })
-          })
-        }
-      },
+      handler: requestHandler(deleteProject),
     },
   })
   routeApiMethod({
@@ -890,6 +585,31 @@ module.exports.register = (server) => {
     path: 'stripe/checkout',
     config: {
       handler: stripeApi.stripeCheckout,
+    },
+  })
+  routeApiMethod({
+    method: ['GET',],
+    path: 'isProjectIdAvailable',
+    config: {
+      auth: 'session',
+      handler: requestHandler((request, reply) => {
+        let {projectId,} = request.query
+        if (projectId == null) {
+          throw badRequest(`projectId parameter must be supplied`)
+        }
+
+        let authedUser = request.auth.credentials
+        let qualifiedProjectId = `${authedUser.username}/${projectId}`
+        logger.debug(`Handling request as to whether ${qualifiedProjectId} is available`)
+        withDb(reply, (conn) => {
+          return r.table('projects')
+            .get(qualifiedProjectId)
+            .run(conn)
+            .then((project) => {
+              return project == null
+            })
+        })
+      }),
     },
   })
 }

@@ -3,10 +3,13 @@ let logger = require('js-logger-aknudsen').get('validationFunctions')
 let Fns = require('./validationFunctions')
 let R = require('ramda')
 
-class ValidationError {
+class Validator {
   constructor(name, input, validators=[], errorText) {
     this.name = name
     this.input = input
+    if (!R.isArrayLike(validators)) {
+      validators = [validators,]
+    }
     this.validators = validators
     this._errorText = errorText
   }
@@ -30,18 +33,20 @@ class ValidationError {
   }
 }
 
-class InvalidUsername extends ValidationError {
+class InvalidUsername extends Validator {
   constructor(input) {
     super(
       'InvalidUsername',
       input,
-      [Fns.isBlankOrHasSpace, Fns.hasSpecialChars,],
-      'Invalid username, please use only a-z, A-Z, 0-9, _.'
+      (input) => {
+        return /^[a-z_\-0-9]+$/.test(input)
+      },
+      'Invalid username, please use only a-z, 0-9, _, -.'
     )
   }
 }
 
-class InvalidPassword extends ValidationError {
+class InvalidPassword extends Validator {
   constructor(input) {
     super(
       'InvalidPassword',
@@ -52,7 +57,7 @@ class InvalidPassword extends ValidationError {
   }
 }
 
-class InvalidPasswordConfirm extends ValidationError {
+class InvalidPasswordConfirm extends Validator {
   constructor(inputs) {
     super(
       'InvalidPasswordConfirm',
@@ -63,30 +68,58 @@ class InvalidPasswordConfirm extends ValidationError {
   }
 }
 
-class InvalidEmail extends ValidationError {
+class InvalidEmail extends Validator {
   constructor(input) {
     super('InvalidEmail', input, [Fns.isBlank,], 'Invalid email')
   }
 }
 
-class InvalidName extends ValidationError {
+class InvalidName extends Validator {
   constructor(input) {
     super('InvalidName', input, [Fns.isBlank,], 'Invalid name')
   }
 }
 
-class InvalidWebsite extends ValidationError {
+class InvalidWebsite extends Validator {
   constructor(input) {
     super('InvalidWebsite', input, [Fns.isBlank,], 'Invalid website')
   }
 }
 
+class InvalidProjectId extends Validator {
+  constructor(input) {
+    super(
+      'InvalidProjectId',
+      input,
+      (input) => {
+        return !/^[a-z_\-0-9]+$/.test(input)
+      },
+      'Invalid project ID, please use only a-z, 0-9, _, -.'
+    )
+  }
+}
+
+class InvalidTag extends Validator {
+  constructor(input) {
+    super(
+      `InvalidTag`,
+      input,
+      (input) => {
+        return !/^[a-z\-0-9.]+$/.test(input)
+      },
+      'Invalid tag, please use only a-z, 0-9, ., -,.'
+    )
+  }
+}
+
 module.exports = {
-  ValidationError,
+  Validator,
   InvalidUsername,
   InvalidPassword,
   InvalidPasswordConfirm,
   InvalidEmail,
   InvalidName,
   InvalidWebsite,
+  InvalidProjectId,
+  InvalidTag,
 }

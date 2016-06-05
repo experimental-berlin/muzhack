@@ -5,7 +5,7 @@ let S = require('underscore.string.fp')
 let Promise = require('bluebird')
 
 let editing = require('../editing')
-let S3Uploader = require('../s3Uploader')
+let GoogleCloudStorageUploader = require('../cloudStorageUploader')
 
 let monitoredDropzoneEvents = [
   'addedfile',
@@ -78,75 +78,75 @@ class DropzoneService {
   createDropzone(cssId, forPictures, existingFiles) {
     let uploadFiles = (files, {metadata, progressCallback,}) => {
       let processedFiles = []
-      let s3Folder = `${metadata.projectId}/files`
+      let cloudFolder = `${metadata.projectId}/files`
       if (metadata.owner == null || metadata.projectId == null) {
         throw new Error('data is missing owner/projectId')
       }
 
-      logger.debug(`Uploading files to folder '${s3Folder}'`)
+      logger.debug(`Uploading files to folder '${cloudFolder}'`)
 
-      let backupFile = (file, downloadUrl, resolve, reject, numTries=0) => {
+      let backupFile = (file, downloadUrl, numTries=0) => {
         numTries += 1
         logger.debug(`Backing up file '${file.name}', try #${numTries}...`)
-        let uploader = new S3Uploader('files', {
-          folder: `${s3Folder}${getFolder(file)}`,
+        let uploader = new GoogleCloudStorageUploader({
+          folder: `${cloudFolder}${getFolder(file)}`,
           isBackup: true,
         })
-        uploader.send(file)
+        return uploader.send(file)
           .then(() => {
             logger.debug(`Succeeded in backing up file '${file.name}'`)
             file.url = downloadUrl
             file.status = Dropzone.SUCCESS
             processedFiles.push(file)
             if (!R.isEmpty(files)) {
-              uploadOneFile(resolve, reject)
+              return uploadOneFile()
             } else {
               logger.debug('Finished uploading files:', processedFiles)
-              resolve(processedFiles)
+              return processedFiles
             }
           }, (error) => {
             logger.warn(`Failed to back up file '${file.name}': '${error.message}'`)
             if (numTries <= 3) {
               logger.info('Retrying backup')
-              backupFile(file, downloadUrl, resolve, reject, numTries)
+              return backupFile(file, downloadUrl, numTries)
             } else {
               logger.warn(`Giving up backup of file since we've already tried ${numTries} times`)
-              reject(error.message)
+              throw error
             }
           })
       }
 
-      let realUploadFile = (file, resolve, reject, numTries) => {
+      let realUploadFile = (file,  numTries) => {
         numTries += 1
-        let folder = `${s3Folder}${getFolder(file)}`
+        let folder = `${cloudFolder}${getFolder(file)}`
         logger.debug(`Uploading file '${file.fullPath}', try #${numTries}...`)
-        let uploader = new S3Uploader('files', {
+        let uploader = new GoogleCloudStorageUploader({
           folder: folder,
         })
-        uploader.send(file)
+        return uploader.send(file)
           .then((downloadUrl) => {
-            backupFile(file, downloadUrl, resolve, reject)
+            return backupFile(file, downloadUrl)
           }, (error) => {
             logger.warn(`Failed to upload file '${file.fullPath}': '${error.message}'`)
             if (numTries <= 3) {
               logger.info('Retrying upload')
-              realUploadFile(file, resolve, reject, numTries)
+              return realUploadFile(file, numTries)
             } else {
               logger.warn(`Giving up since we've already tried ${numTries} times`)
-              reject(error.message)
+              throw error
             }
           })
       }
 
-      let uploadOneFile = (resolve, reject) => {
+      let uploadOneFile = () => {
         let file = files.shift()
         logger.debug(`Uploading file:`, file)
         progressCallback(file.fullPath)
-        realUploadFile(file, resolve, reject, 0)
+        return realUploadFile(file, 0)
       }
 
       logger.debug('Uploading files...', files)
-      return new Promise(uploadOneFile)
+      return uploadOneFile()
         .catch((error) => {
           R.forEach((file) => {
             file.status = Dropzone.ERROR
@@ -158,144 +158,140 @@ class DropzoneService {
     let uploadPictures = (files, {metadata, progressCallback,}) => {
       let pictureDatas = []
       let pictures = []
-      let s3Folder = `${metadata.projectId}/pictures`
+      let cloudFolder = `${metadata.projectId}/pictures`
       if (metadata.owner == null || metadata.projectId == null) {
         throw new Error('data is missing owner/projectId')
       }
 
-      logger.debug(`Uploading pictures to folder '${s3Folder}'`)
-      let uploader = new S3Uploader('pictures', {
-        folder: s3Folder,
+      logger.debug(`Uploading pictures to folder '${cloudFolder}'`)
+      let uploader = new GoogleCloudStorageUploader({
+        folder: cloudFolder,
       })
-      let backupUploader = new S3Uploader('pictures-backup', {
-        folder: s3Folder,
+      let backupUploader = new GoogleCloudStorageUploader({
+        folder: cloudFolder,
         isBackup: true,
       })
 
-      let processImage = (file, width, height) => {
+      let processImage = (file) => {
         return new Promise((resolve, reject) => {
+          let maxSize = 1200
           let img = new Image()
           img.onload = () => {
             logger.debug(`Processing image file '${file.name}'...`)
             let canvas = document.createElement('canvas')
-            let targetAspectRatio = width / height
-            let sourceAspectRatio = img.width / img.height
             let targetWidth
             let targetHeight
-            let horizontalOffset = 0
-            let verticalOffset = 0
-            if (sourceAspectRatio > targetAspectRatio) {
-              logger.debug(`Will pad the image vertically`)
-              let multiplier = width / img.width
-              targetWidth = width
-              targetHeight = multiplier * img.height
-              verticalOffset = (height - targetHeight) / 2
-            } else if (sourceAspectRatio < targetAspectRatio) {
-              logger.debug(`Will pad the image horizontally`)
-              let multiplier = height / img.height
-              targetWidth = multiplier * img.width
-              targetHeight = height
-              horizontalOffset = (width - targetWidth) / 2
+            if (img.width > maxSize || img.height > maxSize) {
+              logger.debug(`Image dimensions exceed max size (${maxSize} pixels), reducing size`)
+              if (img.width > img.height) {
+                let multiplier = maxSize / img.width
+                targetWidth = maxSize
+                targetHeight = multiplier * img.height
+              } else {
+                let multiplier = maxSize / img.height
+                targetHeight = maxSize
+                targetWidth = multiplier * img.width
+              }
+              canvas.width = targetWidth
+              canvas.height = targetHeight
+            } else {
+              canvas.width = img.width
+              canvas.height = img.height
             }
-            canvas.width = width
-            canvas.height = height
             let ctx = canvas.getContext('2d')
-            ctx.fillStyle = 'white'
-            ctx.fillRect(0, 0, width, height)
-            ctx.drawImage(img, 0, 0, img.width, img.height, horizontalOffset, verticalOffset,
-              targetWidth, targetHeight)
+            ctx.drawImage(img, 0, 0, targetWidth, targetHeight)
             resolve(canvas.toDataURL('image/png'))
           }
+
           img.src = URL.createObjectURL(file)
         })
       }
 
-      let processOnePicture = (resolve, reject) => {
+      let processOnePicture = () => {
         let file = files.shift()
         logger.debug(`Processing picture '${file.name}'`)
-        processImage(file, 500, 409)
+        return processImage(file)
           .then((dataUri) => {
             let match = /^data:([^;]+);base64,(.+)$/.exec(dataUri)
             if (match == null) {
-              reject(
+              throw new Error(
                 `processImage for file '${file.name}' returned data URI on wrong format: '${dataUri}'`
               )
             } else {
               pictureDatas.push([file, match[1], match[2],])
               if (!R.isEmpty(files)) {
-                processOnePicture(resolve, reject)
+                return processOnePicture()
               } else {
                 logger.debug('Finished processing pictures successfully')
-                resolve()
               }
             }
           })
       }
 
-      let backupPicture = (blob, file, downloadUrl, resolve, reject, numTries) => {
+      let backupPicture = (blob, file, downloadUrl, numTries) => {
         numTries += 1
         logger.debug(`Backing up picture '${file.name}', try #${numTries}...`)
-        backupUploader.send(blob)
+        return backupUploader.send(blob)
           .then(() => {
             file.url = downloadUrl
             file.status = Dropzone.SUCCESS
             pictures.push(file)
             if (!R.isEmpty(pictureDatas)) {
-              uploadOnePicture(resolve, reject)
+              return uploadOnePicture()
             } else {
               logger.debug('Finished uploading pictures, URLs:', pictures)
-              resolve(pictures)
+              return pictures
             }
           }, (error) => {
-            logger.warn(`Failed to back up picture '${file.name}': '${error}'`)
+            logger.warn(`Failed to back up picture '${file.name}':`, error)
             if (numTries <= 3) {
               logger.info('Retrying backup')
-              backupPicture(blob, file, downloadUrl, resolve, reject, numTries)
+              return backupPicture(blob, file, downloadUrl, numTries)
             } else {
               logger.warn(`Giving up since we've already tried ${numTries} times`)
-              reject(error.message)
+              throw error
             }
           })
       }
 
-      let uploadPicture = (blob, file, type, resolve, reject, numTries) => {
+      let uploadPicture = (blob, file, type, numTries) => {
         numTries += 1
         logger.debug(`Uploading picture '${file.name}', type '${type}', try #${numTries}...`)
-        uploader.send(blob)
+        return uploader.send(blob)
           .then((downloadUrl) => {
-            backupPicture(blob, file, downloadUrl, resolve, reject, 0)
+            return backupPicture(blob, file, downloadUrl, 0)
           }, (error) => {
-            logger.warn(`Failed to upload picture '${file.name}': '${error}'`)
+            logger.warn(`Failed to upload picture '${file.name}': `, error)
             if (numTries <= 3) {
               logger.info('Retrying upload')
-              uploadPicture(blob, file, type, resolve, reject, numTries)
+              return uploadPicture(blob, file, type, numTries)
             } else {
               logger.warn(`Giving up since we've already tried ${numTries} times`)
-              reject(error.message)
+              throw error
             }
           })
       }
 
-      let uploadOnePicture = (resolve, reject) => {
+      let uploadOnePicture = () => {
         let numTries = 0
         let [file, type, b64,] = pictureDatas.shift()
         let blob = b64ToBlob(b64, type)
         blob.name = file.name
         progressCallback(file.fullPath)
-        uploadPicture(blob, file, type, resolve, reject, 0)
+        return uploadPicture(blob, file, type, 0)
       }
 
       logger.debug('Processing pictures...')
-      return new Promise(processOnePicture)
+      return processOnePicture()
         .then(() => {
           logger.debug('Uploading pictures...')
-          return new Promise(uploadOnePicture)
+          return uploadOnePicture()
         })
         .catch((error) => {
           R.forEach((file) => {
             file.status = Dropzone.ERROR
           }, files)
-          logger.error(`Failed to upload pictures: ${error}`)
+          logger.error(`Failed to upload pictures:`, error)
           throw new Error(`Failed to upload pictures: ${error}`)
         })
     }
@@ -316,9 +312,7 @@ class DropzoneService {
     }, mutatingDropzoneEvents)
     if (!R.isEmpty(existingFiles || [])) {
       let description = forPictures ? 'picture' : 'file'
-      let picker = forPictures ? (x) => {
-        return R.merge(x, {name: x.url,})
-      } : (x) => {
+      let picker = forPictures ? R.identity : (x) => {
         return R.merge(x, {name: x.filename,})
       }
       let fileObjs = R.map(picker, existingFiles)
@@ -331,4 +325,7 @@ class DropzoneService {
   }
 }
 
-module.exports = new DropzoneService()
+module.exports = {
+  dropzoneService: new DropzoneService(),
+  mutatingDropzoneEvents,
+}

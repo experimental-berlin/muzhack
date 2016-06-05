@@ -27,7 +27,7 @@ let setSearch = (cursor, text) => {
 
 let createProjectElement = (cursor, i) => {
   let project = cursor.toJS()
-  let thumbnail = !R.isEmpty(project.pictures || []) ? project.pictures[0].url :
+  let thumbnail = !R.isEmpty(project.pictures || []) ? project.pictures[0].exploreUrl :
     '/images/revox-reel-to-reel-resized.jpg'
   return h('.project-item', {
     key: i,

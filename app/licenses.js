@@ -44,4 +44,10 @@ module.exports = {
     icons: ['creative-commons', 'creative-commons-attribution',
       'creative-commons-noncommercial-us',],
   },
+  'cc-by-nc-sa-2.5': {
+    name: 'Creative Commons - Attribution - NonCommercial - ShareAlike 2.5',
+    url: 'http://creativecommons.org/licenses/by-nc-sa/2.5/',
+    icons: ['creative-commons', 'creative-commons-attribution',
+      'creative-commons-noncommercial-us', 'creative-commons-sharealike',],
+  },
 }

@@ -1,0 +1,8 @@
+[
+    {
+      "origin": ["https://staging.muzhack.com"],
+      "responseHeader": ["Content-Type", "x-goog-acl"],
+      "method": "*",
+      "maxAgeSeconds": 3600
+    }
+]

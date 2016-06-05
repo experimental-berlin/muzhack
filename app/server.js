@@ -5,9 +5,9 @@ let Hapi = require('hapi')
 let R = require('ramda')
 let path = require('path')
 let pug = require('pug')
-let immstruct = require('immstruct')
 let Boom = require('boom')
 let moment = require('moment')
+let r = require('rethinkdb')
 let Url = require('url')
 let Promise = require('bluebird')
 let Logger = require('js-logger-aknudsen')
@@ -35,7 +35,8 @@ Traceback:
 ${stack}
 `
     } else {
-      message = error.stack != null ? error.stack.replace(/\n/g, '<br>') : error
+      let stack = error.stack != null ? error.stack : error
+      message = stack.replace(/\n/g, '<br>')
     }
 
     let dateTimeStr = moment.utc().format('YYYY-MM-DD HH:mm:ss')
@@ -59,6 +60,7 @@ let rendering = require('./server/rendering')
 let db = require('./server/db')
 let {getEnvParam,} = require('./server/environment')
 let emailer = require('./server/emailer')
+let ajax = require('./ajax')
 
 process.on('uncaughtException', (error) => {
   logger.error(`An uncaught exception occurred`, error.stack)
@@ -124,6 +126,62 @@ server.register(plugins, (err) => {
     },
   })
 
+  server.route({
+    method: ['GET',],
+    path: '/u/{user}/attach/github',
+    handler: (request, reply) => {
+      let username = request.params.user
+      let {code, state,} = request.query
+      // TODO: Verify that state corresponds to what we initiated the OAuth token request with
+      let clientId = getEnvParam('GITHUB_CLIENT_ID')
+      let clientSecret = getEnvParam('GITHUB_CLIENT_SECRET')
+      logger.debug(`Requesting OAuth data from GitHub for user '${username}'`)
+      ajax.getJson(`https://github.com/login/oauth/access_token?` +
+          `client_id=${clientId}&client_secret=${clientSecret}&state=${state}&code=${code}`)
+        .then((accessTokenData) => {
+          let accessToken = accessTokenData.access_token
+          logger.debug(`Received OAuth data from GitHub for user '${username}'`)
+          return ajax.getJson(`https://api.github.com/user`, null, {
+            headers: {Authorization: `token ${accessToken}`,},
+          })
+            .then((accountData) => {
+              return db.connectToDb()
+                .then((conn) => {
+                  logger.debug(
+                    `Updating user '${username}' with GitHub access token and username:`, {
+                    accessToken,
+                    login: accountData.login,
+                  })
+                  return r.table('users')
+                    .get(username)
+                    .update({
+                      'gitHubAccessToken': accessToken,
+                      'gitHubAccount': accountData.login,
+                    })
+                    .run(conn)
+                    .then(() => {
+                      let redirectUrl = `${getEnvParam('APP_URI')}/u/${username}`
+                      logger.debug(`Redirecting to ${redirectUrl}`)
+                      reply.redirect(redirectUrl)
+                    })
+                    .finally(() => {
+                      db.closeDbConnection(conn)
+                    })
+                })
+            }, (error) => {
+              logger.warn(`Failed to obtain GitHub user data:`, error.stack)
+              throw error
+            })
+        }, (error) => {
+          logger.warn(`Failed to obtain GitHub access token:`, error)
+          reply(Boom.badRequest(`Couldn't get GitHub access token`))
+        })
+        .catch((error) => {
+          logger.error(`Error:`, error.stack)
+          reply(Boom.badImplementation())
+        })
+    },
+  })
   server.route({
     method: ['GET',],
     path: '/{path*}',
