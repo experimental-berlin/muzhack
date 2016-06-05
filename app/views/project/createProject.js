@@ -14,7 +14,7 @@ let licenses = require('../../licenses')
 let FocusingInput = require('../focusingInput')
 let {nbsp,} = require('../../specialChars')
 let ajax = require('../../ajax')
-let Loading = require('./loading')
+let {Loading, InputLoading,} = require('./loading')
 let {DescriptionEditor, InstructionsEditor, PicturesEditor,
   FilesEditor,} = require('./editors')
 let {trimWhitespace,} = require('../../stringUtils')
@@ -100,31 +100,30 @@ let renderFieldError = (errors, fieldName) => {
 
 let inputChangeHandler = (fieldName, handler) => {
   return (event) => {
-    let createCursor = immstruct.instance('state').reference().cursor('createProject')
-    createCursor.set('isReady', false)
-    let promise = Promise.method(handler)(event, createCursor)
-    if (promise.then == null) {
-      // A non-promise was returned
-      promise = Promise.resolve(promise)
-    }
-    promise.then((validationError) => {
-      logger.debug(`Input change handler completed, validation error: ${validationError}`)
-      createCursor = immstruct.instance('state').reference().cursor('createProject')
-      logger.debug(`Create cursor:`, createCursor.toJS())
-      createCursor.update((current) => {
-        let errors = R.defaultTo({}, current.get('errors'))
-        logger.debug(`Current validation errors:`, errors)
-        if (validationError != null) {
-          errors[fieldName] = validationError
-        } else {
-          delete errors[fieldName]
-        }
-        logger.debug(`Setting validation errors:`, errors)
-        current = current.set('errors', errors)
-        current = current.set('isReady', R.isEmpty(errors))
-        return current
+    let createCursor = immstruct.instance('state').reference('createProject').cursor()
+    createCursor = createCursor.set('isReady', false)
+    Promise.method(handler)(event, createCursor)
+      .then((validationError) => {
+        logger.debug(`Input change handler completed, validation error: ${validationError}`)
+        createCursor = immstruct.instance('state').reference('createProject').cursor()
+        createCursor = createCursor.update((current) => {
+          if (validationError != null) {
+            current = current.setIn(['errors', fieldName,], validationError)
+          } else {
+            current = current.deleteIn(['errors', fieldName,])
+          }
+
+          let currentErrors = current.get('errors').toJS()
+          if (R.isEmpty(currentErrors)) {
+            logger.debug(`No input errors detected, enabling project creation`, currentErrors)
+            current = current.set('isReady', true)
+          } else {
+            logger.debug(`Input errors detected, not enabling project creation`, currentErrors)
+            current = current.set('isReady', false)
+          }
+          return current
+        })
       })
-    })
   }
 }
 
@@ -133,7 +132,7 @@ let checkProjectIdTimeout = null
 let renderCreateStandaloneProject = (cursor) => {
   let createCursor = cursor.cursor('createProject')
   let input = createCursor.toJS()
-  let errors = R.defaultTo({}, input.errors)
+  let errors = input.errors
   logger.debug(`Rendering validation errors:`, errors)
   return [
     h('.input-group', [
@@ -141,35 +140,45 @@ let renderCreateStandaloneProject = (cursor) => {
         id: 'id-input', placeholder: 'Project ID',
         value: input.id,
         onChange: inputChangeHandler('id', (event, createCursor) => {
+          if (checkProjectIdTimeout != null) {
+            clearTimeout(checkProjectIdTimeout)
+          }
+
           let projectId = trimWhitespace(event.target.value)
           logger.debug(`Project ID changed: '${projectId}'`)
-          createCursor.set('id', projectId)
+          createCursor = createCursor.set('id', projectId)
 
-          return new Promise((resolve, reject) => {
-            if (checkProjectIdTimeout != null) {
-              clearTimeout(checkProjectIdTimeout)
-            }
-
+          let projectIdValidator = new InvalidProjectId(projectId)
+          if (projectIdValidator.isInvalid) {
+            return projectIdValidator.errorText
+          } else {
             if (!S.isBlank(projectId)) {
-              let projectIdValidator = new InvalidProjectId(projectId)
-              if (projectIdValidator.isInvalid) {
-                resolve(projectIdValidator.errorText)
-              } else {
+              return new Promise((resolve, reject) => {
                 checkProjectIdTimeout = setTimeout(() => {
+                  createCursor.set(`isCheckingId`, true)
                   logger.debug(`Checking whether project ID ${projectId} is available`)
                   ajax.getJson(`/api/isProjectIdAvailable?projectId=${projectId}`)
                     .then((isAvailable) => {
-                      logger.debug(`Project ID ${projectId} is available: ${isAvailable}`)
-                      resolve()
+                      if (isAvailable) {
+                        logger.debug(`Project ID ${projectId} is available`)
+                        resolve()
+                      } else {
+                        logger.debug(`Project ID ${projectId} is not available`)
+                        resolve(`ID ${projectId} is not available`)
+                      }
                     }, reject)
+                    .finally(() => {
+                      createCursor.set(`isCheckingId`, false)
+                    })
                 }, 500)
-              }
+              })
             } else {
-              resolve(`ID must be filled in`)
+              return `ID must be filled in`
             }
-          })
+          }
         }),
       }),
+      input.isCheckingId ? InputLoading() : null,
       renderFieldError(errors, 'id'),
     ]),
     h('.input-group', [
@@ -464,6 +473,12 @@ module.exports = {
         shouldCreateStandalone: true,
         gitHubRepositories: [],
         isReady: false,
+        errors: {
+          id: null,
+          title: null,
+          tags: null,
+          description: null,
+        },
       },
     }
 
