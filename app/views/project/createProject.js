@@ -19,6 +19,8 @@ let {DescriptionEditor, InstructionsEditor, PicturesEditor,
   FilesEditor,} = require('./editors')
 let {trimWhitespace,} = require('../../stringUtils')
 let {InvalidProjectId, InvalidTag,} = require('../../validators')
+let editAndCreateProject = require('./editAndCreateProject')
+let {renderFieldError,} = editAndCreateProject
 
 let uploadProject
 let router
@@ -93,38 +95,8 @@ let createProjectFromGitHub = (cursor) => {
     })
 }
 
-let renderFieldError = (errors, fieldName) => {
-  let errorText = errors[fieldName]
-  return errorText != null ? h(`#${fieldName}-error.field-error`, `* ${errorText}`) : null
-}
-
 let inputChangeHandler = (fieldName, handler) => {
-  return (event) => {
-    let createCursor = immstruct.instance('state').reference('createProject').cursor()
-    createCursor = createCursor.set('isReady', false)
-    Promise.method(handler)(event, createCursor)
-      .then((validationError) => {
-        logger.debug(`Input change handler completed, validation error: ${validationError}`)
-        createCursor = immstruct.instance('state').reference('createProject').cursor()
-        createCursor = createCursor.update((current) => {
-          if (validationError != null) {
-            current = current.setIn(['errors', fieldName,], validationError)
-          } else {
-            current = current.deleteIn(['errors', fieldName,])
-          }
-
-          let currentErrors = current.get('errors').toJS()
-          if (R.isEmpty(currentErrors)) {
-            logger.debug(`No input errors detected, enabling project creation`, currentErrors)
-            current = current.set('isReady', true)
-          } else {
-            logger.debug(`Input errors detected, not enabling project creation`, currentErrors)
-            current = current.set('isReady', false)
-          }
-          return current
-        })
-      })
-  }
+  return editAndCreateProject.inputChangeHandler(fieldName, 'createProject', handler)
 }
 
 let checkProjectIdTimeout = null
@@ -482,6 +454,7 @@ module.exports = {
           title: null,
           tags: null,
           description: null,
+          pictures: null,
         },
       },
     }
