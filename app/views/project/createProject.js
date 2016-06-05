@@ -80,7 +80,7 @@ let createProject = (cursor) => {
 
 let createProjectFromGitHub = (cursor) => {
   let createCursor = cursor.cursor('createProject')
-  let repositoryName = createCursor.get(`gitHubRepositoryName`)
+  let repositoryName = createCursor.getIn([`gitHub`, `gitHubRepositoryName`,])
   let username = userManagement.getLoggedInUser(cursor).username
   let [gitHubOwner, gitHubProject,] = S.wordsDelim('/', repositoryName)
   ajax.postJson(`/api/projects/${username}`, {
@@ -99,7 +99,33 @@ let inputChangeHandler = (fieldName, handler) => {
   return editAndCreateProject.inputChangeHandler(fieldName, 'createProject', handler)
 }
 
+let gitHubInputChangeHandler = (fieldName, handler) => {
+  return editAndCreateProject.inputChangeHandler(fieldName, ['createProject', 'gitHub',], handler)
+}
+
 let checkProjectIdTimeout = null
+
+let checkAvailabilityOfProjectId = (projectId, cursor) => {
+  return new Promise((resolve, reject) => {
+    checkProjectIdTimeout = setTimeout(() => {
+      cursor.set(`isCheckingId`, true)
+      logger.debug(`Checking whether project ID ${projectId} is available`)
+      ajax.getJson(`/api/isProjectIdAvailable?projectId=${projectId}`)
+        .then((isAvailable) => {
+          if (isAvailable) {
+            logger.debug(`Project ID ${projectId} is available`)
+            resolve()
+          } else {
+            logger.debug(`Project ID ${projectId} is not available`)
+            resolve(`ID ${projectId} is not available`)
+          }
+        }, reject)
+        .finally(() => {
+          cursor.set(`isCheckingId`, false)
+        })
+    }, 500)
+  })
+}
 
 let renderCreateStandaloneProject = (cursor) => {
   let createCursor = cursor.cursor('createProject')
@@ -128,25 +154,7 @@ let renderCreateStandaloneProject = (cursor) => {
               return projectIdValidator.errorText
             } else {
               if (!S.isBlank(projectId)) {
-                return new Promise((resolve, reject) => {
-                  checkProjectIdTimeout = setTimeout(() => {
-                    createCursor.set(`isCheckingId`, true)
-                    logger.debug(`Checking whether project ID ${projectId} is available`)
-                    ajax.getJson(`/api/isProjectIdAvailable?projectId=${projectId}`)
-                      .then((isAvailable) => {
-                        if (isAvailable) {
-                          logger.debug(`Project ID ${projectId} is available`)
-                          resolve()
-                        } else {
-                          logger.debug(`Project ID ${projectId} is not available`)
-                          resolve(`ID ${projectId} is not available`)
-                        }
-                      }, reject)
-                      .finally(() => {
-                        createCursor.set(`isCheckingId`, false)
-                      })
-                  }, 500)
-                })
+                return checkAvailabilityOfProjectId(projectId, createCursor)
               }
             }
           }
@@ -267,30 +275,45 @@ let renderCreateStandaloneProject = (cursor) => {
   ]
 }
 
-let AutoComplete = component('AutoComplete', (cursor) => {
+let AutoComplete = component('AutoComplete', ({cursor,}) => {
   let showSuggestions = false
   let createCursor = cursor.cursor('createProject')
-  let isLoading = !!createCursor.get(`isLoadingGitHubRepositories`)
-  let gitHubRepositories = createCursor.cursor(`gitHubRepositories`).toJS()
-  let autoCompleteValue = createCursor.get('gitHubRepositoryName', '')
-  let autoCompleteItems = R.filter(S.include(autoCompleteValue),
-    R.map(R.prop('full_name'), gitHubRepositories))
+  let isLoading = !!createCursor.getIn([`gitHub`, `isLoadingGitHubRepositories`,])
+  let gitHubRepositories = createCursor.cursor([`gitHub`, `gitHubRepositories`,]).toJS()
+  let autoCompleteValue = createCursor.getIn([`gitHub`, 'gitHubRepositoryName',])
+  let gitHubRepositoryNames = R.map(R.prop('full_name'), gitHubRepositories)
+  let autoCompleteItems = R.filter(S.include(autoCompleteValue), gitHubRepositoryNames)
   logger.debug(`GitHub repositories:`, autoCompleteItems)
   logger.debug(
-    `Rendering AutoComplete, is loading: ${isLoading}`)
+    `Rendering AutoComplete, is loading: ${isLoading}`, createCursor.toJS())
   return ReactAutoComplete({
-    inputProps: {name: 'repository', placeholder: `GitHub repository`,},
+    inputProps: {
+      name: 'repository',
+      placeholder: `GitHub repository`,
+      disabled: isLoading,
+      className: `github-autocomplete`,
+    },
     ref: 'autocomplete',
     value: autoCompleteValue,
     items: autoCompleteItems,
     getItemValue: R.identity,
-    onSelect: (value) => {
+    onSelect: gitHubInputChangeHandler('gitHubRepositoryName', (value, gitHubCursor) => {
       logger.debug(`Repository selected: '${value}'`)
-      createCursor.set(`gitHubRepositoryName`, value)
-    },
-    onChange: (event, value) => {
-      createCursor.set('gitHubRepositoryName', value)
-    },
+      gitHubCursor.set(`gitHubRepositoryName`, value)
+    }),
+    onChange: gitHubInputChangeHandler('gitHubRepositoryName', (event, gitHubCursor) => {
+      let repoName = trimWhitespace(event.target.value)
+      logger.debug(`GitHub repository changed: '${repoName}':`, gitHubCursor.toJS())
+      gitHubCursor.set('gitHubRepositoryName', repoName)
+      logger.debug(`After setting:`, gitHubCursor.toJS())
+      if (S.isBlank(repoName)) {
+        return `GitHub repository must be filled in`
+      } else if (!R.contains(repoName, gitHubRepositoryNames)) {
+        return `Please select a valid GitHub repository`
+      } else {
+        return null
+      }
+    }),
     renderItem: (item, isHighlighted) => {
       return h('.autocomplete-item', {
         style: isHighlighted ? {
@@ -309,12 +332,23 @@ let AutoComplete = component('AutoComplete', (cursor) => {
   })
 })
 
+let checkGitHubIdTimeout = null
+
 let renderCreateProjectFromGitHub = (cursor) => {
   let createCursor = cursor.cursor('createProject')
+  let input = createCursor.toJS()
+  let errors = input.gitHub.errors
+  let isGitHubRepositorySelected = !S.isBlank(input.gitHub.gitHubRepositoryName) &&
+    !input.gitHub.isLoadingGitHubRepositories
+  logger.debug(`Rendering form to import project from GitHub`)
   return [
     h('.input-group', [
-      AutoComplete(cursor),
+      AutoComplete({
+        cursor,
+      }),
+      input.gitHub.isLoadingGitHubRepositories ? InputLoading() : null,
     ]),
+    renderFieldError(errors, 'gitHubRepositoryName'),
     h('#create-buttons.button-group', [
       h('button#create-project.pure-button.pure-button-primary', {
         onClick: () => {
@@ -331,6 +365,7 @@ let renderCreateProjectFromGitHub = (cursor) => {
             throw error
           }
         },
+        disabled: !input.gitHub.isReady,
       }, 'Create'),
       h('button#cancel-create.pure-button', {
         onClick: () => {
@@ -388,8 +423,10 @@ let loadGitHubRepositories = () => {
             .then((orgRepositories) => {
               let allRepositories = R.concat(repositories, orgRepositories)
               createCursor.mergeDeep({
-                gitHubRepositories: allRepositories,
-                isLoadingGitHubRepositories: false,
+                gitHub: {
+                  gitHubRepositories: allRepositories,
+                  isLoadingGitHubRepositories: false,
+                },
               })
             })
         })
@@ -418,7 +455,9 @@ let CreateProjectPad = component('CreateProjectPad', (cursor) => {
           logger.debug(`GitHub project creation selected`)
           createCursor.mergeDeep({
             shouldCreateStandalone: false,
-            isLoadingGitHubRepositories: true,
+            gitHub: {
+              isLoadingGitHubRepositories: true,
+            },
           })
           loadGitHubRepositories()
         },
@@ -447,14 +486,23 @@ module.exports = {
         isLoading: false,
         licenseId: 'cc-by-4.0',
         shouldCreateStandalone: true,
-        gitHubRepositories: [],
         isReady: false,
+        isCheckingId: false,
         errors: {
           id: null,
           title: null,
           tags: null,
           description: null,
           pictures: null,
+        },
+        gitHub: {
+          isReady: false,
+          gitHubRepositories: [],
+          isLoadingGitHubRepositories: true,
+          gitHubRepositoryName: '',
+          errors: {
+            gitHubRepositoryName: null,
+          },
         },
       },
     }
