@@ -54,8 +54,15 @@ let SignInForm = component('SignInForm', (cursor) => {
             password: loginCursor.get('password'),
           }).then((user) => {
             logger.info(`User successfully logged in`)
-            cursor.set('loggedInUser', immutable.fromJS(user))
-            router.perform()
+            cursor = cursor.set('loggedInUser', immutable.fromJS(user))
+            let redirectTo = cursor.get(`redirectToAfterLogin`)
+            if (redirectTo != null) {
+              logger.debug(`Redirecting to ${redirectTo} after having logged in`)
+              cursor = cursor.delete(`redirectToAfterLogin`)
+              router.goTo(redirectTo)
+            } else {
+              router.perform()
+            }
           }, () => {
             logger.warn(`Logging user in failed`)
           })

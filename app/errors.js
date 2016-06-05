@@ -7,6 +7,11 @@ let notFoundError = TypedError({
   message: 'Resource not found',
 })
 
+let notFoundError = TypedError({
+  type: 'notFound',
+  message: 'Resource not found',
+})
+
 let validationError = (message) => {
   return TypedError({
     type: 'validation',
