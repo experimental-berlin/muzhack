@@ -237,6 +237,7 @@ let installGitHubWebhook = (owner, gitHubOwner, gitHubProject) => {
 }
 
 let realCreateProjectFromGitHub = Promise.method((owner, ownerName, newProjectParams) => {
+  let {gitHubOwner, gitHubProject,} = projectParams
   let {projectId,} = newProjectParams
   let copyPicturesPromise = copyFilesToCloudStorage(
     newProjectParams.gitHubPictures, 'pictures', owner, projectId)
