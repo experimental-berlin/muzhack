@@ -160,14 +160,6 @@ module.exports = {
       })
   },
   render: (cursor) => {
-    let yesCallback = () => {
-
-    }
-
-    let noCallback = () => {
-
-    }
-
     let exploreCursor = cursor.cursor('explore')
     // logger.debug(`Explore state:`, exploreCursor.toJS())
     return h('.pure-g', [
