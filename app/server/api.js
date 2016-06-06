@@ -504,9 +504,7 @@ module.exports.register = (server) => {
           action: 'write',
           expires: moment.utc().add(1, 'days').format(),
           contentType: 'ignore',
-          // Workaround for bug in gcloud-node, where extensionHeaders is prepended to resource
-          // in signature
-          extensionHeaders: 'x-goog-acl:public-read\n',
+          extensionHeaders: {'x-goog-acl': 'public-read',},
         }, (error, signedUrl) => {
           if (error != null) {
             logger.debug(`Failed to obtain signed URL for file`)
