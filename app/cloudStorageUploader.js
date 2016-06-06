@@ -14,8 +14,7 @@ module.exports = class GoogleCloudStorageUploader {
     logger.debug(`Sending data...`)
     logger.debug(`Getting Cloud Storage upload settings from server...`)
     let path = `${this.folder}/${file.name}`
-    return ajax.getJson(`/api/gcloudStorageSettings`,
-        {path, isBackup: this.isBackup,})
+    return ajax.getJson(`/api/gcloudStorageSettings`, {path, isBackup: this.isBackup,})
       .then((gcloudSettings) => {
         logger.debug(`Received Cloud Storage settings from server`, gcloudSettings)
         return new Promise((resolve, reject) => {
