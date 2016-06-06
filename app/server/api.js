@@ -127,7 +127,9 @@ let search = (request, reply) => {
         return projectsCursor.toArray()
           .then((projects) => {
             logger.debug(`Found ${projects.length} project(s)`)
-            return projects
+            return R.sort((a, b) => {
+              return moment(b.created).diff(moment(a.created))
+            }, projects)
           }, (error) => {
             logger.warn(`Failed to iterate projects: '${error}'`, error.stack)
             throw new Error(error)
