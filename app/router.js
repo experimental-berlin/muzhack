@@ -5,6 +5,7 @@ let immutable = require('immutable')
 let R = require('ramda')
 let S = require('underscore.string.fp')
 let logger = require('js-logger-aknudsen').get('router')
+let Promise = require('bluebird')
 
 let layout = require('./layout')
 let ajax = require('./ajax')
@@ -29,7 +30,7 @@ let getCurrentPath = () => {
 let goTo = (path) => {
   logger.debug(`Navigating to '${path}'`)
   window.history.pushState({}, 'MuzHack', path)
-  perform()
+  return perform()
 }
 
 let redirectIfNecessary = (cursor) => {
@@ -79,7 +80,7 @@ let redirectIfNecessary = (cursor) => {
   }
 }
 
-let perform = (isInitial=false) => {
+let perform = Promise.method((isInitial=false) => {
   let cursor = getState()
   let currentPath = getCurrentPath()
   let currentHash = document.location.hash.slice(1).toLowerCase()
@@ -97,7 +98,7 @@ let perform = (isInitial=false) => {
     return elem.split('=')
   }, queryStrings))
   logger.debug(`Current query parameters:`, queryParams)
-  updateRouterState(cursor, currentPath, queryParams, isInitial)
+  return updateRouterState(cursor, currentPath, queryParams, isInitial)
     .then(([cursor, newState,]) => {
       let mergedNewState = R.merge(newState, {
         router: {
@@ -120,7 +121,7 @@ let perform = (isInitial=false) => {
       logger.warn(`An error occurred updating router state: ${error}`)
       notification.warn(`Error`, error.message, cursor)
     })
-}
+})
 
 if (__IS_BROWSER__) {
   window.onpopstate = () => {
