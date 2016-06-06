@@ -236,23 +236,23 @@ let installGitHubWebhook = (owner, gitHubOwner, gitHubProject) => {
     })
 }
 
-let realCreateProjectFromGitHub = Promise.method((owner, ownerName, newProjectParams) => {
-  let {projectId,} = newProjectParams
+let realCreateProjectFromGitHub = Promise.method((owner, ownerName, projectParams) => {
+  let {gitHubOwner, gitHubProject, projectId,} = projectParams
   let copyPicturesPromise = copyFilesToCloudStorage(
-    newProjectParams.gitHubPictures, 'pictures', owner, projectId)
+    projectParams.gitHubPictures, 'pictures', owner, projectId)
   let copyFilesPromise = copyFilesToCloudStorage(
-    newProjectParams.gitHubFiles, 'files', owner, projectId)
+    projectParams.gitHubFiles, 'files', owner, projectId)
   let processPicturesPromise = Promise.map(copyPicturesPromise, R.partial(ajax.postJson,
       ['http://localhost:10000/jobs',]))
   return Promise.all([processPicturesPromise, copyFilesPromise,])
     .then(([pictures, files,]) => {
-      newProjectParams = R.merge(
+      projectParams = R.merge(
         R.pickBy((key) => {
           return !R.contains(key, ['gitHubFiles', 'gitHubPictures',])
-        }, newProjectParams),
+        }, projectParams),
         {pictures, files,}
       )
-      return newProjectParams
+      return projectParams
     })
     .then((newProjectParams) => {
       return createProjectFromParameters(newProjectParams, owner, ownerName)

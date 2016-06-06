@@ -127,7 +127,9 @@ let search = (request, reply) => {
         return projectsCursor.toArray()
           .then((projects) => {
             logger.debug(`Found ${projects.length} project(s)`)
-            return projects
+            return R.sort((a, b) => {
+              return moment(b.created).diff(moment(a.created))
+            }, projects)
           }, (error) => {
             logger.warn(`Failed to iterate projects: '${error}'`, error.stack)
             throw new Error(error)
@@ -502,9 +504,7 @@ module.exports.register = (server) => {
           action: 'write',
           expires: moment.utc().add(1, 'days').format(),
           contentType: 'ignore',
-          // Workaround for bug in gcloud-node, where extensionHeaders is prepended to resource
-          // in signature
-          extensionHeaders: 'x-goog-acl:public-read\n',
+          extensionHeaders: {'x-goog-acl': 'public-read',},
         }, (error, signedUrl) => {
           if (error != null) {
             logger.debug(`Failed to obtain signed URL for file`)

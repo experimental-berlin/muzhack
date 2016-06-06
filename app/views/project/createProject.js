@@ -63,10 +63,10 @@ let createProject = Promise.method((cursor) => {
       }
       logger.debug(`Creating project '${qualifiedProjectId}'...:`, data)
       cursor.cursor('createProject').set('isLoading', 'Saving project...')
-      ajax.postJson(`/api/projects/${username}`, data)
+      return ajax.postJson(`/api/projects/${username}`, data)
         .then(() => {
           logger.info(`Successfully created project '${qualifiedProjectId}' on server`)
-          router.goTo(`/u/${qualifiedProjectId}`)
+          return router.goTo(`/u/${qualifiedProjectId}`)
         }, (error) => {
           cursor.cursor('createProject').set('isLoading', false)
           logger.warn(`Failed to create project '${qualifiedProjectId}' on server: ${error}`,
@@ -92,7 +92,7 @@ let createProjectFromGitHub = Promise.method((cursor) => {
       logger.info(
         `Successfully created project '${qualifiedProjectId}' from GitHub repository` +
           `'${repositoryName}' on server`)
-      router.goTo(`/u/${qualifiedProjectId}`)
+      return router.goTo(`/u/${qualifiedProjectId}`)
     })
 })
 
