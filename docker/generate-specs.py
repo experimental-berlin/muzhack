@@ -30,7 +30,7 @@ data = {
         'numReplicas': 2,
         'imageVariant': '',
         'imageTag': 'v1.1.32',
-        'imageProcessorImageTag': 'v1.1.14',
+        'imageProcessorImageTag': 'v1.1.16',
         'imagePullPolicy': 'IfNotPresent',
         'appUri': 'https://muzhack.com',
         's3Bucket': 'muzhack.com',
