@@ -19,20 +19,6 @@ if (__IS_BROWSER__) {
   require('./displayProject.styl')
 }
 
-script.
-  (function (d, s, id) {
-    var js, fjs = d.getElementsByTagName(s)[0];
-    if (d.getElementById(id)) {
-      return;
-    }
-
-    js = d.createElement(s);
-    js.id = id;
-    js.src = '//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.6'
-    fjs.parentNode.insertBefore(js, fjs);
-  }(document, 'script', 'facebook-jssdk'))
-
-
 let getFileSize = (numBytes) => {
   let sizeStr
   if (numBytes < 1024) {
@@ -75,7 +61,33 @@ let GoToStore = component('GoToStore', (cursor) => {
   ])
 })
 
-let FacebookLike = component('FacebookLike', (cursor) => {
+let FacebookLike = component('FacebookLike', {
+  componentDidMount: () => {
+    logger.debug(`Loading Facebook social SDK`)
+    let id = 'facebook-jssdk'
+    let divId = '#fb-root'
+
+    let existingScriptElem = document.getElementById(id)
+    if (existingScriptElem != null) {
+      existingScriptElem.parentNode.removeChild(existingScriptElem)
+    }
+    let existingDivElem = document.getElementById(divId)
+    if (existingDivElem != null) {
+      existingDivElem.parentNode.removeChild(existingDivElem)
+    }
+
+    let firstScriptElem = document.getElementsByTagName('script')[0]
+
+    let divElem = document.createElement('div')
+    divElem.id = divId
+    firstScriptElem.parentNode.insertBefore(divElem, firstScriptElem)
+
+    let scriptElem = document.createElement('script')
+    scriptElem.src = '//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.6'
+    scriptElem.id = id
+    firstScriptElem.parentNode.insertBefore(scriptElem, firstScriptElem)
+  },
+}, (cursor) => {
   let projectCursor = cursor.cursor(['displayProject', 'project',])
   let owner = projectCursor.get(`owner`)
   let projectId = projectCursor.get(`projectId`)
