@@ -285,8 +285,9 @@ let AutoComplete = component('AutoComplete', ({cursor,}) => {
   let isLoading = !!createCursor.getIn([`gitHub`, `isLoadingGitHubRepositories`,])
   let gitHubRepositories = createCursor.cursor([`gitHub`, `gitHubRepositories`,]).toJS()
   let autoCompleteValue = createCursor.getIn([`gitHub`, 'gitHubRepositoryName',])
-  let gitHubRepositoryNames = R.map(R.prop('full_name'), gitHubRepositories)
-  let autoCompleteItems = R.filter(S.include(autoCompleteValue), gitHubRepositoryNames)
+  let gitHubRepositoryNames = R.map(R.compose(R.toLower, R.prop('full_name')), gitHubRepositories)
+  let autoCompleteItems = R.filter(S.include(autoCompleteValue.toLowerCase()),
+    gitHubRepositoryNames)
   logger.debug(`GitHub repositories:`, autoCompleteItems)
   logger.debug(
     `Rendering AutoComplete, is loading: ${isLoading}`, createCursor.toJS())
@@ -312,7 +313,7 @@ let AutoComplete = component('AutoComplete', ({cursor,}) => {
       logger.debug(`After setting:`, gitHubCursor.toJS())
       if (S.isBlank(repoName)) {
         return `GitHub repository must be filled in`
-      } else if (!R.contains(repoName, gitHubRepositoryNames)) {
+      } else if (!R.contains(repoName.toLowerCase(), gitHubRepositoryNames)) {
         return `Please select a valid GitHub repository`
       } else {
         return null
