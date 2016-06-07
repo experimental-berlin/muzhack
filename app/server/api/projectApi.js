@@ -492,7 +492,7 @@ let getGitHubCredentials = () => {
 }
 
 let updateProjectFromGitHub = (repoOwner, repoName, reply) => {
-  return downloadFileFromGitHub(repoOwner, repoName, 'metadata.yaml')
+  return downloadMuzHackFileFromGitHub(repoOwner, repoName, 'metadata.yaml')
     .then((metadata) => {
       let {projectId,} = metadata
       return connectToDb()
@@ -653,7 +653,7 @@ let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
   return Promise.all(copyPromises)
 }
 
-let downloadFileFromGitHub = (gitHubOwner, gitHubProject, path) => {
+let downloadMuzHackFileFromGitHub = (gitHubOwner, gitHubProject, path) => {
   return downloadGitHubJson(
       `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents/muzhack/${path}`)
     .then((file) => {
@@ -667,7 +667,7 @@ let unresolvedPicturePromises = {}
 
 let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProject) => {
   let qualifiedRepoId = `${gitHubOwner}/${gitHubProject}`
-  let downloadFile = R.partial(downloadFileFromGitHub, [gitHubOwner, gitHubProject,])
+  let downloadMuzHackFile = R.partial(downloadMuzHackFileFromGitHub, [gitHubOwner, gitHubProject,])
   let rootUrl = `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents`
 
   let getDirectory = (path, recurse=false) => {
@@ -739,9 +739,9 @@ let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProjec
 
   logger.debug(`Getting project parameters from GitHub repository '${qualifiedRepoId}'`)
   let downloadPromises = [
-    downloadFile(`metadata.yaml`),
-    downloadFile(`description.md`),
-    downloadFile(`instructions.md`),
+    downloadMuzHackFile(`metadata.yaml`),
+    downloadMuzHackFile(`description.md`),
+    downloadMuzHackFile(`instructions.md`),
   ]
   let getDirPromises = [getDirectory('muzhack/pictures'), getDirectory('muzhack/files', true),]
   return Promise.all(R.concat(downloadPromises, getDirPromises))
