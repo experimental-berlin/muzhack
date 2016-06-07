@@ -147,7 +147,7 @@ let getUser = (request, reply) => {
     return getUserWithConn(username, conn)
       .then((user) => {
         if (user != null) {
-          logger.debug(`Found user '${username}':`, user)
+          logger.debug(`Found user '${username}'`)
           let soundCloud = user.soundCloud || {}
           let scUploads = soundCloud.uploads || []
           if (!R.isEmpty(scUploads)) {

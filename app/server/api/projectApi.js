@@ -49,7 +49,7 @@ let getProject = (request, reply) => {
       .run(conn)
       .then((project) => {
         if (project != null && !project.placeholder) {
-          logger.debug(`Found project '${qualifiedProjectId}':`, project)
+          logger.debug(`Found project '${qualifiedProjectId}'`)
           return project
         } else {
           logger.debug(`Could not find project '${qualifiedProjectId}'`)
@@ -578,8 +578,9 @@ let downloadResource = (url, options) => {
           reject(notFoundError())
         } else {
           if (numTries > 3) {
-            logger.warn(`Failed to download '${url}':`, error)
-            reject(error)
+            let message = `Failed to download '${url}':`
+            logger.warn(message, error)
+            reject(new Error(message))
           } else {
             performRequest(numTries + 1)
           }
@@ -589,6 +590,13 @@ let downloadResource = (url, options) => {
 
     performRequest(1)
   })
+}
+
+let downloadGitHubJson = (url, options) => {
+  let [clientId, clientSecret,] = getGitHubCredentials()
+  let queryOperator = !S.include(`?`, url) ? `?` : `&`
+  let fullUrl = `${url}${queryOperator}client_id=${clientId}&client_secret=${clientSecret}`
+  return downloadResource(fullUrl, options).then(JSON.parse)
 }
 
 let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
@@ -611,8 +619,9 @@ let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
             if (response.statusCode === 404) {
               reject(notFoundError())
             } else if (numTries > 3) {
-              logger.warn(`Failed to download '${url}':`, error)
-              reject(error)
+              let message = `Failed to download '${url}'`
+              logger.warn(message, error)
+              reject(new Error(message))
             } else {
               // TODO: Wait
               performRequest(numTries + 1)
@@ -641,12 +650,9 @@ let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
 }
 
 let downloadFileFromGitHub = (gitHubOwner, gitHubProject, path) => {
-  let [clientId, clientSecret,] = getGitHubCredentials()
-  return downloadResource(
-      `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents/muzhack/${path}?` +
-      `client_id=${clientId}&client_secret=${clientSecret}`)
-    .then((fileJson) => {
-      let file = JSON.parse(fileJson)
+  return downloadGitHubJson(
+      `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents/muzhack/${path}`)
+    .then((file) => {
       return {
         content: new Buffer(file.content, 'base64').toString(),
       }
@@ -658,36 +664,19 @@ let unresolvedPicturePromises = {}
 let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProject) => {
   let qualifiedRepoId = `${gitHubOwner}/${gitHubProject}`
   let downloadFile = R.partial(downloadFileFromGitHub, [gitHubOwner, gitHubProject,])
-  let [gitHubClientId, gitHubClientSecret,] = getGitHubCredentials()
+  let rootUrl = `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents`
 
   let getDirectory = (path, recurse=false) => {
     logger.debug(`Getting directory '${path}', recursively: ${recurse}...`)
-    return downloadResource(
-        `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents/muzhack/${path}?` +
-        `client_id=${gitHubClientId}&client_secret=${gitHubClientSecret}`)
-      .then((dirJson) => {
-        let dir = JSON.parse(dirJson)
+    let dirUrl = `${rootUrl}/${path}`
+    return downloadGitHubJson(dirUrl)
+      .then((dir) => {
         if (R.isArrayLike(dir)) {
-          let filePromises = R.map((file) => {
-            let rootDir = S.wordsDelim('/', path)[0]
-            return Promise.resolve({
-              name: file.name,
-              url: file.download_url,
-              fullPath: file.path.replace(new RegExp(`^muzhack/${rootDir}/`), ''),
-              size: file.size,
-            })
-          }, R.filter((entry) => {return entry.type === 'file'}, dir))
-          let nestedFilePromises
-          if (recurse) {
-            let subDirs = R.filter((entry) => {return entry.type === 'dir'}, dir)
-            nestedFilePromises = R.map(
-              (subDir) => {return getDirectory(`${path}/${subDir.name}`, true)}, subDirs)
-          } else {
-            nestedFilePromises = []
-          }
-          return Promise.all(R.concat(filePromises, nestedFilePromises))
-            .then(R.flatten)
+          logger.debug(`Getting contents of directory '${path}'`)
+          return Promise.map(dir, R.partial(handleGitHubEntry, [path, recurse,]))
+            .then(R.compose(R.reject(R.isNil), R.flatten))
         } else {
+          logger.debug(`Not a directory: '${path}'`)
           return []
         }
       }, (error) => {
@@ -700,13 +689,56 @@ let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProjec
       })
   }
 
+  let handleGitHubEntry = (path, recurse, entry) => {
+    let entryPath = `${path}/${entry.name}`
+    logger.debug(`Handling GitHub entry '${entryPath}'`)
+    if (entry.type === 'file') {
+      return {
+        name: entry.name,
+        url: entry.download_url,
+        fullPath: entryPath.replace(new RegExp(`^muzhack/[^/]+/`), ''),
+        size: entry.size,
+      }
+    } else if (entry.type === 'dir' && recurse) {
+      return getDirectory(`${path}/${entry.name}`, true)
+    } else if (entry.type === 'symlink') {
+      return downloadGitHubJson(entry.url)
+        .then((symlink) => {
+          logger.debug(`Handling symlink, target: '${symlink.target}'`)
+          let targetPathList = S.wordsDelim(`/`, symlink.target)
+          let currentPathList = S.wordsDelim(`/`, path)
+          R.forEach((pathElem) => {
+            if (pathElem === '.') {
+            } else if (pathElem === '..') {
+              currentPathList.pop()
+            } else {
+              currentPathList.push(pathElem)
+            }
+          }, targetPathList)
+          let targetPath = R.join('/', currentPathList)
+          return downloadGitHubJson(`${rootUrl}/${targetPath}`)
+            .then((target) => {
+              if (R.isArrayLike(target) && recurse) {
+                // This is a directory
+                return Promise.map(target, R.partial(handleGitHubEntry, [targetPath, recurse,]))
+                  .then(R.compose(R.reject(R.isNil), R.flatten))
+              } else {
+                return handleGitHubEntry(targetPath, recurse, target)
+              }
+            })
+        })
+    } else {
+      return null
+    }
+  }
+
   logger.debug(`Getting project parameters from GitHub repository '${qualifiedRepoId}'`)
   let downloadPromises = [
     downloadFile(`metadata.yaml`),
     downloadFile(`description.md`),
     downloadFile(`instructions.md`),
   ]
-  let getDirPromises = [getDirectory('pictures'), getDirectory('files', true),]
+  let getDirPromises = [getDirectory('muzhack/pictures'), getDirectory('muzhack/files', true),]
   return Promise.all(R.concat(downloadPromises, getDirPromises))
     .then(([metadataFile, descriptionFile, instructionsFile, gitHubPictures, gitHubFiles,]) => {
       let metadata = Yaml.parse(metadataFile.content)
