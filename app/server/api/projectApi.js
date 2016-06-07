@@ -593,10 +593,14 @@ let downloadResource = (url, options) => {
 }
 
 let downloadGitHubJson = (url, options) => {
+  return downloadGitHubResource(url, options).then(JSON.parse)
+}
+
+let downloadGitHubResource = (url, options) => {
   let [clientId, clientSecret,] = getGitHubCredentials()
   let queryOperator = !S.include(`?`, url) ? `?` : `&`
   let fullUrl = `${url}${queryOperator}client_id=${clientId}&client_secret=${clientSecret}`
-  return downloadResource(fullUrl, options).then(JSON.parse)
+  return downloadResource(fullUrl, options)
 }
 
 let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
@@ -689,6 +693,30 @@ let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProjec
       })
   }
 
+  let handleGitHubSymlink = (path, recurse, symlink) => {
+    logger.debug(`Handling symlink, target: '${symlink.target}'`)
+    let targetPathList = S.wordsDelim(`/`, symlink.target)
+    let currentPathList = S.wordsDelim(`/`, path)
+    R.forEach((pathElem) => {
+      if (pathElem === '..') {
+        currentPathList.pop()
+      } else if (pathElem !== '.') {
+        currentPathList.push(pathElem)
+      }
+    }, targetPathList)
+    let targetPath = R.join('/', currentPathList)
+    return downloadGitHubJson(`${rootUrl}/${targetPath}`)
+      .then((target) => {
+        if (R.isArrayLike(target) && recurse) {
+          // This is a directory
+          return Promise.map(target, R.partial(handleGitHubEntry, [targetPath, recurse,]))
+            .then(R.compose(R.reject(R.isNil), R.flatten))
+        } else {
+          return handleGitHubEntry(targetPath, recurse, target)
+        }
+      })
+  }
+
   let handleGitHubEntry = (path, recurse, entry) => {
     let entryPath = `${path}/${entry.name}`
     logger.debug(`Handling GitHub entry '${entryPath}'`)
@@ -703,30 +731,7 @@ let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProjec
       return getDirectory(`${path}/${entry.name}`, true)
     } else if (entry.type === 'symlink') {
       return downloadGitHubJson(entry.url)
-        .then((symlink) => {
-          logger.debug(`Handling symlink, target: '${symlink.target}'`)
-          let targetPathList = S.wordsDelim(`/`, symlink.target)
-          let currentPathList = S.wordsDelim(`/`, path)
-          R.forEach((pathElem) => {
-            if (pathElem === '.') {
-            } else if (pathElem === '..') {
-              currentPathList.pop()
-            } else {
-              currentPathList.push(pathElem)
-            }
-          }, targetPathList)
-          let targetPath = R.join('/', currentPathList)
-          return downloadGitHubJson(`${rootUrl}/${targetPath}`)
-            .then((target) => {
-              if (R.isArrayLike(target) && recurse) {
-                // This is a directory
-                return Promise.map(target, R.partial(handleGitHubEntry, [targetPath, recurse,]))
-                  .then(R.compose(R.reject(R.isNil), R.flatten))
-              } else {
-                return handleGitHubEntry(targetPath, recurse, target)
-              }
-            })
-        })
+        .then(R.partial(handleGitHubSymlink, [path, recurse,]))
     } else {
       return null
     }
