@@ -883,4 +883,5 @@ module.exports = {
   createProject,
   deleteProject,
   updateProject,
+  updateProjectFromGitHub,
 }
