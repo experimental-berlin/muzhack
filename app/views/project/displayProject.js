@@ -61,7 +61,13 @@ let GoToStore = component('GoToStore', (cursor) => {
   ])
 })
 
-let FacebookLike = component('FacebookLike', (cursor) => {
+let FacebookLike = component('FacebookLike', {
+  componentDidMount: () => {
+    logger.debug(`Loading Facebook social SDK`)
+
+    FB.XFBML.parse()
+  },
+}, (cursor) => {
   let projectCursor = cursor.cursor(['displayProject', 'project',])
   let owner = projectCursor.get(`owner`)
   let projectId = projectCursor.get(`projectId`)
