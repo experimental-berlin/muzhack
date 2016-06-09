@@ -64,28 +64,8 @@ let GoToStore = component('GoToStore', (cursor) => {
 let FacebookLike = component('FacebookLike', {
   componentDidMount: () => {
     logger.debug(`Loading Facebook social SDK`)
-    let id = 'facebook-jssdk'
-    let divId = '#fb-root'
 
-    let existingScriptElem = document.getElementById(id)
-    if (existingScriptElem != null) {
-      existingScriptElem.parentNode.removeChild(existingScriptElem)
-    }
-    let existingDivElem = document.getElementById(divId)
-    if (existingDivElem != null) {
-      existingDivElem.parentNode.removeChild(existingDivElem)
-    }
-
-    let firstScriptElem = document.getElementsByTagName('script')[0]
-
-    let divElem = document.createElement('div')
-    divElem.id = divId
-    firstScriptElem.parentNode.insertBefore(divElem, firstScriptElem)
-
-    let scriptElem = document.createElement('script')
-    scriptElem.src = '//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.6'
-    scriptElem.id = id
-    firstScriptElem.parentNode.insertBefore(scriptElem, firstScriptElem)
+    FB.XFBML.parse()
   },
 }, (cursor) => {
   let projectCursor = cursor.cursor(['displayProject', 'project',])
