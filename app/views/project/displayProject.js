@@ -263,7 +263,11 @@ let ProjectFiles = component('ProjectFiles', ({project,}) => {
 })
 
 let getActiveTab = (cursor) => {
-  return cursor.getIn([`router`, `currentHash`,], `description`)
+  let activeTab = cursor.getIn([`router`, `currentHash`,])
+  if (S.isBlank(activeTab)) {
+    activeTab = 'description'
+  }
+  return activeTab
 }
 
 class ProjectTab {
