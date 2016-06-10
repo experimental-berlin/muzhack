@@ -6,7 +6,6 @@ let immstruct = require('immstruct')
 let ReactDomServer = require('react-dom/server')
 let Boom = require('boom')
 
-let router = require('../router')
 let {normalizePath,} = require('../urlUtils')
 let explore = require('../views/explore')
 let login = require('../views/login')
