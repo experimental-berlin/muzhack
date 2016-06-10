@@ -56,7 +56,7 @@ module.exports = {
       routeParamNames,
     }
   },
-  updateRouterState: Promise.method((cursor, currentPath, currentQueryParams,
+  updateRouterState: Promise.method((cursor, currentPath, currentHash, currentQueryParams,
       isInitialClientSideRender) => {
     logger.debug(`Updating router state`)
     logger.debug('Current path:', currentPath)
@@ -104,6 +104,7 @@ module.exports = {
         currentRoute,
         currentRouteParams,
         currentPath,
+        currentHash,
         currentQueryParams,
         navItems,
         shouldRenderServerSide,

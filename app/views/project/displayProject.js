@@ -15,6 +15,7 @@ let userManagement = require('../../userManagement')
 let licenses = require('../../licenses')
 let ProjectStore = require('./projectStore')
 let {trimWhitespace,} = require('../../stringUtils')
+let {goTo,} = require('../../router')
 
 if (__IS_BROWSER__) {
   require('./displayProject.styl')
@@ -185,7 +186,7 @@ let BottomPad = component('BottomPad', {
     new ProjectTab('Files', 'puzzle4'),
     new ProjectTab(`Store (${storeItems.length})`, 'barcode', !R.isEmpty(storeItems)),
   ]
-  let activeTab = cursor.cursor(['displayProject',]).get('activeTab')
+  let activeTab = getActiveTab(cursor)
   let tabContent
   if (activeTab === 'description') {
     tabContent = h('#description', [
@@ -203,16 +204,15 @@ let BottomPad = component('BottomPad', {
   return h('#project-bottom-pad', [
     h('ul.tabs', {role: 'tablist',}, R.map((projectTab) => {
       return h(`li.${S.join('.', projectTab.getClasses(cursor))}`, [
-        h('a', {
+        h('div', {
           role: 'tab',
-          href: '#',
           onClick: (event) => {
             event.preventDefault()
 
-            if (projectTab.isEnabled && cursor.cursor(['displayProject',]).get('activeTab') !==
-                projectTab.name) {
+            let activeTab = getActiveTab(cursor)
+            if (projectTab.isEnabled && activeTab !== projectTab.name) {
               logger.debug(`Switching project tab to '${projectTab.name}'`)
-              cursor.cursor(['displayProject',]).set('activeTab', projectTab.name)
+              goTo(`#${projectTab.name}`)
             }
           },
         }, [
@@ -262,6 +262,10 @@ let ProjectFiles = component('ProjectFiles', ({project,}) => {
   }
 })
 
+let getActiveTab = (cursor) => {
+  return cursor.getIn([`router`, `currentHash`,], `description`)
+}
+
 class ProjectTab {
   constructor (title, icon, isEnabled=true) {
     this.title = title
@@ -269,9 +273,8 @@ class ProjectTab {
     this.name = title.toLowerCase().replace(/ \(.+\)/, '')
     this.isEnabled = isEnabled
   }
-
   getClasses(cursor) {
-    let activeTab = cursor.cursor(['displayProject',]).get('activeTab')
+    let activeTab = getActiveTab(cursor)
     let classes = []
     if (activeTab === this.name) {
       logger.debug(`${this.name} is active tab`)
@@ -307,22 +310,14 @@ module.exports = {
     if (projectId == null) {
       throw new Error(`Project ID is undefined`)
     }
+
     let qualifiedProjectId = `${params.owner}/${params.projectId}`
     logger.debug(`Loading project ${qualifiedProjectId}...`)
     return ajax.getJson(`/api/projects/${params.owner}/${params.projectId}`)
       .then((project) => {
         logger.debug(`Loading project ${qualifiedProjectId} JSON succeeded:`, project)
-        let hashValue = trimWhitespace(location.hash.replace(/^#/, ''))
-        let activeTab
-        if (R.contains(hashValue, ['description', 'instructions', 'files',])) {
-          activeTab = hashValue
-          logger.debug(`Getting active tab from URL hash: '${activeTab}'`)
-        } else {
-          activeTab = 'description'
-        }
         return {
           displayProject: {
-            activeTab,
             project: R.merge(project, {
               license: licenses[project.licenseId],
             }),
