@@ -14,6 +14,7 @@ let ajax = require('../../ajax')
 let userManagement = require('../../userManagement')
 let licenses = require('../../licenses')
 let ProjectStore = require('./projectStore')
+let {trimWhitespace,} = require('../../stringUtils')
 
 if (__IS_BROWSER__) {
   require('./displayProject.styl')
@@ -311,9 +312,17 @@ module.exports = {
     return ajax.getJson(`/api/projects/${params.owner}/${params.projectId}`)
       .then((project) => {
         logger.debug(`Loading project ${qualifiedProjectId} JSON succeeded:`, project)
+        let hashValue = trimWhitespace(location.hash.replace(/^#/, ''))
+        let activeTab
+        if (R.contains(hashValue, ['description', 'instructions', 'files',])) {
+          activeTab = hashValue
+          logger.debug(`Getting active tab from URL hash: '${activeTab}'`)
+        } else {
+          activeTab = 'description'
+        }
         return {
           displayProject: {
-            activeTab: 'description',
+            activeTab,
             project: R.merge(project, {
               license: licenses[project.licenseId],
             }),
