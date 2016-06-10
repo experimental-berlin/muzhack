@@ -88,7 +88,7 @@ let perform = Promise.method((isInitial=false) => {
   let routerState = cursor.cursor('router').toJS()
   if (!isInitial && currentPath === routerState.currentPath) {
     logger.debug(`Path did not change:`, currentPath)
-    cursor.cursor('router').set('currentHash', currentHash)
+    cursor = cursor.setIn(['router', 'currentHash',], currentHash)
     redirectIfNecessary(cursor)
     return
   }
@@ -98,11 +98,10 @@ let perform = Promise.method((isInitial=false) => {
     return elem.split('=')
   }, queryStrings))
   logger.debug(`Current query parameters:`, queryParams)
-  return updateRouterState(cursor, currentPath, queryParams, isInitial)
+  return updateRouterState(cursor, currentPath, currentHash, queryParams, isInitial)
     .then(([cursor, newState,]) => {
       let mergedNewState = R.merge(newState, {
         router: {
-          currentHash,
           isLoading: false,
         },
       })
@@ -110,7 +109,6 @@ let perform = Promise.method((isInitial=false) => {
       cursor = cursor.update((current) => {
         current = current.mergeDeep({
           router: {
-            currentHash,
             isLoading: false,
           },
         })
