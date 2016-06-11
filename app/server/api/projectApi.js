@@ -61,23 +61,22 @@ let getProject = (request, reply) => {
 
 let createZip = (owner, projectParams) => {
   let projectId = projectParams.projectId
+  let files = projectParams.files || []
 
-  if (R.isEmpty(projectParams.files)) {
+  if (R.isEmpty(files)) {
     logger.debug(`There are no files, not generating zip`)
     return Promise.resolve(null)
   }
 
   logger.debug('Generating zip...')
   let zip = new JSZip()
-  let downloadPromises = R.map((file) => {
+  return Promise.map(files, (file) => {
     return downloadResource(file.url)
       .then((content) => {
         logger.debug(`Adding file '${file.fullPath}' to zip`)
         zip.file(file.fullPath, content)
       })
-  }, projectParams.files)
-  logger.debug(`Waiting on ${downloadPromises.length} download promise(s)`)
-  return Promise.all(downloadPromises)
+  })
     .then(() => {
       logger.debug(`All files added to zip`)
       logger.debug(`Uploading zip file to Cloud Storage...`)
@@ -390,7 +389,9 @@ let realUpdateProject = (owner, ownerName, projectId, projectParams, reply) => {
   let qualifiedProjectId = `${owner}/${projectId}`
 
   let removeStaleFiles = (oldFiles, newFiles, fileType) => {
-    if (oldFiles == null) {
+    oldFiles = oldFiles || []
+    newFiles = newFiles || []
+    if (R.isEmpty(oldFiles)) {
       logger.debug(`Project has no old ${fileType}s - nothing to remove`)
       return
     }
@@ -439,9 +440,12 @@ let realUpdateProject = (owner, ownerName, projectId, projectParams, reply) => {
               throw new Error(`Trying to sync standalone project with GitHub`)
             }
 
+            if (R.isEmpty(projectParams.pictures || [])) {
+              throw new Error(`projectParams.pictures is empty`)
+            }
             let removeStalePromises = [
-              removeStaleFiles(project.pictures, projectParams.pictures, 'picture'),
-              removeStaleFiles(project.files, projectParams.files, 'file'),
+              removeStaleFiles(project.pictures || [], projectParams.pictures, 'picture'),
+              removeStaleFiles(project.files || [], projectParams.files || [], 'file'),
             ]
             return Promise.all(removeStalePromises)
               .then(() => {
@@ -487,6 +491,28 @@ let updateProject = (request, reply) => {
   }
 }
 
+let realUpdateProjectFromGitHub = (project, projectParams, reply) => {
+  let copyPicturesPromise = copyFilesToCloudStorage(
+    projectParams.gitHubPictures, 'pictures', project.owner, project.projectId)
+  let copyFilesPromise = copyFilesToCloudStorage(
+    projectParams.gitHubFiles, 'files', project.owner, project.projectId)
+  let processPicturesPromise = Promise.map(copyPicturesPromise, R.partial(ajax.postJson,
+      ['http://localhost:10000/jobs',]))
+  return Promise.all([processPicturesPromise, copyFilesPromise,])
+    .then(([pictures, files,]) => {
+      return R.merge(
+        R.pickBy((key) => {
+          return !R.contains(key, ['gitHubFiles', 'gitHubPictures',])
+        }, projectParams),
+        {pictures, files,}
+      )
+    })
+    .then((newProjectParams) => {
+      return realUpdateProject(project.owner, project.ownerName,
+        project.projectId, newProjectParams, reply)
+    })
+}
+
 let getGitHubCredentials = () => {
   return [getEnvParam('GITHUB_CLIENT_ID'), getEnvParam('GITHUB_CLIENT_SECRET'),]
 }
@@ -515,8 +541,7 @@ let updateProjectFromGitHub = (repoOwner, repoName, reply) => {
                 return getProjectParamsForGitHubRepo(project.owner, project.projectId, repoOwner,
                     repoName)
                   .then((projectParams) => {
-                    return realUpdateProject(project.owner, project.ownerName, project.projectId,
-                      projectParams, reply)
+                    return realUpdateProjectFromGitHub(project, projectParams, reply)
                   })
               }, projects)
             })
@@ -749,6 +774,8 @@ let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProjec
       let metadata = Yaml.parse(metadataFile.content)
       logger.debug(`Downloaded all MuzHack data from GitHub repository '${qualifiedRepoId}'`)
       logger.debug(`Metadata:`, metadata)
+      logger.debug(`Got ${gitHubPictures.length} picture(s)`)
+      logger.debug(`Got ${gitHubFiles.length} file(s)`)
       if (projectId == null) {
         projectId = metadata.projectId
       }
