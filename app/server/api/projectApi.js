@@ -251,6 +251,9 @@ let realCreateProjectFromGitHub = Promise.method((owner, ownerName, projectParam
         }, projectParams),
         {pictures, files,}
       )
+      if (R.isEmpty(projectParams.pictures || [])) {
+        throw new Error(`No pictures in projectParams`)
+      }
       return projectParams
     })
     .then((newProjectParams) => {
@@ -440,14 +443,11 @@ let realUpdateProject = (owner, ownerName, projectId, projectParams, reply) => {
               throw new Error(`Trying to sync standalone project with GitHub`)
             }
 
-            if (project.pictures == null) {
-              throw new Error(`Project.pictures are null`)
-            }
             if (projectParams.pictures == null) {
               throw new Error(`projectParams.pictures are null`)
             }
             let removeStalePromises = [
-              removeStaleFiles(project.pictures, projectParams.pictures, 'picture'),
+              removeStaleFiles(project.pictures || [], projectParams.pictures, 'picture'),
               removeStaleFiles(project.files || [], projectParams.files || [], 'file'),
             ]
             return Promise.all(removeStalePromises)
