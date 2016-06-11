@@ -389,6 +389,8 @@ let realUpdateProject = (owner, ownerName, projectId, projectParams, reply) => {
   let qualifiedProjectId = `${owner}/${projectId}`
 
   let removeStaleFiles = (oldFiles, newFiles, fileType) => {
+    oldFiles = oldFiles || []
+    newFiles = newFiles || []
     if (R.isEmpty(oldFiles)) {
       logger.debug(`Project has no old ${fileType}s - nothing to remove`)
       return
