@@ -61,15 +61,16 @@ let getProject = (request, reply) => {
 
 let createZip = (owner, projectParams) => {
   let projectId = projectParams.projectId
+  let files = projectParams.files || []
 
-  if (R.isEmpty(projectParams.files)) {
+  if (R.isEmpty(files)) {
     logger.debug(`There are no files, not generating zip`)
     return Promise.resolve(null)
   }
 
   logger.debug('Generating zip...')
   let zip = new JSZip()
-  return Promise.map(projectParams.files || [], (file) => {
+  return Promise.map(files, (file) => {
     return downloadResource(file.url)
       .then((content) => {
         logger.debug(`Adding file '${file.fullPath}' to zip`)
@@ -388,7 +389,7 @@ let realUpdateProject = (owner, ownerName, projectId, projectParams, reply) => {
   let qualifiedProjectId = `${owner}/${projectId}`
 
   let removeStaleFiles = (oldFiles, newFiles, fileType) => {
-    if (oldFiles == null) {
+    if (R.isEmpty(oldFiles)) {
       logger.debug(`Project has no old ${fileType}s - nothing to remove`)
       return
     }
@@ -439,7 +440,7 @@ let realUpdateProject = (owner, ownerName, projectId, projectParams, reply) => {
 
             let removeStalePromises = [
               removeStaleFiles(project.pictures, projectParams.pictures, 'picture'),
-              removeStaleFiles(project.files, projectParams.files, 'file'),
+              removeStaleFiles(project.files || [], projectParams.files || [], 'file'),
             ]
             return Promise.all(removeStalePromises)
               .then(() => {
