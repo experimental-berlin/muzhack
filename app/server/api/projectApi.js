@@ -251,9 +251,6 @@ let realCreateProjectFromGitHub = Promise.method((owner, ownerName, projectParam
         }, projectParams),
         {pictures, files,}
       )
-      if (R.isEmpty(projectParams.pictures || [])) {
-        throw new Error(`No pictures in projectParams`)
-      }
       return projectParams
     })
     .then((newProjectParams) => {
@@ -494,6 +491,28 @@ let updateProject = (request, reply) => {
   }
 }
 
+let realUpdateProjectFromGitHub = (project, projectParams, reply) => {
+  let copyPicturesPromise = copyFilesToCloudStorage(
+    projectParams.gitHubPictures, 'pictures', project.owner, project.projectId)
+  let copyFilesPromise = copyFilesToCloudStorage(
+    projectParams.gitHubFiles, 'files', project.owner, project.projectId)
+  let processPicturesPromise = Promise.map(copyPicturesPromise, R.partial(ajax.postJson,
+      ['http://localhost:10000/jobs',]))
+  return Promise.all([processPicturesPromise, copyFilesPromise,])
+    .then(([pictures, files,]) => {
+      return R.merge(
+        R.pickBy((key) => {
+          return !R.contains(key, ['gitHubFiles', 'gitHubPictures',])
+        }, projectParams),
+        {pictures, files,}
+      )
+    })
+    .then((newProjectParams) => {
+      return realUpdateProject(project.owner, project.ownerName,
+        project.projectId, newProjectParams, reply)
+    })
+}
+
 let getGitHubCredentials = () => {
   return [getEnvParam('GITHUB_CLIENT_ID'), getEnvParam('GITHUB_CLIENT_SECRET'),]
 }
@@ -522,8 +541,7 @@ let updateProjectFromGitHub = (repoOwner, repoName, reply) => {
                 return getProjectParamsForGitHubRepo(project.owner, project.projectId, repoOwner,
                     repoName)
                   .then((projectParams) => {
-                    return realUpdateProject(project.owner, project.ownerName, project.projectId,
-                      projectParams, reply)
+                    return realUpdateProjectFromGitHub(project, projectParams, reply)
                   })
               }, projects)
             })
