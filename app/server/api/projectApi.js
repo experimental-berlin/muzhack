@@ -443,8 +443,8 @@ let realUpdateProject = (owner, ownerName, projectId, projectParams, reply) => {
               throw new Error(`Trying to sync standalone project with GitHub`)
             }
 
-            if (projectParams.pictures == null) {
-              throw new Error(`projectParams.pictures are null`)
+            if (R.isEmpty(projectParams.pictures || [])) {
+              throw new Error(`projectParams.pictures is empty`)
             }
             let removeStalePromises = [
               removeStaleFiles(project.pictures || [], projectParams.pictures, 'picture'),
