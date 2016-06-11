@@ -440,6 +440,12 @@ let realUpdateProject = (owner, ownerName, projectId, projectParams, reply) => {
               throw new Error(`Trying to sync standalone project with GitHub`)
             }
 
+            if (project.pictures == null) {
+              throw new Error(`Project.pictures are null`)
+            }
+            if (projectParams.pictures == null) {
+              throw new Error(`projectParams.pictures are null`)
+            }
             let removeStalePromises = [
               removeStaleFiles(project.pictures, projectParams.pictures, 'picture'),
               removeStaleFiles(project.files || [], projectParams.files || [], 'file'),
@@ -750,6 +756,8 @@ let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProjec
       let metadata = Yaml.parse(metadataFile.content)
       logger.debug(`Downloaded all MuzHack data from GitHub repository '${qualifiedRepoId}'`)
       logger.debug(`Metadata:`, metadata)
+      logger.debug(`Got ${gitHubPictures.length} picture(s)`)
+      logger.debug(`Got ${gitHubFiles.length} file(s)`)
       if (projectId == null) {
         projectId = metadata.projectId
       }
