@@ -1,0 +1,35 @@
+@media print
+  body, article
+    width 100%
+    margin 0
+    padding 0
+
+  @page
+    margin 2cm
+
+  h2, h3
+   page-break-after avoid
+
+  img
+    max-width 100% !important
+
+  article
+    page-break-before always
+
+  ul, img
+    page-break-inside avoid
+
+  article a
+    font-weight bolder
+    text-decoration none
+
+  article a[href^=http]:after
+    content " <" attr(href) "> "
+
+  article a[href^="#"]:after
+   content ""
+
+@media print and (color)
+  *
+    -webkit-print-color-adjust exact
+    print-color-adjust exact
