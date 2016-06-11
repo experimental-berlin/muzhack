@@ -69,15 +69,13 @@ let createZip = (owner, projectParams) => {
 
   logger.debug('Generating zip...')
   let zip = new JSZip()
-  let downloadPromises = R.map((file) => {
+  return Promise.map(projectParams.files || [], (file) => {
     return downloadResource(file.url)
       .then((content) => {
         logger.debug(`Adding file '${file.fullPath}' to zip`)
         zip.file(file.fullPath, content)
       })
-  }, projectParams.files)
-  logger.debug(`Waiting on ${downloadPromises.length} download promise(s)`)
-  return Promise.all(downloadPromises)
+  })
     .then(() => {
       logger.debug(`All files added to zip`)
       logger.debug(`Uploading zip file to Cloud Storage...`)
