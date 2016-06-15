@@ -7,14 +7,31 @@ let notFoundError = TypedError({
   message: 'Resource not found',
 })
 
-class ValidationError extends Error {
-  constructor(message) {
-    super()
-    this.message = message
-  }
+let validationError = (message) => {
+  return TypedError({
+    type: 'validation',
+    message,
+    statusCode: 400,
+  })()
+}
+
+let alreadyExistsError = TypedError({
+  type: 'alreadyExists',
+  message: 'Resource already exists',
+  statusCode: 400,
+})
+
+let badRequest = (message) => {
+  return TypedError({
+   type: 'badRequest',
+   message,
+   statusCode: 400,
+ })
 }
 
 module.exports = {
   notFoundError,
-  ValidationError,
+  validationError,
+  alreadyExistsError,
+  badRequest,
 }

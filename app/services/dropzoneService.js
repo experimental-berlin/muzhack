@@ -179,27 +179,24 @@ class DropzoneService {
           img.onload = () => {
             logger.debug(`Processing image file '${file.name}'...`)
             let canvas = document.createElement('canvas')
-            let targetWidth
-            let targetHeight
+
             if (img.width > maxSize || img.height > maxSize) {
               logger.debug(`Image dimensions exceed max size (${maxSize} pixels), reducing size`)
               if (img.width > img.height) {
                 let multiplier = maxSize / img.width
-                targetWidth = maxSize
-                targetHeight = multiplier * img.height
+                canvas.width = maxSize
+                canvas.height = multiplier * img.height
               } else {
                 let multiplier = maxSize / img.height
-                targetHeight = maxSize
-                targetWidth = multiplier * img.width
+                canvas.width = multiplier * img.width
+                canvas.height = maxSize
               }
-              canvas.width = targetWidth
-              canvas.height = targetHeight
             } else {
               canvas.width = img.width
               canvas.height = img.height
             }
             let ctx = canvas.getContext('2d')
-            ctx.drawImage(img, 0, 0, targetWidth, targetHeight)
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
             resolve(canvas.toDataURL('image/png'))
           }
 
@@ -325,4 +322,7 @@ class DropzoneService {
   }
 }
 
-module.exports = new DropzoneService()
+module.exports = {
+  dropzoneService: new DropzoneService(),
+  mutatingDropzoneEvents,
+}

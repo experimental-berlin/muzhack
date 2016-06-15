@@ -6,7 +6,6 @@ let immstruct = require('immstruct')
 let ReactDomServer = require('react-dom/server')
 let Boom = require('boom')
 
-let router = require('../router')
 let {normalizePath,} = require('../urlUtils')
 let explore = require('../views/explore')
 let login = require('../views/login')
@@ -63,7 +62,7 @@ let renderIndex = (request, reply) => {
   cursor = cursor.mergeDeep({
     router: createRouterState(routeMap),
   })
-  return updateRouterState(cursor, request.path, request.query)
+  return updateRouterState(cursor, request.path, null, request.query)
     .then(([cursor, newState,]) => {
       logger.debug(`Got new state:`, newState)
       cursor = cursor.mergeDeep(R.merge(newState, {

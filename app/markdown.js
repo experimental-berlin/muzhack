@@ -12,7 +12,14 @@ let editing = require('./editing')
 let getSanitizingConverter = () => {
   let converter = MarkdownSanitizer.getSanitizingConverter()
   markdownExtra.init(converter, {
-    extensions: 'all',
+    extensions: [
+      'tables',
+      'fenced_code_gfm',
+      'def_list',
+      'attr_list',
+      'footnotes',
+      'strikethrough',
+    ],
   })
   return converter
 }

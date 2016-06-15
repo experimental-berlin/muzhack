@@ -5,6 +5,7 @@ let immutable = require('immutable')
 let R = require('ramda')
 let S = require('underscore.string.fp')
 let logger = require('js-logger-aknudsen').get('router')
+let Promise = require('bluebird')
 
 let layout = require('./layout')
 let ajax = require('./ajax')
@@ -29,12 +30,11 @@ let getCurrentPath = () => {
 let goTo = (path) => {
   logger.debug(`Navigating to '${path}'`)
   window.history.pushState({}, 'MuzHack', path)
-  perform()
+  return perform()
 }
 
 let redirectIfNecessary = (cursor) => {
-  let routerCursor = cursor.cursor('router')
-  let routes = routerCursor.get('routes').toJS()
+  let routes = cursor.cursor(['router', 'routes',]).toJS()
   let route = getCurrentRoute(routes)
   let options = routes[route]
   if (typeof options === 'function') {
@@ -42,6 +42,7 @@ let redirectIfNecessary = (cursor) => {
     return
   }
 
+  logger.debug(`Checking if we need to redirect depending on user authentication`)
   let loggedInUser = userManagement.getLoggedInUser(cursor)
   if (loggedInUser != null) {
     logger.debug(`User is logged in:`, loggedInUser)
@@ -49,6 +50,7 @@ let redirectIfNecessary = (cursor) => {
       let redirectTo = '/'
       logger.debug(`Route requires redirect when logged in - redirecting to ${redirectTo}...`)
       goTo(redirectTo)
+      return true
     } else {
       logger.debug(`Route doesn't require redirect when logged in`)
       return
@@ -59,19 +61,26 @@ let redirectIfNecessary = (cursor) => {
       let redirectTo = '/'
       logger.debug(`Route requires redirect when logged out - redirecting to ${redirectTo}...`)
       goTo(redirectTo)
+      return true
     } else {
       if (!options.requiresLogin) {
         logger.debug(`Route doesn't require login`)
         return
       } else  {
         logger.debug(`Route requires user being logged in - redirecting to login page...`)
+        let link = document.createElement('a')
+        link.href = document.location
+        let hash = link.hash || ''
+        let query = link.search || ''
+        cursor = cursor.set('redirectToAfterLogin', `${link.pathname}${query}${hash}`)
         goTo('/login')
+        return true
       }
     }
   }
 }
 
-let perform = (isInitial=false) => {
+let perform = Promise.method((isInitial=false) => {
   let cursor = getState()
   let currentPath = getCurrentPath()
   let currentHash = document.location.hash.slice(1).toLowerCase()
@@ -79,7 +88,7 @@ let perform = (isInitial=false) => {
   let routerState = cursor.cursor('router').toJS()
   if (!isInitial && currentPath === routerState.currentPath) {
     logger.debug(`Path did not change:`, currentPath)
-    cursor.cursor('router').set('currentHash', currentHash)
+    cursor = cursor.setIn(['router', 'currentHash',], currentHash)
     redirectIfNecessary(cursor)
     return
   }
@@ -89,11 +98,10 @@ let perform = (isInitial=false) => {
     return elem.split('=')
   }, queryStrings))
   logger.debug(`Current query parameters:`, queryParams)
-  updateRouterState(cursor, currentPath, queryParams, isInitial)
+  return updateRouterState(cursor, currentPath, currentHash, queryParams, isInitial)
     .then(([cursor, newState,]) => {
       let mergedNewState = R.merge(newState, {
         router: {
-          currentHash,
           isLoading: false,
         },
       })
@@ -101,7 +109,6 @@ let perform = (isInitial=false) => {
       cursor = cursor.update((current) => {
         current = current.mergeDeep({
           router: {
-            currentHash,
             isLoading: false,
           },
         })
@@ -112,7 +119,7 @@ let perform = (isInitial=false) => {
       logger.warn(`An error occurred updating router state: ${error}`)
       notification.warn(`Error`, error.message, cursor)
     })
-}
+})
 
 if (__IS_BROWSER__) {
   window.onpopstate = () => {

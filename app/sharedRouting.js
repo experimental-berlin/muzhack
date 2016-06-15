@@ -2,6 +2,7 @@
 let R = require('ramda')
 let logger = require('js-logger-aknudsen').get('sharedRouting')
 let TypedError = require('error/typed')
+let Promise = require('bluebird')
 
 let regex = require('./regex')
 
@@ -55,7 +56,8 @@ module.exports = {
       routeParamNames,
     }
   },
-  updateRouterState: (cursor, currentPath, currentQueryParams, isInitialClientSideRender) => {
+  updateRouterState: Promise.method((cursor, currentPath, currentHash, currentQueryParams,
+      isInitialClientSideRender) => {
     logger.debug(`Updating router state`)
     logger.debug('Current path:', currentPath)
     let routerState = cursor.cursor('router').toJS()
@@ -102,6 +104,7 @@ module.exports = {
         currentRoute,
         currentRouteParams,
         currentPath,
+        currentHash,
         currentQueryParams,
         navItems,
         shouldRenderServerSide,
@@ -114,5 +117,5 @@ module.exports = {
       logger.debug(`Not loading module data:`, __IS_BROWSER__, shouldRenderServerSide)
       return Promise.resolve([cursor, {},])
     }
-  },
+  }),
 }

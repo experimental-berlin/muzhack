@@ -2,8 +2,9 @@
 let logger = require('js-logger-aknudsen').get('ajax')
 let R = require('ramda')
 let S = require('underscore.string.fp')
+let Promise = require('bluebird')
 
-let ajax = (method, uri, params, payload, options={}) => {
+let ajax = Promise.method((method, uri, params, payload, options={}) => {
   let paramStr = S.join('&', R.map(([param, value,]) => {
     return `${encodeURIComponent(param)}=${encodeURIComponent(value || '')}`
   }, R.toPairs(params || {})))
@@ -20,7 +21,14 @@ let ajax = (method, uri, params, payload, options={}) => {
       serverAjax(absPath, method, payloadJson, options, resolve, reject)
     }
   })
-}
+    .then(([result, response,]) => {
+      if (options.includeResponse) {
+        return [result, response,]
+      } else {
+        return result
+      }
+    })
+})
 
 module.exports = {
   getJson: (path, params, options) => {

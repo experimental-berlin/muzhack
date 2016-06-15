@@ -7,8 +7,17 @@ html
     style.
       #container {visibility:hidden}
   body
+    #fb-root
     #initial-state(data-json=initialState)
     article
       block content
-    script(type="text/javascript" src="https://js.stripe.com/v2/")
-    script(type="text/javascript" src="/bundle.js")
+    script(src="https://js.stripe.com/v2/")
+    script#facebook-jssdk(src="//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.6")
+    script.
+      (function () {
+        FB.init({
+          version: 'v2.6',
+          status: true,
+        })
+      }())
+    script(src="/bundle.js")
