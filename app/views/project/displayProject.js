@@ -165,7 +165,8 @@ let RightColumn = component('RightColumn', (project) => {
   ])
 })
 
-let BottomPad = component('BottomPad', {
+let BottomPad = component('BottomPad',
+  {
     componentDidUpdate: function () {
       let node = ReactDOM.findDOMNode(this)
       let cursor = this.props.cursor
@@ -178,53 +179,64 @@ let BottomPad = component('BottomPad', {
       }
     },
   }, ({cursor, project,}) => {
-  let storeItems = project.storeItems || []
-  logger.debug('Project has store items:', storeItems)
-  let projectTabs = [
-    new ProjectTab('Description', 'file-text'),
-    new ProjectTab('Instructions', 'book'),
-    new ProjectTab('Files', 'puzzle4'),
-    new ProjectTab(`Store (${storeItems.length})`, 'barcode', !R.isEmpty(storeItems)),
-  ]
-  let activeTab = getActiveTab(cursor)
-  let tabContent
-  if (activeTab === 'description') {
-    tabContent = h('#description', [
-      convertMarkdown(project.description),
-    ])
-  } else if (activeTab === 'instructions') {
-    tabContent = h('#instructions', [
-      convertMarkdown(project.instructions),
-    ])
-  } else if (activeTab === 'files') {
-    tabContent = ProjectFiles({project,})
-  } else if (activeTab === 'store') {
-    tabContent = ProjectStore({project, storeItems, cursor,})
-  }
-  return h('#project-bottom-pad', [
-    h('ul.tabs', {role: 'tablist',}, R.map((projectTab) => {
-      return h(`li.${S.join('.', projectTab.getClasses(cursor))}`, [
-        h('div', {
-          role: 'tab',
-          onClick: (event) => {
-            event.preventDefault()
-
-            let activeTab = getActiveTab(cursor)
-            if (projectTab.isEnabled && activeTab !== projectTab.name) {
-              logger.debug(`Switching project tab to '${projectTab.name}'`)
-              goTo(`#${projectTab.name}`)
-            }
-          },
-        }, [
-          projectTab.icon != null ? h(`span.icon-${projectTab.icon}`, nbsp) : null,
-          projectTab.title,
-        ]),
+    let partsPurchaseSection = null
+    if (project.mouserProject != null) {
+      partsPurchaseSection = h('#parts-purchase-section', [
+        h('h1', 'Purchase Parts'),
+        h('a.pure-button', {
+          href: `https://eu.mouser.com/ProjectManager/ProjectDetail.aspx?AccessID=${project.mouserProject}`,
+          target: `_blank`,
+        }, 'Buy from Mouser'),
       ])
-    }, projectTabs)),
-    h('#tab-contents', [
-      tabContent,
-    ]),
-  ])
+    }
+    let storeItems = project.storeItems || []
+    logger.debug('Project has store items:', storeItems)
+    let projectTabs = [
+      new ProjectTab('Description', 'file-text'),
+      new ProjectTab('Instructions', 'book'),
+      new ProjectTab('Files', 'puzzle4'),
+      new ProjectTab(`Store (${storeItems.length})`, 'barcode', !R.isEmpty(storeItems)),
+    ]
+    let activeTab = getActiveTab(cursor)
+    let tabContent
+    if (activeTab === 'description') {
+      tabContent = h('#description', [
+        convertMarkdown(project.description),
+      ])
+    } else if (activeTab === 'instructions') {
+      tabContent = h('#instructions', [
+        partsPurchaseSection,
+        convertMarkdown(project.instructions),
+      ])
+    } else if (activeTab === 'files') {
+      tabContent = ProjectFiles({project,})
+    } else if (activeTab === 'store') {
+      tabContent = ProjectStore({project, storeItems, cursor,})
+    }
+    return h('#project-bottom-pad', [
+      h('ul.tabs', {role: 'tablist',}, R.map((projectTab) => {
+        return h(`li.${S.join('.', projectTab.getClasses(cursor))}`, [
+          h('div', {
+            role: 'tab',
+            onClick: (event) => {
+              event.preventDefault()
+
+              let activeTab = getActiveTab(cursor)
+              if (projectTab.isEnabled && activeTab !== projectTab.name) {
+                logger.debug(`Switching project tab to '${projectTab.name}'`)
+                goTo(`#${projectTab.name}`)
+              }
+            },
+          }, [
+            projectTab.icon != null ? h(`span.icon-${projectTab.icon}`, nbsp) : null,
+            projectTab.title,
+          ]),
+        ])
+      }, projectTabs)),
+      h('#tab-contents', [
+        tabContent,
+      ]),
+    ])
 })
 
 let ProjectFiles = component('ProjectFiles', ({project,}) => {

@@ -255,41 +255,41 @@ let realCreateProjectFromGitHub = Promise.method((owner, ownerName, projectParam
     })
     .then((newProjectParams) => {
       return createProjectFromParameters(newProjectParams, owner, ownerName)
-        .then((project) => {
-          let returnValue = {
-            qualifiedProjectId: `${project.id}`,
-          }
-          let appEnvironment = getEnvParam(`APP_ENVIRONMENT`, null)
-          if (appEnvironment === 'production' || appEnvironment === 'staging') {
-            logger.debug(`Installing webhook at GitHub`)
-            return installGitHubWebhook(owner, gitHubOwner, gitHubProject)
-              .then((webhookId) => {
-                logger.debug(`Setting GitHub webhook ID on project ${project.id}: ${webhookId}`)
-                return connectToDb()
-                  .then((conn) => {
-                    return r.table('projects')
-                      .get(project.id)
-                      .update({
-                        gitHubWebhookId: webhookId,
-                      })
-                      .run(conn)
-                      .then(() => {
-                        logger.debug(`Successfully set webhook ID on project, returning:`,
-                          returnValue)
-                        return returnValue
-                      })
-                      .finally(() => {
-                        closeDbConnection(conn)
-                      })
+    })
+    .then((project) => {
+      let returnValue = {
+        qualifiedProjectId: `${project.id}`,
+      }
+      let appEnvironment = getEnvParam(`APP_ENVIRONMENT`, null)
+      if (appEnvironment === 'production' || appEnvironment === 'staging') {
+        logger.debug(`Installing webhook at GitHub`)
+        return installGitHubWebhook(owner, gitHubOwner, gitHubProject)
+          .then((webhookId) => {
+            logger.debug(`Setting GitHub webhook ID on project ${project.id}: ${webhookId}`)
+            return connectToDb()
+              .then((conn) => {
+                return r.table('projects')
+                  .get(project.id)
+                  .update({
+                    gitHubWebhookId: webhookId,
+                  })
+                  .run(conn)
+                  .then(() => {
+                    logger.debug(`Successfully set webhook ID on project, returning:`,
+                      returnValue)
+                    return returnValue
+                  })
+                  .finally(() => {
+                    closeDbConnection(conn)
                   })
               })
-          } else {
-            logger.debug(
-              `Not installing GitHub webhook, since we aren't in a supported environment`)
-            logger.debug(`Replying with:`, returnValue)
-            return returnValue
-          }
-        })
+          })
+      } else {
+        logger.debug(
+          `Not installing GitHub webhook, since we aren't in a supported environment`)
+        logger.debug(`Replying with:`, returnValue)
+        return returnValue
+      }
     })
 })
 
@@ -560,7 +560,7 @@ let updateProjectFromGitHub = (repoOwner, repoName, reply) => {
 
 class Project {
   constructor({projectId, tags, owner, ownerName, title, created, pictures, licenseId,
-      description, instructions, files, zipFile, gitHubRepository,}) {
+      description, instructions, files, zipFile, gitHubRepository, mouserProject,}) {
     this.projectId = projectId
     this.tags = tags
     this.owner = owner
@@ -574,6 +574,7 @@ class Project {
     this.files = files
     this.zipFile = zipFile
     this.gitHubRepository = gitHubRepository || null
+    this.mouserProject = mouserProject || null
   }
 }
 
@@ -785,6 +786,7 @@ let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProjec
         title: metadata.title,
         licenseId: metadata.licenseId,
         tags: metadata.tags,
+        mouserProject: metadata.mouserProject,
         description: descriptionFile.content,
         instructions: instructionsFile.content,
         gitHubRepository: qualifiedRepoId,
