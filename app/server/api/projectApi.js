@@ -205,39 +205,57 @@ let installGitHubWebhook = (owner, gitHubOwner, gitHubProject) => {
     .then((user) => {
       let callbackUrl = `${getEnvParam('APP_URI')}/api/webhooks/github/${gitHubOwner}/` +
         `${gitHubProject}`
-      return ajax.postJson(
+      return ajax.getJson(
         `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/hooks`,
+        null,
         {
-          name: `web`,
-          active: true,
-          config: {
-            url: callbackUrl,
-            content_type: 'json',
-          },
-        }, {
           headers: {
             Authorization: `token ${user.gitHubAccessToken}`,
           },
+        }
+      )
+        .then((existingHooks) => {
+          logger.debug(`Existing hooks:`, existingHooks)
+          let existingHook = R.find((hook) => {
+            return R.defaultTo({}, hook.config).url === callbackUrl
+          }, existingHooks)
+          return [user, callbackUrl, existingHook,]
         })
-        .then((createResults) => {
-          logger.debug(
-            `Successfully installed GitHub webhook for ${gitHubOwner}/${gitHubProject}:`, createResults)
-          if (createResults.id == null) {
-            throw new Error(`Couldn't get webhook ID`)
-          }
-          return createResults.id
-        }, (error) => {
-          let hookError = R.defaultTo([], error.errors)[0]
-          if (hookError != null && hookError.code === 'custom' && hookError.message.startsWith(
-              'Hook already exists')) {
-            logger.debug(`Hook has already been installed on GitHub - ignoring`)
-          } else {
+    })
+    .then(([user, callbackUrl, existingHook,]) => {
+      if (existingHook == null) {
+        return ajax.postJson(
+          `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/hooks`,
+          {
+            name: `web`,
+            active: true,
+            config: {
+              url: callbackUrl,
+              content_type: 'json',
+            },
+          }, {
+            headers: {
+              Authorization: `token ${user.gitHubAccessToken}`,
+            },
+          })
+          .then((createResults) => {
+            logger.debug(
+              `Successfully installed GitHub webhook for ${gitHubOwner}/${gitHubProject}:`,
+                createResults)
+            if (createResults.id == null) {
+              throw new Error(`Couldn't get webhook ID`)
+            }
+            return createResults.id
+          }, (error) => {
             logger.warn(
               `Failed to install GitHub webhook for ${gitHubOwner}/${gitHubProject}:`, error)
             // TODO: Detach GitHub account in case token is invalid
             throw error
-          }
-        })
+          })
+      } else {
+        logger.debug(`Hook is already installed on GitHub, ID: ${existingHook.id}`)
+        return existingHook.id
+      }
     })
 }
 
