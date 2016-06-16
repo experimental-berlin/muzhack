@@ -227,10 +227,16 @@ let installGitHubWebhook = (owner, gitHubOwner, gitHubProject) => {
           }
           return createResults.id
         }, (error) => {
-          logger.warn(
-            `Failed to install GitHub webhook for ${gitHubOwner}/${gitHubProject}:`, error)
-          // TODO: Detach GitHub account in case token is invalid
-          throw error
+          let hookError = R.defaultTo([], error.errors)[0]
+          if (hookError != null && hookError.code === 'custom' && hookError.message.startsWith(
+              'Hook already exists')) {
+            logger.debug(`Hook has already been installed on GitHub - ignoring`)
+          } else {
+            logger.warn(
+              `Failed to install GitHub webhook for ${gitHubOwner}/${gitHubProject}:`, error)
+            // TODO: Detach GitHub account in case token is invalid
+            throw error
+          }
         })
     })
 }
