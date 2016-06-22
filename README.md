@@ -36,7 +36,7 @@ For the database we use [RethinkDB](https://www.rethinkdb.com/), a NoSQL technol
 1. In one terminal, enter the MuzHack repository.
 2. Run the Node server: `./run-server`
 3. In another terminal, enter the MuzHack repository.
-4. Run the Webpack dev server: `./node_modules/.bin/webpack-dev-server -d --inline`. This serves as a front-end to the Node server, which automatically compiles resources via Webpack.
+4. Run the Webpack dev server: `./run-webpack-dev-server`. This serves as a front-end to the Node server, which automatically compiles resources via Webpack.
 5. Access the Webpack dev server at http://localhost:8080 in your browser. The app will automatically be refreshed when you make changes to the source code thanks to Webpack's hot reload feature.
 
 ### Deployment
