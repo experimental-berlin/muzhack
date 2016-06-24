@@ -104,17 +104,14 @@ let TopPad = component('TopPad', (cursor) => {
     ]),
     h('#image-box', [
       h('#thumbnails', R.map((picture) => {
-        return h('a', {
-          href: '#',
+        return h('.thumbnail-wrapper', {
           onClick: (event) => {
             event.preventDefault()
             logger.debug(`Thumbnail clicked:`, picture)
             projectCursor.set('chosenPicture', picture)
           },
         }, [
-          h('.thumbnail-wrapper', [
-            h('img', {src: picture.thumbNailUrl,}),
-          ]),
+          h('img', {src: picture.thumbNailUrl,}),
         ])
       }, project.pictures)),
       h('#displayed-image', [
