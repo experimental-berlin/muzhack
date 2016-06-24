@@ -95,7 +95,9 @@ let perform = Promise.method((isInitial=false) => {
 
   let queryStrings = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&')
   let queryParams = R.fromPairs(R.map((elem) => {
-    return elem.split('=')
+    return R.map((str) => {
+      return decodeURIComponent(str)
+    }, elem.split('='))
   }, queryStrings))
   logger.debug(`Current query parameters:`, queryParams)
   return updateRouterState(cursor, currentPath, currentHash, queryParams, isInitial)

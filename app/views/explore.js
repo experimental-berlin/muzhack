@@ -116,7 +116,9 @@ let SearchBox = component('SearchBox', function (cursor) {
       onClick: R.partial(performSearch, [cursor,]),
     }),
     FocusingInput({
-      id: 'explore-search-input', value: searchQuery, placeholder: 'Search MuzHack',
+      id: 'explore-search-input',
+      value: searchQuery,
+      placeholder: 'Search MuzHack',
       ref: 'search',
       refName: 'search',
       onChange: (event) => {
@@ -146,14 +148,15 @@ module.exports = {
       ],
     })
   },
-  loadData: (cursor) => {
-    logger.debug(`Loading projects`)
-    return searchAsync(cursor)
+  loadData: (cursor, params, queryParams) => {
+    logger.debug(`Loading projects`, queryParams)
+    let searchString = queryParams.search || ''
+    return searchAsync(cursor, searchString)
       .then((projects) => {
         return {
           explore: {
             isSearching: false,
-            search: '',
+            search: searchString,
             projects,
           },
         }

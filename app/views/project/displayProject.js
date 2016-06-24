@@ -129,12 +129,14 @@ let TopPad = component('TopPad', (cursor) => {
   ])
 })
 
-let RightColumn = component('RightColumn', (project) => {
+let RightColumn = component('RightColumn', ({project, cursor,}) => {
   let tagElems = R.chain((tag) => {
     return [h('a.project-tag', {
       href: '#',
       onClick: (event) => {
         logger.debug(`Project tag '${tag}' clicked`)
+        let searchString = `[${tag}]`
+        goTo(`/?search=${encodeURIComponent(searchString)}`)
         event.preventDefault()
       },
     }, tag), ', ',]
@@ -311,7 +313,7 @@ let render = (cursor) => {
   return h('div', [
     h('h1#project-path', `${project.owner} / ${project.projectId}`),
     TopPad(cursor),
-    RightColumn(project),
+    RightColumn({cursor, project,}),
     BottomPad({cursor, project,}),
   ])
 }
