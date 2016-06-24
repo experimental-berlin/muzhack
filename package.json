@@ -31,7 +31,7 @@
     "coffee-script": "^1.10.0",
     "css-loader": "^0.23.1",
     "eslint": "^2.8",
-    "file-loader": "^0.8.4",
+    "file-loader": "^0.9",
     "gulp": "^3.9.0",
     "gulp-babel": "^6.1.1",
     "gulp-sourcemaps": "^1.6.0",
@@ -51,8 +51,6 @@
   },
   "dependencies": {
     "@arve.knudsen/react-autocomplete": "^1.0.1",
-    "aws-s3-form": "^0.3.2",
-    "aws-sdk": "^2.3.10",
     "base64url": "^1.0.5",
     "bcrypt": "^0.8.5",
     "bluebird": "^3.4.0",
