@@ -1,6 +1,6 @@
 {
   "name": "muzhack",
-  "version": "1.1.39",
+  "version": "1.1.40",
   "description": "Open platform for publishing of music hardware projects.",
   "main": "app/server.js",
   "scripts": {
