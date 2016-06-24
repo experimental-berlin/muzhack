@@ -54,16 +54,6 @@ spec:
             secretKeyRef:
               name: environment
               key: gcloud-private-key
-        - name: AWS_ACCESS_KEY
-          valueFrom:
-            secretKeyRef:
-              name: environment
-              key: aws-access-key-id
-        - name: AWS_SECRET_ACCESS_KEY
-          valueFrom:
-            secretKeyRef:
-              name: environment
-              key: aws-secret-access-key
         - name: MANDRILL_SECRET
           valueFrom:
             secretKeyRef:
