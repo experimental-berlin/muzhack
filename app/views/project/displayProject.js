@@ -133,7 +133,7 @@ let RightColumn = component('RightColumn', ({project, cursor,}) => {
   let tagElems = R.chain((tag) => {
     let searchString = `[${tag}]`
     return [h('a.project-tag', {
-      href: `/?search=${encodeURIComponent(searchString)}`,
+      href: `/?q=${encodeURIComponent(searchString)}`,
     }, tag), ', ',]
   }, project.tags).slice(0, -1)
   return h('#right-column', [

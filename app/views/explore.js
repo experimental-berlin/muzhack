@@ -80,7 +80,7 @@ let performSearch = (cursor) => {
   if (S.isBlank(searchString)) {
     router.goTo(`/`)
   } else {
-    router.goTo(`/?search=${searchString}`)
+    router.goTo(`/?q=${searchString}`)
   }
 }
 
@@ -126,8 +126,8 @@ module.exports = {
     })
   },
   loadData: (cursor, params, queryParams) => {
-    logger.debug(`Loading projects`, queryParams)
-    let searchString = queryParams.search || ''
+    logger.debug(`Loading projects`)
+    let searchString = queryParams.q || ''
     return searchAsync(cursor, searchString)
       .then((projects) => {
         return {
