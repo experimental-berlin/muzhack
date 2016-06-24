@@ -98,7 +98,7 @@ let AccountBar = component('AccountBar', (cursor) => {
 
 let Header = component('Header', (cursor) => {
   logger.debug('Header rendering')
-  let navItems = cursor.cursor(['router', 'navItems',]).toJS()
+  let navItems = cursor.cursor('router').toJS().navItems
   logger.debug('Nav items:', navItems)
   return h('header', [
     h('nav#menu.pure-menu.pure-menu-open.pure-menu-fixed.pure-menu-horizontal', [
