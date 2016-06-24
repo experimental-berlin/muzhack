@@ -98,17 +98,16 @@ module.exports = {
     let shouldRenderServerSide = R.defaultTo(true, module.shouldRenderServerSide)
     let shouldLoad = (__IS_BROWSER__ && (!isInitialClientSideRender || !shouldRenderServerSide)) ||
       shouldRenderServerSide
-    cursor = cursor.mergeDeep({
-      router: {
-        isLoading: shouldLoad,
-        currentRoute,
-        currentRouteParams,
-        currentPath,
-        currentHash,
-        currentQueryParams,
-        navItems,
-        shouldRenderServerSide,
-      },
+    cursor = cursor.updateIn([`router`,], {}, (current) => {
+      current = current.set(`isLoading`, shouldLoad)
+      current = current.set(`currentRoute`, currentRoute)
+      current = current.set(`currentRouteParams`, currentRouteParams)
+      current = current.set(`currentPath`, currentPath)
+      current = current.set(`currentHash`, currentHash)
+      current = current.set(`currentQueryParams`, currentQueryParams)
+      current = current.set(`navItems`, navItems)
+      current = current.set(`shouldRenderServerSide`, shouldRenderServerSide)
+      return current
     })
 
     if (shouldLoad) {

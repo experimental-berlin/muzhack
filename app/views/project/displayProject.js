@@ -131,14 +131,9 @@ let TopPad = component('TopPad', (cursor) => {
 
 let RightColumn = component('RightColumn', ({project, cursor,}) => {
   let tagElems = R.chain((tag) => {
+    let searchString = `[${tag}]`
     return [h('a.project-tag', {
-      href: '#',
-      onClick: (event) => {
-        logger.debug(`Project tag '${tag}' clicked`)
-        let searchString = `[${tag}]`
-        goTo(`/?search=${encodeURIComponent(searchString)}`)
-        event.preventDefault()
-      },
+      href: `/?search=${encodeURIComponent(searchString)}`,
     }, tag), ', ',]
   }, project.tags).slice(0, -1)
   return h('#right-column', [

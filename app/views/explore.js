@@ -11,6 +11,7 @@ let Packery = React.createFactory(require('react-packery-component')(React))
 
 let FocusingInput = require('./focusingInput')
 let ajax = require('../ajax')
+let router = require('../router')
 
 if (__IS_BROWSER__) {
   require('./explore.styl')
@@ -74,37 +75,13 @@ let searchAsync = (cursor, query) => {
 
 let performSearch = (cursor) => {
   let exploreCursor = cursor.cursor('explore')
-  if (exploreCursor.get('isSearching')) {
-    logger.warn(`performSearch invoked while already searching`)
-    return
+  let query = cursor.getIn([`explore`, `search`,])
+  let searchString = encodeURIComponent(query.replace(' ', '+'))
+  if (S.isBlank(searchString)) {
+    router.goTo(`/`)
+  } else {
+    router.goTo(`/?search=${searchString}`)
   }
-
-  let setSearchResults = (cursor, results) => {
-    cursor.update((state) => {
-      return state.merge({
-        explore: state.get('explore').merge({
-          isSearching: false,
-          projects: immutable.fromJS(results),
-        }),
-       })
-     })
-  }
-
-  let query = exploreCursor.get('search')
-  logger.debug(`Performing search: '${query}'`)
-  cursor = cursor.mergeDeep({
-    explore: {
-      isSearching: true,
-      search: query,
-    },
-  })
-  return searchAsync(cursor, query)
-    .then((projects) => {
-      cursor = cursor.update((current) => {
-        current = current.setIn(['explore', 'projects',], immutable.fromJS(projects))
-        return current.setIn(['explore', 'isSearching',], false)
-      })
-    })
 }
 
 let SearchBox = component('SearchBox', function (cursor) {
