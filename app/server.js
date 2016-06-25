@@ -73,6 +73,9 @@ Promise.config({
 
 let server = new Hapi.Server({
   connections: {
+    router: {
+      stripTrailingSlash: true,
+    },
     routes: {
       files: {
         relativeTo: path.join(__dirname, '../public'),
