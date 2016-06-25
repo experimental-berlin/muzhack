@@ -174,15 +174,12 @@ let createProjectFromParameters = (projectParams, owner, ownerName) => {
       return connectToDb()
         .then((conn) => {
           logger.debug(`Creating project '${qualifiedProjectId}':`, project)
-          let extendedProject = R.merge(project, {
-            id: qualifiedProjectId,
-          })
           return r.table('projects')
             .get(qualifiedProjectId)
             .replace(extendedProject)
             .run(conn)
             .then(() => {
-              return extendedProject
+              return project
             })
             .finally(() => {
               closeDbConnection(conn)
@@ -476,14 +473,13 @@ let realUpdateProject = (owner, ownerName, projectId, projectParams, reply) => {
                 logger.debug(`Updating project in database`)
                 return r.table('projects')
                   .get(qualifiedProjectId)
-                  .replace(R.merge(projectParams, {
-                    id: qualifiedProjectId,
+                  .replace(new Project(R.merge(projectParams, {
                     owner,
                     projectId,
                     ownerName,
                     created: moment.utc().format(), // TODO
                     zipFile,
-                  })).run(conn)
+                  }))).run(conn)
                     .then(() => {
                       logger.debug(`Project successfully updated in database`)
                     })
@@ -585,6 +581,7 @@ let updateProjectFromGitHub = (repoOwner, repoName, reply) => {
 class Project {
   constructor({projectId, tags, owner, ownerName, title, created, pictures, licenseId,
       description, instructions, files, zipFile, gitHubRepository, mouserProject,}) {
+    this.id = `${owner}/${projectId}`
     this.projectId = projectId
     this.tags = tags
     this.owner = owner
