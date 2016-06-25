@@ -98,8 +98,8 @@ let perform = Promise.method((isInitial=false) => {
     }, queryStrings))
   }
 
-  if (!isInitial && currentPath === routerState.currentPath &&
-      queryParams === routerState.currentQueryParams) {
+  if (!isInitial && R.equals(currentPath, routerState.currentPath) &&
+      R.equals(queryParams, routerState.currentQueryParams)) {
     logger.debug(`URL did not change:`, currentPath)
     cursor = cursor.setIn(['router', 'currentHash',], currentHash)
     redirectIfNecessary(cursor)
