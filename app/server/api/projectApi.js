@@ -176,7 +176,7 @@ let createProjectFromParameters = (projectParams, owner, ownerName) => {
           logger.debug(`Creating project '${qualifiedProjectId}':`, project)
           return r.table('projects')
             .get(qualifiedProjectId)
-            .replace(extendedProject)
+            .replace(project)
             .run(conn)
             .then(() => {
               return project
