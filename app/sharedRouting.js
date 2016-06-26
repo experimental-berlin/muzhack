@@ -96,8 +96,9 @@ module.exports = {
 
     let module = routerState.routes[currentRoute]
     let shouldRenderServerSide = R.defaultTo(true, module.shouldRenderServerSide)
-    let shouldLoad = (__IS_BROWSER__ && (!isInitialClientSideRender || !shouldRenderServerSide)) ||
+    let shouldLoad = __IS_BROWSER__ ? !isInitialClientSideRender || !shouldRenderServerSide :
       shouldRenderServerSide
+
     cursor = cursor.updateIn([`router`,], {}, (current) => {
       current = current.set(`isLoading`, shouldLoad)
       current = current.set(`currentRoute`, currentRoute)
