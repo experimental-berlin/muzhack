@@ -95,23 +95,26 @@ module.exports = {
   setUp: Promise.method(() => {
     let host = getEnvParam('RETHINKDB_HOST', 'localhost')
     logger.debug(`Setting up database...`)
-    let indexes = ['owner', 'created',]
+    let projectsIndexes = ['owner', 'created',]
     return invokeCallbackWithConn((conn) => {
-      return r.table('projects').indexList()
-        .run(conn)
-        .then((existingIndexes) => {
-          let indexPromises = R.map((index) => {
-            logger.debug(`Creating index '${index}'...`)
-            return r.table('projects')
-              .indexCreate(index)
-              .run(conn)
-          }, R.difference(indexes, existingIndexes))
-          return Promise.all(indexPromises)
-            .then(() => {
-              return r.table('projects')
-                .indexWait()
+      return Promise.each([
+        ['projects', projectsIndexes,],
+      ], ([tableName, indexes,]) => {
+        return r.table(tableName).indexList()
+          .run(conn)
+          .then((existingIndexes) => {
+            return Promise.each(R.difference(indexes, existingIndexes), (index) => {
+              logger.debug(`Creating index '${index}'...`)
+              return r.table(tableName)
+                .indexCreate(index)
                 .run(conn)
             })
+              .then(() => {
+                return r.table(tableName)
+                  .indexWait()
+                  .run(conn)
+              })
+        })
       })
     })
   }),
