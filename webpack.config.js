@@ -3,13 +3,15 @@ let webpack = require('webpack')
 
 module.exports = {
   context: __dirname + '/app',
-  entry: [
-    'babel-polyfill',
-    './entry.js',
-  ],
+  entry: {
+    muzhack: [
+      'babel-polyfill',
+      './entry.js',
+    ],
+  },
   output: {
     path: __dirname + '/dist',
-    filename: 'bundle.js',
+    filename: '[name].bundle.js',
   },
   module: {
     loaders: [

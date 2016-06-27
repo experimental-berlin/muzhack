@@ -192,10 +192,10 @@ server.register(plugins, (err) => {
   })
   server.route({
     method: ['GET',],
-    path: '/bundle.js',
+    path: '/muzhack.bundle.js',
     handler: {
       file: {
-        path: path.join(__dirname, '../bundle.js'),
+        path: path.join(__dirname, '../muzhack.bundle.js'),
         confine: false,
       },
     },
