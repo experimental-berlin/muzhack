@@ -1,22 +1,20 @@
 'use strict'
 let R = require('ramda')
-let logger = require('js-logger-aknudsen').get('serverRendering')
+let logger = require('js-logger-aknudsen').get('workshopsServerRendering')
 let immutable = require('immutable')
 let immstruct = require('immstruct')
 let ReactDomServer = require('react-dom/server')
 let Boom = require('boom')
-let url = require('url')
 
 let {normalizePath,} = require('../urlUtils')
-let explore = require('../views/explore')
+let explore = require('../views/workshopsExplore')
 let login = require('../views/login')
-let userProfile = require('../views/userProfile/userProfile')
 let App = require('../components/app')
 let {createRouterState, updateRouterState,} = require('../sharedRouting')
-let routeMap = require('../routeMap')
+let routeMap = require('../workshopsRouteMap')
 let {getEnvParam,} = require('./environment')
 
-let getInitialRouterState = (request, workshopsUri) => {
+let getInitialRouterState = (request, muzhackUri) => {
   let currentPath = request.path
   logger.debug(`Computing initial router state, path is '${currentPath}'`)
   let navItems = R.map((navItem) => {
@@ -29,8 +27,7 @@ let getInitialRouterState = (request, workshopsUri) => {
     })
   }, [
     {path: '/', text: 'Explore',},
-    {path: '/create', text: 'Create',},
-    {path: workshopsUri, text: 'Workshops', isExternal: true,},
+    {path: muzhackUri, text: 'MuzHack', isExternal: true,},
     {path: 'http://forums.muzhack.com', text: 'Forums', isExternal: true,},
     {path: '/about', text: 'About',},
   ])
@@ -47,22 +44,16 @@ let getInitialRouterState = (request, workshopsUri) => {
 }
 
 let renderIndex = (request, reply) => {
-  logger.debug(`Rendering SPA index, user is logged in: ${request.auth.credentials != null}`)
+  logger.debug(`Rendering workshops SPA index, user is logged in: ${
+    request.auth.credentials != null}`)
   immstruct.clear()
   let appUri = getEnvParam('APP_URI')
-  let appUrlObj = url.parse(appUri)
-  let workshopsUri = `${appUrlObj.protocol}//workshops.${appUrlObj.host}`
   let cursor = immstruct('state', {
-    search: '',
     appUri,
     login: login.createState(),
     explore: explore.createState(),
-    userProfile: userProfile.createState(),
-    router: getInitialRouterState(request, workshopsUri),
+    router: getInitialRouterState(request, appUri),
     loggedInUser: request.auth.isAuthenticated ? request.auth.credentials : null,
-    trelloKey: getEnvParam('TRELLO_KEY'),
-    stripeKey: getEnvParam('STRIPE_PUBLISHABLE_KEY'),
-    gitHubClientId: getEnvParam('GITHUB_CLIENT_ID'),
   }).cursor()
   cursor = cursor.mergeDeep({
     router: createRouterState(routeMap),
@@ -81,13 +72,13 @@ let renderIndex = (request, reply) => {
         logger.debug(`Rendering on server - current state:`, cursor.toJS())
         let reactHtml = ReactDomServer.renderToString(App(cursor))
         logger.debug(`Finished rendering`)
-        reply.view('serverSideIndex', {
+        reply.view('workshopsServerSideIndex', {
           initialState: JSON.stringify(initialState),
           reactHtml,
         })
       } else {
         logger.debug(`Not rendering JavaScript on server side`)
-        reply.view('nonServerSideIndex', {
+        reply.view('workshopsNonServerSideIndex', {
           initialState: JSON.stringify(initialState),
         })
       }
@@ -99,6 +90,10 @@ let renderIndex = (request, reply) => {
         logger.error(`Failed to load initial state: '${error}':`, error.stack)
         reply(Boom.badImplementation())
       }
+    })
+    .catch((error) => {
+      logger.error(`Rendering failed: ${error}`, error.stack)
+      reply(Boom.badImplementation())
     })
 }
 

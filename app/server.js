@@ -57,6 +57,7 @@ ${stack}
 let auth = require('./server/auth')
 let api = require('./server/api')
 let rendering = require('./server/rendering')
+let workshopsServerRendering = require('./server/workshopsServerRendering')
 let db = require('./server/db')
 let {getEnvParam,} = require('./server/environment')
 let emailer = require('./server/emailer')
@@ -70,6 +71,10 @@ Promise.config({
   longStackTraces: true,
   cancellation: true,
 })
+
+// TODO
+let standardVHost = `localhost`
+let workshopsVHost = `workshops.${standardVHost}`
 
 let setUpServer = Promise.method(() => {
   let server = new Hapi.Server({
@@ -93,7 +98,7 @@ let setUpServer = Promise.method(() => {
     process.env.MUZHACK_URI = `http://localhost:${port}`
   }
 
-  auth.register(server)
+  auth.register(server, standardVHost, workshopsVHost)
   let plugins = R.map((x) => {return require(x)}, ['inert', 'vision',])
   return Promise.promisify(server.register, {context: server,})(plugins)
     .then(() => {
@@ -147,10 +152,6 @@ setUpServer()
         vhost: [standardVHost, workshopsVHost,],
       }, options))
     }
-
-    // TODO
-    let standardVHost = `localhost`
-    let workshopsVHost = `workshops.${standardVHost}`
 
     routeServerMethod({
       path: '/u/{user}/attach/github',
@@ -236,6 +237,12 @@ setUpServer()
           reply()
         }
       },
+    })
+
+    routeServerMethod({
+      path: '/{path*}',
+      handler: workshopsServerRendering.renderIndex,
+      vhost: workshopsVHost,
     })
 
     api.register(server, standardVHost)

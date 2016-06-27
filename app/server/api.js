@@ -442,6 +442,7 @@ let getOtherTrelloBoards = (request, reply) => {
 }
 
 module.exports.register = (server, standardVHost) => {
+  logger.debug(`standardVHost: '${standardVHost}'`)
   let routeApiMethod = (options) => {
     let path = `/api/${options.path}`
     server.route(R.merge(options, {

@@ -8,6 +8,10 @@ module.exports = {
       'babel-polyfill',
       './entry.js',
     ],
+    workshops: [
+      'babel-polyfill',
+      './workshopsEntry.js',
+    ],
   },
   output: {
     path: __dirname + '/dist',
