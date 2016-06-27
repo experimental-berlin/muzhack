@@ -95,7 +95,7 @@ module.exports = {
   setUp: Promise.method(() => {
     let host = getEnvParam('RETHINKDB_HOST', 'localhost')
     logger.debug(`Setting up database...`)
-    let indexes = ['owner',]
+    let indexes = ['owner', 'created',]
     return invokeCallbackWithConn((conn) => {
       return r.table('projects').indexList()
         .run(conn)

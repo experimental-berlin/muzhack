@@ -168,7 +168,7 @@ let createProjectFromParameters = (projectParams, owner, ownerName) => {
       let project = new Project(R.merge(projectParams, {
         owner,
         ownerName,
-        created: moment.utc().format(),
+        created: moment.utc().toDate(),
         zipFile,
       }))
       return connectToDb()
@@ -477,7 +477,7 @@ let realUpdateProject = (owner, ownerName, projectId, projectParams, reply) => {
                     owner,
                     projectId,
                     ownerName,
-                    created: moment.utc().format(), // TODO
+                    created: moment.utc().toDate(), // TODO
                     zipFile,
                   }))).run(conn)
                     .then(() => {
