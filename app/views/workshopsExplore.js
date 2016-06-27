@@ -12,9 +12,11 @@ let Packery = React.createFactory(require('react-packery-component')(React))
 let FocusingInput = require('./focusingInput')
 let ajax = require('../ajax')
 let router = require('../router')
+let {displayDateTextual,} = require('../datetime')
 
 if (__IS_BROWSER__) {
-  require('./explore.styl')
+  require('./workshopsExplore.styl')
+  require('purecss/build/grids-responsive.css')
 }
 
 let setSearch = (cursor, text) => {
@@ -24,14 +26,39 @@ let setSearch = (cursor, text) => {
 
 let createWorkshopLeaderElement = (cursor, i) => {
   let workshopLeader = cursor.toJS()
-  let thumbnail = '/images/revox-reel-to-reel-resized.jpg'
-  return h('.result-item', {
+  return h('li.workshop-leader-item', {
     key: i,
     'data-id': workshopLeader.id,
   }, [
     h('a', {href: `/u/${workshopLeader.id}`,}, [
-      h('.workshop-leader-item-header', [
-        h('.workshop-leader-item-title', workshopLeader.title),
+      h('.pure-u-1.pure-u-md-4-24', [
+        h('.workshop-leader-item-image-wrapper', [
+          h('img.workshop-leader-item-image', {src: workshopLeader.avatar,}),
+        ]),
+      ]),
+      h('.pure-u-1.pure-u-md-20-24', [
+        h('.workshop-leader-item-content', [
+          h('.pure-u-24-24', [
+            h('.workshop-leader-item-name', workshopLeader.name),
+          ]),
+          h('.pure-u-19-24', [
+            h('p.workshop-leader-item-about', workshopLeader.about),
+            h('.workshop-leader-item-metadata.muted.small', [
+              h('.workshop-leader-item-location', workshopLeader.location),
+              h('.workshop-leader-item-joined', `Joined on ${displayDateTextual(
+                workshopLeader.created)}`),
+            ]),
+          ]),
+          h('.pure-u-5-24', [
+            h('.workshop-leader-item-workshops.muted', [
+              // TODO
+              h('.workshop-leader-item-upcoming-workshops', `0 upcoming workshops`),
+              h('.workshop-leader-item-past-workshops',
+                `${workshopLeader.workshops.length} past workshops`),
+            ]),
+          ]),
+
+        ]),
       ]),
     ]),
   ])
@@ -44,14 +71,8 @@ let Results = component('Results', (cursor) => {
   } else {
     let resultsCursor = exploreCursor.cursor('searchResults')
     logger.debug(`Got ${resultsCursor.toJS().length} search results`)
-    let resultElems = resultsCursor.map(createWorkshopLeaderElement).toJS()
     return resultsCursor.isEmpty() ? h('p', 'No workshop leaders were found, please try again.') :
-      Packery({
-        className: 'results-container',
-        options: {
-          itemSelector: '.result-item',
-        },
-      }, resultElems)
+      h('ul.results-container', resultsCursor.map(createWorkshopLeaderElement).toJS())
   }
 })
 
