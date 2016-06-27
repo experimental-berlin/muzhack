@@ -57,9 +57,7 @@ let search = (request, reply) => {
     }
     let regex = `(?i)${queryWithoutTags}`
     return r.table('workshopLeaders')
-      .orderBy({
-        
-      })
+      .orderBy({index: r.desc(`created`),})
       .filter((workshopLeader) => {
         let pred = workshopLeader('id').match(regex).or(workshopLeader('name').match(regex))
         R.forEach((tag) => {
