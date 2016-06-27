@@ -74,7 +74,6 @@ let searchAsync = (cursor, query) => {
 }
 
 let performSearch = (cursor) => {
-  let exploreCursor = cursor.cursor('explore')
   let query = cursor.getIn([`explore`, `search`,])
   let searchString = encodeURIComponent(query.replace(' ', '+'))
   if (S.isBlank(searchString)) {
@@ -140,7 +139,6 @@ module.exports = {
       })
   },
   render: (cursor) => {
-    let exploreCursor = cursor.cursor('explore')
     // logger.debug(`Explore state:`, exploreCursor.toJS())
     return h('.pure-g', [
       h('.pure-u-1', [
