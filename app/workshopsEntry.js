@@ -5,7 +5,7 @@ let router = require('./router')
 let Logger = require('js-logger-aknudsen')
 
 let ajax = require('./ajax')
-let routeMap = require('./routeMap')
+let routeMap = require('./workshopsRouteMap')
 
 require('./app.styl')
 require('./styles/fonts.css')

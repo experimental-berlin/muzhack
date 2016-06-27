@@ -1,6 +1,6 @@
 'use strict'
 let h = require('react-hyperscript')
-let logger = require('js-logger-aknudsen').get('about')
+let logger = require('js-logger-aknudsen').get('workshopsAbout')
 
 if (__IS_BROWSER__) {
   require('./about.styl')
@@ -25,10 +25,14 @@ module.exports = {
       ]),
       h('.pure-u-1', [
         h('#about-pad', [
-          h('h1', 'About MuzHack'),
-          h('p', `MuzHack is a joint effort between Arve Knudsen and Notam to produce an online
-hub for music hardware projects. The goal is for this application to contain descriptions of the
-outcomes of such projects, and generally facilitate their re-production.`),
+          h('h1', 'About MuzHack Workshops'),
+          h('p', [
+            `MuzHack Workshops is a service for finding experts leading workshops within the
+            field of music in general and and music technology specifically. It also helps
+            in finding workshops themselves, both upcoming ones and ones that have already
+            taken place. This service is developed as part of the `,
+            h('a', {href: `https://muzhack.com`,}, `MuzHack project`), `.`,
+          ]),
         ]),
       ]),
     ])

@@ -440,14 +440,13 @@ let getOtherTrelloBoards = (request, reply) => {
     })
 }
 
-module.exports.register = (server, standardVHost) => {
+module.exports.register = (server, standardVHost, workshopsVHost) => {
   logger.debug(`standardVHost: '${standardVHost}'`)
   let routeApiMethod = (options) => {
-    let path = `/api/${options.path}`
-    server.route(R.merge(options, {
-      path,
+    options.path = `/api/${options.path}`
+    server.route(R.merge({
       vhost: standardVHost,
-    }))
+    }, options))
   }
 
   routeApiMethod({
@@ -530,6 +529,7 @@ module.exports.register = (server, standardVHost) => {
       logger.error(`An error was logged on a client: ${error.message}:`, error.stack)
       reply()
     },
+    vhost: [standardVHost, workshopsVHost,],
   })
   routeApiMethod({
     method: ['POST',],

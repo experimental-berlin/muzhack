@@ -2,7 +2,7 @@
 let component = require('omniscient')
 let immutable = require('immutable')
 let S = require('underscore.string.fp')
-let logger = require('js-logger-aknudsen').get('explore')
+let logger = require('js-logger-aknudsen').get('workshopsExplore')
 let R = require('ramda')
 let h = require('react-hyperscript')
 let React = require('react')
@@ -17,65 +17,46 @@ if (__IS_BROWSER__) {
   require('./explore.styl')
 }
 
-let getQualifiedId = (project) => {
-  return `${project.owner}/${project.projectId}`
-}
-
 let setSearch = (cursor, text) => {
   logger.debug(`Setting search to '${text}'`)
-  cursor.cursor('explore').set('search', text)
+  cursor.cursor('workshopsExplore').set('search', text)
 }
 
-let createProjectElement = (cursor, i) => {
-  let project = cursor.toJS()
-  let thumbnail = !R.isEmpty(project.pictures || []) ? project.pictures[0].exploreUrl :
-    '/images/revox-reel-to-reel-resized.jpg'
-  return h('.project-item', {
+let createWorkshopLeaderElement = (cursor, i) => {
+  let workshopLeader = cursor.toJS()
+  let thumbnail = '/images/revox-reel-to-reel-resized.jpg'
+  return h('.result-item', {
     key: i,
-    'data-id': getQualifiedId(project),
+    'data-id': workshopLeader.id,
   }, [
-    h('a', {href: `/u/${project.owner}/${project.projectId}`,}, [
-      h('.project-item-header', [
-        h('.project-item-title', project.title),
-        h('.project-item-author', project.owner),
+    h('a', {href: `/u/${workshopLeader.id}`,}, [
+      h('.workshop-leader-item-header', [
+        h('.workshop-leader-item-title', workshopLeader.title),
       ]),
-      h('img.project-item-image', {src: thumbnail,}),
     ]),
   ])
 }
 
 let Results = component('Results', (cursor) => {
-  let exploreCursor = cursor.cursor('explore')
+  let exploreCursor = cursor.cursor('workshopsExplore')
   if (exploreCursor.get('isSearching')) {
     return h('p', 'Searching...')
   } else {
-    let projectsCursor = exploreCursor.cursor('projects')
-    logger.debug(`Got ${projectsCursor.toJS().length} search results`)
-    let projectElems = projectsCursor.map(createProjectElement).toJS()
-    return projectsCursor.isEmpty() ? h('p', 'No workshop leaders were found, please try again.') :
+    let resultsCursor = exploreCursor.cursor('searchResults')
+    logger.debug(`Got ${resultsCursor.toJS().length} search results`)
+    let resultElems = resultsCursor.map(createWorkshopLeaderElement).toJS()
+    return resultsCursor.isEmpty() ? h('p', 'No workshop leaders were found, please try again.') :
       Packery({
-        className: 'projects-container',
+        className: 'results-container',
         options: {
-          itemSelector: '.project-item',
+          itemSelector: '.result-item',
         },
-      }, projectElems)
+      }, resultElems)
   }
 })
 
-let searchAsync = (cursor, query) => {
-  return ajax.getJson('/api/search', {query: query || '',})
-    .then((projects) => {
-      logger.debug(`Searching succeeded`)
-      return projects
-    }, (reason) => {
-      logger.warn('Searching failed:', reason)
-      return []
-    })
-}
-
 let performSearch = (cursor) => {
-  let exploreCursor = cursor.cursor('explore')
-  let query = cursor.getIn([`explore`, `search`,])
+  let query = cursor.getIn([`workshopsExplore`, `search`,])
   let searchString = encodeURIComponent(query.replace(' ', '+'))
   if (S.isBlank(searchString)) {
     router.goTo(`/`)
@@ -85,7 +66,7 @@ let performSearch = (cursor) => {
 }
 
 let SearchBox = component('SearchBox', function (cursor) {
-  let searchQuery = cursor.cursor('explore').get('search')
+  let searchQuery = cursor.cursor('workshopsExplore').get('search')
   logger.debug(`SearchBox rendering, query: '${searchQuery}'`)
   let hasSearchQuery = !S.isBlank(searchQuery)
   return h('.search-box', [
@@ -95,7 +76,7 @@ let SearchBox = component('SearchBox', function (cursor) {
     FocusingInput({
       id: 'explore-search-input',
       value: searchQuery,
-      placeholder: 'Search MuzHack',
+      placeholder: 'Search MuzHack Workshops',
       ref: 'search',
       refName: 'search',
       onChange: (event) => {
@@ -121,27 +102,32 @@ module.exports = {
   createState: () => {
     return immutable.fromJS({
       search: '',
-      projects: [
+      searchResults: [
       ],
     })
   },
   loadData: (cursor, params, queryParams) => {
-    logger.debug(`Loading projects`)
-    let searchString = queryParams.q || ''
-    return searchAsync(cursor, searchString)
-      .then((projects) => {
+    logger.debug(`Loading workshopLeaders`)
+    let query = queryParams.q || ''
+    return ajax.getJson('/api/workshops/search', {query,})
+      .then((results) => {
+        logger.debug(`Searching succeeded`)
+        return results
+      }, (reason) => {
+        logger.warn('Searching failed:', reason)
+        return []
+      })
+      .then((searchResults) => {
         return {
-          explore: {
+          workshopsExplore: {
             isSearching: false,
-            search: searchString,
-            projects,
+            search: query,
+            searchResults,
           },
         }
       })
   },
   render: (cursor) => {
-    let exploreCursor = cursor.cursor('explore')
-    // logger.debug(`Explore state:`, exploreCursor.toJS())
     return h('.pure-g', [
       h('.pure-u-1', [
         h('#explore-pad', [

@@ -56,6 +56,7 @@ ${stack}
 
 let auth = require('./server/auth')
 let api = require('./server/api')
+let workshopsServerApi = require('./server/workshopsServerApi')
 let rendering = require('./server/rendering')
 let workshopsServerRendering = require('./server/workshopsServerRendering')
 let db = require('./server/db')
@@ -245,7 +246,8 @@ setUpServer()
       vhost: workshopsVHost,
     })
 
-    api.register(server, standardVHost)
+    api.register(server, standardVHost, workshopsVHost)
+    workshopsServerApi.register(server, standardVHost, workshopsVHost)
 
     db.setUp()
       .then(() => {
