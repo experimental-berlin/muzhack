@@ -115,6 +115,7 @@ let search = (request, reply) => {
     }
     let regex = `(?i)${queryWithoutTags}`
     return r.table('projects')
+      .orderBy({index: r.desc(`created`),})
       .filter((project) => {
         let pred = project('projectId').match(regex).or(project('title').match(regex))
           .or(project('owner').match(regex))
@@ -128,9 +129,7 @@ let search = (request, reply) => {
         return projectsCursor.toArray()
           .then((projects) => {
             logger.debug(`Found ${projects.length} project(s)`)
-            return R.sort((a, b) => {
-              return moment(b.created).diff(moment(a.created))
-            }, projects)
+            return projects
           }, (error) => {
             logger.warn(`Failed to iterate projects: '${error}'`, error.stack)
             throw new Error(error)
