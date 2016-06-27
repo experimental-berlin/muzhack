@@ -209,10 +209,10 @@ setUpServer()
       vhost: standardVHost,
     })
     routeServerMethod({
-      path: '/bundle.js',
+    path: '/muzhack.bundle.js',
       handler: {
         file: {
-          path: path.join(__dirname, '../bundle.js'),
+        path: path.join(__dirname, '../muzhack.bundle.js'),
           confine: false,
         },
       },
