@@ -47,7 +47,7 @@ let connectToDb = Promise.method((attempt) => {
       .then(() => {
         return r.tableList().run(conn)
           .then((existingTables) => {
-            return Promise.all(R.reject((x) => {return x == null}, R.map((tableName) => {
+            return Promise.each(['projects', 'users', 'workshopLeaders',], (tableName) => {
               if (!R.contains(tableName, existingTables)) {
                 logger.info(`Creating ${tableName} table`)
                 return r.tableCreate(tableName).run(conn)
@@ -55,7 +55,7 @@ let connectToDb = Promise.method((attempt) => {
                 logger.debug(`The ${tableName} table already exists`)
                 return null
               }
-            }, ['projects', 'users',])))
+            })
           })
       })
       .then(() => {
