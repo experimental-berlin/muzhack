@@ -9,6 +9,7 @@ let R = require('ramda')
 let account = require('../../account')
 let {nbsp,} = require('../../specialChars')
 let datetime = require('../../datetime')
+let userManagement = require('../../userManagement')
 
 let getAvatarUrl = (user) => {
   if (!S.isBlank(user.avatarUrl)) {
@@ -27,6 +28,8 @@ let getAvatarUrl = (user) => {
 module.exports = component('VCard', ({cursor, user,}) => {
   let userProfileUrl = account.getUserProfileUrl(user.username)
   let userJoined = datetime.displayDateTextual(user.createdAt)
+  let loggedInUser = userManagement.getLoggedInUser(cursor)
+  let isLoggedInUser = loggedInUser != null && loggedInUser.username === user.username
 
   return h('#vcard', [
     h('#user-avatar', [
@@ -51,7 +54,7 @@ module.exports = component('VCard', ({cursor, user,}) => {
       h('span.icon-calendar', nbsp),
       h('span', `Joined ${userJoined}`),
     ]),
-    h('#user-github-account.vcard-detail', [
+    isLoggedInUser ? h('#user-github-account.vcard-detail', [
       h('span.icon-github', nbsp),
       user.gitHubAccessToken == null ?
         h('a', {
@@ -79,7 +82,7 @@ module.exports = component('VCard', ({cursor, user,}) => {
           },
         }, 'Attach to GitHub') :
         `Attached to GitHub account ${user.gitHubAccount}`,
-    ]),
+    ]) : null,
     !S.isBlank(user.about) ? h('div', [
       h('hr'),
       h('#user-about-short.vcard-detail', [
