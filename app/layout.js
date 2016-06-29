@@ -87,12 +87,10 @@ let AccountBar = component('AccountBar', (cursor) => {
       h('span.icon-enter3'),
     ]),
   ]
-  return h('.pull-right', [
-    h('.accountbar', [
-      h('ul.pure-menu-list', R.map((link) => {
-        return h('li.pure-menu-item', [link,])
-      }, links)),
-    ]),
+  return h('.accountbar', [
+    h('ul.pure-menu-list', R.map((link) => {
+      return h('li.pure-menu-item', [link,])
+    }, links)),
   ])
 })
 
