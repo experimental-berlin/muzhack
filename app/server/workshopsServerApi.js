@@ -56,10 +56,12 @@ let search = (request, reply) => {
       logger.debug(`No tags`)
     }
     let regex = `(?i)${queryWithoutTags}`
-    return r.table('workshopLeaders')
+    return r.table('users')
       .orderBy({index: r.desc(`created`),})
-      .filter((workshopLeader) => {
-        let pred = workshopLeader('id').match(regex).or(workshopLeader('name').match(regex))
+      .filter((user) => {
+        let pred = user('isWorkshopLeader').and(
+          user('id').match(regex).or(user('name').match(regex))
+        )
         R.forEach((tag) => {
           pred = pred.and(workshopLeader('tags').contains((t) => {return t.downcase().eq(tag)}))
         }, tags)
@@ -84,13 +86,23 @@ let search = (request, reply) => {
 module.exports.register = (server, standardVHost, workshopsVHost) => {
   let routeApiMethod = (options) => {
     options.path = `/api/workshops/${options.path}`
-    server.route(R.merge(options, {
+    if (typeof options.handler === 'function') {
+      let origHandler = options.handler
+      options.handler = (request, reply) => {
+        Promise.method(origHandler)(request, reply)
+          .catch((error) => {
+            logger.error(`An uncaught exception occurred:`, error)
+            reply(Boom.badImplementation())
+          })
+      }
+    }
+    server.route(R.merge({
+      method: 'GET',
       vhost: [standardVHost, workshopsVHost,],
-    }))
+    }, options))
   }
 
   routeApiMethod({
-    method: ['GET',],
     path: 'search',
     handler: search,
   })

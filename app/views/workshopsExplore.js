@@ -33,7 +33,7 @@ let createWorkshopLeaderElement = (cursor, i) => {
     h('a', {href: `/u/${workshopLeader.id}`,}, [
       h('.pure-u-1.pure-u-md-4-24', [
         h('.workshop-leader-item-image-wrapper', [
-          h('img.workshop-leader-item-image', {src: workshopLeader.avatar,}),
+          h('img.workshop-leader-item-image', {src: workshopLeader.avatarUrl,}),
         ]),
       ]),
       h('.pure-u-1.pure-u-md-20-24', [
@@ -42,7 +42,7 @@ let createWorkshopLeaderElement = (cursor, i) => {
             h('.workshop-leader-item-name', workshopLeader.name),
           ]),
           h('.pure-u-19-24', [
-            h('p.workshop-leader-item-about', workshopLeader.about),
+            h('p.workshop-leader-item-about', workshopLeader.blurb),
             h('.workshop-leader-item-metadata.muted.small', [
               h('.workshop-leader-item-location', workshopLeader.location),
               h('.workshop-leader-item-joined', `Joined on ${displayDateTextual(

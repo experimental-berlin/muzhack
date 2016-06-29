@@ -4,29 +4,24 @@ let R = require('ramda')
 let S = require('underscore.string.fp')
 let h = require('react-hyperscript')
 let immutable = require('immutable')
-let logger = require('js-logger-aknudsen').get('userProfile')
+let logger = require('js-logger-aknudsen').get('workshopsUserProfile')
 
 let ajax = require('../../ajax')
 let {nbsp,} = require('../../specialChars')
-let VCard = require('./vcard')
 let {convertMarkdown,} = require('../../markdown')
-let datetime = require('../../datetime')
-let {ProjectPlans,} = require('./projectPlans')
+let VCard = require('./workshopsVCard')
 
 if (__IS_BROWSER__) {
-  require('./userProfile.styl')
+  require('./workshopsUserProfile.styl')
 }
 
 let About = component('About', (user) => {
-  return h('div', [
-    h('h1', `About ${user.name}`),
-    convertMarkdown(user.about),
-  ])
+  return convertMarkdown(user.about)
 })
 
-let Projects = component('Projects', (user) => {
+let Workshops = component('Workshops', (user) => {
   let {username,} = user
-  return !R.isEmpty(user.projects) ? h('table#user-projects', [
+  return !R.isEmpty(user.workshops) ? h('table#user-workshops', [
     h('thead', [
       h('tr', [
         h('th', 'ID'),
@@ -34,51 +29,9 @@ let Projects = component('Projects', (user) => {
         h('th', 'Created'),
       ]),
     ]),
-    h('tbody', R.map((project) => {
-      let {projectId, title,} = project
-      let createdStr = datetime.displayDateTextual(project.created)
-      return h('tr', [
-        h('td', [
-          h('a.user-project', {href: `/u/${username}/${projectId}`,}, projectId),
-        ]),
-        h('td', [
-          h('a.user-project', {href: `/u/${username}/${projectId}`,}, title),
-        ]),
-        h('td', [
-          h('a.user-project', {href: `/u/${username}/${projectId}`,}, createdStr),
-        ]),
-      ])
-    }, user.projects)),
-  ]) : h('em', 'No projects.')
-})
-
-let SoundCloudUpload = component('SoundCloudUpload', {
-  componentDidMount: function () {
-    let upload = this.props.upload
-    logger.debug(`SoundCloud upload did mount`, upload)
-    let uploadElem = this.refs.soundCloudUpload
-    logger.debug('Got SoundCloud upload element:', uploadElem)
-    uploadElem.innerHTML = upload.html
-  },
-}, () => {
-   return h('.soundcloud-upload', {ref: `soundCloudUpload`,})
-})
-
-let Media = component('Media', (user) => {
-  let soundCloud = user.soundCloud || {}
-  return h('div', !R.isEmpty(user.soundCloudUploads) ? [
-    h('h1#soundcloud-header', [
-      h('span.icon-soundcloud', 'SoundCloud'),
-    ]),
-    h('p', `${S.words(user.name)[0]}'s sounds on SoundCloud`),
-    h('ul#soundcloud-uploads', R.map((upload) => {
-      return h('li', [SoundCloudUpload({upload,}),])
-    }, soundCloud.uploads)),
-  ] : null)
-})
-
-let Workshops = component('Workshops', (user) => {
-  return convertMarkdown(user.workshopsInfo)
+    h('tbody', R.map((workshop) => {
+    }, user.workshops)),
+  ]) : h('em', 'No workshops have been registered for this user.')
 })
 
 let isActiveTab = (tabName, cursor) => {
@@ -138,37 +91,28 @@ module.exports = {
     let currentHash = cursor.cursor('router').get('currentHash')
     let soundCloud = user.soundCloud || {}
     let profileTabs = [
-      new UserTab('Projects'),
-      new UserTab('Plans'),
       new UserTab('About'),
-      new UserTab('Media', null, !R.isEmpty(soundCloud.uploads || [])),
-      new UserTab('Workshops', null, !S.isBlank(user.workshopsInfo)),
+      new UserTab('Workshops'),
     ]
     let activeTab = R.contains(currentHash, R.map((tab) => {
       return tab.name
-    }, profileTabs)) ? currentHash : 'projects'
+    }, profileTabs)) ? currentHash : 'about'
 
     logger.debug(`Rendering profile of user '${user.username}', active tab '${activeTab}':`, user)
     logger.debug(`State:`, profileCursor.toJS())
     let tabContents
     if (activeTab === 'about') {
       tabContents = About(user)
-    } else if (activeTab === 'projects') {
-      tabContents = Projects(user)
-    } else if (activeTab === 'plans') {
-      tabContents = ProjectPlans({user, cursor,})
-    } else if (activeTab === 'media') {
-      tabContents = Media(user)
     } else if (activeTab === 'workshops') {
       tabContents = Workshops(user)
     }
 
     return h('#user-pad', [
       h('.pure-g', [
-        h('.pure-u-1-4', [
+        h('.pure-u-md-6-24', [
           VCard({cursor, user,}),
         ]),
-        h('.pure-u-3-4', [
+        h('.pure-u-md-18-24', [
           h('ul.tabs', {role: 'tablist',}, R.map((profileTab) => {
             return h(`li.${S.join('.', profileTab.getClasses(activeTab))}`, [
               profileTab.enabled ? h('a', {

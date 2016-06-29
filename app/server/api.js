@@ -179,6 +179,7 @@ let getUser = (request, reply) => {
               }
               let extendedUser = R.merge(R.omit(restrictedAttributes, user), {
                 soundCloud: {
+                  username: soundCloud.username,
                   uploads: R.filter((x) => x != null, embeddables),
                 },
               })
@@ -444,25 +445,34 @@ module.exports.register = (server, standardVHost, workshopsVHost) => {
   logger.debug(`standardVHost: '${standardVHost}'`)
   let routeApiMethod = (options) => {
     options.path = `/api/${options.path}`
+    if (typeof options.handler === 'function') {
+      let origHandler = options.handler
+      options.handler = (request, reply) => {
+        Promise.method(origHandler)(request, reply)
+          .catch((error) => {
+            logger.error(`An uncaught exception occurred:`, error)
+            reply(Boom.badImplementation())
+          })
+      }
+    }
     server.route(R.merge({
+      method: 'GET',
       vhost: standardVHost,
     }, options))
   }
 
   routeApiMethod({
-    method: ['GET',],
     path: 'search',
     handler: search,
   })
   routeApiMethod({
-    method: ['GET',],
     path: 'projects/{owner}/{projectId}',
     handler: requestHandler(getProject),
   })
   routeApiMethod({
-    method: ['GET',],
     path: 'users/{username}',
     handler: getUser,
+    vhost: [standardVHost, workshopsVHost,],
   })
   routeApiMethod({
     method: ['POST',],
@@ -480,12 +490,10 @@ module.exports.register = (server, standardVHost, workshopsVHost) => {
     handler: removeProjectPlan,
   })
   routeApiMethod({
-    method: ['GET',],
     path: 'users/{username}/otherTrelloBoards',
     handler: getOtherTrelloBoards,
   })
   routeApiMethod({
-    method: ['GET',],
     path: 'gcloudStorageSettings',
     config: {
       auth: 'session',
@@ -590,7 +598,6 @@ module.exports.register = (server, standardVHost, workshopsVHost) => {
     },
   })
   routeApiMethod({
-    method: ['GET',],
     path: 'isProjectIdAvailable',
     config: {
       auth: 'session',

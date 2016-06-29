@@ -96,11 +96,11 @@ module.exports = {
     let host = getEnvParam('RETHINKDB_HOST', 'localhost')
     logger.debug(`Setting up database...`)
     let projectsIndexes = ['owner', 'created',]
-    let workshopLeadersIndexes = ['created',]
+    let usersIndexes = ['created',]
     return invokeCallbackWithConn((conn) => {
       return Promise.each([
         ['projects', projectsIndexes,],
-        ['workshopLeaders', workshopLeadersIndexes,],
+        ['users', usersIndexes,],
       ], ([tableName, indexes,]) => {
         return r.table(tableName).indexList()
           .run(conn)

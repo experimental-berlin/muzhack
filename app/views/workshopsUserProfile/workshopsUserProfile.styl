@@ -1,0 +1,120 @@
+@require '../_common'
+@require '../_tabs'
+
+tab-color = #4C4C4C
+
+#user-pad
+  pad-base()
+
+  padding 20px
+  margin 25px
+  margin-bottom 0
+
+  #user-avatar
+    img
+      rounded-corners()
+      max-width 100%
+
+  & >:first-child
+    margin-top 0
+
+  // TODO: Consolidate with project
+  .tabs
+    tabs-base()
+
+    color muted
+    border-bottom 1px solid muted
+
+    li
+      a
+        color tab-color
+      &.disabled
+        color muted
+      &.active
+        border-left 1px solid
+        border-right 1px solid tab-color
+        border-top 1px solid tab-color
+
+#user-name
+  ellipsis-overflow()
+
+  font-size 2em
+  font-weight bold
+
+#user-username
+  ellipsis-overflow()
+
+  font-size 1.3em
+
+#plan-buttons
+  margin 0
+  margin-bottom 20px
+
+#create-plan-modal
+  fieldset
+    margin 0
+    padding 0
+
+#user-projects
+  width 100%
+  text-align left
+  margin 0
+  padding 0
+
+  thead
+    border-bottom 1px solid black
+
+    th
+      padding 8px
+      padding-top 0
+
+  tbody
+    tr
+      border-bottom 1px solid black
+
+      td
+        padding 8px
+
+#planned-projects
+  list-style none
+  margin 0
+  padding 0
+
+.planned-project-controls
+  display inline-block
+  margin-left 4px
+
+.user-project, .planned-project, .close-project-plan, .remove-project-plan, .edit-project-plan
+  text-decoration none
+  color black
+
+.edit-project-plan, .remove-project-plan, .close-project-plan
+  margin-left 2px
+
+#vcard
+  padding-right 15px
+
+  a
+    text-decoration none
+    color black
+
+  .vcard-detail
+    overflow hidden
+    text-overflow ellipsis
+    padding 2px 0
+
+#tab-contents
+  & >:first-child, .markdown-root >:first-child
+    margin-top 0
+
+  padding-top 16px
+  padding-left 5px
+  padding-right 5px
+
+#soundcloud-uploads
+  list-style none
+  padding 0
+  margin 0
+
+#soundcloud-header
+  color #f50

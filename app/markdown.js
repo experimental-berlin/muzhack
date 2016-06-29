@@ -29,7 +29,7 @@ module.exports.convertMarkdown = (markdown) => {
   let html = converter.makeHtml(markdown || '')
   let htmlToReactParser = new HtmlToReactParser(React)
   // Enclose in a div since HtmlToReact can't handle multiple root elements
-  return htmlToReactParser.parse(`<div>${html}</div>`)
+  return htmlToReactParser.parse(`<div class="markdown-root">${html}</div>`)
 }
 
 let markdownManual = {
