@@ -109,10 +109,10 @@ module.exports = {
 
     return h('#user-pad', [
       h('.pure-g', [
-        h('.pure-u-md-6-24', [
+        h('.pure-u-1.pure-u-md-6-24', [
           VCard({cursor, user,}),
         ]),
-        h('.pure-u-md-18-24', [
+        h('.pure-u-1.pure-u-md-18-24', [
           h('ul.tabs', {role: 'tablist',}, R.map((profileTab) => {
             return h(`li.${S.join('.', profileTab.getClasses(activeTab))}`, [
               profileTab.enabled ? h('a', {
