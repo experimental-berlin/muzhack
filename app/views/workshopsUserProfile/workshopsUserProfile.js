@@ -5,11 +5,13 @@ let S = require('underscore.string.fp')
 let h = require('react-hyperscript')
 let immutable = require('immutable')
 let logger = require('js-logger-aknudsen').get('workshopsUserProfile')
+let moment = require('moment')
 
 let ajax = require('../../ajax')
 let {nbsp,} = require('../../specialChars')
 let {convertMarkdown,} = require('../../markdown')
 let VCard = require('./workshopsVCard')
+let {partitionWorkshops,} = require('../workshopsCommon')
 
 if (__IS_BROWSER__) {
   require('./workshopsUserProfile.styl')
@@ -20,17 +22,26 @@ let About = component('About', (user) => {
 })
 
 let Workshops = component('Workshops', (user) => {
+  let renderWorkshops = (workshops, type) => {
+    return h(`#user-${type}-workshops`, [
+      h('h2', `${S.capitalize(type)} Workshops`),
+      h(`table`, [
+       h('tbody', R.map((workshop) => {
+         return h('tr', [
+           h('td', moment(workshop.startTime).format(`MMM D`)),
+           h('td', workshop.title),
+           h('td', workshop.venue.name),
+         ])
+       }, R.sortBy(R.prop('startTime'), workshops))),
+     ]),
+   ])
+  }
+
   let {username,} = user
-  return !R.isEmpty(user.workshops) ? h('table#user-workshops', [
-    h('thead', [
-      h('tr', [
-        h('th', 'ID'),
-        h('th', 'Name'),
-        h('th', 'Created'),
-      ]),
-    ]),
-    h('tbody', R.map((workshop) => {
-    }, user.workshops)),
+  let [upcomingWorkshops, pastWorkshops,] = partitionWorkshops(user)
+  return !R.isEmpty(upcomingWorkshops) || !R.isEmpty(pastWorkshops) ? h('div', [
+    !R.isEmpty(upcomingWorkshops) ? renderWorkshops(upcomingWorkshops, `upcoming`): null,
+   !R.isEmpty(pastWorkshops) ? renderWorkshops(pastWorkshops, `past`) : null,
   ]) : h('em', 'No workshops have been registered for this user.')
 })
 

@@ -13,6 +13,7 @@ let FocusingInput = require('./focusingInput')
 let ajax = require('../ajax')
 let router = require('../router')
 let {displayDateTextual,} = require('../datetime')
+let {partitionWorkshops,} = require('./workshopsCommon')
 
 if (__IS_BROWSER__) {
   require('./workshopsExplore.styl')
@@ -26,6 +27,8 @@ let setSearch = (cursor, text) => {
 
 let createWorkshopLeaderElement = (cursor, i) => {
   let workshopLeader = cursor.toJS()
+  let [numUpcomingWorkshops, numPastWorkshops,] = R.map(R.prop('length'),
+    partitionWorkshops(workshopLeader))
   return h('li.workshop-leader-item', {
     key: i,
     'data-id': workshopLeader.id,
@@ -52,12 +55,13 @@ let createWorkshopLeaderElement = (cursor, i) => {
           h('.pure-u-5-24', [
             h('.workshop-leader-item-workshops.muted', [
               // TODO
-              h('.workshop-leader-item-upcoming-workshops', `0 upcoming workshops`),
+              h('.workshop-leader-item-upcoming-workshops',
+                `${numUpcomingWorkshops} upcoming workshop${
+                  numUpcomingWorkshops !== 1 ? 's' : ''}`),
               h('.workshop-leader-item-past-workshops',
-                `${workshopLeader.workshops.length} past workshops`),
+                `${numPastWorkshops} past workshop${numPastWorkshops !== 1 ? 's': ''}`),
             ]),
           ]),
-
         ]),
       ]),
     ]),
