@@ -29,18 +29,21 @@ let createWorkshopLeaderElement = (cursor, i) => {
   let workshopLeader = cursor.toJS()
   let [numUpcomingWorkshops, numPastWorkshops,] = R.map(R.prop('length'),
     partitionWorkshops(workshopLeader))
+  let workshopLeaderUrl = `/u/${workshopLeader.id}`
   return h('li.workshop-leader-item', {
     key: i,
     'data-id': workshopLeader.id,
   }, [
-    h('a', {href: `/u/${workshopLeader.id}`,}, [
+    h('a', {href: workshopLeaderUrl,}, [
       h('.pure-u-1.pure-u-md-4-24', [
         h('.workshop-leader-item-image-wrapper', [
           h('img.workshop-leader-item-image', {src: workshopLeader.avatarUrl,}),
         ]),
       ]),
-      h('.pure-u-1.pure-u-md-20-24', [
-        h('.workshop-leader-item-content', [
+    ]),
+    h('.pure-u-1.pure-u-md-20-24', [
+      h('.workshop-leader-item-content', [
+        h('a', {href: workshopLeaderUrl,}, [
           h('.pure-u-24-24', [
             h('.workshop-leader-item-name', workshopLeader.name),
           ]),
@@ -52,9 +55,12 @@ let createWorkshopLeaderElement = (cursor, i) => {
                 workshopLeader.created)}`),
             ]),
           ]),
-          h('.pure-u-5-24', [
-            h('.workshop-leader-item-workshops.muted', [
-              // TODO
+        ]),
+        h('.pure-u-5-24', [
+          h('.workshop-leader-item-workshops.muted', [
+            h('a', {
+              href: `${workshopLeaderUrl}#workshops`,
+            }, [
               h('.workshop-leader-item-upcoming-workshops',
                 `${numUpcomingWorkshops} upcoming workshop${
                   numUpcomingWorkshops !== 1 ? 's' : ''}`),
