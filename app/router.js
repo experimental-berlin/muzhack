@@ -7,7 +7,6 @@ let S = require('underscore.string.fp')
 let logger = require('js-logger-aknudsen').get('router')
 let Promise = require('bluebird')
 
-let layout = require('./layout')
 let ajax = require('./ajax')
 let userManagement = require('./userManagement')
 let Loading = __IS_BROWSER__ ? require('./views/loading') : null

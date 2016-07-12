@@ -115,7 +115,7 @@ let Header = component('Header', (cursor) => {
 
 let Footer = component('Footer', () => {
   return h('footer', [
-    h('p', 'MuzHack Workshops beta, enjoy responsibly.'),
+    h('p', 'MuzHack beta, enjoy responsibly.'),
     h('p', [
       '© 2016 ',
       h('a', {href: 'http://arveknudsen.com', target: '_blank',}, 'Arve Knudsen'),
