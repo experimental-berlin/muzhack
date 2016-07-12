@@ -25,15 +25,16 @@ let Workshops = component('Workshops', (user) => {
   let renderWorkshops = (workshops, type) => {
     return h(`#user-${type}-workshops`, [
       h('h2', `${S.capitalize(type)} Workshops`),
-      h(`table`, [
-       h('tbody', R.map((workshop) => {
-         return h('tr', [
-           h('td', moment(workshop.startTime).format(`MMM D`)),
-           h('td', workshop.title),
-           h('td', workshop.venue.name),
-         ])
-       }, R.sortBy(R.prop('startTime'), workshops))),
-     ]),
+      h(`.table.table-striped`, R.map((workshop) => {
+        let rowClasses = [`table-row`,]
+        return h(`a.${S.join('.', rowClasses)}`, {
+          href: `/u/${workshop.owner}/${workshop.id}`,
+        }, [
+          h('.table-cell', moment(workshop.startTime).format(`MMM D`)),
+          h('.table-cell', workshop.title),
+          h('.table-cell', workshop.venue.name),
+       ])
+     }, R.sortBy(R.prop('startTime'), workshops))),
    ])
   }
 
