@@ -143,7 +143,9 @@ let Footer = component('Footer', () => {
         h('input.paypal-button', {
           type: 'image',
           src: 'https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif',
-          border: '0', name: 'submit', alt: 'PayPal - The safer, easier way to pay online!',
+          style: {
+            border: '0', name: 'submit', alt: 'PayPal - The safer, easier way to pay online!',
+          },
         }),
       ]),
       h('a.flatter-link', {
