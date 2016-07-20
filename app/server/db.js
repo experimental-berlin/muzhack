@@ -16,7 +16,7 @@ let invokeCallbackWithConn = Promise.method((callback) => {
   return connectToDb()
     .then((conn) => {
       logger.debug(`Invoking callback`)
-      return callback(conn)
+      return Promise.method(callback)(conn)
         .finally(() => {
           closeDbConnection(conn)
         })
@@ -82,6 +82,7 @@ let connectToDb = Promise.method((attempt) => {
 module.exports = {
   connectToDb,
   closeDbConnection,
+  invokeCallbackWithConn,
   withDb: Promise.method((reply, callback) => {
     return invokeCallbackWithConn(callback)
       .then((result) => {

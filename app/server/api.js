@@ -9,6 +9,7 @@ let JSZip = require('jszip')
 let request = require('request')
 let gcloud = require('gcloud')
 let Promise = require('bluebird')
+let CryptoJs = require('crypto-js')
 
 let stripeApi = require('./api/stripeApi')
 let ajax = require('../ajax')
