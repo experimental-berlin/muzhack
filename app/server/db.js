@@ -35,32 +35,7 @@ let connectToDb = Promise.method((attempt) => {
     db: 'muzhack',
   }).then((conn) => {
     logger.debug(`Successfully connected to RethinkDB host '${host}', attempt #${attempt}`)
-    return r.dbList().run(conn)
-      .then((existingDbs) => {
-        if (!R.contains('muzhack', existingDbs)) {
-          logger.info(`Creating database muzhack`)
-          return r.dbCreate('muzhack').run(conn)
-        } else {
-          logger.debug(`The muzhack database already exists`)
-        }
-      })
-      .then(() => {
-        return r.tableList().run(conn)
-          .then((existingTables) => {
-            return Promise.each(['projects', 'users', 'workshopLeaders',], (tableName) => {
-              if (!R.contains(tableName, existingTables)) {
-                logger.info(`Creating ${tableName} table`)
-                return r.tableCreate(tableName).run(conn)
-              } else {
-                logger.debug(`The ${tableName} table already exists`)
-                return null
-              }
-            })
-          })
-      })
-      .then(() => {
-        return conn
-      })
+    return conn
   }, (error) => {
     if (attempt < 5) {
       let timeout = attempt * 0.5
@@ -76,6 +51,48 @@ let connectToDb = Promise.method((attempt) => {
         error.stack)
       throw new Error(`Failed to connect to RethinkDB after ${attempt} attempts: '${error}'`)
     }
+  })
+})
+
+let createTables = Promise.method((conn) => {
+  return r.tableList()
+    .run(conn)
+    .then((existingTables) => {
+      let tableAndIndexNames = [
+        ['projects', ['owner', 'created',],],
+        ['users', ['created',],],
+        ['workshopLeaders',],
+        ['resetPasswordTokens',],
+      ]
+      return Promise.each(tableAndIndexNames, ([tableName, indexNames,]) => {
+        let createPromise
+        if (!R.contains(tableName, existingTables)) {
+          logger.info(`Creating ${tableName} table`)
+          createPromise = r.tableCreate(tableName).run(conn)
+        } else {
+          logger.debug(`The ${tableName} table already exists`)
+          createPromise = Promise.resolve()
+        }
+        return createPromise.then(() => {
+          if (!R.isEmpty(indexNames || [])) {
+            return r.table(tableName).indexList()
+              .run(conn)
+              .then((existingIndexes) => {
+                return Promise.each(R.difference(indexNames, existingIndexes), (index) => {
+                  logger.debug(`Creating index '${index}'...`)
+                  return r.table(tableName)
+                    .indexCreate(index)
+                    .run(conn)
+                })
+                  .then(() => {
+                    return r.table(tableName)
+                      .indexWait()
+                      .run(conn)
+                  })
+            })
+          }
+        })
+      })
   })
 })
 
@@ -96,29 +113,17 @@ module.exports = {
   setUp: Promise.method(() => {
     let host = getEnvParam('RETHINKDB_HOST', 'localhost')
     logger.debug(`Setting up database...`)
-    let projectsIndexes = ['owner', 'created',]
-    let usersIndexes = ['created',]
     return invokeCallbackWithConn((conn) => {
-      return Promise.each([
-        ['projects', projectsIndexes,],
-        ['users', usersIndexes,],
-      ], ([tableName, indexes,]) => {
-        return r.table(tableName).indexList()
-          .run(conn)
-          .then((existingIndexes) => {
-            return Promise.each(R.difference(indexes, existingIndexes), (index) => {
-              logger.debug(`Creating index '${index}'...`)
-              return r.table(tableName)
-                .indexCreate(index)
-                .run(conn)
-            })
-              .then(() => {
-                return r.table(tableName)
-                  .indexWait()
-                  .run(conn)
-              })
+      return r.dbList().run(conn)
+        .then((existingDbs) => {
+          if (!R.contains('muzhack', existingDbs)) {
+            logger.info(`Creating database muzhack`)
+            return r.dbCreate('muzhack').run(conn)
+          } else {
+            logger.debug(`The muzhack database already exists`)
+          }
         })
-      })
+        .then(() => {return createTables(conn)})
     })
   }),
 }
