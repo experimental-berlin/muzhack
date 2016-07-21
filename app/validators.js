@@ -39,7 +39,7 @@ class InvalidUsername extends Validator {
       'InvalidUsername',
       input,
       (input) => {
-        return /^[a-z_\-0-9]+$/.test(input)
+        return !/^[a-z_\-0-9]+$/.test(input)
       },
       'Invalid username, please use only a-z, 0-9, _, -.'
     )
