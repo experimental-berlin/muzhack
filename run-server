@@ -30,7 +30,7 @@ for k, v in settings.iteritems():
 _proc = subprocess.Popen(['./services/image-processor/image-processor.py', ])
 try:
     subprocess.check_call(
-        ['./node_modules/.bin/babel-node', '--harmony_destructuring', '.', ])
+        ['./node_modules/.bin/babel-node', '.', ])
 except subprocess.CalledProcessError:
     _error('Node failed')
 except KeyboardInterrupt:

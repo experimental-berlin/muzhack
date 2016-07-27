@@ -1,8 +1,8 @@
-FROM nodesource/jessie:5
+FROM nodesource/jessie:6
 MAINTAINER MuzHack Team <contact@muzhack.com>
 
 WORKDIR /app
-ENTRYPOINT ["node", "--harmony_destructuring", "dist/app/server.js"]
+ENTRYPOINT ["node", "dist/app/server.js"]
 ENV PORT=80
 EXPOSE 80
 
