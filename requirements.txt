@@ -1,2 +1,4 @@
 rethinkdb
 jinja2
+PyYAML
+yamlordereddictloader
