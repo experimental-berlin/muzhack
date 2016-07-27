@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
 """Generate instructions document for a MuzHack-style project."""
 import argparse
 import os.path
