@@ -1,5 +1,5 @@
 'use strict'
-GLOBAL.__IS_BROWSER__ = false
+global.__IS_BROWSER__ = false
 
 let Hapi = require('hapi')
 let R = require('ramda')
