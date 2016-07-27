@@ -57,7 +57,7 @@ def _read_bom():
         with open(bom_path) as f_bom:
             bom_dict = yaml.load(f_bom.read(), Loader=YamlLoader)
 
-        bom = ''
+        bom = '# Bill of Materials\n'
         if isinstance(list(bom_dict.values())[0], dict):
             _logger.debug('BOM tables should be divided into sections')
             for k, v in bom_dict.items():

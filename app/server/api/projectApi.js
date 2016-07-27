@@ -10,6 +10,9 @@ let Yaml = require('yamljs')
 let Promise = require('bluebird')
 let gcloud = require('gcloud')
 let moment = require('moment')
+let child_process = require('child_process')
+let tmp = require('tmp')
+let fs = require('fs')
 
 let licenses = require('../../licenses')
 let {trimWhitespace,} = require('../../stringUtils')
@@ -19,6 +22,8 @@ let {withDb, connectToDb, closeDbConnection,} = require('../db')
 let {notFoundError, validationError, alreadyExistsError,} = require('../../errors')
 let {getUserWithConn,} = require('./apiUtils')
 let ajax = require('../../ajax')
+
+tmp.setGracefulCleanup()
 
 let getCloudStorageUrl = (path) => {
   let bucketName = getEnvParam(`GCLOUD_BUCKET`)
@@ -607,7 +612,7 @@ let verifyLicense = (projectParams) => {
 
 let downloadResource = (url, options) => {
   logger.debug(`Downloading resource '${url}'...`)
-  let {encoding,} = options || {}
+  let {encoding, mayNotExist,} = options || {}
   return new Promise((resolve, reject) => {
     let performRequest = (numTries) => {
       logger.debug(`Attempt #${numTries} for ${url}`)
@@ -622,7 +627,11 @@ let downloadResource = (url, options) => {
           resolve(body)
         } else if (response.statusCode === 404) {
           logger.debug(`Couldn't find resource ${url}`)
-          reject(notFoundError())
+          if (mayNotExist) {
+            resolve(null)
+          } else {
+            reject(notFoundError())
+          }
         } else {
           if (numTries > 3) {
             let message = `Failed to download '${url}':`
@@ -700,17 +709,40 @@ let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
   return Promise.all(copyPromises)
 }
 
-let downloadMuzHackFileFromGitHub = (gitHubOwner, gitHubProject, path) => {
+let downloadMuzHackFileFromGitHub = (gitHubOwner, gitHubProject, path, options) => {
   return downloadGitHubJson(
-      `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents/muzhack/${path}`)
+      `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents/muzhack/${path}`,
+      options)
     .then((file) => {
       return {
-        content: new Buffer(file.content, 'base64').toString(),
+        content: file != null ? new Buffer(file.content, 'base64').toString() : null,
       }
     })
 }
 
 let unresolvedPicturePromises = {}
+
+let mergeInstructionsWithBom = Promise.method((instructions, bom) => {
+  return Promise.promisify(tmp.dir)()
+    .then((tmpDir) => {
+      return Promise.each([['instructions.md', instructions,], ['bom.yaml', bom,],],
+        ([filename, contents,]) => {
+          return Promise.promisify(fs.writeFile)(`${tmpDir}/${filename}`, contents)
+        })
+        .then(() => {
+          let command = `./scripts/generate-instructions.py ${tmpDir}`
+          logger.debug(`Generating instructions with BOM merged in, command: '${command}'`)
+          return Promise.promisify(child_process.exec, {
+            multiArgs: true,
+          })(
+           command)
+         })
+     })
+     .then(([stdout, stderr,]) => {
+       logger.debug(`New instructions generated successfully`)
+       return stdout
+     })
+})
 
 let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProject) => {
   let qualifiedRepoId = `${gitHubOwner}/${gitHubProject}`
@@ -789,30 +821,45 @@ let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProjec
     downloadMuzHackFile(`metadata.yaml`),
     downloadMuzHackFile(`description.md`),
     downloadMuzHackFile(`instructions.md`),
+    downloadMuzHackFile(`bom.yaml`, {mayNotExist: true,}),
   ]
   let getDirPromises = [getDirectory('muzhack/pictures'), getDirectory('muzhack/files', true),]
   return Promise.all(R.concat(downloadPromises, getDirPromises))
-    .then(([metadataFile, descriptionFile, instructionsFile, gitHubPictures, gitHubFiles,]) => {
+    .then(([metadataFile, descriptionFile, instructionsFile, bomFile, gitHubPictures,
+        gitHubFiles,]) => {
       let metadata = Yaml.parse(metadataFile.content)
+      let bomYaml = bomFile.content != null ? bomFile.content : null
+      let bom = bomYaml != null ? Yaml.parse(bomYaml) : null
       logger.debug(`Downloaded all MuzHack data from GitHub repository '${qualifiedRepoId}'`)
       logger.debug(`Metadata:`, metadata)
-      logger.debug(`Got ${gitHubPictures.length} picture(s)`)
-      logger.debug(`Got ${gitHubFiles.length} file(s)`)
-      if (projectId == null) {
-        projectId = metadata.projectId
+      let instructionsPromise
+      if (bom == null) {
+        logger.debug(`Project has no dedicated BOM file`)
+        instructionsPromise = Promise.resolve(instructionsFile.content)
+      } else {
+        logger.debug(`Project has a dedicated BOM file, merging it into instructions`)
+        instructionsPromise = mergeInstructionsWithBom(instructionsFile.content, bomYaml)
       }
-      return R.merge({gitHubOwner, gitHubProject,}, {
-        id: projectId,
-        projectId,
-        title: metadata.title,
-        licenseId: metadata.licenseId,
-        tags: metadata.tags,
-        mouserProject: metadata.mouserProject,
-        description: descriptionFile.content,
-        instructions: instructionsFile.content,
-        gitHubRepository: qualifiedRepoId,
-        gitHubFiles,
-        gitHubPictures,
+      return instructionsPromise.then((instructions) => {
+        logger.debug(`Got ${gitHubPictures.length} picture(s)`)
+        logger.debug(`Got ${gitHubFiles.length} file(s)`)
+        if (projectId == null) {
+          projectId = metadata.projectId
+        }
+        return R.merge({gitHubOwner, gitHubProject,}, {
+          id: projectId,
+          projectId,
+          title: metadata.title,
+          licenseId: metadata.licenseId,
+          tags: metadata.tags,
+          mouserProject: metadata.mouserProject,
+          description: descriptionFile.content,
+          instructions: instructions,
+          gitHubRepository: qualifiedRepoId,
+          gitHubFiles,
+          gitHubPictures,
+          bom,
+        })
       })
     }, (error) => {
       logger.error(
