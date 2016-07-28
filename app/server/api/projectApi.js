@@ -585,7 +585,7 @@ let updateProjectFromGitHub = (repoOwner, repoName, reply) => {
 
 class Project {
   constructor({projectId, tags, owner, ownerName, title, created, pictures, licenseId,
-      description, instructions, files, zipFile, gitHubRepository, mouserProject,}) {
+      description, instructions, files, zipFile, gitHubRepository, mouserProject, summary,}) {
     this.id = `${owner}/${projectId}`
     this.projectId = projectId
     this.tags = tags
@@ -596,6 +596,7 @@ class Project {
     this.pictures = pictures
     this.licenseId = licenseId
     this.description = description
+    this.summary = summary
     this.instructions = instructions
     this.files = files
     this.zipFile = zipFile
