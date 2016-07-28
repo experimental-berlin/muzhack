@@ -724,6 +724,7 @@ let unresolvedPicturePromises = {}
 
 let mergeInstructionsWithBom = Promise.method((instructions, bom) => {
   return Promise.promisify(tmp.dir)()
+    // TODO: Clean up after
     .then((tmpDir) => {
       return Promise.each([['instructions.md', instructions,], ['bom.yaml', bom,],],
         ([filename, contents,]) => {
@@ -854,6 +855,7 @@ let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProjec
           tags: metadata.tags,
           mouserProject: metadata.mouserProject,
           description: descriptionFile.content,
+          summary: metadata.summary || '',
           instructions: instructions,
           gitHubRepository: qualifiedRepoId,
           gitHubFiles,

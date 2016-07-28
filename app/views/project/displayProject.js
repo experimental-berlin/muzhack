@@ -326,7 +326,14 @@ module.exports = {
     return ajax.getJson(`/api/projects/${params.owner}/${params.projectId}`)
       .then((project) => {
         logger.debug(`Loading project ${qualifiedProjectId} JSON succeeded:`, project)
+        let chosenPicture = project.chosenPicture || project.pictures[0]
         return {
+          metaHtmlAttributes: [
+            {property: 'og:title', content: project.title,},
+            {property: 'og:type', content: 'website',},
+            {property: 'og:image', content: chosenPicture.mainUrl,},
+            {property: 'og:description', content: project.summary || '',},
+          ],
           displayProject: {
             project: R.merge(project, {
               license: licenses[project.licenseId],
