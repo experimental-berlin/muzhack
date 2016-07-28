@@ -76,7 +76,7 @@ def _read_bom():
                     raise Exception(
                         'BOM entry {} should be a list, for consistency')
 
-            bom = _generate_bom_tables(bom_dict)
+            bom += _generate_bom_tables(bom_dict)
 
         bom = bom.strip()
         return '{}\n\n'.format(bom)
