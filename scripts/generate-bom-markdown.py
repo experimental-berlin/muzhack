@@ -34,6 +34,7 @@ def _generate_bom_tables(component_type2components):
                         i, component_type, headers
                     ))
             values = [field2value[x] for x in headers]
+            values = [v if v is not None else '' for v in values]
             string_values = [
                 ', '.join(v) if isinstance(v, (list, tuple))
                 else str(v)
