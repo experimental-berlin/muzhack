@@ -724,9 +724,15 @@ let downloadMuzHackFileFromGitHub = (gitHubOwner, gitHubProject, path, options) 
 let unresolvedPicturePromises = {}
 
 let mergeInstructionsWithBom = Promise.method((instructions, bom) => {
-  return Promise.promisify(tmp.dir)()
-    // TODO: Clean up after
-    .then((tmpDir) => {
+  return Promise.promisify((callback) => {
+    tmp.dir({unsafeCleanup: true,}, (err, path, cleanupCallback) => {
+      if (err != null) {
+        cleanupCallback()
+      }
+      callback(err, [path, cleanupCallback,])
+    })
+  })()
+    .then(([tmpDir, cleanupCallback,]) => {
       return Promise.each([['instructions.md', instructions,], ['bom.yaml', bom,],],
         ([filename, contents,]) => {
           return Promise.promisify(fs.writeFile)(`${tmpDir}/${filename}`, contents)
@@ -736,14 +742,16 @@ let mergeInstructionsWithBom = Promise.method((instructions, bom) => {
           logger.debug(`Generating instructions with BOM merged in, command: '${command}'`)
           return Promise.promisify(child_process.exec, {
             multiArgs: true,
-          })(
-           command)
-         })
-     })
-     .then(([stdout, stderr,]) => {
-       logger.debug(`New instructions generated successfully`)
-       return stdout
-     })
+          })(command)
+        })
+        .finally(() => {
+          cleanupCallback()
+        })
+    })
+    .then(([stdout, stderr,]) => {
+      logger.debug(`New instructions generated successfully`)
+      return stdout
+    })
 })
 
 let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProject) => {
