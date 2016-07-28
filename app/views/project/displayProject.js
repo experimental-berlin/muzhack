@@ -159,6 +159,22 @@ let RightColumn = component('RightColumn', ({project, cursor,}) => {
   ])
 })
 
+let renderInstructions = (project) => {
+  let instructions = convertMarkdown(project.instructions)
+  if (project.bomMarkdown != null) {
+    return h('div', [
+      h('h1', 'Bill of Materials'),
+      // TODO: Add control for BOM visibility
+      h('#bill-of-materials', [
+        convertMarkdown(project.bomMarkdown),
+      ]),
+      instructions,
+    ])
+  } else {
+    return instructions
+  }
+}
+
 let BottomPad = component('BottomPad',
   {
     componentDidUpdate: function () {
@@ -200,7 +216,7 @@ let BottomPad = component('BottomPad',
     } else if (activeTab === 'instructions') {
       tabContent = h('#instructions', [
         partsPurchaseSection,
-        convertMarkdown(project.instructions),
+        renderInstructions(project),
       ])
     } else if (activeTab === 'files') {
       tabContent = ProjectFiles({project,})
@@ -301,7 +317,7 @@ let render = (cursor) => {
   let projectCursor = cursor.cursor(['displayProject', 'project',])
   let project = projectCursor.toJS()
 
-  logger.debug(`Rendering display of project:`, project)
+  // logger.debug(`Rendering display of project:`, project)
   return h('div', [
     h('h1#project-path', `${project.owner} / ${project.projectId}`),
     TopPad(cursor),
@@ -325,7 +341,7 @@ module.exports = {
     logger.debug(`Loading project ${qualifiedProjectId}...`)
     return ajax.getJson(`/api/projects/${params.owner}/${params.projectId}`)
       .then((project) => {
-        logger.debug(`Loading project ${qualifiedProjectId} JSON succeeded:`, project)
+        logger.debug(`Loading project ${qualifiedProjectId} JSON succeeded`)
         let chosenPicture = project.chosenPicture || project.pictures[0]
         return {
           metaHtmlAttributes: [

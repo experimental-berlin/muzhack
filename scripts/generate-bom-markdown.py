@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-"""Generate instructions document for a MuzHack-style project."""
+"""Generate BOM markdown for a MuzHack-style project."""
 import argparse
 import os.path
 import logging
@@ -11,13 +11,10 @@ logging.basicConfig(format='%(asctime)s %(message)s', level=logging.DEBUG)
 _logger = logging.getLogger()
 
 cl_parser = argparse.ArgumentParser(
-    description='Generate instructions document')
+    description='Generate BOM markdown from YAML')
 cl_parser.add_argument('directory', help='Directory containing MuzHack files')
 cl_parser.add_argument('-o', '--output', help='Output file path')
 args = cl_parser.parse_args()
-
-with open(os.path.join(args.directory, 'instructions.md')) as f_instructions:
-    instructions = f_instructions.read()
 
 
 def _generate_bom_tables(component_type2components):
@@ -53,43 +50,41 @@ def _generate_bom_tables(component_type2components):
 
 def _read_bom():
     bom_path = os.path.join(args.directory, 'bom.yaml')
-    if os.path.exists(bom_path):
-        with open(bom_path) as f_bom:
-            bom_dict = yaml.load(f_bom.read(), Loader=YamlLoader)
+    with open(bom_path) as f_bom:
+        bom_yaml = f_bom.read()
+    bom_dict = yaml.load(bom_yaml, Loader=YamlLoader)
 
-        bom = '# Bill of Materials\n'
-        if isinstance(list(bom_dict.values())[0], dict):
-            _logger.debug('BOM tables should be divided into sections')
-            for k, v in bom_dict.items():
-                if not isinstance(v, dict):
-                    raise Exception(
-                        'BOM entry {} should be a dict, for consistency')
-                else:
-                    bom_tables = _generate_bom_tables(v)
-                    bom += """## {}
+    _logger.warn('BOM YAML: {}'.format(bom_yaml))
+    bom = ''
+    if isinstance(list(bom_dict.values())[0], dict):
+        _logger.debug('BOM tables should be divided into sections')
+        for k, v in bom_dict.items():
+            if not isinstance(v, dict):
+                raise Exception(
+                    'BOM entry {} should be a dict, for consistency')
+            else:
+                bom_tables = _generate_bom_tables(v)
+                bom += """## {}
 {}
 """.format(k, bom_tables)
-        else:
-            _logger.debug('BOM tables should not be divided into sections')
-            for k, v in bom_dict.items():
-                if not isinstance(v, (list, tuple)):
-                    raise Exception(
-                        'BOM entry {} should be a list, for consistency')
-
-            bom += _generate_bom_tables(bom_dict)
-
-        bom = bom.strip()
-        return '{}\n\n'.format(bom)
     else:
-        return ''
+        _logger.debug('BOM tables should not be divided into sections')
+        for k, v in bom_dict.items():
+            if not isinstance(v, (list, tuple)):
+                raise Exception(
+                    'BOM entry {} should be a list, for consistency')
+
+        bom += _generate_bom_tables(bom_dict)
+
+    bom = bom.strip()
+    return '{}\n\n'.format(bom)
 
 bom = _read_bom()
 
-generated_instructions = '{}{}'.format(bom, instructions)
-if generated_instructions[-1] != '\n':
-    generated_instructions += '\n'
+if bom[-1] != '\n':
+    bom += '\n'
 if args.output:
     with open(args.output, 'wt') as f_output:
-        f_output.write(generated_instructions)
+        f_output.write(bom)
 else:
-    print(generated_instructions)
+    print(bom)

@@ -585,7 +585,8 @@ let updateProjectFromGitHub = (repoOwner, repoName, reply) => {
 
 class Project {
   constructor({projectId, tags, owner, ownerName, title, created, pictures, licenseId,
-      description, instructions, files, zipFile, gitHubRepository, mouserProject, summary,}) {
+      description, instructions, files, zipFile, gitHubRepository, mouserProject, summary,
+      bom, bomMarkdown,}) {
     this.id = `${owner}/${projectId}`
     this.projectId = projectId
     this.tags = tags
@@ -602,6 +603,8 @@ class Project {
     this.zipFile = zipFile
     this.gitHubRepository = gitHubRepository || null
     this.mouserProject = mouserProject || null
+    this.bom = bom
+    this.bomMarkdown = bomMarkdown
   }
 }
 
@@ -723,7 +726,7 @@ let downloadMuzHackFileFromGitHub = (gitHubOwner, gitHubProject, path, options) 
 
 let unresolvedPicturePromises = {}
 
-let mergeInstructionsWithBom = Promise.method((instructions, bom) => {
+let generateBomMarkdown = Promise.method((bomYaml) => {
   return Promise.promisify((callback) => {
     tmp.dir({unsafeCleanup: true,}, (err, path, cleanupCallback) => {
       if (err != null) {
@@ -733,13 +736,10 @@ let mergeInstructionsWithBom = Promise.method((instructions, bom) => {
     })
   })()
     .then(([tmpDir, cleanupCallback,]) => {
-      return Promise.each([['instructions.md', instructions,], ['bom.yaml', bom,],],
-        ([filename, contents,]) => {
-          return Promise.promisify(fs.writeFile)(`${tmpDir}/${filename}`, contents)
-        })
+      return Promise.promisify(fs.writeFile)(`${tmpDir}/bom.yaml`, bomYaml)
         .then(() => {
-          let command = `./scripts/generate-instructions.py ${tmpDir}`
-          logger.debug(`Generating instructions with BOM merged in, command: '${command}'`)
+          let command = `./scripts/generate-bom-markdown.py ${tmpDir}`
+          logger.debug(`Generating BOM markdown, command: '${command}'`)
           return Promise.promisify(child_process.exec, {
             multiArgs: true,
           })(command)
@@ -749,7 +749,7 @@ let mergeInstructionsWithBom = Promise.method((instructions, bom) => {
         })
     })
     .then(([stdout, stderr,]) => {
-      logger.debug(`New instructions generated successfully`)
+      logger.debug(`BOM markdown generated successfully`)
       return stdout
     })
 })
@@ -842,36 +842,38 @@ let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProjec
       let bom = bomYaml != null ? Yaml.parse(bomYaml) : null
       logger.debug(`Downloaded all MuzHack data from GitHub repository '${qualifiedRepoId}'`)
       logger.debug(`Metadata:`, metadata)
-      let instructionsPromise
+      let bomMarkdownPromise
       if (bom == null) {
         logger.debug(`Project has no dedicated BOM file`)
-        instructionsPromise = Promise.resolve(instructionsFile.content)
+        bomMarkdownPromise = Promise.resolve()
       } else {
-        logger.debug(`Project has a dedicated BOM file, merging it into instructions`)
-        instructionsPromise = mergeInstructionsWithBom(instructionsFile.content, bomYaml)
+        logger.debug(`Project has a dedicated BOM file`)
+        bomMarkdownPromise = generateBomMarkdown(bomYaml)
       }
-      return instructionsPromise.then((instructions) => {
-        logger.debug(`Got ${gitHubPictures.length} picture(s)`)
-        logger.debug(`Got ${gitHubFiles.length} file(s)`)
-        if (projectId == null) {
-          projectId = metadata.projectId
-        }
-        return R.merge({gitHubOwner, gitHubProject,}, {
-          id: projectId,
-          projectId,
-          title: metadata.title,
-          licenseId: metadata.licenseId,
-          tags: metadata.tags,
-          mouserProject: metadata.mouserProject,
-          description: descriptionFile.content,
-          summary: metadata.summary || '',
-          instructions: instructions,
-          gitHubRepository: qualifiedRepoId,
-          gitHubFiles,
-          gitHubPictures,
-          bom,
+      return bomMarkdownPromise
+        .then((bomMarkdown) => {
+          logger.debug(`Got ${gitHubPictures.length} picture(s)`)
+          logger.debug(`Got ${gitHubFiles.length} file(s)`)
+          if (projectId == null) {
+            projectId = metadata.projectId
+          }
+          return R.merge({gitHubOwner, gitHubProject,}, {
+            id: projectId,
+            projectId,
+            title: metadata.title,
+            licenseId: metadata.licenseId,
+            tags: metadata.tags,
+            mouserProject: metadata.mouserProject,
+            description: descriptionFile.content,
+            summary: metadata.summary || '',
+            instructions: instructionsFile.content,
+            gitHubRepository: qualifiedRepoId,
+            gitHubFiles,
+            gitHubPictures,
+            bom,
+            bomMarkdown,
+          })
         })
-      })
     }, (error) => {
       logger.error(
         `Failed to get MuzHack project parameters from GitHub repository '${qualifiedRepoId}':`,
