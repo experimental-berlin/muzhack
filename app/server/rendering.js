@@ -60,6 +60,7 @@ let renderIndex = (request, reply) => {
     trelloKey: getEnvParam('TRELLO_KEY'),
     stripeKey: getEnvParam('STRIPE_PUBLISHABLE_KEY'),
     gitHubClientId: getEnvParam('GITHUB_CLIENT_ID'),
+    fbAppId: getEnvParam('FB_APP_ID'),
   }).cursor()
   cursor = cursor.mergeDeep({
     router: createRouterState(routeMap),

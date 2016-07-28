@@ -34,6 +34,7 @@ data = {
         'imagePullPolicy': 'IfNotPresent',
         'appUri': 'https://muzhack.com',
         's3Bucket': 'muzhack.com',
+        'fbAppId': '274051199640220',
         'rethinkdbHost': 'rethinkdb-proxy',
         'rethinkdbClusterHost1': 'rethinkdb1',
         'rethinkdbClusterHost2': 'rethinkdb2',

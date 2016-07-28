@@ -329,6 +329,7 @@ module.exports = {
         let chosenPicture = project.chosenPicture || project.pictures[0]
         return {
           metaHtmlAttributes: [
+            {property: 'fb:app_id', content: cursor.get('fbAppId'),},
             {property: 'og:title', content: project.title,},
             {property: 'og:type', content: 'website',},
             {property: 'og:image', content: chosenPicture.mainUrl,},
