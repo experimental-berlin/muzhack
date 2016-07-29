@@ -1,5 +1,6 @@
 'use strict'
 let R = require('ramda')
+let S = require('underscore.string.fp')
 let logger = require('js-logger-aknudsen').get('serverRendering')
 let immutable = require('immutable')
 let immstruct = require('immstruct')
@@ -53,6 +54,7 @@ let renderIndex = (request, reply) => {
   let appUrlObj = url.parse(appUri)
   let workshopsUri = `${appUrlObj.protocol}//workshops.${appUrlObj.host}`
   let cursor = immstruct('state', {
+    metaHtmlAttributes: [],
     search: '',
     appUri,
     login: login.createState(),
@@ -63,6 +65,7 @@ let renderIndex = (request, reply) => {
     trelloKey: getEnvParam('TRELLO_KEY'),
     stripeKey: getEnvParam('STRIPE_PUBLISHABLE_KEY'),
     gitHubClientId: getEnvParam('GITHUB_CLIENT_ID'),
+    fbAppId: getEnvParam('FB_APP_ID'),
   }).cursor()
   cursor = cursor.mergeDeep({
     router: createRouterState(routeMap),
@@ -77,19 +80,20 @@ let renderIndex = (request, reply) => {
       }))
       let initialState = cursor.toJS()
       logger.debug(`Successfully loaded initial state:`, initialState)
+      let renderOptions = {
+        initialState: JSON.stringify(initialState),
+        metaAttributes: initialState.metaHtmlAttributes,
+      }
       if (initialState.router.shouldRenderServerSide) {
         logger.debug(`Rendering on server - current state:`, cursor.toJS())
         let reactHtml = ReactDomServer.renderToString(App(cursor))
         logger.debug(`Finished rendering`)
-        reply.view('serverSideIndex', {
-          initialState: JSON.stringify(initialState),
+        reply.view('serverSideIndex', R.merge(renderOptions, {
           reactHtml,
-        })
+        }))
       } else {
         logger.debug(`Not rendering JavaScript on server side`)
-        reply.view('nonServerSideIndex', {
-          initialState: JSON.stringify(initialState),
-        })
+        reply.view('nonServerSideIndex', renderOptions)
       }
     }, (error) => {
       if (error.statusCode === 404 || error.type === 'notFound') {

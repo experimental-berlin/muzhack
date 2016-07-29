@@ -159,6 +159,40 @@ let RightColumn = component('RightColumn', ({project, cursor,}) => {
   ])
 })
 
+let renderInstructions = (cursor, project) => {
+  let instructions = convertMarkdown(project.instructions)
+  let displayProjectCursor = cursor.cursor('displayProject')
+  if (project.bomMarkdown != null) {
+    let expandBillOfMaterials = displayProjectCursor.get('expandBillOfMaterials')
+    let visibilityIcon = expandBillOfMaterials ? `icon-arrow-down14` : `icon-arrow-right14`
+    let billOfMaterialsOptions = {}
+    if (!expandBillOfMaterials) {
+      billOfMaterialsOptions['hidden'] = 'hidden'
+    }
+    return h('div', [
+      h('h1#bom-header', 'Bill of Materials'),
+      nbsp,
+      h(`span#control-bom-visibility.action.${visibilityIcon}`, {
+        onClick: () => {
+          let showBillOfMaterials = !expandBillOfMaterials
+          if (showBillOfMaterials) {
+            logger.debug(`Expanding bill of materials`)
+          } else {
+            logger.debug(`Folding bill of materials`)
+          }
+          displayProjectCursor.set(`expandBillOfMaterials`, showBillOfMaterials)
+        },
+      }),
+      h('#bill-of-materials', billOfMaterialsOptions, [
+        convertMarkdown(project.bomMarkdown),
+      ]),
+      instructions,
+    ])
+  } else {
+    return instructions
+  }
+}
+
 let BottomPad = component('BottomPad',
   {
     componentDidUpdate: function () {
@@ -200,7 +234,7 @@ let BottomPad = component('BottomPad',
     } else if (activeTab === 'instructions') {
       tabContent = h('#instructions', [
         partsPurchaseSection,
-        convertMarkdown(project.instructions),
+        renderInstructions(cursor, project),
       ])
     } else if (activeTab === 'files') {
       tabContent = ProjectFiles({project,})
@@ -301,7 +335,7 @@ let render = (cursor) => {
   let projectCursor = cursor.cursor(['displayProject', 'project',])
   let project = projectCursor.toJS()
 
-  logger.debug(`Rendering display of project:`, project)
+  // logger.debug(`Rendering display of project:`, project)
   return h('div', [
     h('h1#project-path', `${project.owner} / ${project.projectId}`),
     TopPad(cursor),
@@ -325,9 +359,18 @@ module.exports = {
     logger.debug(`Loading project ${qualifiedProjectId}...`)
     return ajax.getJson(`/api/projects/${params.owner}/${params.projectId}`)
       .then((project) => {
-        logger.debug(`Loading project ${qualifiedProjectId} JSON succeeded:`, project)
+        logger.debug(`Loading project ${qualifiedProjectId} JSON succeeded`)
+        let chosenPicture = project.chosenPicture || project.pictures[0]
         return {
+          metaHtmlAttributes: [
+            {property: 'fb:app_id', content: cursor.get('fbAppId'),},
+            {property: 'og:title', content: project.title,},
+            {property: 'og:type', content: 'website',},
+            {property: 'og:image', content: chosenPicture.mainUrl,},
+            {property: 'og:description', content: project.summary || '',},
+          ],
           displayProject: {
+            expandBillOfMaterials: true,
             project: R.merge(project, {
               license: licenses[project.licenseId],
             }),
