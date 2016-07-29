@@ -666,44 +666,53 @@ let downloadGitHubResource = (url, options) => {
 let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
   let bucket = getStorageBucket()
   let copyPromises = R.map((file) => {
+    let cloudFilePath = `u/${owner}/${projectId}/${dirPath}/${file.fullPath}`
+    logger.debug(`Copying file to Cloud Storage: ${file.url} -> ${cloudFilePath}...`)
     return new Promise((resolve, reject) => {
-      let cloudFilePath = `u/${owner}/${projectId}/${dirPath}/${file.fullPath}`
-      logger.debug(`Copying file to Cloud Storage: ${file.url} -> ${cloudFilePath}...`)
-
       let performRequest = (numTries) => {
         logger.debug(`Attempt #${numTries} for ${file.url}`)
         let cloudFile = bucket.file(cloudFilePath)
-        request.get(file.url, {
+        let cloudFileStream = cloudFile.createWriteStream()
+        let r = request.get(file.url, {
           headers: {
             'User-Agent': 'request',
           },
         })
-          .pipe(cloudFile.createWriteStream())
-          .on('error', (err) => {
+        // Pause the request until we've configured it fully, otherwise we might lose the initial
+        // received data :(
+        r.pause()
+        r.on('response', (response) => {
+          if (response.statusCode !== 200) {
             if (response.statusCode === 404) {
+              logger.debug(`${file.url} not found on server`)
               reject(notFoundError())
             } else if (numTries > 3) {
               let message = `Failed to download '${url}'`
-              logger.warn(message, error)
+              logger.warn(message, response.statusMessage)
               reject(new Error(message))
             } else {
               // TODO: Wait
               performRequest(numTries + 1)
             }
-          })
-          .on('finish', () => {
-            logger.debug(`Successfully copied ${file.url} to Cloud Storage`)
-            cloudFile.makePublic((err) => {
-              if (err != null) {
-                reject(err)
-              } else {
-                resolve(R.merge(file, {
-                  url: getCloudStorageUrl(cloudFilePath),
-                  cloudPath: cloudFilePath,
-                }))
-              }
+          } else {
+            logger.debug(`Got successful response for URL ${file.url} - commencing streaming`)
+            cloudFileStream.on('finish', () => {
+              logger.debug(`Successfully copied ${file.url} to Cloud Storage`)
+              cloudFile.makePublic((err) => {
+                if (err != null) {
+                  reject(err)
+                } else {
+                  resolve(R.merge(file, {
+                    url: getCloudStorageUrl(cloudFilePath),
+                    cloudPath: cloudFilePath,
+                  }))
+                }
+              })
             })
-          })
+            r.pipe(cloudFileStream)
+            r.resume()
+          }
+        })
       }
 
       performRequest(1)
