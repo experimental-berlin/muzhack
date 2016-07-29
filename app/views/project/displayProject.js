@@ -191,7 +191,9 @@ let renderInstructions = (cursor, project) => {
       ]),
     ])
   } else {
-    return instructions
+    return h('#instructions-container', [
+      instructions,
+    ])
   }
 }
 
