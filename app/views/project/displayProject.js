@@ -170,7 +170,7 @@ let renderInstructions = (cursor, project) => {
       billOfMaterialsOptions['hidden'] = 'hidden'
     }
     return h('div', [
-      h('h1#bom-header', 'Bill of Materials'),
+      h('h1#bill-of-materials-header', 'Bill of Materials'),
       nbsp,
       h(`span#control-bom-visibility.action.${visibilityIcon}`, {
         onClick: () => {
@@ -186,7 +186,9 @@ let renderInstructions = (cursor, project) => {
       h('#bill-of-materials', billOfMaterialsOptions, [
         convertMarkdown(project.bomMarkdown),
       ]),
-      instructions,
+      h('#instructions-container', [
+        instructions,
+      ]),
     ])
   } else {
     return instructions

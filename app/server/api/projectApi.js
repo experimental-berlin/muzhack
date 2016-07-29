@@ -604,7 +604,7 @@ class Project {
     this.gitHubRepository = gitHubRepository || null
     this.mouserProject = mouserProject || null
     this.bom = bom
-    this.bomMarkdown = bomMarkdown
+    this.bomMarkdown = bomMarkdown || null
   }
 }
 
