@@ -159,13 +159,31 @@ let RightColumn = component('RightColumn', ({project, cursor,}) => {
   ])
 })
 
-let renderInstructions = (project) => {
+let renderInstructions = (cursor, project) => {
   let instructions = convertMarkdown(project.instructions)
+  let displayProjectCursor = cursor.cursor('displayProject')
   if (project.bomMarkdown != null) {
+    let expandBillOfMaterials = displayProjectCursor.get('expandBillOfMaterials')
+    let visibilityIcon = expandBillOfMaterials ? `icon-arrow-down14` : `icon-arrow-right14`
+    let billOfMaterialsOptions = {}
+    if (!expandBillOfMaterials) {
+      billOfMaterialsOptions['hidden'] = 'hidden'
+    }
     return h('div', [
-      h('h1', 'Bill of Materials'),
-      // TODO: Add control for BOM visibility
-      h('#bill-of-materials', [
+      h('h1#bom-header', 'Bill of Materials'),
+      nbsp,
+      h(`span#control-bom-visibility.action.${visibilityIcon}`, {
+        onClick: () => {
+          let showBillOfMaterials = !expandBillOfMaterials
+          if (showBillOfMaterials) {
+            logger.debug(`Expanding bill of materials`)
+          } else {
+            logger.debug(`Folding bill of materials`)
+          }
+          displayProjectCursor.set(`expandBillOfMaterials`, showBillOfMaterials)
+        },
+      }),
+      h('#bill-of-materials', billOfMaterialsOptions, [
         convertMarkdown(project.bomMarkdown),
       ]),
       instructions,
@@ -216,7 +234,7 @@ let BottomPad = component('BottomPad',
     } else if (activeTab === 'instructions') {
       tabContent = h('#instructions', [
         partsPurchaseSection,
-        renderInstructions(project),
+        renderInstructions(cursor, project),
       ])
     } else if (activeTab === 'files') {
       tabContent = ProjectFiles({project,})
@@ -352,6 +370,7 @@ module.exports = {
             {property: 'og:description', content: project.summary || '',},
           ],
           displayProject: {
+            expandBillOfMaterials: true,
             project: R.merge(project, {
               license: licenses[project.licenseId],
             }),
