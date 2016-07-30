@@ -62,8 +62,9 @@ subtle-shadow()
 #description,#instructions
   rendered-markdown()
 
-  &>:first-child
-    margin-top 0
+  > div
+    > :first-child
+      margin-top 0
 
 #right-column
   box-sizing border-box
@@ -186,6 +187,7 @@ cell-padding = 8px
   display inline-block
 
 #bill-of-materials-header
+  margin-top 0
   display inline-block
 
 #bill-of-materials
