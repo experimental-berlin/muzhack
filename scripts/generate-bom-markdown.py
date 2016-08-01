@@ -22,18 +22,15 @@ def _generate_bom_tables(component_type2components):
     to components."""
     markdown = ''
     for component_type, components in component_type2components.items():
-        headers = components[0].keys()
+        headers = set()
+        for component in components:
+            headers = headers.union(component.keys())
+        headers = sorted(headers)
         component_table = """|{}|
 |{}|
 """.format('|'.join(headers), '|'.join(['-' * len(x) for x in headers]))
         for i, field2value in enumerate(components):
-            if sorted(field2value.keys()) != sorted(headers):
-                raise Exception(
-                    'Component {} of type {} doesn\'t have the expected '
-                    'fields ({})'.format(
-                        i, component_type, headers
-                    ))
-            values = [field2value[x] for x in headers]
+            values = [field2value.get(x) for x in headers]
             values = [v if v is not None else '' for v in values]
             string_values = [
                 ', '.join(v) if isinstance(v, (list, tuple))
