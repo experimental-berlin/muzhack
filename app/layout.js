@@ -120,20 +120,17 @@ let Footer = component('Footer', () => {
       '© 2016 ',
       h('a', {href: 'http://arveknudsen.com', target: '_blank',}, 'Arve Knudsen'),
     ]),
-    h('p', [
-      h('a.social-link', {href: 'https://twitter.com/muzhack', target: '_blank',}, [
-        h('span.icon-twitter'),
-      ]),
-      h('a.social-link', {href: 'https://www.facebook.com/muzhack', target: '_blank',}, [
-        h('span.icon-facebook2'),
-      ]),
-      h('a.social-link', {href: 'https://github.com/muzhack/muzhack', target: '_blank',}, [
-        h('span.icon-github'),
-      ]),
-      h('a.social-link', {href: 'mailto:contact@muzhack.com', target: '_blank',}, [
-        h('span.icon-envelop3'),
-      ]),
-    ]),
+    h('p', R.map(([url, icon,]) => {
+      return h('a.social-link', {href: url, target: '_blank',}, [
+        h(`span.icon-${icon}`),
+      ])
+    }, [
+      ['https://twitter.com/muzhack', 'twitter',],
+      ['https://www.facebook.com/muzhack', 'facebook2',],
+      ['http://blog.muzhack.com', 'blog',],
+      ['https://github.com/muzhack/muzhack', 'github',],
+      ['mailto:contact@muzhack.com', 'envelop3',],
+    ])),
     h('#donations', [
       h('form.paypal-form', {
         action: 'https://www.paypal.com/cgi-bin/webscr', method: 'post', target: '_blank',
