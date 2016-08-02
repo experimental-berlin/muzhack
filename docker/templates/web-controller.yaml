@@ -79,8 +79,8 @@ spec:
         ports:
         - name: http-server
           containerPort: 80
-      - name: image-processor
-        image: eu.gcr.io/muzhack-1288/image-processor{{imageVariant}}:{{imageProcessorImageTag}}
+      - name: project-processor
+        image: eu.gcr.io/muzhack-1288/project-processor{{imageVariant}}:{{projectProcessorImageTag}}
         imagePullPolicy: {{imagePullPolicy}}
         env:
         - name: GCLOUD_BUCKET

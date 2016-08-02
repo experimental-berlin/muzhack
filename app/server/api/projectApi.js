@@ -267,22 +267,27 @@ let realCreateProjectFromGitHub = Promise.method((owner, ownerName, projectParam
     projectParams.gitHubPictures, 'pictures', owner, projectId)
   let copyFilesPromise = copyFilesToCloudStorage(
     projectParams.gitHubFiles, 'files', owner, projectId)
-  let processPicturesPromise = Promise.map(copyPicturesPromise, R.partial(ajax.postJson,
-      ['http://localhost:10000/jobs',]))
-  return Promise.all([processPicturesPromise, copyFilesPromise,])
+  return Promise.all([copyPromise, copyFilesPromise,])
     .then(([pictures, files,]) => {
-      projectParams = R.merge(
-        R.pickBy((key) => {
-          return !R.contains(key, ['gitHubFiles', 'gitHubPictures',])
-        }, projectParams),
-        {pictures, files,}
-      )
-      return projectParams
+      return ajax.postJson('http://localhost:10000/jobs', {
+        instructions: projectParams.instructions,
+        pictures,
+      })
+        .then((processedParams) => {
+          return R.merge(
+            R.pickBy((key) => {
+              return !R.contains(key, ['gitHubFiles', 'gitHubPictures',])
+            }, projectParams),
+            {
+              instructions: processedParams.instructions,
+              pictures: processedParams.pictures,
+              files,
+            }
+          )
+        })
     })
     .then((newProjectParams) => {
-      return createProjectFromParameters(newProjectParams, owner, ownerName)
-    })
-    .then((project) => {
+      let project = createProjectFromParameters(newProjectParams, owner, ownerName)
       let returnValue = {
         qualifiedProjectId: `${project.id}`,
       }
@@ -341,6 +346,7 @@ let processPicturesFromProjectParams = Promise.method((projectParams, owner) => 
       cloudPath: `u/${owner}/${projectId}/pictures/${picture.name}`,
     })
   }, projectParams.pictures)
+  // FIXME
   return Promise.map(pictures, R.partial(ajax.postJson, ['http://localhost:10000/jobs',]))
     .then((pictures) => {
       return R.merge(projectParams, {
@@ -665,7 +671,7 @@ let downloadGitHubResource = (url, options) => {
 
 let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
   let bucket = getStorageBucket()
-  let copyPromises = R.map((file) => {
+  return Promise.map(files, (file) => {
     let cloudFilePath = `u/${owner}/${projectId}/${dirPath}/${file.fullPath}`
     logger.debug(`Copying file to Cloud Storage: ${file.url} -> ${cloudFilePath}...`)
     return new Promise((resolve, reject) => {
@@ -717,9 +723,7 @@ let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
 
       performRequest(1)
     })
-  }, files)
-
-  return Promise.all(copyPromises)
+  })
 }
 
 let downloadMuzHackFileFromGitHub = (gitHubOwner, gitHubProject, path, options) => {

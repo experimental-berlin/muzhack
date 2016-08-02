@@ -27,7 +27,7 @@ except IOError:
 for k, v in settings.iteritems():
     os.environ[k] = v
 
-_proc = subprocess.Popen(['./services/image-processor/image-processor.py', ])
+_proc = subprocess.Popen(['./services/project-processor/project-processor.py', ])
 try:
     subprocess.check_call(
         ['./node_modules/.bin/babel-node', '.', ])
