@@ -171,7 +171,7 @@ let renderInstructions = (cursor, project) => {
     }
     return h('div', [
       project.instructionsPdfUrl != null ? h('div', [
-        h('a.action', {href: project.instructionsPdfUrl,}, h('span.icon-file-pdf')),
+        h('a.instructions-file.action', {href: project.instructionsPdfUrl,}, h('span.icon-file-pdf')),
         h('hr'),
       ]) : null,
       h('h1#bill-of-materials-header', 'Bill of Materials'),
