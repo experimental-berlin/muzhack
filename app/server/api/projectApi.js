@@ -529,11 +529,19 @@ let updateProject = (request, reply) => {
 
     logger.debug(`Received request to update project '${owner}/${projectId}':`, projectParams)
     projectParams.projectId = projectId
-    processPicturesFromProjectParams(projectParams, owner)
-      .then((newProjectParams) => {
-        realUpdateProject(owner, ownerName, projectId, newProjectParams, reply)
+    let pictures = R.map((picture) => {
+      let projectId = projectParams.projectId || projectParams.id
+      return R.merge(picture, {
+        cloudPath: `u/${owner}/${projectId}/pictures/${picture.name}`,
+      })
+    }, projectParams.pictures)
+    processProject(owner, ownerName, projectParams.projectId, projectParams.title,
+        projectParams.instructions, pictures)
+      .then(R.partial(R.merge, [projectParams,]))
+      .then((processedParams) => {
+        realUpdateProject(owner, ownerName, projectId, processedParams, reply)
       }, (error) => {
-        logger.error(`Processing pictures failed:`, error.stack)
+        logger.error(`Processing project failed:`, error.stack)
         reply(Boom.badImplementation())
       })
   }
