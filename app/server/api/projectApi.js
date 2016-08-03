@@ -295,7 +295,8 @@ let realCreateProjectFromGitHub = Promise.method((owner, ownerName, projectParam
               return !R.contains(key, ['gitHubFiles', 'gitHubPictures',])
             }, projectParams),
             {
-              instructionsPdfUrl: getCloudStorageUrl(`${cloudDirectory}/instructions.pdf`),
+              instructionsPdfUrl: getCloudStorageUrl(
+                `${cloudDirectory}/${owner}-${projectParams.id}-instructions.pdf`),
               pictures: processedParams.pictures,
               files,
             }
