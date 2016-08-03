@@ -162,6 +162,10 @@ let RightColumn = component('RightColumn', ({project, cursor,}) => {
 let renderInstructions = (cursor, project) => {
   let instructions = convertMarkdown(project.instructions)
   let displayProjectCursor = cursor.cursor('displayProject')
+  let fileLinksPart = project.instructionsPdfUrl != null ? h('div', [
+    h('a.instructions-file.action', {href: project.instructionsPdfUrl,}, h('span.icon-file-pdf')),
+    h('hr'),
+  ]) : null
   if (project.bomMarkdown != null) {
     let expandBillOfMaterials = displayProjectCursor.get('expandBillOfMaterials')
     let visibilityIcon = expandBillOfMaterials ? `icon-arrow-down14` : `icon-arrow-right14`
@@ -170,6 +174,7 @@ let renderInstructions = (cursor, project) => {
       billOfMaterialsOptions['hidden'] = 'hidden'
     }
     return h('div', [
+      fileLinksPart,
       h('h1#bill-of-materials-header', 'Bill of Materials'),
       nbsp,
       h(`span#control-bom-visibility.action.${visibilityIcon}`, {
@@ -186,12 +191,18 @@ let renderInstructions = (cursor, project) => {
       h('#bill-of-materials', billOfMaterialsOptions, [
         convertMarkdown(project.bomMarkdown),
       ]),
+      h('hr'),
       h('#instructions-container', [
         instructions,
       ]),
     ])
   } else {
-    return instructions
+    return h('div', [
+      fileLinksPart,
+      h('#instructions-container', [
+        instructions,
+      ]),
+    ])
   }
 }
 

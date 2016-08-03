@@ -8,5 +8,5 @@
 	path = lib/html-to-react
 	url = git@github.com:aknuds1/html-to-react.git
 [submodule "services/image-processor"]
-	path = services/image-processor
+	path = services/project-processor
 	url = git@github.com:muzhack/image-processor.git

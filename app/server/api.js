@@ -17,7 +17,7 @@ let {getEnvParam,} = require('./environment')
 let {withDb, connectToDb, closeDbConnection,} = require('./db')
 let {requestHandler,} = require('./requestHandler')
 let {createProject, updateProject, getProject, deleteProject,
-  updateProjectFromGitHub,} = require('./api/projectApi')
+    updateProjectFromGitHub,} = require('./api/projectApi')
 let {trimWhitespace,} = require('../stringUtils')
 let {getUserWithConn,} = require('./api/apiUtils')
 let {badRequest,} = require('../errors')
