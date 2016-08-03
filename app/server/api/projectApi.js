@@ -554,7 +554,6 @@ let realUpdateProjectFromGitHub = Promise.method((project, projectParams, reply)
     projectParams.gitHubFiles, 'files', project.owner, project.projectId)
   return Promise.all([copyPicturesPromise, copyFilesPromise,])
     .then(([pictures, files,]) => {
-      let qualifiedProjectId = `${project.owner}/${projectParams.id}`
       return processProject(project.owner, project.ownerName, project.projectId,
           projectParams.title, projectParams.instructions, pictures, projectParams.bomMarkdown)
         .then((processedParams) => {
