@@ -163,8 +163,8 @@ let createProjectPlaceholder = (owner, projectParams) => {
     })
 }
 
-let createProjectFromParameters = (projectParams, owner, ownerName) => {
-  logger.debug(`Got project parameters`, projectParams)
+let createProjectFromParameters = Promise.method((owner, ownerName, projectParams) => {
+  // logger.debug(`Got project parameters`, projectParams)
   projectParams = sanitizeProjectParams(projectParams)
   let qualifiedProjectId = `${owner}/${projectParams.projectId}`
 
@@ -194,7 +194,7 @@ let createProjectFromParameters = (projectParams, owner, ownerName) => {
       logger.warn(`Failed to generate zip: ${error.message}:`, error.stack)
       throw error
     })
-}
+})
 
 let installGitHubWebhook = (owner, gitHubOwner, gitHubProject) => {
   return connectToDb()
@@ -267,10 +267,15 @@ let realCreateProjectFromGitHub = Promise.method((owner, ownerName, projectParam
     projectParams.gitHubPictures, 'pictures', owner, projectId)
   let copyFilesPromise = copyFilesToCloudStorage(
     projectParams.gitHubFiles, 'files', owner, projectId)
-  return Promise.all([copyPromise, copyFilesPromise,])
+  return Promise.all([copyPicturesPromise, copyFilesPromise,])
     .then(([pictures, files,]) => {
+      let qualifiedProjectId = `${owner}/${projectParams.id}`
       return ajax.postJson('http://localhost:10000/jobs', {
+        id: qualifiedProjectId,
+        author: ownerName,
+        title: projectParams.title,
         instructions: projectParams.instructions,
+        bom: projectParams.bomMarkdown,
         pictures,
       })
         .then((processedParams) => {
@@ -279,15 +284,15 @@ let realCreateProjectFromGitHub = Promise.method((owner, ownerName, projectParam
               return !R.contains(key, ['gitHubFiles', 'gitHubPictures',])
             }, projectParams),
             {
-              instructions: processedParams.instructions,
+              instructionsPdf: processedParams.instructions.pdf,
               pictures: processedParams.pictures,
               files,
             }
           )
         })
     })
-    .then((newProjectParams) => {
-      let project = createProjectFromParameters(newProjectParams, owner, ownerName)
+    .then(R.partial(createProjectFromParameters, [owner, ownerName,]))
+    .then((project) => {
       let returnValue = {
         qualifiedProjectId: `${project.id}`,
       }
@@ -376,7 +381,7 @@ let createProjectFromClientApp = (owner, ownerName, projectParams) => {
   return createProjectPlaceholder(owner, projectParams)
     .then(() => {
       return processPicturesFromProjectParams(projectParams, owner)
-        .then(R.curryN(3, createProjectFromParameters)(R.__, owner, ownerName))
+        .then(R.partial(createProjectFromParameters, [owner, ownerName,]))
         .catch(R.partial(removeProjectPlaceholder, [owner, projectParams,]))
     })
 }
@@ -592,7 +597,7 @@ let updateProjectFromGitHub = (repoOwner, repoName, reply) => {
 class Project {
   constructor({projectId, tags, owner, ownerName, title, created, pictures, licenseId,
       description, instructions, files, zipFile, gitHubRepository, mouserProject, summary,
-      bom, bomMarkdown,}) {
+      bom, bomMarkdown, instructionsPdf,}) {
     this.id = `${owner}/${projectId}`
     this.projectId = projectId
     this.tags = tags
@@ -605,6 +610,7 @@ class Project {
     this.description = description
     this.summary = summary
     this.instructions = instructions
+    this.instructionsPdf = instructionsPdf
     this.files = files
     this.zipFile = zipFile
     this.gitHubRepository = gitHubRepository || null

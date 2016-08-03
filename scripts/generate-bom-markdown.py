@@ -6,9 +6,8 @@ import logging
 import yaml
 from yamlordereddictloader import Loader as YamlLoader
 
-
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.DEBUG)
-_logger = logging.getLogger()
+_logger = logging.getLogger('generate-bom-markdown')
 
 cl_parser = argparse.ArgumentParser(
     description='Generate BOM markdown from YAML')
