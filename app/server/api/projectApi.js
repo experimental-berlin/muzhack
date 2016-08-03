@@ -44,7 +44,7 @@ let getStorageBucket = () => {
   return gcs.bucket(bucketName)
 }
 
-let realGetProject = (request) => {
+let realGetProject = Promise.method((request) => {
   let {owner, projectId,} = request.params
   let qualifiedProjectId = `${owner}/${projectId}`
   logger.debug(`Getting project '${qualifiedProjectId}'`)
@@ -66,14 +66,14 @@ let realGetProject = (request) => {
           closeDbConnection(conn)
         })
     })
-}
+})
 
 let getProject = (request, reply) => {
   realGetProject(request)
     .then(reply)
 }
 
-let createZip = (owner, projectParams) => {
+let createZip = Promise.method((owner, projectParams) => {
   let projectId = projectParams.projectId
   let files = projectParams.files || []
 
@@ -135,9 +135,9 @@ let createZip = (owner, projectParams) => {
       logger.warn(`Failed to download files:`, error.stack)
       throw new Error(error)
     })
-}
+})
 
-let createProjectPlaceholder = (owner, projectParams) => {
+let createProjectPlaceholder = Promise.method((owner, projectParams) => {
   let qualifiedProjectId = `${owner}/${projectParams.id}`
   logger.debug(`Creating placeholder in database for project ${qualifiedProjectId}...`)
   return connectToDb()
@@ -170,7 +170,7 @@ let createProjectPlaceholder = (owner, projectParams) => {
           closeDbConnection(conn)
         })
     })
-}
+})
 
 let createProjectFromParameters = Promise.method((owner, ownerName, projectParams) => {
   // logger.debug(`Got project parameters`, projectParams)
@@ -278,29 +278,17 @@ let realCreateProjectFromGitHub = Promise.method((owner, ownerName, projectParam
     projectParams.gitHubFiles, 'files', owner, projectId)
   return Promise.all([copyPicturesPromise, copyFilesPromise,])
     .then(([pictures, files,]) => {
-      let qualifiedProjectId = `${owner}/${projectParams.id}`
-      let cloudDirectory = `u/${qualifiedProjectId}`
-      return ajax.postJson('http://localhost:10000/jobs', {
-        id: qualifiedProjectId,
-        author: ownerName,
-        title: projectParams.title,
-        instructions: projectParams.instructions,
-        bom: projectParams.bomMarkdown,
-        pictures,
-        cloudDirectory,
-      })
+      return processProject(owner, ownerName, projectParams.id, projectParams.title,
+          projectParams.instructions, pictures, projectParams.bomMarkdown)
         .then((processedParams) => {
-          return R.merge(
+          return R.merge(R.merge(
             R.pickBy((key) => {
               return !R.contains(key, ['gitHubFiles', 'gitHubPictures',])
             }, projectParams),
-            {
-              instructionsPdfUrl: getCloudStorageUrl(
-                `${cloudDirectory}/${owner}-${projectParams.id}-instructions.pdf`),
-              pictures: processedParams.pictures,
+            processedParams
+          ), {
               files,
-            }
-          )
+          })
         })
     })
     .then(R.partial(createProjectFromParameters, [owner, ownerName,]))
@@ -356,18 +344,22 @@ let createProjectFromGitHub = (owner, ownerName, projectParams) => {
     })
 }
 
-let processPicturesFromProjectParams = Promise.method((projectParams, owner) => {
-  let pictures = R.map((picture) => {
-    let projectId = projectParams.projectId || projectParams.id
-    return R.merge(picture, {
-      cloudPath: `u/${owner}/${projectId}/pictures/${picture.name}`,
-    })
-  }, projectParams.pictures)
-  // FIXME
-  return Promise.map(pictures, R.partial(ajax.postJson, ['http://localhost:10000/jobs',]))
-    .then((pictures) => {
-      return R.merge(projectParams, {
-        pictures,
+let processProject = Promise.method((owner, ownerName, projectId, title, instructions,
+    pictures, bom) => {
+  let qualifiedProjectId = `${owner}/${projectId}`
+  let cloudDirectory = `u/${qualifiedProjectId}`
+  return ajax.postJson('http://localhost:10000/jobs', {
+    id: qualifiedProjectId,
+    author: ownerName,
+    title: title,
+    instructions: instructions,
+    pictures,
+    cloudDirectory,
+    bom,
+  })
+    .then((processedParams) => {
+      return R.merge(processedParams, {
+        instructionsPdfUrl: getCloudStorageUrl(processedParams.instructionsPdfPath),
       })
     })
 })
@@ -389,14 +381,22 @@ let removeProjectPlaceholder = (owner, projectParams, error) => {
     })
 }
 
-let createProjectFromClientApp = (owner, ownerName, projectParams) => {
+let createProjectFromClientApp = Promise.method((owner, ownerName, projectParams) => {
   return createProjectPlaceholder(owner, projectParams)
     .then(() => {
-      return processPicturesFromProjectParams(projectParams, owner)
+      let pictures = R.map((picture) => {
+        let projectId = projectParams.projectId || projectParams.id
+        return R.merge(picture, {
+          cloudPath: `u/${owner}/${projectId}/pictures/${picture.name}`,
+        })
+      }, projectParams.pictures)
+      return processProject(owner, ownerName, projectParams.id, projectParams.title,
+          projectParams.instructions, pictures)
+        .then(R.partial(R.merge, [projectParams,]))
         .then(R.partial(createProjectFromParameters, [owner, ownerName,]))
         .catch(R.partial(removeProjectPlaceholder, [owner, projectParams,]))
     })
-}
+})
 
 let createProject = (request, reply) => {
   let projectParams = request.payload
@@ -539,33 +539,34 @@ let updateProject = (request, reply) => {
   }
 }
 
-let realUpdateProjectFromGitHub = (project, projectParams, reply) => {
+let realUpdateProjectFromGitHub = Promise.method((project, projectParams, reply) => {
   let copyPicturesPromise = copyFilesToCloudStorage(
     projectParams.gitHubPictures, 'pictures', project.owner, project.projectId)
   let copyFilesPromise = copyFilesToCloudStorage(
     projectParams.gitHubFiles, 'files', project.owner, project.projectId)
-  let processPicturesPromise = Promise.map(copyPicturesPromise, R.partial(ajax.postJson,
-      ['http://localhost:10000/jobs',]))
-  return Promise.all([processPicturesPromise, copyFilesPromise,])
+  return Promise.all([copyPicturesPromise, copyFilesPromise,])
     .then(([pictures, files,]) => {
-      return R.merge(
-        R.pickBy((key) => {
-          return !R.contains(key, ['gitHubFiles', 'gitHubPictures',])
-        }, projectParams),
-        {pictures, files,}
-      )
+      let qualifiedProjectId = `${project.owner}/${projectParams.id}`
+      return processProject(project.owner, project.ownerName, project.projectId,
+          projectParams.title, projectParams.instructions, pictures, projectParams.bomMarkdown)
+        .then((processedParams) => {
+          return R.merge(R.merge(
+            R.pickBy((key) => {
+              return !R.contains(key, ['gitHubFiles', 'gitHubPictures',])
+            }, projectParams),
+            processedParams
+          ), {
+              files,
+          })
+        })
     })
-    .then((newProjectParams) => {
-      return realUpdateProject(project.owner, project.ownerName,
-        project.projectId, newProjectParams, reply)
-    })
-}
+})
 
 let getGitHubCredentials = () => {
   return [getEnvParam('GITHUB_CLIENT_ID'), getEnvParam('GITHUB_CLIENT_SECRET'),]
 }
 
-let updateProjectFromGitHub = (repoOwner, repoName, reply) => {
+let updateProjectFromGitHub = Promise.method((repoOwner, repoName, reply) => {
   return downloadMuzHackFileFromGitHub(repoOwner, repoName, 'metadata.yaml')
     .then((metadata) => {
       let {projectId,} = metadata
@@ -604,7 +605,7 @@ let updateProjectFromGitHub = (repoOwner, repoName, reply) => {
         logger.error(`Syncing projects with GitHub failed:`, error)
         reply(Boom.badImplementation())
       })
-}
+})
 
 class Project {
   constructor({projectId, tags, owner, ownerName, title, created, pictures, licenseId,
@@ -620,14 +621,14 @@ class Project {
     this.pictures = pictures
     this.licenseId = licenseId
     this.description = description
-    this.summary = summary
+    this.summary = summary || null
     this.instructions = instructions
     this.instructionsPdfUrl = instructionsPdfUrl
     this.files = files
     this.zipFile = zipFile
     this.gitHubRepository = gitHubRepository || null
     this.mouserProject = mouserProject || null
-    this.bom = bom
+    this.bom = bom || null
     this.bomMarkdown = bomMarkdown || null
   }
 }
@@ -638,7 +639,7 @@ let verifyLicense = (projectParams) => {
   }
 }
 
-let downloadResource = (url, options) => {
+let downloadResource = Promise.method((url, options) => {
   logger.debug(`Downloading resource '${url}'...`)
   let {encoding, mayNotExist,} = options || {}
   return new Promise((resolve, reject) => {
@@ -674,7 +675,7 @@ let downloadResource = (url, options) => {
 
     performRequest(1)
   })
-}
+})
 
 let downloadGitHubJson = (url, options) => {
   return downloadGitHubResource(url, options).then(JSON.parse)
@@ -687,7 +688,7 @@ let downloadGitHubResource = (url, options) => {
   return downloadResource(fullUrl, options)
 }
 
-let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
+let copyFilesToCloudStorage = Promise.method((files, dirPath, owner, projectId) => {
   let bucket = getStorageBucket()
   return Promise.map(files, (file) => {
     let cloudFilePath = `u/${owner}/${projectId}/${dirPath}/${file.fullPath}`
@@ -742,9 +743,9 @@ let copyFilesToCloudStorage = (files, dirPath, owner, projectId) => {
       performRequest(1)
     })
   })
-}
+})
 
-let downloadMuzHackFileFromGitHub = (gitHubOwner, gitHubProject, path, options) => {
+let downloadMuzHackFileFromGitHub = Promise.method((gitHubOwner, gitHubProject, path, options) => {
   return downloadGitHubJson(
       `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents/muzhack/${path}`,
       options)
@@ -753,7 +754,7 @@ let downloadMuzHackFileFromGitHub = (gitHubOwner, gitHubProject, path, options) 
         content: file != null ? new Buffer(file.content, 'base64').toString() : null,
       }
     })
-}
+})
 
 let unresolvedPicturePromises = {}
 
@@ -785,7 +786,8 @@ let generateBomMarkdown = Promise.method((bomYaml) => {
     })
 })
 
-let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProject) => {
+let getProjectParamsForGitHubRepo = Promise.method((owner, projectId, gitHubOwner,
+    gitHubProject) => {
   let qualifiedRepoId = `${gitHubOwner}/${gitHubProject}`
   let downloadMuzHackFile = R.partial(downloadMuzHackFileFromGitHub, [gitHubOwner, gitHubProject,])
   let rootUrl = `https://api.github.com/repos/${gitHubOwner}/${gitHubProject}/contents`
@@ -913,7 +915,7 @@ let getProjectParamsForGitHubRepo = (owner, projectId, gitHubOwner, gitHubProjec
         `Failed to get MuzHack project parameters from GitHub repository '${qualifiedRepoId}'`
       )
     })
-}
+})
 
 let sanitizeProjectParams = (projectParams) => {
   logger.debug(`Sanitizing project parameters`)
