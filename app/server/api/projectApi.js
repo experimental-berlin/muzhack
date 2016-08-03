@@ -44,24 +44,33 @@ let getStorageBucket = () => {
   return gcs.bucket(bucketName)
 }
 
-let getProject = (request, reply) => {
+let realGetProject = (request) => {
   let {owner, projectId,} = request.params
   let qualifiedProjectId = `${owner}/${projectId}`
   logger.debug(`Getting project '${qualifiedProjectId}'`)
-  withDb(reply, (conn) => {
-    return r.table('projects')
-      .get(qualifiedProjectId)
-      .run(conn)
-      .then((project) => {
-        if (project != null && !project.placeholder) {
-          logger.debug(`Found project '${qualifiedProjectId}'`)
-          return project
-        } else {
-          logger.debug(`Could not find project '${qualifiedProjectId}'`)
-          return Boom.notFound()
-        }
-      })
-  })
+  return connectToDb()
+    .then((conn) => {
+      return r.table('projects')
+        .get(qualifiedProjectId)
+        .run(conn)
+        .then((project) => {
+          if (project != null && !project.placeholder) {
+            logger.debug(`Found project '${qualifiedProjectId}'`)
+            return project
+          } else {
+            logger.debug(`Could not find project '${qualifiedProjectId}'`)
+            return Boom.notFound()
+          }
+        })
+        .finally(() => {
+          closeDbConnection(conn)
+        })
+    })
+}
+
+let getProject = (request, reply) => {
+  realGetProject(request)
+    .then(reply)
 }
 
 let createZip = (owner, projectParams) => {
@@ -270,6 +279,7 @@ let realCreateProjectFromGitHub = Promise.method((owner, ownerName, projectParam
   return Promise.all([copyPicturesPromise, copyFilesPromise,])
     .then(([pictures, files,]) => {
       let qualifiedProjectId = `${owner}/${projectParams.id}`
+      let cloudDirectory = `u/${qualifiedProjectId}`
       return ajax.postJson('http://localhost:10000/jobs', {
         id: qualifiedProjectId,
         author: ownerName,
@@ -277,6 +287,7 @@ let realCreateProjectFromGitHub = Promise.method((owner, ownerName, projectParam
         instructions: projectParams.instructions,
         bom: projectParams.bomMarkdown,
         pictures,
+        cloudDirectory,
       })
         .then((processedParams) => {
           return R.merge(
@@ -284,7 +295,7 @@ let realCreateProjectFromGitHub = Promise.method((owner, ownerName, projectParam
               return !R.contains(key, ['gitHubFiles', 'gitHubPictures',])
             }, projectParams),
             {
-              instructionsPdf: processedParams.instructions.pdf,
+              instructionsPdfUrl: getCloudStorageUrl(`${cloudDirectory}/instructions.pdf`),
               pictures: processedParams.pictures,
               files,
             }
@@ -597,7 +608,7 @@ let updateProjectFromGitHub = (repoOwner, repoName, reply) => {
 class Project {
   constructor({projectId, tags, owner, ownerName, title, created, pictures, licenseId,
       description, instructions, files, zipFile, gitHubRepository, mouserProject, summary,
-      bom, bomMarkdown, instructionsPdf,}) {
+      bom, bomMarkdown, instructionsPdfUrl,}) {
     this.id = `${owner}/${projectId}`
     this.projectId = projectId
     this.tags = tags
@@ -610,7 +621,7 @@ class Project {
     this.description = description
     this.summary = summary
     this.instructions = instructions
-    this.instructionsPdf = instructionsPdf
+    this.instructionsPdfUrl = instructionsPdfUrl
     this.files = files
     this.zipFile = zipFile
     this.gitHubRepository = gitHubRepository || null
