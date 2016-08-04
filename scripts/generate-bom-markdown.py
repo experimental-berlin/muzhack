@@ -19,26 +19,30 @@ args = cl_parser.parse_args()
 def _generate_bom_tables(component_type2components):
     """Generate Bill Of Materials tables from mapping of component type
     to components."""
-    markdown = ''
+    markdown = u''
     for component_type, components in component_type2components.items():
         headers = set()
         for component in components:
             headers = headers.union(component.keys())
         headers = sorted(headers)
-        component_table = """|{}|
+        component_table = u"""|{}|
 |{}|
 """.format('|'.join(headers), '|'.join(['-' * len(x) for x in headers]))
         for i, field2value in enumerate(components):
             values = [field2value.get(x) for x in headers]
             values = [v if v is not None else '' for v in values]
-            string_values = [
-                ', '.join(v) if isinstance(v, (list, tuple))
-                else str(v)
-                for v in values
-            ]
-            component_table += '|{}|\n'.format('|'.join(string_values))
+            string_values = []
+            for v in values:
+                if isinstance(v, (list, tuple)):
+                    string_values.append(', '.join(v))
+                else:
+                    if not isinstance(v, basestring):
+                        string_values.append(str(v))
+                    else:
+                        string_values.append(v)
+            component_table += u'|{}|\n'.format('|'.join(string_values))
 
-        markdown += """### {}
+        markdown += u"""### {}
 {}
 """.format(component_type, component_table)
 
@@ -74,7 +78,7 @@ def _read_bom():
         bom += _generate_bom_tables(bom_dict)
 
     bom = bom.strip()
-    return '{}\n\n'.format(bom)
+    return u'{}\n\n'.format(bom)
 
 bom = _read_bom()
 
@@ -84,4 +88,4 @@ if args.output:
     with open(args.output, 'wt') as f_output:
         f_output.write(bom)
 else:
-    print(bom)
+    print(bom.encode('utf-8'))
