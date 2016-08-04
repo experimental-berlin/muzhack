@@ -22,6 +22,7 @@ let {withDb, connectToDb, closeDbConnection,} = require('../db')
 let {notFoundError, validationError, alreadyExistsError,} = require('../../errors')
 let {getUserWithConn,} = require('./apiUtils')
 let ajax = require('../../ajax')
+let {convertMarkdownToHtml,} = require('../../markdown')
 
 tmp.setGracefulCleanup()
 
@@ -348,14 +349,16 @@ let processProject = Promise.method((owner, ownerName, projectId, title, instruc
     pictures, bom) => {
   let qualifiedProjectId = `${owner}/${projectId}`
   let cloudDirectory = `u/${qualifiedProjectId}`
+  let instructionsHtml = convertMarkdownToHtml(instructions)
+  let bomHtml = convertMarkdownToHtml(bom)
   return ajax.postJson('http://localhost:10000/jobs', {
     id: qualifiedProjectId,
     author: ownerName,
     title: title,
-    instructions: instructions,
+    instructions: instructionsHtml,
     pictures,
     cloudDirectory,
-    bom,
+    bom: bomHtml,
   })
     .then((processedParams) => {
       return R.merge(processedParams, {
