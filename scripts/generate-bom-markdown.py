@@ -21,10 +21,11 @@ def _generate_bom_tables(component_type2components):
     to components."""
     markdown = u''
     for component_type, components in component_type2components.items():
-        headers = set()
+        headers = []
         for component in components:
-            headers = headers.union(component.keys())
-        headers = sorted(headers)
+            for header in component:
+                if header not in headers:
+                    headers.append(header)
         component_table = u"""|{}|
 |{}|
 """.format('|'.join(headers), '|'.join(['-' * len(x) for x in headers]))
