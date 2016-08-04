@@ -24,9 +24,14 @@ let getSanitizingConverter = () => {
   return converter
 }
 
-module.exports.convertMarkdown = (markdown) => {
+let convertMarkdownToHtml = (markdown) => {
   let converter = getSanitizingConverter()
   let html = converter.makeHtml(markdown || '')
+  return html
+}
+
+let convertMarkdown = (markdown) => {
+  let html = convertMarkdownToHtml(markdown)
   let htmlToReactParser = new HtmlToReactParser(React)
   // Enclose in a div since HtmlToReact can't handle multiple root elements
   return htmlToReactParser.parse(`<div class="markdown-root">${html}</div>`)
@@ -340,6 +345,11 @@ class MarkdownService {
     logger.debug('Resetting instructions editor')
     this.instructionsEditor.render(text)
   }
+}
+
+module.exports = {
+  convertMarkdownToHtml,
+  convertMarkdown,
 }
 
 if (__IS_BROWSER__) {
