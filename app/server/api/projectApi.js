@@ -560,6 +560,7 @@ let realUpdateProjectFromGitHub = Promise.method((project, projectParams, reply)
       return processProject(project.owner, project.ownerName, project.projectId,
           projectParams.title, projectParams.instructions, pictures, projectParams.bomMarkdown)
         .then((processedParams) => {
+          logger.debug(`Project processing finished`)
           return R.merge(R.merge(
             R.pickBy((key) => {
               return !R.contains(key, ['gitHubFiles', 'gitHubPictures',])
@@ -568,6 +569,10 @@ let realUpdateProjectFromGitHub = Promise.method((project, projectParams, reply)
           ), {
               files,
           })
+        })
+        .then((processedParams) => {
+          realUpdateProject(project.owner, project.ownerName, project.projectId,
+            processedParams, reply)
         })
     })
 })
