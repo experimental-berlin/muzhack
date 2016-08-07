@@ -3,85 +3,56 @@
 
 tab-color = #4C4C4C
 
-#user-pad
+#workshop-pad
   pad-base()
 
   padding 20px
 
-  #user-avatar
-    img
-      rounded-corners()
-      max-width 100%
-
   & >:first-child
     margin-top 0
 
-  // TODO: Consolidate with project
-  .tabs
-    tabs-base()
+#workshop-title
+  color white
+  margin-top -50px
+  position relative
 
-    color muted
-    border-bottom 1px solid muted
+.workshop-date-container
+  margin-top 35px
+  margin-bottom 15px
 
-    li
-      a
-        color tab-color
-      &.disabled
-        color muted
-      &.active
-        border-left 1px solid
-        border-right 1px solid tab-color
-        border-top 1px solid tab-color
-
-#user-name
-  ellipsis-overflow()
-
-  font-size 2em
+.workshop-date
+  display inline-block
   font-weight bold
+  font-size 18px
 
-#user-username
-  ellipsis-overflow()
+.workshop-host-name-and-address-container
+  display flex
+  align-items center
+  margin-bottom: 30px
 
-  font-size 1.3em
-
-#vcard
-  padding-right 15px
+.workshop-host-name-and-address
+  display inline-block
 
   a
     text-decoration none
     color black
 
-  .vcard-detail
-    overflow hidden
-    text-overflow ellipsis
-    padding 2px 0
+.workshop-host-name
+  display block
+  font-size 18px
+  font-weight bold
 
-#tab-contents
-  & >:first-child, .markdown-root >:first-child
-    margin-top 0
+.workshop-host-address
+  display inline-block
 
-  padding-top 24px
-  padding-left 5px
-  padding-right 5px
+#workshop-cover-wrapper
+  width 1170px
+  margin -20px
+  overflow hidden
+  height 300px
+  position relative
 
-#soundcloud-uploads
-  list-style none
-  padding 0
-  margin 0
-
-#soundcloud-header
-  color #f50
-
-#user-upcoming-workshops, #user-past-workshops
-  >h2
-    margin-top 0
-
-  >.table
-    width 100%
-
-    .table-cell
-      padding 4px
-
-    a
-      text-decoration none
-      color black
+#workshop-cover-image
+  width 100%
+  position absolute
+  left 0

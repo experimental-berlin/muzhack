@@ -63,6 +63,7 @@ let createTables = Promise.method((conn) => {
         ['users', ['created',],],
         ['workshopLeaders',],
         ['resetPasswordTokens',],
+        ['workshops',],
       ]
       return Promise.each(tableAndIndexNames, ([tableName, indexNames,]) => {
         let createPromise

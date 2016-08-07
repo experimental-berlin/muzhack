@@ -32,9 +32,13 @@ let convertMarkdownToHtml = (markdown) => {
 
 let convertMarkdown = (markdown) => {
   let html = convertMarkdownToHtml(markdown)
+  return convertHtmlToReact(html)
+}
+
+let convertHtmlToReact = (html) => {
   let htmlToReactParser = new HtmlToReactParser(React)
   // Enclose in a div since HtmlToReact can't handle multiple root elements
-  return htmlToReactParser.parse(`<div class="markdown-root">${html}</div>`)
+  return htmlToReactParser.parse(`<div class="html-to-react-root">${html}</div>`)
 }
 
 let markdownManual = {
@@ -350,6 +354,7 @@ class MarkdownService {
 module.exports = {
   convertMarkdownToHtml,
   convertMarkdown,
+  convertHtmlToReact,
 }
 
 if (__IS_BROWSER__) {
