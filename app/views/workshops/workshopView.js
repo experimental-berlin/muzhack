@@ -12,6 +12,7 @@ let {nbsp,} = require('../../specialChars')
 let {convertHtmlToReact,} = require('../../markdown')
 let VCard = require('./workshopsVCard')
 let {partitionWorkshops,} = require('../workshopsCommon')
+let {displayDateTextual,} = require('../../datetime')
 
 if (__IS_BROWSER__) {
   require('./workshopView.styl')
@@ -42,6 +43,7 @@ module.exports = {
     let {workshop,} = state
     logger.debug(`Rendering workshop '${workshop.id}':`, workshop)
     logger.debug(`State:`, state)
+    let startTime = moment(workshop.startTime).utc()
 
     return h('#workshop-pad', [
       h('.pure-g', [
@@ -55,17 +57,17 @@ module.exports = {
           h('#workshop-date-container', [
             h('span.icon-clock'),
             nbsp,
-            h('#workshop-date', workshop.date),
+            h('#workshop-date', displayDateTextual(startTime)),
           ]),
           h('#workshop-host-name-and-address-container', [
             h('span.icon-location'),
             nbsp,
             h('#workshop-host-name-and-address', [
-              workshop.hostId != null ?
-                h('a#workshop-host-name', {href: `/h/${workshop.hostId}`,}, workshop.hostName) :
-                h('span#workshop-host-name', workshop.hostName),
-              h('a#workshop-host-address.small', {href: workshop.hostMapUrl, target: '_blank',},
-                workshop.hostAddress),
+              workshop.host.id != null ?
+                h('a#workshop-host-name', {href: `/h/${workshop.host.id}`,}, workshop.host.name) :
+                h('span#workshop-host-name', workshop.host.name),
+              h('a#workshop-host-address.small', {href: workshop.host.mapUrl, target: '_blank',},
+                workshop.host.address),
             ]),
           ]),
           h('#workshop-leader', [

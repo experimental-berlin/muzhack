@@ -32,7 +32,7 @@ let Workshops = component('Workshops', (user) => {
         }, [
           h('.table-cell', moment(workshop.startTime).format(`MMM D`)),
           h('.table-cell', workshop.title),
-          h('.table-cell', workshop.venue.name),
+          h('.table-cell', workshop.host.name),
        ])
      }, R.sortBy(R.prop('startTime'), workshops))),
    ])

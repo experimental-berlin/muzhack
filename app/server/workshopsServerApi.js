@@ -5,22 +5,13 @@ let R = require('ramda')
 let S = require('underscore.string.fp')
 let moment = require('moment')
 let r = require('rethinkdb')
-let JSZip = require('jszip')
 let request = require('request')
-let gcloud = require('gcloud')
 let Promise = require('bluebird')
 
-let stripeApi = require('./api/stripeApi')
-let ajax = require('../ajax')
-let {getEnvParam,} = require('./environment')
 let {connectToDb, closeDbConnection,} = require('./db')
-let {requestHandler,} = require('./requestHandler')
-let {createProject, updateProject, getProject, deleteProject,
-  updateProjectFromGitHub,} = require('./api/projectApi')
 let {trimWhitespace,} = require('../stringUtils')
-let {getUserWithConn,} = require('./api/apiUtils')
-let {badRequest,} = require('../errors')
 let {notFoundError,} = require('../errors')
+let {convertMarkdownToHtml,} = require('../markdown')
 
 let search = (request) => {
   logger.debug(`Searching for '${request.query.query}'`)
@@ -97,51 +88,17 @@ let getWorkshop = (request) => {
         .run(conn)
         .then((workshop) => {
           if (workshop != null) {
-            return workshop
+            return R.merge(workshop, {
+              description: convertMarkdownToHtml(workshop.description),
+              host: {
+                id: workshop.host.id,
+                name: workshop.host.name,
+                address: workshop.host.address,
+                mapUrl: `https://www.google.com/maps/place/${workshop.host.address}`,
+              },
+            })
           } else {
             logger.debug(`Workshop '${workshopId}' wasn't found`)
-            workshop = {
-              id: 'ewajustka/voice-udder',
-              owner: 'ewajustka',
-              ownerName: 'Ewa Justka',
-              title: 'Voice Odder Workshop',
-              hostName: 'MS Stubnitz',
-              hostAddress: 'Kirchenpauerkai, 20457 Hamburg, Germany',
-              coverImageUrl: 'https://scontent.ftxl1-1.fna.fbcdn.net/v/t1.0-9/13508877_10201683647769183_4194719920633668303_n.jpg?oh=356e7b61b5caecda9d6339e54329884e&oe=585A1566',
-              description: `“The word is now a virus. The flu virus may have once been a healthy lung cell. It is now a parasitic organism that invades and damages the central nervous system. Modern man has lost the option of silence. Try halting sub-vocal speech. Try to achieve even ten seconds of inner silence. You will encounter a resisting organism that forces you to talk. That organism is the word.” – William S. Burroughs, The Ticket That Exploded
-<br><br>
-During this workshop participants will free themselves of this “parasitic resisting organism” by building a device specially designed for this purpose. This device will allow the participants to hear the invader and even see him in the form of light. Do not be afraid though! This creature is not dangerous as we will keep it in the form of electronic circuitry where it will be drifting with currents and resistances. Let it speak through your voice, let's shout it out and modulate it ! We shall not be afraid of The Other!
-<br><br>
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-<br><br>
-For this one-day workshop, Polish electronic noise artist Ewa Justka will guide you through the creation of a unique, multi-faceted electronic instrument and effects unit - The Voice Odder.
-<br><br>
-The Voice Odder is a simple electronic circuit based on delay IC. It can generate various sounds - from echo and delay effect to reverb, extreme resonance sampling and distortion, depending on resistance and voltage.
-<br><br>
-During the workshop participants will learn how to build electronic circuits: how to solder, read schematics and data sheets, use multimeter and what are the functions of basic electronic components.
-<br><br>
-The workshop is for beginners in electronics but advanced participants will have fun too!
-<br><br>
-All of the materials will be provided and are included in price. Participants will finish the workshop with their own fully-functioning Voice Odder to take away.
-<br><br>
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-<br>
-DOCUMENTATION: https://ewajustka.bandcamp.com/album/voice-odder
-<br><br>
-PRICE: 25 EURO
-<br><br>
-MAX AMOUNT OF PARTICIPANTS: 15
-<br><br>
-TO BOOK A PLACE PLEASE EMAIL : ewajustka@gmail.com . YOU MUST PAY BEFOREHAND VIA PAYPAL IN ORDER TO BOOK THE PLACE.
-<br><br>
-PLEASE BRING WITH YOU A SOLDERING IRON IF YOU HAVE ONE.
-<br><br>
-THE WORKSHOP IS A PART OF THE PRIMAL UPROAR FESTIVAL.`,
-              date: 'Friday, August 5, 2016',
-            }
-            return R.merge(workshop, {
-              hostMapUrl: `https://www.google.com/maps/place/${workshop.hostAddress}`,
-            })
             throw notFoundError()
           }
         })
