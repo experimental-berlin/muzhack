@@ -48,8 +48,12 @@ let getInitialRouterState = (request) => {
 let renderIndex = (request, reply) => {
   logger.debug(`Rendering SPA index, user is logged in: ${request.auth.credentials != null}`)
   immstruct.clear()
+  let fbAppId = getEnvParam('FB_APP_ID')
   let cursor = immstruct('state', {
-    metaHtmlAttributes: [],
+    metaHtmlAttributes: {
+      'fb:app_id': fbAppId,
+      'og:type': 'website',
+    },
     search: '',
     appUri: getEnvParam('APP_URI'),
     login: login.createState(),
@@ -60,7 +64,7 @@ let renderIndex = (request, reply) => {
     trelloKey: getEnvParam('TRELLO_KEY'),
     stripeKey: getEnvParam('STRIPE_PUBLISHABLE_KEY'),
     gitHubClientId: getEnvParam('GITHUB_CLIENT_ID'),
-    fbAppId: getEnvParam('FB_APP_ID'),
+    fbAppId,
   }).cursor()
   cursor = cursor.mergeDeep({
     router: createRouterState(routeMap),
@@ -77,7 +81,12 @@ let renderIndex = (request, reply) => {
       logger.debug(`Successfully loaded initial state:`, initialState)
       let renderOptions = {
         initialState: JSON.stringify(initialState),
-        metaAttributes: initialState.metaHtmlAttributes,
+        metaAttributes: R.map(([property, content,]) => {
+          return {
+            property,
+            content,
+          }
+        }, R.toPairs(initialState.metaHtmlAttributes)),
       }
       if (initialState.router.shouldRenderServerSide) {
         logger.debug(`Rendering on server - current state:`, cursor.toJS())
