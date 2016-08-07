@@ -102,6 +102,8 @@ let getWorkshop = (request) => {
             logger.debug(`Workshop '${workshopId}' wasn't found`)
             workshop = {
               id: 'ewajustka/voice-udder',
+              owner: 'ewajustka',
+              ownerName: 'Ewa Justka',
               title: 'Voice Odder Workshop',
               hostName: 'MS Stubnitz',
               hostAddress: 'Kirchenpauerkai, 20457 Hamburg, Germany',

@@ -52,21 +52,24 @@ module.exports = {
             }),
           ]),
           h('h1#workshop-title', workshop.title),
-          h('.workshop-date-container', [
+          h('#workshop-date-container', [
             h('span.icon-clock'),
             nbsp,
-            h('.workshop-date', workshop.date),
+            h('#workshop-date', workshop.date),
           ]),
-          h('.workshop-host-name-and-address-container', [
+          h('#workshop-host-name-and-address-container', [
             h('span.icon-location'),
             nbsp,
-            h('.workshop-host-name-and-address', [
+            h('#workshop-host-name-and-address', [
               workshop.hostId != null ?
-                h('a.workshop-host-name', {href: `/h/${workshop.hostId}`,}, workshop.hostName) :
-                h('span.workshop-host-name', workshop.hostName),
-              h('a.workshop-host-address.small', {href: workshop.hostMapUrl, target: '_blank',},
+                h('a#workshop-host-name', {href: `/h/${workshop.hostId}`,}, workshop.hostName) :
+                h('span#workshop-host-name', workshop.hostName),
+              h('a#workshop-host-address.small', {href: workshop.hostMapUrl, target: '_blank',},
                 workshop.hostAddress),
             ]),
+          ]),
+          h('#workshop-leader', [
+            `Led by`, nbsp, h('a', {href: `/u/${workshop.owner}`,}, workshop.ownerName),
           ]),
           h('#workshop-description', [convertHtmlToReact(workshop.description),]),
         ]),
