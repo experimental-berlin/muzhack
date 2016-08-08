@@ -375,13 +375,11 @@ module.exports = {
         logger.debug(`Loading project ${qualifiedProjectId} JSON succeeded`)
         let chosenPicture = project.chosenPicture || project.pictures[0]
         return {
-          metaHtmlAttributes: [
-            {property: 'fb:app_id', content: cursor.get('fbAppId'),},
-            {property: 'og:title', content: project.title,},
-            {property: 'og:type', content: 'website',},
-            {property: 'og:image', content: chosenPicture.mainUrl,},
-            {property: 'og:description', content: project.summary || '',},
-          ],
+          metaHtmlAttributes: {
+            'og:title': project.title,
+            'og:image': chosenPicture.mainUrl,
+            'og:description': project.summary || '',
+          },
           displayProject: {
             expandBillOfMaterials: true,
             project: R.merge(project, {
