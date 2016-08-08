@@ -351,9 +351,15 @@ let render = (cursor) => {
   // logger.debug(`Rendering display of project:`, project)
   return h('div', [
     h('h1#project-path', `${project.owner} / ${project.projectId}`),
-    TopPad(cursor),
-    RightColumn({cursor, project,}),
-    BottomPad({cursor, project,}),
+    h('.pure-g', [
+      h('.pure-u-md-18-24', [
+        TopPad(cursor),
+        BottomPad({cursor, project,}),
+      ]),
+      h('.pure-u-md-6-24', [
+        RightColumn({cursor, project,}),
+      ]),
+    ]),
   ])
 }
 
