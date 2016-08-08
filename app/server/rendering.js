@@ -58,6 +58,8 @@ let renderIndex = (request, reply) => {
     metaHtmlAttributes: {
       'fb:app_id': fbAppId,
       'og:type': 'website',
+      'og:title': 'MuzHack',
+      'og:description': 'MuzHack is an online hub for the publishing of music hardware projects.',
     },
     search: '',
     appUri,
