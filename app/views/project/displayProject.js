@@ -161,9 +161,8 @@ let RightColumn = component('RightColumn', ({project, cursor,}) => {
 let renderInstructions = (cursor, project) => {
   let instructions = convertMarkdown(project.instructions)
   let displayProjectCursor = cursor.cursor('displayProject')
-  let fileLinksPart = project.instructionsPdfUrl != null ? h('div', [
+  let fileLinksPart = project.instructionsPdfUrl != null ? h('#file-links', [
     h('a.instructions-file.action', {href: project.instructionsPdfUrl,}, h('span.icon-file-pdf')),
-    h('hr'),
   ]) : null
   if (project.bomMarkdown != null) {
     let expandBillOfMaterials = displayProjectCursor.get('expandBillOfMaterials')

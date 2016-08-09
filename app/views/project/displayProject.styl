@@ -51,6 +51,8 @@ subtle-shadow()
 
 #tab-contents
   padding padding
+  padding-bottom 0
+
   img
     max-width 100%
 
@@ -74,7 +76,7 @@ subtle-shadow()
 #project-left-column
   padding-right 30px
   border-right 1px solid black
-  border-color #989898
+  border-color muted
 
 #project-right-column
   box-sizing border-box
@@ -111,8 +113,12 @@ subtle-shadow()
   text-shadow 3px 3px 10px #9E9E9E
 
 #image-box
+  rounded-corners()
+
   width 100%
   margin-bottom 30px
+  max-height 400px
+  overflow hidden
 
 #main-image
   rounded-corners()
@@ -177,10 +183,15 @@ cell-padding = 8px
   display inline-block
 
 #bill-of-materials
-  margin-bottom 20px
+  border-bottom 1px solid muted
 
   :first-child
     margin-top 1em
+
+  & + hr
+    margin-top 10px
+    margin-bottom 10px
+    background-color muted
 
 #instructions-container
   > div
@@ -192,7 +203,7 @@ cell-padding = 8px
 
 #tag-section
   padding-bottom 10px
-  margin-bottom 10px
+  margin-bottom 20px
 
   a
     text-decoration none
@@ -200,3 +211,8 @@ cell-padding = 8px
 
 #control-bom-visibility
   font-size 1em
+
+#file-links
+  border-bottom 1px solid muted
+  padding-bottom 10px
+  margin-bottom 10px
