@@ -19,6 +19,7 @@ let {goTo,} = require('../../router')
 
 if (__IS_BROWSER__) {
   require('./displayProject.styl')
+  require('purecss/build/grids-responsive.css')
 }
 
 let getFileSize = (numBytes) => {
@@ -84,14 +85,14 @@ let FacebookLike = component('FacebookLike', {
   })
 })
 
-let TopPad = component('TopPad', (cursor) => {
+let TopOfProject = component('TopOfProject', (cursor) => {
   let projectCursor = cursor.cursor(['displayProject', 'project',])
   let project = projectCursor.toJS()
   let creationDateString = datetime.displayDateTextual(project.created)
   let mainPicture = project.chosenPicture || project.pictures[0]
   let loggedInUser = userManagement.getLoggedInUser(cursor)
   let canEdit = loggedInUser != null && loggedInUser.username === project.owner
-  return h('#project-top-pad', [
+  return h('#project-top-section', [
     h('#project-top-elements', [
       h('#project-heading', [
         h('h1#project-title', project.title),
@@ -103,22 +104,20 @@ let TopPad = component('TopPad', (cursor) => {
       ProjectControls({canEdit, project, cursor,}),
     ]),
     h('#image-box', [
-      h('#thumbnails', R.map((picture) => {
-        return h('.thumbnail-wrapper', {
-          onClick: (event) => {
-            event.preventDefault()
-            logger.debug(`Thumbnail clicked:`, picture)
-            projectCursor.set('chosenPicture', picture)
-          },
-        }, [
-          h('img', {src: picture.thumbNailUrl,}),
-        ])
-      }, project.pictures)),
-      h('#displayed-image', [
-        h('img', {
-          src: mainPicture != null ? mainPicture.mainUrl : null
-        ,}),
-      ]),
+      // h('#thumbnails', R.map((picture) => {
+      //   return h('.thumbnail-wrapper', {
+      //     onClick: (event) => {
+      //       event.preventDefault()
+      //       logger.debug(`Thumbnail clicked:`, picture)
+      //       projectCursor.set('chosenPicture', picture)
+      //     },
+      //   }, [
+      //     h('img', {src: picture.thumbNailUrl,}),
+      //   ])
+      // }, project.pictures)),
+      h('img#main-image', {
+        src: mainPicture != null ? mainPicture.url : null
+      ,}),
     ]),
     h('#social-controls', [
       FacebookLike(cursor),
@@ -133,15 +132,15 @@ let RightColumn = component('RightColumn', ({project, cursor,}) => {
       href: `/?q=${encodeURIComponent(searchString)}`,
     }, tag), ', ',]
   }, project.tags).slice(0, -1)
-  return h('#right-column', [
-    h('#tag-pad', [
+  return h('#project-right-column', [
+    h('#tag-section', [
       h('h2', [
         h('span.icon-tags2'),
         `${nbsp}Tags`,
       ]),
       h('#project-tags', tagElems),
     ]),
-    h('#license-pad', [
+    h('#license-section', [
       h('h2', 'License'),
       h('#license-icons', [
         h('a', {href: project.license.url, target: '_blank',}, R.map((icon) => {
@@ -206,7 +205,7 @@ let renderInstructions = (cursor, project) => {
   }
 }
 
-let BottomPad = component('BottomPad',
+let BottomOfProject = component('BottomOfProject',
   {
     componentDidUpdate: function () {
       let node = ReactDOM.findDOMNode(this)
@@ -254,7 +253,7 @@ let BottomPad = component('BottomPad',
     } else if (activeTab === 'store') {
       tabContent = ProjectStore({project, storeItems, cursor,})
     }
-    return h('#project-bottom-pad', [
+    return h('#project-bottom-section', [
       h('ul.tabs', {role: 'tablist',}, R.map((projectTab) => {
         return h(`li.${S.join('.', projectTab.getClasses(cursor))}`, [
           h('div', {
@@ -352,12 +351,16 @@ let render = (cursor) => {
   return h('div', [
     h('h1#project-path', `${project.owner} / ${project.projectId}`),
     h('.pure-g', [
-      h('.pure-u-md-18-24', [
-        TopPad(cursor),
-        BottomPad({cursor, project,}),
-      ]),
-      h('.pure-u-md-6-24', [
-        RightColumn({cursor, project,}),
+      h('#project-pad', [
+        h('.pure-u-1.pure-u-md-18-24', [
+          h('#project-left-column', [
+            TopOfProject(cursor),
+            BottomOfProject({cursor, project,}),
+          ]),
+        ]),
+        h('.pure-u-1.pure-u-md-6-24', [
+          RightColumn({cursor, project,}),
+        ]),
       ]),
     ]),
   ])
@@ -383,7 +386,7 @@ module.exports = {
         return {
           metaHtmlAttributes: {
             'og:title': project.title,
-            'og:image': chosenPicture.mainUrl,
+            'og:image': chosenPicture.url,
             'og:description': project.summary || '',
           },
           displayProject: {

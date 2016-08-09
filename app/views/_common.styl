@@ -30,15 +30,20 @@ airy-padding-sides()
   padding-left 20px
   padding-right 20px
 
-pad-base()
-  // @media screen and (min-width: 1170px)
-  //   max-width 1170px
-  //   margin-top 25px
-  //   margin-bottom 60px
-  //   box-shadow 1px 1px 3px 1px #cecece
+max-width-mixin()
+  @media screen and (min-width: 1170px)
+    max-width 1170px
+    margin-left auto
+    margin-right auto
 
-  // margin-left auto
-  // margin-right auto
+pad-base()
+  max-width-mixin()
+
+  rounded-corners()
+
+  margin-top 25px
+  margin-bottom 60px
+  box-shadow 1px 1px 3px 1px #cecece
   // Ensure that child margins don't collapse within borderless elements
   overflow auto
   box-sizing border-box

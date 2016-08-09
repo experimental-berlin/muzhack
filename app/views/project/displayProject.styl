@@ -7,11 +7,14 @@ padding = 20px
 subtle-shadow()
   box-shadow 2px 2px 13px 1px #0D0D0D
 
-#project-top-pad
+#project-pad
   pad-base()
   airy-padding-sides()
 
-  padding padding
+  // Ensure that child margins don't collapse within borderless elements
+  overflow auto
+
+  padding 40px
   // margin margin
   // margin-bottom 0
 
@@ -28,14 +31,8 @@ subtle-shadow()
   align-self center
   margin-left 4px
 
-#project-bottom-pad
-  pad-base()
-  airy-padding-sides()
-
-  padding padding
-  margin margin
-  margin-top 16px
-  margin-bottom 60px
+#project-bottom-section
+  margin-top 30px
 
   .tabs
     tabs-base()
@@ -57,7 +54,7 @@ subtle-shadow()
   img
     max-width 100%
 
-#description,#instructions
+#description, #instructions
   rendered-markdown()
 
   > div
@@ -74,28 +71,19 @@ subtle-shadow()
     td
       background-color #f2f2f2
 
-#right-column
+#project-left-column
+  padding-right 30px
+  border-right 1px solid black
+  border-color #989898
+
+#project-right-column
   box-sizing border-box
   vertical-align top
-  // margin-top margin
-  // margin-bottom margin
-  // margin-right margin
+  padding-left 20px
+  padding-bottom 60px
 
-#tag-pad
-  pad-base()
-  airy-padding-sides()
-
-  padding-bottom padding
-
-#license-pad
-  pad-base()
-  airy-padding-sides()
-
-  padding-bottom padding
-
-  p
-    margin 0
-    margin-top 8px
+  :first-child
+    margin-top 0
 
 #license-icons
   font-size 40px
@@ -115,28 +103,21 @@ subtle-shadow()
   margin-top 4px
 
 #project-path
+  max-width-mixin()
+
   margin-bottom 0
   margin-top 20px
   padding-left padding
   text-shadow 3px 3px 10px #9E9E9E
 
 #image-box
-  width 620px
-  margin-left auto
-  margin-right auto
+  width 100%
   margin-bottom 30px
 
-#displayed-image
+#main-image
   rounded-corners()
-  overflow hidden
-  width 500px
-  height 409px
-  display inline-block
-  subtle-shadow()
 
-  img
-    width 100%
-    height 100%
+  width 100%
 
 #thumbnails
   display inline-block
@@ -208,3 +189,14 @@ cell-padding = 8px
 
 .instructions-file
   font-size 26px
+
+#tag-section
+  padding-bottom 10px
+  margin-bottom 10px
+
+  a
+    text-decoration none
+    color black
+
+#control-bom-visibility
+  font-size 1em
