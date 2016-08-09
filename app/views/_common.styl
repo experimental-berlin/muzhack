@@ -59,18 +59,21 @@ ellipsis-overflow()
 rendered-markdown()
   img
     max-width 100%
+    display block
+    border-radius 4px
+    margin-top 10px
+    margin-bottom 10px
 
   p
     margin 0
     margin-bottom 1em
 
+    code
+      padding: 1px 5px 1px 5px
+
   code
     font-size 14px
     background-color code-background-color
-
-  p
-    code
-      padding: 1px 5px 1px 5px
 
   hr
     background-color #ddd
@@ -125,3 +128,7 @@ rendered-markdown()
 
     td
       background-color transparent
+    
+  tr:nth-child(2n-1)
+    td
+      background-color #f2f2f2
