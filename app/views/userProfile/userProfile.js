@@ -117,7 +117,7 @@ module.exports = {
   loadData: (cursor, params) => {
     return ajax.getJson(`/api/users/${params.user}`)
       .then((user) => {
-        logger.debug(`Loading user JSON succeeded:`, user)
+        // logger.debug(`Loading user JSON succeeded:`, user)
         return {
           userProfile: {
             user: user,

@@ -183,9 +183,11 @@ let getUser = (request, reply) => {
                   uploads: R.filter((x) => x != null, embeddables),
                 },
               })
-              logger.debug(`Returning user:`, extendedUser)
+              // logger.debug(`Returning user:`, extendedUser)
               if (!isLoggedInUser) {
-                logger.debug(`Filtering out the following properties:`, restrictedAttributes)
+                logger.debug(
+                  `Filtering the following properties since requesting user differs ` +
+                  `from requested user:`, restrictedAttributes)
               }
               return extendedUser
             }, (error) => {
