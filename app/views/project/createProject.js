@@ -24,6 +24,7 @@ let {renderFieldError,} = editAndCreateProject
 
 let uploadProject
 let router
+let getUser
 if (__IS_BROWSER__) {
   uploadProject = require('./uploadProject')
   router = require('../../router')
@@ -32,6 +33,8 @@ if (__IS_BROWSER__) {
   require('./createProject.styl')
   require('dropzone/src/dropzone.scss')
   require('../dropzone.styl')
+} else {
+  getUser = require('../../server/api/apiUtils').getUser
 }
 
 let createProject = Promise.method((cursor) => {
@@ -446,10 +449,16 @@ let loadGitHubRepositories = () => {
 }
 
 let CreateProjectPad = component('CreateProjectPad', (cursor) => {
+  logger.debug(`Rendering CreateProjectPad`)
   let createCursor = cursor.cursor('createProject')
   let gitHubAccessToken = createCursor.get('gitHubAccessToken')
   let shouldCreateStandalone = createCursor.get('shouldCreateStandalone')
   let failureBanner = createCursor.get('failureBanner')
+  if (gitHubAccessToken == null) {
+    logger.debug(`Have no GitHub access token - not letting user import from GitHUb`)
+  } else {
+    logger.debug(`Have a GitHub access token - letting user import from GitHUb`)
+  }
   return h('#create-project-pad', [
     failureBanner != null ? h('#failure-banner', failureBanner) : null,
     gitHubAccessToken != null ? h('.input-group', [
@@ -482,6 +491,25 @@ let CreateProjectPad = component('CreateProjectPad', (cursor) => {
     h('#project-inputs', shouldCreateStandalone ?
       renderCreateStandaloneProject(cursor) : renderCreateProjectFromGitHub(cursor)),
     ])
+})
+
+let loadGitHubAccessToken = Promise.method((loggedInUser) => {
+  if (__IS_BROWSER__) {
+    logger.debug(`Loading logged in user ${loggedInUser.username}...`)
+    return ajax.getJson(`/api/users/${loggedInUser.username}`)
+      .then((user) => {
+        // logger.debug(`Loading user ${user.username} JSON succeeded:`, user)
+        return user.gitHubAccessToken
+      }, (error) => {
+        logger.warn(`Loading user ${loggedInUser.username} JSON failed:`, error)
+        throw error
+      })
+  } else {
+    return getUser(loggedInUser.username)
+      .then((user) => {
+        return user.gitHubAccessToken
+      })
+  }
 })
 
 module.exports = {
@@ -523,19 +551,14 @@ module.exports = {
 
     let loggedInUser = userManagement.getLoggedInUser(cursor)
     if (loggedInUser != null) {
-      logger.debug(`Loading logged in user ${loggedInUser.username}...`)
-      return ajax.getJson(`/api/users/${loggedInUser.username}`)
-        .then((user) => {
-          logger.debug(`Loading user ${user.username} JSON succeeded:`, user)
+      return loadGitHubAccessToken(loggedInUser)
+        .then((gitHubAccessToken) => {
           state = R.mergeWith(R.merge, state, {
             createProject: {
-              gitHubAccessToken: user.gitHubAccessToken,
+              gitHubAccessToken,
             },
           })
           return state
-        }, (error) => {
-          logger.warn(`Loading user ${loggedInUser.username} JSON failed:`, error)
-          throw error
         })
     } else {
       return state
