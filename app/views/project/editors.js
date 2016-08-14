@@ -101,8 +101,8 @@ let FilesEditor = component('FilesEditor', {
 let getParameters = (input, cursor) => {
   logger.debug(`Getting parameters from input`, input)
   let title = trimWhitespace(input.title)
-  let description = markdownService.getDescription()
-  let instructions = markdownService.getInstructions()
+  let description = trimWhitespace(markdownService.getDescription())
+  let instructions = trimWhitespace(markdownService.getInstructions())
   let tags = R.map(trimWhitespace, S.wordsDelim(/,/, input.tagsString))
   let user = userManagement.getLoggedInUser(cursor)
   let username = user.username

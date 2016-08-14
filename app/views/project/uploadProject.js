@@ -2,10 +2,11 @@
 let logger = require('js-logger-aknudsen').get('saveProject')
 let R = require('ramda')
 let S = require('underscore.string.fp')
+let Promise = require('bluebird')
 
 let {getParameters, getPictureDropzone, getFileDropzone,} = require('./editors')
 
-module.exports = (project, specificCursor, cursor) => {
+module.exports = Promise.method((project, specificCursor, cursor) => {
   let uploadFiles = () => {
     if (project.owner == null || project.projectId == null) {
       throw new Error(`project.owner and/or project.projectId are null`)
@@ -85,4 +86,4 @@ module.exports = (project, specificCursor, cursor) => {
       )
       return {title, description, instructions, tags, licenseId, username, pictureFiles, files,}
     })
-}
+})
