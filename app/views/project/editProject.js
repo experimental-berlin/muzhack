@@ -35,7 +35,8 @@ let inputChangeHandler = (fieldName, handler) => {
 let editProject = (cursor) => {
   let editCursor = cursor.cursor('editProject')
   let editProject = editCursor.toJS()
-  uploadProject(editProject.project, editCursor, cursor)
+  let input = editProject.project
+  uploadProject(input, editCursor, cursor)
     .then(({title, description, instructions, tags, licenseId, username, pictureFiles, files,}) => {
       logger.debug(`Picture files:`, pictureFiles)
       logger.debug(`Files:`, files)
@@ -136,7 +137,7 @@ let EditNonGitHubProject = component('EditNonGitHubProject', (cursor) => {
         type: 'text',
         placeholder: 'Project title', value: project.title,
         onChange: inputChangeHandler('title', (event, editCursor) => {
-          let title = trimWhitespace(event.target.value)
+          let title = event.target.value
           logger.debug(`Project title changed: '${title}'`)
           editCursor.setIn(['project', 'title',], title)
           if (S.isBlank(title)) {

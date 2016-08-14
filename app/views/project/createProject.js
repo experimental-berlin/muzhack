@@ -173,7 +173,7 @@ let renderCreateStandaloneProject = (cursor) => {
         placeholder: 'Project title',
         value: input.title,
         onChange: inputChangeHandler('title', (event, createCursor) => {
-          let title = trimWhitespace(event.target.value)
+          let title = event.target.value
           logger.debug(`Project title changed: '${title}'`)
           createCursor.set('title', title)
           if (S.isBlank(title)) {
