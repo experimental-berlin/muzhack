@@ -31,7 +31,8 @@ let getInitialRouterState = (request, workshopsUri) => {
   }, [
     {path: '/', text: 'Explore',},
     {path: '/create', text: 'Create',},
-    {path: workshopsUri, text: 'Workshops', isExternal: true,},
+    // TODO: Enable
+    // {path: workshopsUri, text: 'Workshops', isExternal: true,},
     {path: 'http://forums.muzhack.com', text: 'Forums', isExternal: true,},
     {path: '/about', text: 'About',},
   ])
