@@ -73,8 +73,18 @@ Promise.config({
   cancellation: true,
 })
 
-// TODO
-let standardVHost = `localhost`
+let appEnvironment = getEnvParam('APP_ENVIRONMENT')
+
+let standardVHost
+if (appEnvironment === 'production') {
+  standardVHost = 'muzhack.com'
+} else if (appEnvironment === 'staging') {
+  standardVHost = 'staging.muzhack.com'
+} else if (appEnvironment === 'local') {
+  standardVHost = `localhost`
+} else {
+  throw new Error(`Unrecognized app environment '${appEnvironment}'`)
+}
 let workshopsVHost = `workshops.${standardVHost}`
 
 let setUpServer = Promise.method(() => {
