@@ -105,9 +105,6 @@ let setUpServer = Promise.method(() => {
     host: '0.0.0.0',
     port,
   })
-  if (process.env.MUZHACK_URI == null) {
-    process.env.MUZHACK_URI = `http://localhost:${port}`
-  }
 
   auth.register(server, standardVHost, workshopsVHost)
   let plugins = R.map((x) => {return require(x)}, ['inert', 'vision',])

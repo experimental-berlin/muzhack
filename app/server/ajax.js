@@ -9,7 +9,7 @@ let {notFoundError,} = require('../errors')
 
 module.exports = (uri, method, payloadJson, options, resolve, reject) => {
   if (uri.startsWith('/')) {
-    uri = `${getEnvParam('MUZHACK_URI')}${uri}`
+    uri = `${getEnvParam('APP_URI')}${uri}`
   }
 
   let extendedHeaders = R.merge({
