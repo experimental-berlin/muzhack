@@ -16,6 +16,8 @@ spec:
         image: eu.gcr.io/muzhack-1288/muzhack{{imageVariant}}:{{imageTag}}
         imagePullPolicy: {{imagePullPolicy}}
         env:
+        - name: NODE_ENV
+          value: production
         - name: APP_ENVIRONMENT
           value: {{appEnvironment}}
         - name: APP_URI
