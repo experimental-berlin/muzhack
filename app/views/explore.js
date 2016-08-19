@@ -57,8 +57,11 @@ let Results = component('Results', (cursor) => {
         className: 'projects-container',
         options: {
           itemSelector: '.project-item',
+          columnWidth: '.grid-sizer',
+          gutter: '.gutter-sizer',
+          percentPosition: true,
         },
-      }, projectElems)
+      }, [h('.grid-sizer'), h('.gutter-sizer'),].concat(projectElems))
   }
 })
 

@@ -1,34 +1,48 @@
 @require '_common'
 @require '_searchbox'
 
+.search-box
+  search-box()
+
+  margin-top 20px
+
+  .search-icon
+    top 6px
+    left 9px
+
+#explore-search-input
+  border 1px solid #000
+  box-shadow 1px 1px 3px 1px #cecece
+  padding-left 28px
+  padding-right 28px
+  margin 0
+  box-sizing border-box
+  width 100%
+
+  &:focus
+    outline: none
+
+.clear-icon
+  top 6px
+  right 635px
+
 #explore-pad
   pad-base()
-  airy-padding-sides()
 
-  .search-box
-    search-box()
+  padding-left 35px
+  padding-right 35px
 
-    margin-top 20px
+  .grid-sizer, .project-item
+    width 100%
 
-    .search-icon
-      top 6px
-      left 9px
+    @media screen and (min-width: 48em)
+      width 49%
 
-    #explore-search-input
-      border 1px solid #000
-      box-shadow 1px 1px 3px 1px #cecece
-      padding-left 28px
-      padding-right 28px
-      margin 0
-      box-sizing border-box
-      width 500px
+    @media screen and (min-width: 80em)
+      width 32.5%
 
-      &:focus
-        outline: none
-
-    .clear-icon
-      top 6px
-      right 635px
+  .gutter-sizer
+    width 1%
 
   .projects-container
     padding 24px 0
@@ -40,10 +54,7 @@
     box-sizing border-box
     padding 0
     border 0
-    width 218px
-    height 218px
-    margin 10px
-    box-shadow 2px 2px 13px 1px #1D1C1C
+    overflow hidden
 
     a
       text-decoration none
@@ -65,6 +76,5 @@
     color #AFAFAF
 
   .project-item-image
-    width 218px
-    height 172px
+    width 100%
     border-radius 0 0 4px 4px
