@@ -26,9 +26,13 @@ module.exports = {
       h('.pure-u-1', [
         h('#about-pad', [
           h('h1', 'About MuzHack'),
-          h('p', `MuzHack is a joint effort between Arve Knudsen and Notam to produce an online
-hub for music hardware projects. The goal is for this application to contain descriptions of the
-outcomes of such projects, and generally facilitate their re-production.`),
+          h('p', [
+            `MuzHack is a joint effort between `,
+            h('a', {href: 'http://arveknudsen.com', target: '_blank',}, `Arve Knudsen`), ` and `,
+            h('a', {href: 'http://notam02.no', target: '_blank',}, `Notam`),
+            ` to produce an online hub for music hardware projects. The goal is for this ` +
+            `application to contain descriptions of the outcomes of such projects, and generally ` + `facilitate their re-production.`,
+          ]),
         ]),
       ]),
     ])
