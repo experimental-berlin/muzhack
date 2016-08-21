@@ -103,9 +103,11 @@ let renderIndex = (request, reply) => {
           }, R.toPairs(attr2content))
         }, R.toPairs(initialState.metaHtmlAttributes))
       )
+      let isProduction = getEnvParam('APP_ENVIRONMENT') === 'production'
       let renderOptions = {
         initialState: JSON.stringify(initialState),
         metaAttributes,
+        isProduction,
       }
       if (initialState.router.shouldRenderServerSide) {
         logger.debug(`Rendering on server - current state:`, cursor.toJS())
