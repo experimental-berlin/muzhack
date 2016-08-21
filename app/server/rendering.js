@@ -57,6 +57,7 @@ let renderIndex = (request, reply) => {
   let workshopsUri = `${appUrlObj.protocol}//workshops.${appUrlObj.host}`
   let cursor = immstruct('state', {
     metaHtmlAttributes: {
+      viewport: 'width=device-width, initial-scale=1.0',
       'fb:app_id': fbAppId,
       'og:type': 'website',
       'og:title': 'MuzHack',
