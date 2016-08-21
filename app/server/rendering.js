@@ -57,11 +57,15 @@ let renderIndex = (request, reply) => {
   let workshopsUri = `${appUrlObj.protocol}//workshops.${appUrlObj.host}`
   let cursor = immstruct('state', {
     metaHtmlAttributes: {
-      viewport: 'width=device-width, initial-scale=1.0',
-      'fb:app_id': fbAppId,
-      'og:type': 'website',
-      'og:title': 'MuzHack',
-      'og:description': 'MuzHack is an online hub for the publishing of music hardware projects.',
+      name: {
+        viewport: 'width=device-width, initial-scale=1.0',
+      },
+      property: {
+        'fb:app_id': fbAppId,
+        'og:type': 'website',
+        'og:title': 'MuzHack',
+        'og:description': 'MuzHack is an online hub for the publishing of music hardware projects.',
+      },
     },
     search: '',
     appUri,
@@ -88,14 +92,19 @@ let renderIndex = (request, reply) => {
       }))
       let initialState = cursor.toJS()
       logger.debug(`Successfully loaded initial state:`, initialState)
+      let metaAttributes = R.flatten(
+        R.map(([attrType, attr2content,]) => {
+          return R.map(([attr, content,]) => {
+            let obj = {}
+            obj[attrType] = attr
+            obj.content = content
+            return obj
+          }, R.toPairs(attr2content))
+        }, R.toPairs(initialState.metaHtmlAttributes))
+      )
       let renderOptions = {
         initialState: JSON.stringify(initialState),
-        metaAttributes: R.map(([property, content,]) => {
-          return {
-            property,
-            content,
-          }
-        }, R.toPairs(initialState.metaHtmlAttributes)),
+        metaAttributes,
       }
       if (initialState.router.shouldRenderServerSide) {
         logger.debug(`Rendering on server - current state:`, cursor.toJS())

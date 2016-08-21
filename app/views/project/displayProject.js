@@ -384,9 +384,11 @@ module.exports = {
         let chosenPicture = project.chosenPicture || project.pictures[0]
         return {
           metaHtmlAttributes: {
-            'og:title': project.title,
-            'og:image': chosenPicture.url,
-            'og:description': project.summary || '',
+            property: {
+              'og:title': project.title,
+              'og:image': chosenPicture.url,
+              'og:description': project.summary || '',
+            },
           },
           displayProject: {
             expandBillOfMaterials: true,
