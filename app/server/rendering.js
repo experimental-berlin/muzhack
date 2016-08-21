@@ -59,7 +59,7 @@ let renderIndex = (request, reply) => {
     metaHtmlAttributes: {
       name: {
         viewport: 'width=device-width, initial-scale=1.0',
-        description: 'Freely share your music hardware projects.',
+        description: 'An online hub for the free sharing of music hardware projects.',
       },
       property: {
         'fb:app_id': fbAppId,
