@@ -218,10 +218,10 @@ setUpServer()
       vhost: standardVHost,
     })
     routeServerMethod({
-    path: '/muzhack.bundle.js',
+      path: '/muzhack.bundle.js',
       handler: {
         file: {
-        path: path.join(__dirname, '../muzhack.bundle.js'),
+          path: path.join(__dirname, '../muzhack.bundle.js'),
           confine: false,
         },
       },
@@ -244,6 +244,13 @@ setUpServer()
         } else {
           reply()
         }
+      },
+    })
+    routeServerMethod({
+      path: '/google7ffea6639eea1b0a.html',
+      handler: (request, reply) => {
+        reply(`google-site-verification: google7ffea6639eea1b0a.html`)
+          .header('Content-Type', 'text/plain')
       },
     })
 
