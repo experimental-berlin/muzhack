@@ -508,7 +508,8 @@ let realUpdateProject = (owner, ownerName, projectId, projectParams, reply) => {
                     owner,
                     projectId,
                     ownerName,
-                    created: moment.utc().toDate(), // TODO
+                    created: project.created,
+                    updated: moment.utc().toDate(),
                     zipFile,
                   }))).run(conn)
                     .then(() => {
@@ -625,7 +626,7 @@ let updateProjectFromGitHub = Promise.method((repoOwner, repoName, reply) => {
 class Project {
   constructor({projectId, tags, owner, ownerName, title, created, pictures, licenseId,
       description, instructions, files, zipFile, gitHubRepository, mouserProject, summary,
-      bom, bomMarkdown, instructionsPdfUrl,}) {
+      bom, bomMarkdown, instructionsPdfUrl, updated,}) {
     this.id = `${owner}/${projectId}`
     this.projectId = projectId
     this.tags = tags
@@ -645,6 +646,7 @@ class Project {
     this.mouserProject = mouserProject || null
     this.bom = bom || null
     this.bomMarkdown = bomMarkdown || null
+    this.updated = updated || null
   }
 }
 
