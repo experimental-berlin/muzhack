@@ -66,6 +66,7 @@ let renderIndex = (request, reply) => {
         'og:type': 'website',
         'og:title': 'MuzHack',
         'og:description': 'MuzHack is an online hub for the publishing of music hardware projects.',
+        'og:image': 'https://muzhack.com/assets/images/muzhack.png',
       },
     },
     search: '',
