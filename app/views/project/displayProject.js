@@ -6,6 +6,7 @@ let S = require('underscore.string.fp')
 let component = require('omniscient')
 let React = require('react')
 let ReactDOM = require('react-dom')
+let Lightbox = React.createFactory(require('react-images'))
 
 let datetime = require('../../datetime')
 let {nbsp,} = require('../../specialChars')
@@ -89,7 +90,7 @@ let TopOfProject = component('TopOfProject', (cursor) => {
   let projectCursor = cursor.cursor(['displayProject', 'project',])
   let project = projectCursor.toJS()
   let creationDateString = datetime.displayDateTextual(project.created)
-  let mainPicture = project.chosenPicture || project.pictures[0]
+  let mainPicture = project.pictures[0]
   let loggedInUser = userManagement.getLoggedInUser(cursor)
   let canEdit = loggedInUser != null && loggedInUser.username === project.owner
   return h('#project-top-section', [
@@ -103,18 +104,12 @@ let TopOfProject = component('TopOfProject', (cursor) => {
       ]),
       ProjectControls({canEdit, project, cursor,}),
     ]),
-    h('#image-box', [
-      // h('#thumbnails', R.map((picture) => {
-      //   return h('.thumbnail-wrapper', {
-      //     onClick: (event) => {
-      //       event.preventDefault()
-      //       logger.debug(`Thumbnail clicked:`, picture)
-      //       projectCursor.set('chosenPicture', picture)
-      //     },
-      //   }, [
-      //     h('img', {src: picture.thumbNailUrl,}),
-      //   ])
-      // }, project.pictures)),
+    h('#project-image-box', {
+      onClick: () => {
+        logger.debug(`Cover image clicked - displaying lightbox`)
+        cursor.setIn(['displayProject', 'displayLightBox',], true)
+      },
+    }, [
       h('img#main-image', {
         src: mainPicture != null ? mainPicture.url : null
       ,}),
@@ -362,6 +357,30 @@ let render = (cursor) => {
         ]),
       ]),
     ]),
+    Lightbox({
+      backdropClosesModal: true,
+      currentImage: cursor.getIn(['displayProject', 'displayedPicture',]),
+      images: R.map((picture) => {
+        return {
+          src: picture.url,
+        }
+      }, project.pictures),
+      isOpen: cursor.getIn(['displayProject', 'displayLightBox',]),
+      onClickPrev: () => {
+        logger.debug(`Navigating to previous picture`)
+        cursor.setIn(['displayProject', 'displayedPicture',],
+          cursor.getIn(['displayProject', 'displayedPicture',]) - 1)
+      },
+      onClickNext: () => {
+        logger.debug(`Navigating to next picture`)
+        cursor.setIn(['displayProject', 'displayedPicture',],
+          cursor.getIn(['displayProject', 'displayedPicture',]) + 1)
+      },
+      onClose: () => {
+        logger.debug(`Closing lightbox`)
+        cursor.setIn(['displayProject', 'displayLightBox',], false)
+      },
+    }),
   ])
 }
 
@@ -381,7 +400,7 @@ module.exports = {
     return ajax.getJson(`/api/projects/${params.owner}/${params.projectId}`)
       .then((project) => {
         logger.debug(`Loading project ${qualifiedProjectId} JSON succeeded`)
-        let chosenPicture = project.chosenPicture || project.pictures[0]
+        let chosenPicture = project.pictures[0]
         return {
           metaHtmlAttributes: {
             property: {
@@ -395,6 +414,8 @@ module.exports = {
             project: R.merge(project, {
               license: licenses[project.licenseId],
             }),
+            displayLightBox: false,
+            displayedPicture: 0,
           },
         }
       }, (error) => {
