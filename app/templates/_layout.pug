@@ -18,6 +18,32 @@ html
 
         ga('create', 'UA-49183217-3', 'auto');
         ga('send', 'pageview');
+    script(type='application/ld+json').
+      {
+        "@context": "http://schema.org",
+        "@type": "WebPage",
+        "breadcrumb": {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+             "@type": "ListItem",
+             "position": 1,
+             "item":
+             {
+              "@id": "https://muzhack.com",
+              "name": "Home"
+              }
+            },
+          ]
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "contentUrl": "/assets/images/muzhack.png",
+        },
+        "author": "MuzHack Team",
+        "copyrightHolder": "MuzHack Team",
+        "copyrightYear": 2014
+      }
   body
     #fb-root
     #initial-state(data-json=initialState)
