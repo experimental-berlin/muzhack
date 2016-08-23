@@ -275,5 +275,6 @@ setUpServer()
         })
       }, (error) => {
         logger.error(`Failed to set up database: '${error}'`)
+        throw error
       })
   })
