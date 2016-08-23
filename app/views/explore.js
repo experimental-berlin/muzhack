@@ -31,7 +31,7 @@ let createProjectElement = (cursor, i) => {
   let thumbnail = !R.isEmpty(project.pictures || []) ? project.pictures[0].exploreUrl :
     '/images/revox-reel-to-reel-resized.jpg'
   return h('.project-item', {
-    key: i,
+    key: i + 2,
     'data-id': getQualifiedId(project),
   }, [
     h('a', {href: `/u/${project.owner}/${project.projectId}`,}, [
@@ -61,7 +61,7 @@ let Results = component('Results', (cursor) => {
           gutter: '.gutter-sizer',
           percentPosition: true,
         },
-      }, [h('.grid-sizer'), h('.gutter-sizer'),].concat(projectElems))
+      }, [h('.grid-sizer', {key: 0,}), h('.gutter-sizer', {key: 1,}),].concat(projectElems))
   }
 })
 
