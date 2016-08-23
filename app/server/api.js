@@ -7,7 +7,7 @@ let moment = require('moment')
 let r = require('rethinkdb')
 let JSZip = require('jszip')
 let request = require('request')
-let gcloud = require('gcloud')
+let gcloud = require('google-cloud')
 let Promise = require('bluebird')
 let CryptoJs = require('crypto-js')
 
