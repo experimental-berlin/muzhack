@@ -90,11 +90,7 @@ module.exports = {
         }
       }, (error) => {
         logger.warn(`Loading user JSON failed:`, error)
-        if (typeof error !== 'string') {
-          throw error
-        } else {
-          throw new Error(error)
-        }
+        throw error
       })
   },
   render: (cursor) => {

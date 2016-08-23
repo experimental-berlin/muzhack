@@ -27,6 +27,12 @@ let ajax = Promise.method((method, uri, params, payload, options={}) => {
       } else {
         return result
       }
+    }, (error) => {
+      if (typeof error === 'string') {
+        throw new Error(error)
+      } else {
+        throw error
+      }
     })
 })
 
