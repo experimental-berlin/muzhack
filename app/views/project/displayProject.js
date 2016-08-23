@@ -6,7 +6,7 @@ let S = require('underscore.string.fp')
 let component = require('omniscient')
 let React = require('react')
 let ReactDOM = require('react-dom')
-let Lightbox = React.createFactory(require('react-images'))
+let Lightbox = React.createFactory(require('@arve.knudsen/react-images'))
 
 let datetime = require('../../datetime')
 let {nbsp,} = require('../../specialChars')
@@ -367,18 +367,25 @@ let render = (cursor) => {
       }, project.pictures),
       isOpen: cursor.getIn(['displayProject', 'displayLightBox',]),
       onClickPrev: () => {
+        let pictureIndex = cursor.getIn(['displayProject', 'displayedPicture',])
         logger.debug(`Navigating to previous picture`)
         cursor.setIn(['displayProject', 'displayedPicture',],
-          cursor.getIn(['displayProject', 'displayedPicture',]) - 1)
+          pictureIndex - 1)
       },
       onClickNext: () => {
+        let pictureIndex = cursor.getIn(['displayProject', 'displayedPicture',])
         logger.debug(`Navigating to next picture`)
         cursor.setIn(['displayProject', 'displayedPicture',],
-          cursor.getIn(['displayProject', 'displayedPicture',]) + 1)
+          pictureIndex + 1)
       },
       onClose: () => {
         logger.debug(`Closing lightbox`)
-        cursor.setIn(['displayProject', 'displayLightBox',], false)
+        cursor.mergeDeep({
+          displayProject: {
+            displayLightBox: false,
+            displayedPicture: 0,
+          },
+        })
       },
     }),
   ])
