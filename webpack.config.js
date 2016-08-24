@@ -1,20 +1,17 @@
 'use strict'
 let webpack = require('webpack')
-let isProduction = process.env.NODE_ENV === 'production'
 
 let plugins = [
   new webpack.DefinePlugin({
     __IS_BROWSER__: true,
   }),
 ]
-if (isProduction) {
-   // Disable development features in React in production build
-  plugins = plugins.concat(new webpack.DefinePlugin({
-    'process.env': {
-      NODE_ENV: JSON.stringify('production'),
-    },
-  }))
-}
+ // Disable development features in React in production build
+plugins = plugins.concat([new webpack.DefinePlugin({
+  'process.env': {
+    NODE_ENV: JSON.stringify('production'),
+  },
+}),])
 
 module.exports = {
   context: __dirname + '/app',
