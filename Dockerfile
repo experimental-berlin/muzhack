@@ -14,6 +14,8 @@ COPY requirements.txt requirements.txt
 # Turn off production mode, as we need to install dev dependencies
 ENV NODE_ENV=
 RUN npm install
+# Re-enable production mode
+ENV NODE_ENV=production
 RUN npm install -g gulp
 RUN pip install -U pip
 RUN pip install -U -r requirements.txt

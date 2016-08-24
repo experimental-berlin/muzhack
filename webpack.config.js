@@ -8,12 +8,12 @@ let plugins = [
   }),
 ]
 if (isProduction) {
-   // Disable development features in React in production build
-  plugins = plugins.concat(new webpack.DefinePlugin({
+  // Disable development features in React in production build
+  plugins = plugins.concat([new webpack.DefinePlugin({
     'process.env': {
       NODE_ENV: JSON.stringify('production'),
     },
-  }))
+  }),])
 }
 
 module.exports = {
