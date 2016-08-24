@@ -86,7 +86,7 @@ let renderIndex = (request, reply) => {
   })
   return updateRouterState(cursor, request.path, null, request.query)
     .then(([cursor, newState,]) => {
-      logger.debug(`Got new state:`, newState)
+      // logger.debug(`Got new state:`, newState)
       cursor = cursor.mergeDeep(R.merge(newState, {
         router: {
           isLoading: false,
