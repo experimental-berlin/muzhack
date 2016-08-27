@@ -8,6 +8,7 @@ let h = require('react-hyperscript')
 let React = require('react')
 let ReactDOM = require('react-dom')
 let Masonry = React.createFactory(require('react-masonry-component'))
+let InfiniteScroll = React.createFactory(require('react-infinite-scroll')())
 
 let FocusingInput = require('./focusingInput')
 let ajax = require('../ajax')
@@ -45,6 +46,31 @@ let createProjectElement = (cursor, i) => {
 }
 
 let Results = component('Results', (cursor) => {
+  let loadMoreProjects = () => {
+    let exploreState = cursor.cursor('explore').toJS()
+    let searchString = exploreState.search
+    let currentPage = exploreState.currentSearchPage
+    let perPage = exploreState.perSearchPage
+    logger.debug(
+      `Loading more projects in response to InfiniteScroll, page: ${currentPage}...`)
+    return searchAsync(cursor, searchString, currentPage, perPage)
+      .then((projects) => {
+        let hasMoreProjects = projects.length === perPage
+        let existingProjects = exploreState.projects
+        logger.debug(
+          `Received results from search for page ${currentPage}: ${projects.length}`)
+        logger.debug(`Has more: ${hasMoreProjects}`)
+        cursor.updateIn(['explore',], (current) => {
+          return current.merge({
+            search: searchString,
+            projects: R.concat(existingProjects, projects),
+            hasMoreProjects,
+            currentSearchPage: currentPage + 1,
+          })
+        })
+      })
+  }
+
   let exploreCursor = cursor.cursor('explore')
   if (exploreCursor.get('isSearching')) {
     return h('p', 'Searching...')
@@ -52,21 +78,31 @@ let Results = component('Results', (cursor) => {
     let projectsCursor = exploreCursor.cursor('projects')
     logger.debug(`Got ${projectsCursor.toJS().length} search results`)
     let projectElems = projectsCursor.map(createProjectElement).toJS()
-    return projectsCursor.isEmpty() ? h('p', 'No projects were found, please try again.') :
-      Masonry({
-        className: 'projects-container',
-        options: {
-          itemSelector: '.project-item',
-          columnWidth: '.grid-sizer',
-          gutter: '.gutter-sizer',
-          percentPosition: true,
-        },
-      }, [h('.grid-sizer', {key: 0,}), h('.gutter-sizer', {key: 1,}),].concat(projectElems))
+    return InfiniteScroll({
+        loader: null, // TODO
+        loadMore: loadMoreProjects,
+        hasMore: exploreCursor.get('hasMoreProjects'),
+        threshold: 1000,
+      }, [
+        Masonry({
+          className: 'projects-container',
+          options: {
+            itemSelector: '.project-item',
+            columnWidth: '.grid-sizer',
+            gutter: '.gutter-sizer',
+            percentPosition: true,
+          },
+        }, [h('.grid-sizer', {key: 0,}), h('.gutter-sizer', {key: 1,}),].concat(projectElems)),
+      ])
   }
 })
 
-let searchAsync = (cursor, query) => {
-  return ajax.getJson('/api/search', {query: query || '',})
+let searchAsync = (cursor, query, page, perPage) => {
+  return ajax.getJson('/api/search', {
+    query: query || '',
+    page,
+    perPage,
+  })
     .then((projects) => {
       logger.debug(`Searching succeeded`)
       return projects
@@ -123,23 +159,19 @@ module.exports = {
   createState: () => {
     return immutable.fromJS({
       search: '',
-      projects: [
-      ],
+      projects: [],
+      hasMoreProjects: true,
+      currentSearchPage: 0,
+      perSearchPage: 6,
     })
   },
   loadData: (cursor, params, queryParams) => {
-    logger.debug(`Loading projects`)
     let searchString = queryParams.q || ''
-    return searchAsync(cursor, searchString)
-      .then((projects) => {
-        return {
-          explore: {
-            isSearching: false,
-            search: searchString,
-            projects,
-          },
-        }
-      })
+    return {
+      explore: {
+        search: searchString,
+      },
+    }
   },
   render: (cursor) => {
     // logger.debug(`Explore state:`, exploreCursor.toJS())

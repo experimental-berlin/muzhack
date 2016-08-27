@@ -12,7 +12,7 @@ let notFoundError = TypedError({
   message: 'Path not found',
 })
 
-let loadData = (cursor, module) => {
+let loadData = Promise.method((cursor, module) => {
   let routerState = cursor.cursor('router').toJS()
   let promise
   if (module.loadData != null) {
@@ -24,21 +24,16 @@ let loadData = (cursor, module) => {
         isLoading: true,
       },
     })
-    let result = module.loadData(cursor, routerState.currentRouteParams,
-      routerState.currentQueryParams) || {}
-    if (result.then != null) {
-      promise = result
-    } else {
-      promise = Promise.resolve(result)
-    }
+    promise = Promise.method(module.loadData)(cursor, routerState.currentRouteParams,
+      routerState.currentQueryParams)
   } else {
     promise = Promise.resolve({})
   }
   return promise
     .then((result) => {
-      return [cursor, result,]
+      return [cursor, result != null ? result : {},]
     })
-}
+})
 
 module.exports = {
   createRouterState: (routeMap) => {

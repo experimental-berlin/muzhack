@@ -81,7 +81,9 @@ let verifyDiscourseSso = (request, reply) => {
 }
 
 let search = (request, reply) => {
-  logger.debug(`Searching for '${request.query.query}'`)
+  let page = Number(request.query.page)
+  let perPage = Number(request.query.perPage)
+  logger.debug(`Searching for '${request.query.query}', page: ${page}`)
   withDb(reply, (conn) => {
     let reTag = /\[[^\]]*\]/g
     let queryWithoutTags = ''
@@ -125,6 +127,8 @@ let search = (request, reply) => {
         }, tags)
         return pred
       })
+      .skip(page * perPage)
+      .limit(perPage)
       .run(conn)
       .then((projectsCursor) => {
         return projectsCursor.toArray()
