@@ -51,6 +51,7 @@
   },
   "dependencies": {
     "@arve.knudsen/react-autocomplete": "^1.0.1",
+    "@arve.knudsen/react-images": "^0.5.2",
     "base64url": "^2.0.0",
     "bcrypt": "^0.8.5",
     "bluebird": "^3.4.0",
@@ -77,9 +78,8 @@
     "react": "^15.0.0",
     "react-dom": "^15.0.0",
     "react-hyperscript": "^2.2.0",
-    "@arve.knudsen/react-images": "^0.5.2",
+    "react-masonry-component": "^4.2.1",
     "react-modal": "^1.2.0",
-    "react-packery-component": "^1.0.1",
     "request": "^2.67.0",
     "rethinkdb": "^2.2.0",
     "stripe": "^4.1.0",

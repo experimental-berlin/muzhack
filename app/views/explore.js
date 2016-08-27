@@ -7,7 +7,7 @@ let R = require('ramda')
 let h = require('react-hyperscript')
 let React = require('react')
 let ReactDOM = require('react-dom')
-let Packery = React.createFactory(require('react-packery-component')(React))
+let Masonry = React.createFactory(require('react-masonry-component'))
 
 let FocusingInput = require('./focusingInput')
 let ajax = require('../ajax')
@@ -53,7 +53,7 @@ let Results = component('Results', (cursor) => {
     logger.debug(`Got ${projectsCursor.toJS().length} search results`)
     let projectElems = projectsCursor.map(createProjectElement).toJS()
     return projectsCursor.isEmpty() ? h('p', 'No projects were found, please try again.') :
-      Packery({
+      Masonry({
         className: 'projects-container',
         options: {
           itemSelector: '.project-item',
