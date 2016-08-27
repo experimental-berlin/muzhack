@@ -58,7 +58,7 @@
     "ent": "^2.2.0",
     "error": "^7.0.2",
     "google-cloud": "^0.38.3",
-    "hapi": "^14.0",
+    "hapi": "^15.0.1",
     "hapi-auth-cookie": "^6.1",
     "htmlparser2": "^3.8.3",
     "immstruct": "^2.0.0",
