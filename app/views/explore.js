@@ -13,6 +13,7 @@ let InfiniteScroll = React.createFactory(require('react-infinite-scroll')())
 let FocusingInput = require('./focusingInput')
 let ajax = require('../ajax')
 let router = require('../router')
+let Loading = require('./loading')
 
 if (__IS_BROWSER__) {
   require('./explore.styl')
@@ -81,7 +82,7 @@ let Results = component('Results', (cursor) => {
     logger.debug(`Got ${projectsCursor.toJS().length} search results`)
     let projectElems = projectsCursor.map(createProjectElement).toJS()
     return InfiniteScroll({
-      loader: null, // TODO
+      loader: Loading(),
       loadMore: loadMoreProjects,
       hasMore: exploreCursor.get('hasMoreProjects'),
       threshold: 1000,
