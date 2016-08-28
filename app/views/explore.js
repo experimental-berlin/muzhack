@@ -53,7 +53,7 @@ let Results = component('Results', (cursor) => {
     let exploreState = cursor.cursor('explore').toJS()
     let searchString = exploreState.search
     let currentPage = exploreState.currentSearchPage
-    let perPage = exploreState.perSearchPage
+    let perPage = 6
     logger.debug(
       `Loading more projects in response to InfiniteScroll, page: ${currentPage}...`)
     return searchAsync(cursor, searchString, currentPage, perPage)
@@ -164,15 +164,18 @@ module.exports = {
       projects: [],
       hasMoreProjects: true,
       currentSearchPage: 0,
-      perSearchPage: 6,
     })
   },
   loadData: (cursor, params, queryParams) => {
     let searchString = queryParams.q || ''
 
+    logger.debug(`loadData called`)
     return {
       explore: {
         search: searchString,
+        projects: [],
+        hasMoreProjects: true,
+        currentSearchPage: 0,
       },
     }
   },
