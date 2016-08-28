@@ -67,7 +67,7 @@ module.exports = Promise.method((project, specificCursor, cursor) => {
     return picturesPromise
   }
 
-  let [title, description, instructions, tags, licenseId, username, queuedPictures,
+  let [title, summary, description, instructions, tags, licenseId, username, queuedPictures,
     queuedFiles,] = getParameters(project, cursor)
   return uploadFiles()
     .then(([uploadedPictures, uploadedFiles,]) => {
@@ -84,6 +84,7 @@ module.exports = Promise.method((project, specificCursor, cursor) => {
         transformFiles(fileDropzone.getExistingFiles()),
         transformFiles(uploadedFiles)
       )
-      return {title, description, instructions, tags, licenseId, username, pictureFiles, files,}
+      return {title, summary, description, instructions, tags, licenseId, username,
+        pictureFiles, files,}
     })
 })
