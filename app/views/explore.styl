@@ -61,6 +61,19 @@
     a
       text-decoration none
 
+  .project-item-image-container
+    // Hack to make height 3/4 of width
+    position relative
+    padding-top 75%
+    width 100%
+
+  .project-item-image
+    // Position on top of padded space within parent element, as part of hack to calculate height
+    // from width
+    position absolute
+    left 0
+    top 0
+
   .project-item-header
     padding 8px
     background-color black

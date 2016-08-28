@@ -40,7 +40,9 @@ let createProjectElement = (cursor, i) => {
         h('.project-item-title', project.title),
         h('.project-item-author', project.owner),
       ]),
-      h('img.project-item-image', {src: thumbnail,}),
+      h('.project-item-image-container', [
+        h('img.project-item-image', {src: thumbnail,}),
+      ]),
     ]),
   ])
 }
@@ -60,7 +62,7 @@ let Results = component('Results', (cursor) => {
         logger.debug(
           `Received results from search for page ${currentPage}: ${projects.length}`)
         logger.debug(`Has more: ${hasMoreProjects}`)
-        cursor.updateIn(['explore',], (current) => {
+        cursor = cursor.updateIn(['explore',], (current) => {
           return current.merge({
             search: searchString,
             projects: R.concat(existingProjects, projects),
@@ -79,21 +81,21 @@ let Results = component('Results', (cursor) => {
     logger.debug(`Got ${projectsCursor.toJS().length} search results`)
     let projectElems = projectsCursor.map(createProjectElement).toJS()
     return InfiniteScroll({
-        loader: null, // TODO
-        loadMore: loadMoreProjects,
-        hasMore: exploreCursor.get('hasMoreProjects'),
-        threshold: 1000,
-      }, [
-        Masonry({
-          className: 'projects-container',
-          options: {
-            itemSelector: '.project-item',
-            columnWidth: '.grid-sizer',
-            gutter: '.gutter-sizer',
-            percentPosition: true,
-          },
-        }, [h('.grid-sizer', {key: 0,}), h('.gutter-sizer', {key: 1,}),].concat(projectElems)),
-      ])
+      loader: null, // TODO
+      loadMore: loadMoreProjects,
+      hasMore: exploreCursor.get('hasMoreProjects'),
+      threshold: 1000,
+    }, [
+      Masonry({
+        className: 'projects-container',
+        options: {
+          itemSelector: '.project-item',
+          columnWidth: '.grid-sizer',
+          gutter: '.gutter-sizer',
+          percentPosition: true,
+        },
+      }, [h('.grid-sizer', {key: 0,}), h('.gutter-sizer', {key: 1,}),].concat(projectElems)),
+    ])
   }
 })
 
