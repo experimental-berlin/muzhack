@@ -86,6 +86,7 @@
     "tmp": "0.0.28",
     "underscore.string.fp": "^1.0.4",
     "vision": "^4.0.1",
-    "yamljs": "^0.2.7"
+    "yamljs": "^0.2.7",
+    "react-infinite-scroll": "aknuds1/react-infinite-scroll"
   }
 }

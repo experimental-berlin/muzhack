@@ -8,10 +8,12 @@ let h = require('react-hyperscript')
 let React = require('react')
 let ReactDOM = require('react-dom')
 let Masonry = React.createFactory(require('react-masonry-component'))
+let InfiniteScroll = React.createFactory(require('react-infinite-scroll')())
 
 let FocusingInput = require('./focusingInput')
 let ajax = require('../ajax')
 let router = require('../router')
+let Loading = require('./loading')
 
 if (__IS_BROWSER__) {
   require('./explore.styl')
@@ -39,12 +41,45 @@ let createProjectElement = (cursor, i) => {
         h('.project-item-title', project.title),
         h('.project-item-author', project.owner),
       ]),
-      h('img.project-item-image', {src: thumbnail,}),
+      h('.project-item-image-container', [
+        h('img.project-item-image', {src: thumbnail,}),
+      ]),
     ]),
   ])
 }
 
 let Results = component('Results', (cursor) => {
+  let loadMoreProjects = () => {
+    let exploreState = cursor.cursor('explore').toJS()
+    let searchString = exploreState.search
+    let currentPage = exploreState.currentSearchPage
+    let perPage = 6
+    logger.debug(
+      `Loading more projects in response to InfiniteScroll, page: ${currentPage}...`)
+    return searchAsync(cursor, searchString, currentPage, perPage)
+      .then((projects) => {
+        let hasMoreProjects = projects.length === perPage
+        let existingProjects = exploreState.projects
+        let wasSearchSuccessful = currentPage > 0 || !R.isEmpty(projects)
+        if (wasSearchSuccessful) {
+          logger.debug(
+            `Received results from search for page ${currentPage}: ${projects.length}`)
+          logger.debug(`Has more: ${hasMoreProjects}`)
+        } else {
+          logger.debug(`Search returned no results`)
+        }
+        cursor = cursor.updateIn(['explore',], (current) => {
+          return current.merge({
+            search: searchString,
+            projects: R.concat(existingProjects, projects),
+            hasMoreProjects,
+            currentSearchPage: currentPage + 1,
+            wasSearchSuccessful,
+          })
+        })
+      })
+  }
+
   let exploreCursor = cursor.cursor('explore')
   if (exploreCursor.get('isSearching')) {
     return h('p', 'Searching...')
@@ -52,8 +87,13 @@ let Results = component('Results', (cursor) => {
     let projectsCursor = exploreCursor.cursor('projects')
     logger.debug(`Got ${projectsCursor.toJS().length} search results`)
     let projectElems = projectsCursor.map(createProjectElement).toJS()
-    return projectsCursor.isEmpty() ? h('p', 'No projects were found, please try again.') :
-      Masonry({
+    let wasSearchSuccessful = exploreCursor.get('wasSearchSuccessful')
+    return wasSearchSuccessful ? InfiniteScroll({
+      loader: Loading(),
+      loadMore: loadMoreProjects,
+      hasMore: exploreCursor.get('hasMoreProjects'),
+      threshold: 1000,
+    }, Masonry({
         className: 'projects-container',
         options: {
           itemSelector: '.project-item',
@@ -62,11 +102,16 @@ let Results = component('Results', (cursor) => {
           percentPosition: true,
         },
       }, [h('.grid-sizer', {key: 0,}), h('.gutter-sizer', {key: 1,}),].concat(projectElems))
+    ) : h('p', 'No projects were found, please try again.')
   }
 })
 
-let searchAsync = (cursor, query) => {
-  return ajax.getJson('/api/search', {query: query || '',})
+let searchAsync = (cursor, query, page, perPage) => {
+  return ajax.getJson('/api/search', {
+    query: query || '',
+    page,
+    perPage,
+  })
     .then((projects) => {
       logger.debug(`Searching succeeded`)
       return projects
@@ -123,23 +168,24 @@ module.exports = {
   createState: () => {
     return immutable.fromJS({
       search: '',
-      projects: [
-      ],
+      projects: [],
+      hasMoreProjects: true,
+      currentSearchPage: 0,
     })
   },
   loadData: (cursor, params, queryParams) => {
-    logger.debug(`Loading projects`)
     let searchString = queryParams.q || ''
-    return searchAsync(cursor, searchString)
-      .then((projects) => {
-        return {
-          explore: {
-            isSearching: false,
-            search: searchString,
-            projects,
-          },
-        }
-      })
+
+    logger.debug(`loadData called`)
+    return {
+      explore: {
+        search: searchString,
+        projects: [],
+        hasMoreProjects: true,
+        currentSearchPage: 0,
+        wasSearchSuccessful: true,
+      },
+    }
   },
   render: (cursor) => {
     // logger.debug(`Explore state:`, exploreCursor.toJS())
