@@ -85,8 +85,7 @@ let Results = component('Results', (cursor) => {
       loadMore: loadMoreProjects,
       hasMore: exploreCursor.get('hasMoreProjects'),
       threshold: 1000,
-    }, [
-      Masonry({
+    }, Masonry({
         className: 'projects-container',
         options: {
           itemSelector: '.project-item',
@@ -94,8 +93,8 @@ let Results = component('Results', (cursor) => {
           gutter: '.gutter-sizer',
           percentPosition: true,
         },
-      }, [h('.grid-sizer', {key: 0,}), h('.gutter-sizer', {key: 1,}),].concat(projectElems)),
-    ])
+      }, [h('.grid-sizer', {key: 0,}), h('.gutter-sizer', {key: 1,}),].concat(projectElems))
+    )
   }
 })
 
@@ -169,6 +168,7 @@ module.exports = {
   },
   loadData: (cursor, params, queryParams) => {
     let searchString = queryParams.q || ''
+
     return {
       explore: {
         search: searchString,
