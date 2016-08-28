@@ -60,15 +60,21 @@ let Results = component('Results', (cursor) => {
       .then((projects) => {
         let hasMoreProjects = projects.length === perPage
         let existingProjects = exploreState.projects
-        logger.debug(
-          `Received results from search for page ${currentPage}: ${projects.length}`)
-        logger.debug(`Has more: ${hasMoreProjects}`)
+        let wasSearchSuccessful = currentPage > 0 || !R.isEmpty(projects)
+        if (wasSearchSuccessful) {
+          logger.debug(
+            `Received results from search for page ${currentPage}: ${projects.length}`)
+          logger.debug(`Has more: ${hasMoreProjects}`)
+        } else {
+          logger.debug(`Search returned no results`)
+        }
         cursor = cursor.updateIn(['explore',], (current) => {
           return current.merge({
             search: searchString,
             projects: R.concat(existingProjects, projects),
             hasMoreProjects,
             currentSearchPage: currentPage + 1,
+            wasSearchSuccessful,
           })
         })
       })
@@ -81,7 +87,8 @@ let Results = component('Results', (cursor) => {
     let projectsCursor = exploreCursor.cursor('projects')
     logger.debug(`Got ${projectsCursor.toJS().length} search results`)
     let projectElems = projectsCursor.map(createProjectElement).toJS()
-    return InfiniteScroll({
+    let wasSearchSuccessful = exploreCursor.get('wasSearchSuccessful')
+    return wasSearchSuccessful ? InfiniteScroll({
       loader: Loading(),
       loadMore: loadMoreProjects,
       hasMore: exploreCursor.get('hasMoreProjects'),
@@ -95,7 +102,7 @@ let Results = component('Results', (cursor) => {
           percentPosition: true,
         },
       }, [h('.grid-sizer', {key: 0,}), h('.gutter-sizer', {key: 1,}),].concat(projectElems))
-    )
+    ) : h('p', 'No projects were found, please try again.')
   }
 })
 
@@ -176,6 +183,7 @@ module.exports = {
         projects: [],
         hasMoreProjects: true,
         currentSearchPage: 0,
+        wasSearchSuccessful: true,
       },
     }
   },
