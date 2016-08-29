@@ -4,5 +4,5 @@ metadata:
   name: l7-ingress-locust
 spec:
   backend:
-    serviceName: web
-    servicePort: 8089
+    serviceName: locust-master
+    servicePort: loc-master-web
