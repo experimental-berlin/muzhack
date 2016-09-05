@@ -555,6 +555,7 @@ module.exports = {
           id: null,
           title: null,
           tags: null,
+          summary: null,
           description: null,
           pictures: null,
         },
