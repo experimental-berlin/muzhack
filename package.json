@@ -87,6 +87,6 @@
     "underscore.string.fp": "^1.0.4",
     "vision": "^4.0.1",
     "yamljs": "^0.2.7",
-    "react-infinite-scroll": "aknuds1/react-infinite-scroll"
+    "@arve.knudsen/react-infinite-scroll": "^0.1.7"
   }
 }
