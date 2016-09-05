@@ -3,6 +3,7 @@ global.__IS_BROWSER__ = false
 
 let Hapi = require('hapi')
 let R = require('ramda')
+let S = require('underscore.string.fp')
 let path = require('path')
 let pug = require('pug')
 let Boom = require('boom')
@@ -89,6 +90,13 @@ let workshopsVHost = `workshops.${standardVHost}`
 
 let setUpServer = Promise.method(() => {
   let server = new Hapi.Server({
+    cache: [
+      {
+        engine: require('catbox-redis'),
+        host: getEnvParam('REDIS_HOST', '127.0.0.1'),
+        partition: 'cache',
+      },
+    ],
     connections: {
       router: {
         stripTrailingSlash: true,
@@ -161,6 +169,21 @@ setUpServer()
       }, options))
     }
 
+
+    let renderIndexCache = server.cache({
+      expiresIn: 60 * 60 * 1000,
+      segment: 'renderIndex',
+      generateFunc: ({request, reply,}, next) => {
+        Promise.method(rendering.renderIndex)(request, reply)
+          .then((result) => {
+            next(null, result)
+          }, (error) => {
+            next(error)
+          })
+      },
+      generateTimeout: 20 * 1000,
+    })
+
     routeServerMethod({
       path: '/u/{user}/attach/github',
       handler: (request, reply) => {
@@ -214,7 +237,32 @@ setUpServer()
     })
     routeServerMethod({
       path: '/{path*}',
-      handler: rendering.renderIndex,
+      handler: (request, reply) => {
+        let queryStr = S.join(':', R.map(S.join('='), R.toPairs(request.query)))
+        let id = `${request.url.path}?${queryStr}`
+        logger.debug(`Query ID: ${id}`, request.url)
+        logger.debug(`Cache policy ready: ${renderIndexCache.isReady()}`)
+        renderIndexCache.get({
+          id,
+          request,
+          reply,
+        }, (err, result, cached) => {
+          if (cached != null) {
+            logger.debug(`Value found in cache for ID '${id}'`)
+          } else {
+            logger.debug(`Value not found in cache for ID '${id}' - storing it`)
+            return new Promise((resolve, reject) => {
+              renderIndexCache.set(id, result, (error) => {
+                if (error != null) {
+                  reject(error)
+                } else {
+                  resolve()
+                }
+              })
+            })
+          }
+        })
+      },
       vhost: standardVHost,
     })
     routeServerMethod({
@@ -253,7 +301,6 @@ setUpServer()
           .header('Content-Type', 'text/plain')
       },
     })
-
     routeServerMethod({
       path: '/{path*}',
       handler: workshopsServerRendering.renderIndex,
