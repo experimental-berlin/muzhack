@@ -37,13 +37,17 @@ let editProject = (cursor) => {
   let editProject = editCursor.toJS()
   let input = editProject.project
   uploadProject(input, editCursor, cursor)
-    .then(({title, description, instructions, tags, licenseId, username, pictureFiles, files,}) => {
+    .then(({title, summary, description, instructions, tags, licenseId, username,
+        pictureFiles, files,}) => {
       logger.debug(`Picture files:`, pictureFiles)
       logger.debug(`Files:`, files)
-      logger.debug(`title: ${title}, description: ${description}, tags: ${S.join(`,`, tags)}`)
+      logger.debug(
+        `title: ${title}, summary: ${summary}, description: ${description}, ` +
+        `tags: ${S.join(`,`, tags)}`)
       let qualifiedProjectId = `${editProject.owner}/${editProject.projectId}`
       let data = {
         title,
+        summary,
         description,
         instructions,
         tags,
@@ -135,7 +139,8 @@ let EditNonGitHubProject = component('EditNonGitHubProject', (cursor) => {
     h('.input-group', [
       h('input#title-input', {
         type: 'text',
-        placeholder: 'Project title', value: project.title,
+        placeholder: 'Project title',
+        value: project.title,
         onChange: inputChangeHandler('title', (event, editCursor) => {
           let title = event.target.value
           logger.debug(`Project title changed: '${title}'`)
@@ -152,7 +157,8 @@ let EditNonGitHubProject = component('EditNonGitHubProject', (cursor) => {
     h('.input-group', [
       h('input#tags-input', {
         type: 'text',
-        placeholder: 'Project tags', value: project.tagsString,
+        placeholder: 'Project tags',
+        value: project.tagsString,
         onChange: inputChangeHandler('tags', (event, editCursor) => {
           logger.debug(`Project tags changed: '${event.target.value}'`)
           let tagsString = event.target.value
@@ -191,6 +197,24 @@ let EditNonGitHubProject = component('EditNonGitHubProject', (cursor) => {
       }, R.map(([licenseId, license,]) => {
         return h('option', {value: licenseId,}, license.name)
       }, R.toPairs(licenses))),
+    ]),
+    h('.input-group', [
+      h('input#summary-input', {
+        type: 'text',
+        placeholder: 'Project summary - One to two sentences',
+        value: project.summary,
+        onChange: inputChangeHandler('summary', (event, editCursor) => {
+          let summary = event.target.value
+          logger.debug(`Project summary changed: '${summary}'`)
+          editCursor.setIn(['project', 'summary',], summary)
+          if (S.isBlank(summary)) {
+            return `Summary must be filled in`
+          } else {
+            return null
+          }
+        }),
+      }),
+      renderFieldError(errors, 'summary'),
     ]),
     h('#description-editor', {
       onChange: inputChangeHandler('description', (event) => {

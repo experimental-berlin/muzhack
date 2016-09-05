@@ -48,15 +48,18 @@ let createProject = Promise.method((cursor) => {
   })
 
   return uploadProject(inputExtended, createCursor, cursor)
-    .then(({title, description, instructions, tags, licenseId, username, pictureFiles,
+    .then(({title, summary, description, instructions, tags, licenseId, username, pictureFiles,
         files,}) => {
       logger.debug(`Picture files:`, pictureFiles)
       logger.debug(`Files:`, files)
-      logger.debug(`title: ${title}, description: ${description}, tags: ${S.join(`,`, tags)}`)
+      logger.debug(
+        `title: ${title}, summary: ${summary}, description: ${description}, ` +
+        `tags: ${S.join(`,`, tags)}`)
       let qualifiedProjectId = `${username}/${input.id}`
       let data = {
         id: input.id,
         title,
+        summary,
         description,
         instructions,
         tags,
@@ -227,6 +230,24 @@ let renderCreateStandaloneProject = (cursor) => {
       }, R.map(([id, license,]) => {
         return h('option', {value: id,}, license.name)
       }, R.toPairs(licenses))),
+    ]),
+    h('.input-group', [
+      h('input#summary-input', {
+        type: 'text',
+        placeholder: 'Project summary - One to two sentences',
+        value: input.summary,
+        onChange: inputChangeHandler('summary', (event, createCursor) => {
+          let summary = event.target.value
+          logger.debug(`Project summary changed: '${summary}'`)
+          createCursor.set('summary', summary)
+          if (S.isBlank(summary)) {
+            return `Summary must be filled in`
+          } else {
+            return null
+          }
+        }),
+      }),
+      renderFieldError(errors, 'summary'),
     ]),
     h('#description-editor',  {
       onChange: inputChangeHandler('description', (event, createCursor) => {

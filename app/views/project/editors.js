@@ -101,6 +101,7 @@ let FilesEditor = component('FilesEditor', {
 let getParameters = (input, cursor) => {
   logger.debug(`Getting parameters from input`, input)
   let title = trimWhitespace(input.title)
+  let summary = trimWhitespace(input.summary)
   let description = trimWhitespace(markdownService.getDescription())
   let instructions = trimWhitespace(markdownService.getInstructions())
   let tags = R.map(trimWhitespace, S.wordsDelim(/,/, input.tagsString))
@@ -111,8 +112,14 @@ let getParameters = (input, cursor) => {
   if (licenseId == null) {
     throw new Error(`licenseId is null`)
   }
-  if (S.isBlank(title) || R.isEmpty(tags)) {
-    throw validationError('Fields not correctly filled in')
+  if (S.isBlank(title)) {
+    throw validationError('Title must be filled in')
+  }
+  if (R.isEmpty(tags)) {
+    throw validationError('Tags must be filled in')
+  }
+  if (S.isBlank(summary)) {
+    throw validationError('Summary must be filled in')
   }
   if (S.isBlank(description)) {
     throw validationError('Description must be filled in')
@@ -123,7 +130,7 @@ let getParameters = (input, cursor) => {
   }
   let queuedPictures = pictureDropzone.getQueuedFiles()
   let queuedFiles = fileDropzone.getQueuedFiles()
-  return [title, description, instructions, tags, licenseId, username, queuedPictures,
+  return [title, summary, description, instructions, tags, licenseId, username, queuedPictures,
     queuedFiles,]
 }
 

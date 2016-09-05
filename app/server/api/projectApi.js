@@ -637,7 +637,7 @@ class Project {
     this.pictures = pictures
     this.licenseId = licenseId
     this.description = description
-    this.summary = summary || null
+    this.summary = S.prune('...', 200, summary)
     this.instructions = instructions
     this.instructionsPdfUrl = instructionsPdfUrl
     this.files = files

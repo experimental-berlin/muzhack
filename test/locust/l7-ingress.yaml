@@ -3,8 +3,6 @@ kind: Ingress
 metadata:
   name: l7-ingress
 spec:
-  tls:
-    - secretName: web-secret
   backend:
-    serviceName: web
-    servicePort: 80
+    serviceName: locust-master
+    servicePort: loc-master-web
