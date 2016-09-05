@@ -7,6 +7,7 @@ let immstruct = require('immstruct')
 let ReactDomServer = require('react-dom/server')
 let Boom = require('boom')
 let url = require('url')
+let Promise = require('bluebird')
 
 let {normalizePath,} = require('../urlUtils')
 let explore = require('../views/explore')
@@ -110,24 +111,29 @@ let renderIndex = (request, reply) => {
         metaAttributes,
         isProduction,
       }
+      let renderPromise
       if (initialState.router.shouldRenderServerSide) {
         logger.debug(`Rendering on server - current state:`, cursor.toJS())
         let reactHtml = ReactDomServer.renderToString(App(cursor))
         logger.debug(`Finished rendering`)
-        reply.view('serverSideIndex', R.merge(renderOptions, {
-          reactHtml,
-        }))
+        renderPromise = Promise.promisify(request.render, {
+          context: request,
+        })('serverSideIndex',
+          R.merge(renderOptions, {reactHtml,}))
       } else {
         logger.debug(`Not rendering JavaScript on server side`)
-        reply.view('nonServerSideIndex', renderOptions)
+        renderPromise = Promise.promisify(server.render, {
+          context: request,
+        })('nonServerSideIndex', renderOptions)
       }
+      return renderPromise
     }, (error) => {
       if (error.statusCode === 404 || error.type === 'notFound') {
         logger.debug(`Current route not recognized`)
-        reply(Boom.notFound())
+        return Boom.notFound()
       } else {
         logger.error(`Failed to load initial state: '${error}':`, error.stack)
-        reply(Boom.badImplementation())
+        return Boom.badImplementation()
       }
     })
 }

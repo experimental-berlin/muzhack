@@ -178,6 +178,7 @@ setUpServer()
           .then((result) => {
             next(null, result)
           }, (error) => {
+            logger.warn(`renderIndex returned error:`, error)
             next(error)
           })
       },
@@ -240,27 +241,26 @@ setUpServer()
       handler: (request, reply) => {
         let queryStr = S.join(':', R.map(S.join('='), R.toPairs(request.query)))
         let id = `${request.url.path}?${queryStr}`
-        logger.debug(`Query ID: ${id}`, request.url)
-        logger.debug(`Cache policy ready: ${renderIndexCache.isReady()}`)
+        logger.debug(`Query ID: ${id}:`, request.url)
         renderIndexCache.get({
           id,
           request,
           reply,
         }, (err, result, cached) => {
+          let resultPromise
           if (cached != null) {
             logger.debug(`Value found in cache for ID '${id}'`)
           } else {
             logger.debug(`Value not found in cache for ID '${id}' - storing it`)
-            return new Promise((resolve, reject) => {
-              renderIndexCache.set(id, result, (error) => {
-                if (error != null) {
-                  reject(error)
-                } else {
-                  resolve()
-                }
-              })
+            renderIndexCache.set(id, result, (error) => {
+              if (error != null) {
+                logger.warn(`Failed to store result of request for '${request.url}' in cache:`,
+                  error)
+              }
             })
           }
+
+          reply(result)
         })
       },
       vhost: standardVHost,
