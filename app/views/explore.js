@@ -8,7 +8,7 @@ let h = require('react-hyperscript')
 let React = require('react')
 let ReactDOM = require('react-dom')
 let Masonry = React.createFactory(require('react-masonry-component'))
-let InfiniteScroll = React.createFactory(require('react-infinite-scroll')())
+let InfiniteScroll = React.createFactory(require('@arve.knudsen/react-infinite-scroll')())
 
 let FocusingInput = require('./focusingInput')
 let ajax = require('../ajax')
