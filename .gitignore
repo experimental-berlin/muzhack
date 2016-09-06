@@ -9,3 +9,5 @@ __pycache__/
 docker/production/
 docker/staging/
 docker/secrets.json
+isolate-*v8.log
+*.pyc
