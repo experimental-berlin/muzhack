@@ -52,6 +52,7 @@
   "dependencies": {
     "@arve.knudsen/react-autocomplete": "^1.0.1",
     "@arve.knudsen/react-images": "^0.5.2",
+    "@arve.knudsen/react-infinite-scroll": "^0.1.7",
     "base64url": "^2.0.0",
     "bcrypt": "^0.8.5",
     "bluebird": "^3.4.0",
@@ -86,7 +87,6 @@
     "tmp": "0.0.28",
     "underscore.string.fp": "^1.0.4",
     "vision": "^4.0.1",
-    "yamljs": "^0.2.7",
-    "@arve.knudsen/react-infinite-scroll": "^0.1.7"
+    "yamljs": "^0.2.7"
   }
 }

@@ -144,6 +144,18 @@ let createProjectPlaceholder = Promise.method((owner, projectParams) => {
   return connectToDb()
     .then((conn) => {
       return r.table('projects')
+        .filter({
+          id: qualifiedProjectId,
+          placeholder: true,
+        })
+        .delete()
+        .run(conn)
+        .then(() => {
+          return conn
+        })
+    })
+    .then((conn) => {
+      return r.table('projects')
         .insert({
           id: qualifiedProjectId,
           placeholder: true,
@@ -738,19 +750,20 @@ let copyFilesToCloudStorage = Promise.method((files, dirPath, owner, projectId) 
             }
           } else {
             logger.debug(`Got successful response for URL ${file.url} - commencing streaming`)
-            cloudFileStream.on('finish', () => {
-              logger.debug(`Successfully copied ${file.url} to Cloud Storage`)
-              cloudFile.makePublic((err) => {
-                if (err != null) {
-                  reject(err)
-                } else {
-                  resolve(R.merge(file, {
-                    url: getCloudStorageUrl(cloudFilePath),
-                    cloudPath: cloudFilePath,
-                  }))
-                }
+            cloudFileStream
+              .on('finish', () => {
+                logger.debug(`Successfully copied ${file.url} to Cloud Storage`)
+                cloudFile.makePublic((err) => {
+                  if (err != null) {
+                    reject(err)
+                  } else {
+                    resolve(R.merge(file, {
+                      url: getCloudStorageUrl(cloudFilePath),
+                      cloudPath: cloudFilePath,
+                    }))
+                  }
+                })
               })
-            })
             r.pipe(cloudFileStream)
             r.resume()
           }
