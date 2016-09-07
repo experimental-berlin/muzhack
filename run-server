@@ -42,10 +42,13 @@ for k, v in settings.items():
 if not args.debug:
     node_command = ['./node_modules/.bin/babel-node', '.', ]
 else:
-    node_command = ['bode-debug', '-p', '8000', '.', ]
+    node_command = [
+        './node_modules/.bin/babel-node', '--inspect', '--debug-brk', '.',
+    ]
 
 _processor_proc = subprocess.Popen(
-    ['./services/project-processor/project-processor.py', ])
+    ['./services/project-processor/project-processor.py', ]
+)
 try:
     subprocess.check_call(node_command)
 except subprocess.CalledProcessError:
