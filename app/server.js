@@ -64,6 +64,11 @@ let {getEnvParam,} = require('./server/environment')
 let emailer = require('./server/emailer')
 let ajax = require('./ajax')
 
+let isProduction = getEnvParam('NODE_ENV', '').toLowerCase() === 'production'
+if (isProduction) {
+  Logger.setLevel(Logger.WARN)
+}
+
 process.on('uncaughtException', (error) => {
   logger.error(`An uncaught exception occurred`, error.stack)
 })
@@ -239,7 +244,7 @@ setUpServer()
     routeServerMethod({
       path: '/robots.txt',
       handler: (request, reply) => {
-        if ((process.env.NODE_ENV || '').toLowerCase() !== 'production') {
+        if (isProduction) {
           reply(`User-agent: *\nDisallow: /`).header('Content-Type', 'text/plain')
         } else {
           reply()
