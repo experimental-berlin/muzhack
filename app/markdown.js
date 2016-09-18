@@ -36,7 +36,7 @@ let convertMarkdown = (markdown) => {
 }
 
 let convertHtmlToReact = (html) => {
-  let htmlToReactParser = new HtmlToReactParser(React)
+  let htmlToReactParser = new HtmlToReactParser()
   // Enclose in a div since HtmlToReact can't handle multiple root elements
   return htmlToReactParser.parse(`<div class="html-to-react-root">${html}</div>`)
 }
