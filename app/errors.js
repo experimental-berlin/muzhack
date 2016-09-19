@@ -5,6 +5,7 @@ let TypedError = require('error/typed')
 let notFoundError = TypedError({
   type: 'notFound',
   message: 'Resource not found',
+  statusCode: 404,
 })
 
 let validationError = (message) => {
