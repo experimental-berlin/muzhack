@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('displayProject')
+let logger = require('@arve.knudsen/js-logger').get('displayProject')
 let h = require('react-hyperscript')
 let R = require('ramda')
 let S = require('underscore.string.fp')

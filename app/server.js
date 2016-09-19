@@ -10,7 +10,7 @@ let moment = require('moment')
 let r = require('rethinkdb')
 let Url = require('url')
 let Promise = require('bluebird')
-let Logger = require('js-logger-aknudsen')
+let Logger = require('@arve.knudsen/js-logger')
 let logger = Logger.get('server')
 Logger.useDefaults({
   formatter: (messages, context) => {

@@ -1,6 +1,6 @@
 'use strict'
 let R = require('ramda')
-let logger = require('js-logger-aknudsen').get('sharedRouting')
+let logger = require('@arve.knudsen/js-logger').get('sharedRouting')
 let TypedError = require('error/typed')
 let Promise = require('bluebird')
 

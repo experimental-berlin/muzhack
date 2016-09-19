@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('db')
+let logger = require('@arve.knudsen/js-logger').get('db')
 let Boom = require('boom')
 let R = require('ramda')
 let Promise = require('bluebird')

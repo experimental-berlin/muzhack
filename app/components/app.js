@@ -1,6 +1,6 @@
 'use strict'
 let component = require('omniscient')
-let logger = require('js-logger-aknudsen').get('components.app')
+let logger = require('@arve.knudsen/js-logger').get('components.app')
 
 let Loading = require('../views/loading')
 let layout = require('../layout')

@@ -1,7 +1,7 @@
 'use strict'
 let h = require('react-hyperscript')
 let component = require('omniscient')
-let logger = require('js-logger-aknudsen').get('focusingInput')
+let logger = require('@arve.knudsen/js-logger').get('focusingInput')
 let ReactDOM = require('react-dom')
 let S = require('underscore.string.fp')
 

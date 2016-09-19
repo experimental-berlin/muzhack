@@ -15,7 +15,7 @@ if (__IS_BROWSER__) {
   require('./bitcoinate.styl')
 }
 
-let logger = require('js-logger-aknudsen').get('layout')
+let logger = require('@arve.knudsen/js-logger').get('layout')
 
 let WarningDialog = component('WarningDialog', ({cursor, title, message,}) => {
   let closeCallback = () => {

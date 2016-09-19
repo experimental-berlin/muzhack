@@ -4,7 +4,7 @@ let R = require('ramda')
 let S = require('underscore.string.fp')
 let h = require('react-hyperscript')
 let immutable = require('immutable')
-let logger = require('js-logger-aknudsen').get('userProfile')
+let logger = require('@arve.knudsen/js-logger').get('userProfile')
 
 let ajax = require('../../ajax')
 let {nbsp,} = require('../../specialChars')

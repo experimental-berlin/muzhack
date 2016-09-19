@@ -4,7 +4,7 @@ let component = require('omniscient')
 let immutable = require('immutable')
 let R = require('ramda')
 let S = require('underscore.string.fp')
-let logger = require('js-logger-aknudsen').get('router')
+let logger = require('@arve.knudsen/js-logger').get('router')
 let Promise = require('bluebird')
 
 let ajax = require('./ajax')

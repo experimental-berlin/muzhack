@@ -2,7 +2,7 @@
 let immstruct = require('immstruct')
 let ReactDom = require('react-dom')
 let router = require('./router')
-let Logger = require('js-logger-aknudsen')
+let Logger = require('@arve.knudsen/js-logger')
 
 let ajax = require('./ajax')
 let routeMap = require('./routeMap')

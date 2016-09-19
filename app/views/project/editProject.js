@@ -2,7 +2,7 @@
 let component = require('omniscient')
 let R = require('ramda')
 let S = require('underscore.string.fp')
-let logger = require('js-logger-aknudsen').get('editProject')
+let logger = require('@arve.knudsen/js-logger').get('editProject')
 let h = require('react-hyperscript')
 
 let userManagement = require('../../userManagement')
