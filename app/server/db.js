@@ -100,7 +100,6 @@ let createTables = Promise.method((conn) => {
 module.exports = {
   connectToDb,
   closeDbConnection,
-  invokeCallbackWithConn,
   withDb: Promise.method((reply, callback) => {
     return invokeCallbackWithConn(callback)
       .then((result) => {
