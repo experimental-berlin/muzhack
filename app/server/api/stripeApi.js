@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('stripeApi')
+let logger = require('@arve.knudsen/js-logger').get('stripeApi')
 let stripe = require('stripe')('sk_test_up9Z8wz3kmysPcOPXza4Y2tV')
 let Boom = require('boom')
 

@@ -1,6 +1,6 @@
 'use strict'
 let request = require('request')
-let logger = require('js-logger-aknudsen').get('server.ajax')
+let logger = require('@arve.knudsen/js-logger').get('server.ajax')
 let R = require('ramda')
 
 let {resolveWithResponse,} = require('../ajaxUtils')

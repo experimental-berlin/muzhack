@@ -1,7 +1,7 @@
 'use strict'
 let h = require('react-hyperscript')
 let component = require('omniscient')
-let logger = require('js-logger-aknudsen').get('projectStore')
+let logger = require('@arve.knudsen/js-logger').get('projectStore')
 let R = require('ramda')
 
 let {convertMarkdown,} = require('../../markdown')

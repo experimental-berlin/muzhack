@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('environment')
+let logger = require('@arve.knudsen/js-logger').get('environment')
 
 module.exports = {
   getEnvParam: (key, dflt) => {

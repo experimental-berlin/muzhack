@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('notification')
+let logger = require('@arve.knudsen/js-logger').get('notification')
 let h = require('react-hyperscript')
 
 let Modal = require('./modal')

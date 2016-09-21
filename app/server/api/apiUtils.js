@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('server.api.apiUtils')
+let logger = require('@arve.knudsen/js-logger').get('server.api.apiUtils')
 let r = require('rethinkdb')
 let Promise = require('bluebird')
 let {connectToDb, closeDbConnection,} = require('../db')

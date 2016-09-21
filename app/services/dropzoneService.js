@@ -38,8 +38,8 @@ let mutatingDropzoneEvents = [
   'removedfile',
 ]
 
-let dropzoneLogger = require('js-logger-aknudsen').get('dropzone')
-let logger = require('js-logger-aknudsen').get('DropzoneService')
+let dropzoneLogger = require('@arve.knudsen/js-logger').get('dropzone')
+let logger = require('@arve.knudsen/js-logger').get('DropzoneService')
 
 let handleDropzoneEvent = (event, dropzone, ...args) => {
   dropzoneLogger.debug(`${event}:`, args)

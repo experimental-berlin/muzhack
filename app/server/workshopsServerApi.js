@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('workshopsServerApi')
+let logger = require('@arve.knudsen/js-logger').get('workshopsServerApi')
 let Boom = require('boom')
 let R = require('ramda')
 let S = require('underscore.string.fp')

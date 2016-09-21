@@ -1,16 +1,11 @@
 'use strict'
 let R = require('ramda')
-let logger = require('js-logger-aknudsen').get('sharedRouting')
+let logger = require('@arve.knudsen/js-logger').get('sharedRouting')
 let TypedError = require('error/typed')
 let Promise = require('bluebird')
 
+let notFoundError = require('./errors')
 let regex = require('./regex')
-
-let notFoundError = TypedError({
-  type: 'Not Found',
-  statusCode: 404,
-  message: 'Path not found',
-})
 
 let loadData = Promise.method((cursor, module) => {
   let routerState = cursor.cursor('router').toJS()

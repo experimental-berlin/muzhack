@@ -1,7 +1,7 @@
 'use strict';
 let R = require('ramda')
 let $ = require('jquery')
-let logger = require('js-logger-aknudsen').get('trello')
+let logger = require('@arve.knudsen/js-logger').get('trello')
 
 let token = null;
 let authPromises = [];

@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('logout')
+let logger = require('@arve.knudsen/js-logger').get('logout')
 let h = require('react-hyperscript')
 
 let ajax = require('../ajax')

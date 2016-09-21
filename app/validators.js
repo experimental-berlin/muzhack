@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('validationFunctions')
+let logger = require('@arve.knudsen/js-logger').get('validationFunctions')
 let Fns = require('./validationFunctions')
 let R = require('ramda')
 

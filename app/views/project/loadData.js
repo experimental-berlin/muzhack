@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('project.loadData')
+let logger = require('@arve.knudsen/js-logger').get('project.loadData')
 
 let ajax = require('../../ajax')
 

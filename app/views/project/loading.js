@@ -1,7 +1,7 @@
 'use strict'
 let component = require('omniscient')
 let h = require('react-hyperscript')
-let logger = require('js-logger-aknudsen').get('project.loading')
+let logger = require('@arve.knudsen/js-logger').get('project.loading')
 
 if (__IS_BROWSER__) {
   require('../loading.styl')

@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('projectApi')
+let logger = require('@arve.knudsen/js-logger').get('projectApi')
 let Boom = require('boom')
 let S = require('underscore.string.fp')
 let JSZip = require('jszip')

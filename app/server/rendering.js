@@ -1,7 +1,7 @@
 'use strict'
 let R = require('ramda')
 let S = require('underscore.string.fp')
-let logger = require('js-logger-aknudsen').get('serverRendering')
+let logger = require('@arve.knudsen/js-logger').get('serverRendering')
 let immutable = require('immutable')
 let immstruct = require('immstruct')
 let ReactDomServer = require('react-dom/server')

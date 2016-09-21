@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('modal')
+let logger = require('@arve.knudsen/js-logger').get('modal')
 let React = require('react')
 let ReactModal = React.createFactory(require('react-modal'))
 let h = require('react-hyperscript')
