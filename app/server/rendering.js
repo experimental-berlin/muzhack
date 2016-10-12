@@ -3,7 +3,10 @@ let map = require('ramda/src/map')
 let omit = require('ramda/src/omit')
 let merge = require('ramda/src/merge')
 let any = require('ramda/src/any')
+let pipe = require('ramda/src/pipe')
+let filter = require('ramda/src/filter')
 let find = require('ramda/src/find')
+let fromPairs = require('ramda/src/fromPairs')
 let toPairs = require('ramda/src/toPairs')
 let flatten = require('ramda/src/flatten')
 let S = require('underscore.string.fp')
@@ -55,6 +58,16 @@ let getInitialRouterState = (request, workshopsUri) => {
 }
 
 let renderIndex = (request, reply) => {
+  let authCookie = pipe(
+    map((element) => {
+      return /([^=]+)=(.+)/.exec(element).slice(1)
+    }),
+    filter(([key,]) => {
+      logger.debug(`Got key '${key}'`)
+      return key === 'sid'
+    }),
+    fromPairs
+  )(request.headers.cookie.split(/; /)).sid
   logger.debug(`Rendering SPA index, user is logged in: ${request.auth.credentials != null}`)
   immstruct.clear()
   let appUri = getEnvParam('APP_URI')
@@ -86,7 +99,7 @@ let renderIndex = (request, reply) => {
     stripeKey: getEnvParam('STRIPE_PUBLISHABLE_KEY'),
     gitHubClientId: getEnvParam('GITHUB_CLIENT_ID'),
     fbAppId,
-    authCookie: request.state.sid,
+    authCookie,
   }).cursor()
   cursor = cursor.mergeDeep({
     router: createRouterState(routeMap),

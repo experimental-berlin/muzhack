@@ -114,7 +114,7 @@ module.exports = {
     })
   },
   loadData: (cursor, params) => {
-    return ajax.getJson(`/api/users/${params.user}`)
+    return ajax.getJson(`/api/users/${params.user}`, null, {cursor,})
       .then((user) => {
         // logger.debug(`Loading user JSON succeeded:`, user)
         return {
@@ -144,7 +144,7 @@ module.exports = {
       return tab.name
     }, profileTabs)) ? currentHash : 'projects'
 
-    logger.debug(`Rendering profile of user '${user.username}', active tab '${activeTab}':`, user)
+    logger.debug(`Rendering profile of user '${user.username}', active tab '${activeTab}'`)
     logger.debug(`State:`, profileCursor.toJS())
     let tabContents
     if (activeTab === 'about') {
