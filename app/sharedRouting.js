@@ -4,7 +4,7 @@ let logger = require('@arve.knudsen/js-logger').get('sharedRouting')
 let TypedError = require('error/typed')
 let Promise = require('bluebird')
 
-let notFoundError = require('./errors')
+let {notFoundError,} = require('./errors')
 let regex = require('./regex')
 
 let loadData = Promise.method((cursor, module) => {
