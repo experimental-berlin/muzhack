@@ -11,7 +11,7 @@ let moment = require('moment')
 let r = require('rethinkdb')
 let Url = require('url')
 let Promise = require('bluebird')
-let Logger = require('js-logger-aknudsen')
+let Logger = require('@arve.knudsen/js-logger')
 let logger = Logger.get('server')
 Logger.useDefaults({
   formatter: (messages, context) => {
@@ -64,6 +64,11 @@ let db = require('./server/db')
 let {getEnvParam,} = require('./server/environment')
 let emailer = require('./server/emailer')
 let ajax = require('./ajax')
+
+let isProduction = getEnvParam('NODE_ENV', '').toLowerCase() === 'production'
+if (isProduction) {
+  Logger.setLevel(Logger.WARN)
+}
 
 process.on('uncaughtException', (error) => {
   logger.error(`An uncaught exception occurred`, error.stack)
@@ -287,7 +292,7 @@ setUpServer()
     routeServerMethod({
       path: '/robots.txt',
       handler: (request, reply) => {
-        if ((process.env.NODE_ENV || '').toLowerCase() !== 'production') {
+        if (isProduction) {
           reply(`User-agent: *\nDisallow: /`).header('Content-Type', 'text/plain')
         } else {
           reply()

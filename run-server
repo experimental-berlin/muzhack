@@ -5,10 +5,14 @@ import sys
 import os
 import subprocess
 import atexit
+import argparse
 
 
 def _cleanup():
-    _processor_proc.terminate()
+    try:
+        _processor_proc.terminate()
+    except NameError:
+        pass
 
 
 atexit.register(_cleanup)
@@ -19,6 +23,14 @@ def _error(msg):
     sys.exit(1)
 
 
+cl_parser = argparse.ArgumentParser(description='Run Node server')
+cl_parser.add_argument(
+    '--debug', '-d', help='Debug through node-inspector', action='store_true',
+    default=False,
+)
+args = cl_parser.parse_args()
+
+
 try:
     with open('settings.json', 'rt') as f:
         settings = json.load(f)
@@ -27,11 +39,18 @@ except IOError:
 for k, v in settings.items():
     os.environ[k] = v
 
+if not args.debug:
+    node_command = ['./node_modules/.bin/babel-node', '.', ]
+else:
+    node_command = [
+        './node_modules/.bin/babel-node', '--inspect', '--debug-brk', '.',
+    ]
+
 _processor_proc = subprocess.Popen(
-    ['./services/project-processor/project-processor.py', ])
+    ['./services/project-processor/project-processor.py', ]
+)
 try:
-    subprocess.check_call(
-        ['./node_modules/.bin/babel-node', '.', ])
+    subprocess.check_call(node_command)
 except subprocess.CalledProcessError:
     _error('Node failed')
 except KeyboardInterrupt:

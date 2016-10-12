@@ -4,7 +4,7 @@ let R = require('ramda')
 let S = require('underscore.string.fp')
 let h = require('react-hyperscript')
 let immutable = require('immutable')
-let logger = require('js-logger-aknudsen').get('workshopView')
+let logger = require('@arve.knudsen/js-logger').get('workshopView')
 let moment = require('moment')
 
 let ajax = require('../../ajax')

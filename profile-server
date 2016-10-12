@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+import subprocess
+import json
+import sys
+import os
+import subprocess
+import atexit
+
+
+def _cleanup():
+    _processor_proc.terminate()
+
+
+atexit.register(_cleanup)
+
+
+def _error(msg):
+    sys.stderr.write('{}\n'.format(msg))
+    sys.exit(1)
+
+
+try:
+    with open('settings.json', 'rt') as f:
+        settings = json.load(f)
+except IOError:
+    sys.exit('settings.json doesn\'t exist')
+for k, v in settings.items():
+    os.environ[k] = v
+
+env = os.environ.copy()
+env['PRODUCTION'] = 'true'
+_processor_proc = subprocess.Popen(
+    ['./services/project-processor/project-processor.py', ])
+try:
+    subprocess.check_call(
+        ['./node_modules/.bin/babel-node', '--prof', '.', ], env=env,
+    )
+except subprocess.CalledProcessError:
+    _error('Node failed')
+except KeyboardInterrupt:
+    sys.exit(0)

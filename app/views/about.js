@@ -1,6 +1,6 @@
 'use strict'
 let h = require('react-hyperscript')
-let logger = require('js-logger-aknudsen').get('about')
+let logger = require('@arve.knudsen/js-logger').get('about')
 
 if (__IS_BROWSER__) {
   require('./about.styl')

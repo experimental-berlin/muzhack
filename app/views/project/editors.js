@@ -1,7 +1,7 @@
 'use strict'
 let component = require('omniscient')
 let h = require('react-hyperscript')
-let logger = require('js-logger-aknudsen').get('project.editors')
+let logger = require('@arve.knudsen/js-logger').get('project.editors')
 let R = require('ramda')
 let S = require('underscore.string.fp')
 

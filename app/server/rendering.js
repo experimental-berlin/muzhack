@@ -1,7 +1,16 @@
 'use strict'
-let R = require('ramda')
+let map = require('ramda/src/map')
+let omit = require('ramda/src/omit')
+let merge = require('ramda/src/merge')
+let any = require('ramda/src/any')
+let pipe = require('ramda/src/pipe')
+let filter = require('ramda/src/filter')
+let find = require('ramda/src/find')
+let fromPairs = require('ramda/src/fromPairs')
+let toPairs = require('ramda/src/toPairs')
+let flatten = require('ramda/src/flatten')
 let S = require('underscore.string.fp')
-let logger = require('js-logger-aknudsen').get('serverRendering')
+let logger = require('@arve.knudsen/js-logger').get('serverRendering')
 let immutable = require('immutable')
 let immstruct = require('immstruct')
 let ReactDomServer = require('react-dom/server')
@@ -21,11 +30,11 @@ let {getEnvParam,} = require('./environment')
 let getInitialRouterState = (request, workshopsUri) => {
   let currentPath = request.path
   logger.debug(`Computing initial router state, path is '${currentPath}'`)
-  let navItems = R.map((navItem) => {
+  let navItems = map((navItem) => {
     let path = !navItem.isExternal ? normalizePath(navItem.path) : navItem.path
     let isSelected = path === currentPath
     logger.debug(`Nav item '${navItem.text}' is selected: ${isSelected}, ${path}`)
-    return R.merge(navItem, {
+    return merge(navItem, {
       path,
       isSelected,
     })
@@ -37,9 +46,9 @@ let getInitialRouterState = (request, workshopsUri) => {
     {path: 'http://forums.muzhack.com', text: 'Forums', isExternal: true,},
     {path: '/about', text: 'About',},
   ])
-  if (!R.any((navItem) => {return navItem.isSelected}, navItems)) {
+  if (!any((navItem) => {return navItem.isSelected}, navItems)) {
     logger.debug(`Defaulting to root nav item being selected`)
-    let navItem = R.find((navItem) => {return navItem.path === '/'}, navItems)
+    let navItem = find((navItem) => {return navItem.path === '/'}, navItems)
     navItem.isSelected = true
   }
   return immutable.fromJS({
@@ -50,6 +59,16 @@ let getInitialRouterState = (request, workshopsUri) => {
 }
 
 let renderIndex = (request, reply) => {
+  let authCookie = pipe(
+    map((element) => {
+      return /([^=]+)=(.+)/.exec(element).slice(1)
+    }),
+    filter(([key,]) => {
+      logger.debug(`Got key '${key}'`)
+      return key === 'sid'
+    }),
+    fromPairs
+  )(request.headers.cookie.split(/; /)).sid
   logger.debug(`Rendering SPA index, user is logged in: ${request.auth.credentials != null}`)
   immstruct.clear()
   let appUri = getEnvParam('APP_URI')
@@ -81,6 +100,7 @@ let renderIndex = (request, reply) => {
     stripeKey: getEnvParam('STRIPE_PUBLISHABLE_KEY'),
     gitHubClientId: getEnvParam('GITHUB_CLIENT_ID'),
     fbAppId,
+    authCookie,
   }).cursor()
   cursor = cursor.mergeDeep({
     router: createRouterState(routeMap),
@@ -88,26 +108,26 @@ let renderIndex = (request, reply) => {
   return updateRouterState(cursor, request.path, null, request.query)
     .then(([cursor, newState,]) => {
       // logger.debug(`Got new state:`, newState)
-      cursor = cursor.mergeDeep(R.merge(newState, {
+      cursor = cursor.mergeDeep(merge(newState, {
         router: {
           isLoading: false,
         },
       }))
       let initialState = cursor.toJS()
       logger.debug(`Successfully loaded initial state:`, initialState)
-      let metaAttributes = R.flatten(
-        R.map(([attrType, attr2content,]) => {
-          return R.map(([attr, content,]) => {
+      let metaAttributes = flatten(
+        map(([attrType, attr2content,]) => {
+          return map(([attr, content,]) => {
             let obj = {}
             obj[attrType] = attr
             obj.content = content
             return obj
-          }, R.toPairs(attr2content))
-        }, R.toPairs(initialState.metaHtmlAttributes))
+          }, toPairs(attr2content))
+        }, toPairs(initialState.metaHtmlAttributes))
       )
       let isProduction = getEnvParam('APP_ENVIRONMENT') === 'production'
       let renderOptions = {
-        initialState: JSON.stringify(initialState),
+        initialState: JSON.stringify(omit(['authCookie',], initialState)),
         metaAttributes,
         isProduction,
       }
@@ -119,7 +139,7 @@ let renderIndex = (request, reply) => {
         renderPromise = Promise.promisify(request.render, {
           context: request,
         })('serverSideIndex',
-          R.merge(renderOptions, {reactHtml,}))
+          merge(renderOptions, {reactHtml,}))
       } else {
         logger.debug(`Not rendering JavaScript on server side`)
         renderPromise = Promise.promisify(server.render, {

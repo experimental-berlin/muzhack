@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('GoogleCloudStorageUploader')
+let logger = require('@arve.knudsen/js-logger').get('GoogleCloudStorageUploader')
 let R = require('ramda')
 
 let ajax = require('./ajax')

@@ -1,9 +1,9 @@
 'use strict'
-let HtmlToReactParser = require('../lib/html-to-react/lib/parser')
+let HtmlToReactParser = require('html-to-react/lib/parser')
 let React = require('react')
 let MarkdownSanitizer = require('../lib/pagedown/Markdown.Sanitizer')
 let markdownExtra = require('../lib/pagedown/Markdown.Extra').Extra
-let logger = require('js-logger-aknudsen').get('markdown')
+let logger = require('@arve.knudsen/js-logger').get('markdown')
 let $ = require('jquery')
 let R = require('ramda')
 
@@ -36,7 +36,7 @@ let convertMarkdown = (markdown) => {
 }
 
 let convertHtmlToReact = (html) => {
-  let htmlToReactParser = new HtmlToReactParser(React)
+  let htmlToReactParser = new HtmlToReactParser()
   // Enclose in a div since HtmlToReact can't handle multiple root elements
   return htmlToReactParser.parse(`<div class="html-to-react-root">${html}</div>`)
 }

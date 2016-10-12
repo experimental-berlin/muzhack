@@ -1,6 +1,6 @@
 'use strict'
 let R = require('ramda')
-let logger = require('js-logger-aknudsen').get('workshopsServerRendering')
+let logger = require('@arve.knudsen/js-logger').get('workshopsServerRendering')
 let immutable = require('immutable')
 let immstruct = require('immstruct')
 let ReactDomServer = require('react-dom/server')

@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('saveProject')
+let logger = require('@arve.knudsen/js-logger').get('saveProject')
 let R = require('ramda')
 let S = require('underscore.string.fp')
 let Promise = require('bluebird')
