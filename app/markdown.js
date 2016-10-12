@@ -1,5 +1,5 @@
 'use strict'
-let HtmlToReactParser = require('../lib/html-to-react/lib/parser')
+let HtmlToReactParser = require('html-to-react/lib/parser')
 let React = require('react')
 let MarkdownSanitizer = require('../lib/pagedown/Markdown.Sanitizer')
 let markdownExtra = require('../lib/pagedown/Markdown.Extra').Extra
