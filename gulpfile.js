@@ -29,7 +29,7 @@ gulp.task('assets', () => {
 
 gulp.task('webpack', () => {
   return gulp
-    .src('dist/bundle.js')
+    .src('dist/muzhack.bundle.js')
     .pipe(gulp.dest('dist/dist/'))
 })
 

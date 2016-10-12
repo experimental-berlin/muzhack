@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('server.requestHandler')
+let logger = require('@arve.knudsen/js-logger').get('server.requestHandler')
 let Promise = require('bluebird')
 let Boom = require('boom')
 

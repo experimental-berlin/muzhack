@@ -1,9 +1,9 @@
 'use strict'
-let HtmlToReactParser = require('../lib/html-to-react/lib/parser')
+let HtmlToReactParser = require('html-to-react/lib/parser')
 let React = require('react')
 let MarkdownSanitizer = require('../lib/pagedown/Markdown.Sanitizer')
 let markdownExtra = require('../lib/pagedown/Markdown.Extra').Extra
-let logger = require('js-logger-aknudsen').get('markdown')
+let logger = require('@arve.knudsen/js-logger').get('markdown')
 let $ = require('jquery')
 let R = require('ramda')
 
@@ -24,12 +24,21 @@ let getSanitizingConverter = () => {
   return converter
 }
 
-module.exports.convertMarkdown = (markdown) => {
+let convertMarkdownToHtml = (markdown) => {
   let converter = getSanitizingConverter()
   let html = converter.makeHtml(markdown || '')
-  let htmlToReactParser = new HtmlToReactParser(React)
+  return html
+}
+
+let convertMarkdown = (markdown) => {
+  let html = convertMarkdownToHtml(markdown)
+  return convertHtmlToReact(html)
+}
+
+let convertHtmlToReact = (html) => {
+  let htmlToReactParser = new HtmlToReactParser()
   // Enclose in a div since HtmlToReact can't handle multiple root elements
-  return htmlToReactParser.parse(`<div>${html}</div>`)
+  return htmlToReactParser.parse(`<div class="html-to-react-root">${html}</div>`)
 }
 
 let markdownManual = {
@@ -340,6 +349,12 @@ class MarkdownService {
     logger.debug('Resetting instructions editor')
     this.instructionsEditor.render(text)
   }
+}
+
+module.exports = {
+  convertMarkdownToHtml,
+  convertMarkdown,
+  convertHtmlToReact,
 }
 
 if (__IS_BROWSER__) {

@@ -1,0 +1,94 @@
+@require '_common'
+@require '_searchbox'
+
+#explore-pad
+  pad-base()
+  airy-padding-sides()
+
+  .search-box
+    search-box()
+
+    margin-top 20px
+
+    .search-icon
+      top 6px
+      left 9px
+
+    #explore-search-input
+      border 1px solid #000
+      box-shadow 1px 1px 3px 1px #cecece
+      padding-left 28px
+      padding-right 28px
+      margin 0
+      box-sizing border-box
+      width 500px
+
+      &:focus
+        outline: none
+
+    .clear-icon
+      top 6px
+      right 635px
+
+  .results-container
+    padding 24px 0
+    margin 0
+
+  .workshop-leader-item
+    list-style none
+    box-sizing border-box
+    padding 0
+    padding-top 30px
+    border-top 1px solid #cecece
+    margin 0
+    margin-bottom 30px
+
+    a
+      text-decoration none
+      color black
+
+  .workshop-leader-item-username
+    padding-right 6px
+    vertical-align middle
+    display inline-block
+    font-size 23px
+    white-space nowrap
+    overflow hidden
+    text-overflow ellipsis
+
+  .workshop-leader-item-name
+    vertical-align middle
+    display inline-block
+    font-size 23px
+    white-space nowrap
+    overflow hidden
+    text-overflow ellipsis
+    margin-bottom 10px
+    font-weight bold
+
+  .workshop-leader-item-image-wrapper
+    max-width 100%
+    border-radius 0 0 4px 4px
+    margin-right 15px
+
+  .workshop-leader-item-image
+    rounded-corners()
+    max-width 100%
+
+  .workshop-leader-item-location
+    display inline-block
+    margin-right 10px
+
+  .workshop-leader-item-joined
+    display inline-block
+    margin-right 10px
+
+  .workshop-leader-item-about
+    margin 0
+
+  .workshop-leader-item-metadata
+    margin-top 10px
+
+  .workshop-leader-item-workshops
+    margin-left 15px
+    font-size 14px

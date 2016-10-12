@@ -1,15 +1,36 @@
 'use strict'
 let webpack = require('webpack')
+let isProduction = process.env.NODE_ENV === 'production'
+
+let plugins = [
+  new webpack.DefinePlugin({
+    __IS_BROWSER__: true,
+  }),
+]
+if (isProduction) {
+  // Disable development features in React in production build
+  plugins = plugins.concat([new webpack.DefinePlugin({
+    'process.env': {
+      NODE_ENV: JSON.stringify('production'),
+    },
+  }),])
+}
 
 module.exports = {
   context: __dirname + '/app',
-  entry: [
-    'babel-polyfill',
-    './entry.js',
-  ],
+  entry: {
+    muzhack: [
+      'babel-polyfill',
+      './entry.js',
+    ],
+    workshops: [
+      'babel-polyfill',
+      './workshopsEntry.js',
+    ],
+  },
   output: {
     path: __dirname + '/dist',
-    filename: 'bundle.js',
+    filename: '[name].bundle.js',
   },
   module: {
     loaders: [
@@ -59,12 +80,8 @@ module.exports = {
   devServer: {
     historyApiFallback: false,
     proxy: {
-      '*': 'http://localhost:8000',
+      '**': 'http://localhost:8000',
     },
   },
-  plugins: [
-    new webpack.DefinePlugin({
-      __IS_BROWSER__: true,
-    }),
-  ],
+  plugins,
 }

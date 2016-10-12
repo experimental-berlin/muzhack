@@ -24,25 +24,25 @@ form
   margin 0
 
 #content
-  padding-bottom 60px
+  @media screen and (min-width: 1170px)
+    max-width 1170px
+    margin-left auto
+    margin-right auto
 
-  //TODO: Make responsive
-  width 1170px
-  margin-left auto
-  margin-right auto
   border-radius 10px
   padding-top 36px
   padding-left 0px
   padding-right 0px
 
-
 #menu
+  padding-top 0.2em
+  display flex
   z-index 1000
   border-bottom 0px
   background-color menu-background
+
   .pure-menu-heading
     color menu-color
-    margin-top 0.2em
     a
       color menu-color
       padding 0
@@ -63,6 +63,21 @@ form
         -moz-box-shadow inset 0 3px 8px rgba(0, 0, 0, 0.125)
         box-shadow inset 0 3px 8px rgba(0, 0, 0, 0.125)
         color menu-color
+
+  .search-box
+    display inline-block
+
+    .search-icon
+      position absolute
+      top 7px
+      left 7px
+      font-size search-font-size
+
+    .clear-icon
+      position absolute
+      top 7px
+      right 7px
+      font-size search-font-size
 
 footer
   border-top 1px solid border-color
@@ -92,9 +107,9 @@ a.social-link
   justify-content center
 
 .accountbar
-  display inline-block
   padding-left 20px
   padding-right 30px
+  margin-left auto
 
   .toolbar-btn
     display inline-block
@@ -111,22 +126,6 @@ a.social-link
     &.disabled
       color #5F2D5D
       cursor default
-
-#menu
-  .search-box
-    display inline-block
-
-    .search-icon
-      position absolute
-      top 7px
-      left 7px
-      font-size search-font-size
-
-    .clear-icon
-      position absolute
-      top 7px
-      right 7px
-      font-size search-font-size
 
 #navbar-search-input
   padding-left 21px

@@ -15,7 +15,7 @@ if (__IS_BROWSER__) {
   require('./bitcoinate.styl')
 }
 
-let logger = require('js-logger-aknudsen').get('layout')
+let logger = require('@arve.knudsen/js-logger').get('layout')
 
 let WarningDialog = component('WarningDialog', ({cursor, title, message,}) => {
   let closeCallback = () => {
@@ -87,18 +87,16 @@ let AccountBar = component('AccountBar', (cursor) => {
       h('span.icon-enter3'),
     ]),
   ]
-  return h('.pull-right', [
-    h('.accountbar', [
-      h('ul.pure-menu-list', R.map((link) => {
-        return h('li.pure-menu-item', [link,])
-      }, links)),
-    ]),
+  return h('.accountbar', [
+    h('ul.pure-menu-list', R.map((link) => {
+      return h('li.pure-menu-item', [link,])
+    }, links)),
   ])
 })
 
 let Header = component('Header', (cursor) => {
   logger.debug('Header rendering')
-  let navItems = cursor.cursor(['router', 'navItems',]).toJS()
+  let navItems = cursor.cursor('router').toJS().navItems
   logger.debug('Nav items:', navItems)
   return h('header', [
     h('nav#menu.pure-menu.pure-menu-open.pure-menu-fixed.pure-menu-horizontal', [
@@ -122,20 +120,17 @@ let Footer = component('Footer', () => {
       '© 2016 ',
       h('a', {href: 'http://arveknudsen.com', target: '_blank',}, 'Arve Knudsen'),
     ]),
-    h('p', [
-      h('a.social-link', {href: 'https://twitter.com/muzhack', target: '_blank',}, [
-        h('span.icon-twitter'),
-      ]),
-      h('a.social-link', {href: 'https://www.facebook.com/muzhack', target: '_blank',}, [
-        h('span.icon-facebook2'),
-      ]),
-      h('a.social-link', {href: 'https://github.com/muzhack/muzhack', target: '_blank',}, [
-        h('span.icon-github'),
-      ]),
-      h('a.social-link', {href: 'mailto:contact@muzhack.com', target: '_blank',}, [
-        h('span.icon-envelop3'),
-      ]),
-    ]),
+    h('p', R.map(([url, icon,]) => {
+      return h('a.social-link', {href: url, target: '_blank',}, [
+        h(`span.icon-${icon}`),
+      ])
+    }, [
+      ['https://twitter.com/muzhack', 'twitter',],
+      ['https://www.facebook.com/muzhack', 'facebook2',],
+      ['http://blog.muzhack.com', 'blog',],
+      ['https://github.com/muzhack/muzhack', 'github',],
+      ['mailto:contact@muzhack.com', 'envelop3',],
+    ])),
     h('#donations', [
       h('form.paypal-form', {
         action: 'https://www.paypal.com/cgi-bin/webscr', method: 'post', target: '_blank',
@@ -145,7 +140,9 @@ let Footer = component('Footer', () => {
         h('input.paypal-button', {
           type: 'image',
           src: 'https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif',
-          border: '0', name: 'submit', alt: 'PayPal - The safer, easier way to pay online!',
+          style: {
+            border: '0', name: 'submit', alt: 'PayPal - The safer, easier way to pay online!',
+          },
         }),
       ]),
       h('a.flatter-link', {

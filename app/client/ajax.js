@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('client.ajax')
+let logger = require('@arve.knudsen/js-logger').get('client.ajax')
 let S = require('underscore.string.fp')
 let R = require('ramda')
 let {notFoundError,} = require('../errors')

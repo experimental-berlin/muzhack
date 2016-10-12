@@ -1,10 +1,11 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('errors')
+let logger = require('@arve.knudsen/js-logger').get('errors')
 let TypedError = require('error/typed')
 
 let notFoundError = TypedError({
   type: 'notFound',
   message: 'Resource not found',
+  statusCode: 404,
 })
 
 let validationError = (message) => {

@@ -2,10 +2,47 @@ doctype html
 html
   head
     meta(charset="utf-8")
+    each attrs in metaAttributes
+      meta&attributes(attrs)
     title MuzHack
     link(rel='icon' href='/assets/images/MuzHack-favicon.png')
+    link(rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto')
     style.
       #container {visibility:hidden}
+    if isProduction
+      script.
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-49183217-3', 'auto');
+        ga('send', 'pageview');
+    script(type='application/ld+json').
+      {
+        "@context": "http://schema.org",
+        "@type": "WebPage",
+        "breadcrumb": {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "item": {
+                "@id": "https://muzhack.com",
+                "name": "Home"
+              }
+            }
+          ]
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "contentUrl": "/assets/images/muzhack.png"
+        },
+        "author": "MuzHack Team",
+        "copyrightHolder": "MuzHack Team",
+        "copyrightYear": 2014
+      }
   body
     #fb-root
     #initial-state(data-json=initialState)
@@ -20,4 +57,4 @@ html
           status: true,
         })
       }())
-    script(src="/bundle.js")
+    script(src="/muzhack.bundle.js")

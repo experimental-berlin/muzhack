@@ -1,11 +1,12 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('saveProject')
+let logger = require('@arve.knudsen/js-logger').get('saveProject')
 let R = require('ramda')
 let S = require('underscore.string.fp')
+let Promise = require('bluebird')
 
 let {getParameters, getPictureDropzone, getFileDropzone,} = require('./editors')
 
-module.exports = (project, specificCursor, cursor) => {
+module.exports = Promise.method((project, specificCursor, cursor) => {
   let uploadFiles = () => {
     if (project.owner == null || project.projectId == null) {
       throw new Error(`project.owner and/or project.projectId are null`)
@@ -66,7 +67,7 @@ module.exports = (project, specificCursor, cursor) => {
     return picturesPromise
   }
 
-  let [title, description, instructions, tags, licenseId, username, queuedPictures,
+  let [title, summary, description, instructions, tags, licenseId, username, queuedPictures,
     queuedFiles,] = getParameters(project, cursor)
   return uploadFiles()
     .then(([uploadedPictures, uploadedFiles,]) => {
@@ -83,6 +84,7 @@ module.exports = (project, specificCursor, cursor) => {
         transformFiles(fileDropzone.getExistingFiles()),
         transformFiles(uploadedFiles)
       )
-      return {title, description, instructions, tags, licenseId, username, pictureFiles, files,}
+      return {title, summary, description, instructions, tags, licenseId, username,
+        pictureFiles, files,}
     })
-}
+})

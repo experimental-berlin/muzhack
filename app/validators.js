@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('validationFunctions')
+let logger = require('@arve.knudsen/js-logger').get('validationFunctions')
 let Fns = require('./validationFunctions')
 let R = require('ramda')
 
@@ -39,7 +39,7 @@ class InvalidUsername extends Validator {
       'InvalidUsername',
       input,
       (input) => {
-        return /^[a-z_\-0-9]+$/.test(input)
+        return !/^[a-z_\-0-9]+$/.test(input)
       },
       'Invalid username, please use only a-z, 0-9, _, -.'
     )

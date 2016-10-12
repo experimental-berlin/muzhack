@@ -7,15 +7,13 @@ padding = 20px
 subtle-shadow()
   box-shadow 2px 2px 13px 1px #0D0D0D
 
-#project-top-pad
+#project-pad
   pad-base()
-  airy-padding-sides()
 
-  display inline-block
-  width 720px
-  padding padding
-  margin margin
-  margin-bottom 0
+  margin-top 20px
+  // Ensure that child margins don't collapse within borderless elements
+  overflow auto
+  padding 40px
 
   &>:first-child
     margin-top 0
@@ -30,14 +28,8 @@ subtle-shadow()
   align-self center
   margin-left 4px
 
-#project-bottom-pad
-  pad-base()
-  airy-padding-sides()
-
-  padding padding
-  margin margin
-  margin-top 16px
-  margin-bottom 60px
+#project-bottom-section
+  margin-top 30px
 
   .tabs
     tabs-base()
@@ -56,40 +48,31 @@ subtle-shadow()
 
 #tab-contents
   padding padding
+  padding-bottom 0
+
   img
     max-width 100%
 
-#description,#instructions
+#description, #instructions
   rendered-markdown()
 
-  &>:first-child
-    margin-top 0
+  > div
+    > :first-child
+      margin-top 0
 
-#right-column
+#project-left-column
+  padding-right 30px
+  border-right 1px solid black
+  border-color muted
+
+#project-right-column
   box-sizing border-box
-  display inline-block
   vertical-align top
-  width 370px
-  margin-top margin
-  margin-bottom margin
-  margin-right margin
+  padding-left 20px
+  padding-bottom 60px
 
-#tag-pad
-  pad-base()
-  airy-padding-sides()
-
-  padding-bottom padding
-
-#license-pad
-  pad-base()
-  airy-padding-sides()
-
-  margin-top 14px
-  padding-bottom padding
-
-  p
-    margin 0
-    margin-top 8px
+  :first-child
+    margin-top 0
 
 #license-icons
   font-size 40px
@@ -112,25 +95,21 @@ subtle-shadow()
   margin-bottom 0
   margin-top 20px
   padding-left padding
-  text-shadow 3px 3px 10px #9E9E9E
+  text-shadow 3px 3px 10px #d8d8d8
 
-#image-box
-  width 620px
-  margin-left auto
-  margin-right auto
-  margin-bottom 30px
-
-#displayed-image
+#project-image-box
   rounded-corners()
-  overflow hidden
-  width 500px
-  height 409px
-  display inline-block
-  subtle-shadow()
 
-  img
-    width 100%
-    height 100%
+  width 100%
+  margin-bottom 30px
+  max-height 400px
+  overflow hidden
+  cursor pointer
+
+#main-image
+  rounded-corners()
+
+  width 100%
 
 #thumbnails
   display inline-block
@@ -140,6 +119,8 @@ subtle-shadow()
 .thumbnail-wrapper
   rounded-corners()
   subtle-shadow()
+
+  cursor pointer
   overflow hidden
   width 100px
   height 82px
@@ -182,3 +163,42 @@ cell-padding = 8px
 
 #go-to-store
   display inline-block
+
+#bill-of-materials-header
+  margin 0
+  display inline-block
+
+#bill-of-materials
+  overflow hidden
+
+  :first-child
+    margin-top 1em
+
+  & + hr
+    margin-top 10px
+    margin-bottom 10px
+    background-color muted
+
+#instructions-container
+  > div
+    > :first-child
+      margin-top 0
+
+.instructions-file
+  font-size 26px
+
+#tag-section
+  padding-bottom 10px
+  margin-bottom 20px
+
+  a
+    text-decoration none
+    color black
+
+#control-bom-visibility
+  font-size 1em
+
+#file-links
+  border-bottom 1px solid muted
+  padding-bottom 10px
+  margin-bottom 10px

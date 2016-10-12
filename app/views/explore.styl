@@ -1,73 +1,92 @@
 @require '_common'
 @require '_searchbox'
 
+.search-box
+  search-box()
+
+  margin-top 20px
+
+  .search-icon
+    top 6px
+    left 9px
+
+#explore-search-input
+  border 1px solid #000
+  box-shadow 1px 1px 3px 1px #cecece
+  padding-left 28px
+  padding-right 28px
+  margin 0
+  box-sizing border-box
+  width 100%
+
+  &:focus
+    outline: none
+
+.clear-icon
+  top 6px
+  right 9px
+
 #explore-pad
   pad-base()
-  airy-padding-sides()
 
-  margin 25px
-  margin-bottom 0
+  padding-left 35px
+  padding-right 35px
 
-  .search-box
-    search-box()
+  .grid-sizer, .project-item
+    width 100%
 
-    margin-top 20px
+    @media screen and (min-width: 35.5em)
+      width 49.5%
 
-    .search-icon
-      top 6px
-      left 20px
+    @media screen and (min-width: 60em)
+      width 32.5%
 
-    #explore-search-input
-      border 1px solid #000
-      box-shadow 2px 2px 6px 0px #C1C1C1
-      padding-left 28px
-      padding-right 28px
-      margin-left 11px
-      box-sizing border-box
-      width 500px
+  .gutter-sizer
+    width 1%
 
-      &:focus
-        outline: none
+.projects-container
+  padding 24px 0
+  margin 0
 
-    .clear-icon
-      top 6px
-      right 575px
+.project-item
+  rounded-corners()
 
-  .projects-container
-    padding-top 20px
-    padding-bottom 20px
+  box-sizing border-box
+  padding 0
+  overflow hidden
+  border 1px solid #E1E3DF
+  border-radius 4px
+  margin-bottom 1%
 
-  .project-item
-    rounded-corners()
+  a
+    text-decoration none
 
-    box-sizing border-box
-    padding 0
-    border 0
-    width 218px
-    height 218px
-    margin 10px
-    box-shadow 2px 2px 13px 1px #1D1C1C
+.project-item-image-container
+  // Hack to make height 3/4 of width
+  position relative
+  padding-top 75%
+  width 100%
 
-    a
-      text-decoration none
+.project-item-image
+  // Position on top of padded space within parent element, as part of hack to calculate height
+  // from width
+  position absolute
+  left 0
+  top 0
+  width 100%
+  display block
 
-  .project-item-header
-    padding 8px
-    background-color black
-    color #E2E2E2
-    border-radius 4px 4px 0 0
+.project-item-header
+  padding 8px
+  background-color black
+  color #E2E2E2
 
-  .project-item-title
-    font-size 14px
-    white-space nowrap
-    overflow hidden
-    text-overflow ellipsis
+.project-item-title
+  font-size 14px
+  white-space nowrap
+  overflow hidden
+  text-overflow ellipsis
 
-  .project-item-author
-    font-size 12px
-    color #AFAFAF
-
-  .project-item-image
-    width 218px
-    height 172px
-    border-radius 0 0 4px 4px
+.project-item-author
+  font-size 12px
+  color #AFAFAF

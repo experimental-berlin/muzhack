@@ -1,18 +1,23 @@
 'use strict'
 let request = require('request')
-let logger = require('js-logger-aknudsen').get('server.ajax')
-let R = require('ramda')
+let logger = require('@arve.knudsen/js-logger').get('server.ajax')
+let merge = require('ramda/src/merge')
 
 let {resolveWithResponse,} = require('../ajaxUtils')
 let {getEnvParam,} = require('./environment')
 let {notFoundError,} = require('../errors')
 
 module.exports = (uri, method, payloadJson, options, resolve, reject) => {
+  let cookieJar = request.jar()
   if (uri.startsWith('/')) {
-    uri = `${getEnvParam('MUZHACK_URI')}${uri}`
+    uri = `${getEnvParam('APP_URI')}${uri}`
+    let authCookie = (options.cursor || {}).get('authCookie')
+    if (authCookie != null) {
+      cookieJar.setCookie(request.cookie(`sid=${authCookie}`), uri)
+      logger.debug(`Setting auth cookie on request to own server`)
+    }
   }
-
-  let extendedHeaders = R.merge({
+  let extendedHeaders = merge({
     'User-Agent': 'request',
     'Content-Type': 'application/json;charset=UTF-8',
     'Accept': 'application/json',
@@ -23,6 +28,7 @@ module.exports = (uri, method, payloadJson, options, resolve, reject) => {
     uri,
     body: payloadJson,
     headers: extendedHeaders,
+    jar: cookieJar,
   }, (error, response, body) => {
     if (error == null && response.statusCode >= 200 && response.statusCode < 300) {
       resolveWithResponse(body, response, resolve, reject)

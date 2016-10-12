@@ -24,16 +24,18 @@ def _render_template(fname, environment, context):
     with open(os.path.join(dpath, fname + '.yaml'), 'wt') as f:
         f.write(output + '\n')
 
+fb_app_id = '274051199640220'
 data = {
     'production': {
         'appEnvironment': 'production',
         'numReplicas': 2,
         'imageVariant': '',
-        'imageTag': 'v1.1.38',
-        'imageProcessorImageTag': 'v1.1.16',
+        'imageTag': 'v1.3.20',
+        'projectProcessorImageTag': 'v1.2.1',
         'imagePullPolicy': 'IfNotPresent',
         'appUri': 'https://muzhack.com',
         's3Bucket': 'muzhack.com',
+        'fbAppId': fb_app_id,
         'rethinkdbHost': 'rethinkdb-proxy',
         'rethinkdbClusterHost1': 'rethinkdb1',
         'rethinkdbClusterHost2': 'rethinkdb2',
@@ -47,10 +49,11 @@ data = {
         'numReplicas': 1,
         'imageVariant': '-test',
         'imageTag': 'latest',
-        'imageProcessorImageTag': 'latest',
+        'projectProcessorImageTag': 'latest',
         'imagePullPolicy': 'Always',
         'appUri': 'https://staging.muzhack.com',
         's3Bucket': 'staging.muzhack.com',
+        'fbAppId': fb_app_id,
         'rethinkdbHost': 'rethinkdb-driver',
         'discourseUrl': 'http://forums.muzhack.com',
         'gcloudBucket': 'staging.muzhack.com',

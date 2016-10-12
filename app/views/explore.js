@@ -2,15 +2,18 @@
 let component = require('omniscient')
 let immutable = require('immutable')
 let S = require('underscore.string.fp')
-let logger = require('js-logger-aknudsen').get('explore')
+let logger = require('@arve.knudsen/js-logger').get('explore')
 let R = require('ramda')
 let h = require('react-hyperscript')
 let React = require('react')
 let ReactDOM = require('react-dom')
-let Packery = React.createFactory(require('react-packery-component')(React))
+let Masonry = React.createFactory(require('react-masonry-component'))
+let InfiniteScroll = React.createFactory(require('@arve.knudsen/react-infinite-scroll')())
 
 let FocusingInput = require('./focusingInput')
 let ajax = require('../ajax')
+let router = require('../router')
+let Loading = require('./loading')
 
 if (__IS_BROWSER__) {
   require('./explore.styl')
@@ -30,7 +33,7 @@ let createProjectElement = (cursor, i) => {
   let thumbnail = !R.isEmpty(project.pictures || []) ? project.pictures[0].exploreUrl :
     '/images/revox-reel-to-reel-resized.jpg'
   return h('.project-item', {
-    key: i,
+    key: i + 2,
     'data-id': getQualifiedId(project),
   }, [
     h('a', {href: `/u/${project.owner}/${project.projectId}`,}, [
@@ -38,12 +41,45 @@ let createProjectElement = (cursor, i) => {
         h('.project-item-title', project.title),
         h('.project-item-author', project.owner),
       ]),
-      h('img.project-item-image', {src: thumbnail,}),
+      h('.project-item-image-container', [
+        h('img.project-item-image', {src: thumbnail,}),
+      ]),
     ]),
   ])
 }
 
 let Results = component('Results', (cursor) => {
+  let loadMoreProjects = () => {
+    let exploreState = cursor.cursor('explore').toJS()
+    let searchString = exploreState.search
+    let currentPage = exploreState.currentSearchPage
+    let perPage = 6
+    logger.debug(
+      `Loading more projects in response to InfiniteScroll, page: ${currentPage}...`)
+    return searchAsync(cursor, searchString, currentPage, perPage)
+      .then((projects) => {
+        let hasMoreProjects = projects.length === perPage
+        let existingProjects = exploreState.projects
+        let wasSearchSuccessful = currentPage > 0 || !R.isEmpty(projects)
+        if (wasSearchSuccessful) {
+          logger.debug(
+            `Received results from search for page ${currentPage}: ${projects.length}`)
+          logger.debug(`Has more: ${hasMoreProjects}`)
+        } else {
+          logger.debug(`Search returned no results`)
+        }
+        cursor = cursor.updateIn(['explore',], (current) => {
+          return current.merge({
+            search: searchString,
+            projects: R.concat(existingProjects, projects),
+            hasMoreProjects,
+            currentSearchPage: currentPage + 1,
+            wasSearchSuccessful,
+          })
+        })
+      })
+  }
+
   let exploreCursor = cursor.cursor('explore')
   if (exploreCursor.get('isSearching')) {
     return h('p', 'Searching...')
@@ -51,18 +87,31 @@ let Results = component('Results', (cursor) => {
     let projectsCursor = exploreCursor.cursor('projects')
     logger.debug(`Got ${projectsCursor.toJS().length} search results`)
     let projectElems = projectsCursor.map(createProjectElement).toJS()
-    return projectsCursor.isEmpty() ? h('p', 'No projects were found, please try again.') :
-      Packery({
+    let wasSearchSuccessful = exploreCursor.get('wasSearchSuccessful')
+    return wasSearchSuccessful ? InfiniteScroll({
+      loader: Loading(),
+      loadMore: loadMoreProjects,
+      hasMore: exploreCursor.get('hasMoreProjects'),
+      threshold: 1000,
+    }, Masonry({
         className: 'projects-container',
         options: {
           itemSelector: '.project-item',
+          columnWidth: '.grid-sizer',
+          gutter: '.gutter-sizer',
+          percentPosition: true,
         },
-      }, projectElems)
+      }, [h('.grid-sizer', {key: 0,}), h('.gutter-sizer', {key: 1,}),].concat(projectElems))
+    ) : h('p', 'No projects were found, please try again.')
   }
 })
 
-let searchAsync = (cursor, query) => {
-  return ajax.getJson('/api/search', {query: query || '',})
+let searchAsync = (cursor, query, page, perPage) => {
+  return ajax.getJson('/api/search', {
+    query: query || '',
+    page,
+    perPage,
+  })
     .then((projects) => {
       logger.debug(`Searching succeeded`)
       return projects
@@ -73,38 +122,13 @@ let searchAsync = (cursor, query) => {
 }
 
 let performSearch = (cursor) => {
-  let exploreCursor = cursor.cursor('explore')
-  if (exploreCursor.get('isSearching')) {
-    logger.warn(`performSearch invoked while already searching`)
-    return
+  let query = cursor.getIn([`explore`, `search`,])
+  let searchString = encodeURIComponent(query.replace(' ', '+'))
+  if (S.isBlank(searchString)) {
+    router.goTo(`/`)
+  } else {
+    router.goTo(`/?q=${searchString}`)
   }
-
-  let setSearchResults = (cursor, results) => {
-    cursor.update((state) => {
-      return state.merge({
-        explore: state.get('explore').merge({
-          isSearching: false,
-          projects: immutable.fromJS(results),
-        }),
-       })
-     })
-  }
-
-  let query = exploreCursor.get('search')
-  logger.debug(`Performing search: '${query}'`)
-  cursor = cursor.mergeDeep({
-    explore: {
-      isSearching: true,
-      search: query,
-    },
-  })
-  return searchAsync(cursor, query)
-    .then((projects) => {
-      cursor = cursor.update((current) => {
-        current = current.setIn(['explore', 'projects',], immutable.fromJS(projects))
-        return current.setIn(['explore', 'isSearching',], false)
-      })
-    })
 }
 
 let SearchBox = component('SearchBox', function (cursor) {
@@ -116,7 +140,9 @@ let SearchBox = component('SearchBox', function (cursor) {
       onClick: R.partial(performSearch, [cursor,]),
     }),
     FocusingInput({
-      id: 'explore-search-input', value: searchQuery, placeholder: 'Search MuzHack',
+      id: 'explore-search-input',
+      value: searchQuery,
+      placeholder: 'Search MuzHack',
       ref: 'search',
       refName: 'search',
       onChange: (event) => {
@@ -142,25 +168,26 @@ module.exports = {
   createState: () => {
     return immutable.fromJS({
       search: '',
-      projects: [
-      ],
+      projects: [],
+      hasMoreProjects: true,
+      currentSearchPage: 0,
     })
   },
-  loadData: (cursor) => {
-    logger.debug(`Loading projects`)
-    return searchAsync(cursor)
-      .then((projects) => {
-        return {
-          explore: {
-            isSearching: false,
-            search: '',
-            projects,
-          },
-        }
-      })
+  loadData: (cursor, params, queryParams) => {
+    let searchString = queryParams.q || ''
+
+    logger.debug(`loadData called`)
+    return {
+      explore: {
+        search: searchString,
+        projects: [],
+        hasMoreProjects: true,
+        currentSearchPage: 0,
+        wasSearchSuccessful: true,
+      },
+    }
   },
   render: (cursor) => {
-    let exploreCursor = cursor.cursor('explore')
     // logger.debug(`Explore state:`, exploreCursor.toJS())
     return h('.pure-g', [
       h('.pure-u-1', [

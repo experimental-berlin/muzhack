@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('ajaxUtils')
+let logger = require('@arve.knudsen/js-logger').get('ajaxUtils')
 let S = require('underscore.string.fp')
 
 module.exports = {

@@ -1,18 +1,13 @@
 'use strict'
 let R = require('ramda')
-let logger = require('js-logger-aknudsen').get('sharedRouting')
+let logger = require('@arve.knudsen/js-logger').get('sharedRouting')
 let TypedError = require('error/typed')
 let Promise = require('bluebird')
 
+let {notFoundError,} = require('./errors')
 let regex = require('./regex')
 
-let notFoundError = TypedError({
-  type: 'Not Found',
-  statusCode: 404,
-  message: 'Path not found',
-})
-
-let loadData = (cursor, module) => {
+let loadData = Promise.method((cursor, module) => {
   let routerState = cursor.cursor('router').toJS()
   let promise
   if (module.loadData != null) {
@@ -24,21 +19,16 @@ let loadData = (cursor, module) => {
         isLoading: true,
       },
     })
-    let result = module.loadData(cursor, routerState.currentRouteParams,
-      routerState.currentQueryParams) || {}
-    if (result.then != null) {
-      promise = result
-    } else {
-      promise = Promise.resolve(result)
-    }
+    promise = Promise.method(module.loadData)(cursor, routerState.currentRouteParams,
+      routerState.currentQueryParams)
   } else {
     promise = Promise.resolve({})
   }
   return promise
     .then((result) => {
-      return [cursor, result,]
+      return [cursor, result != null ? result : {},]
     })
-}
+})
 
 module.exports = {
   createRouterState: (routeMap) => {
@@ -96,19 +86,19 @@ module.exports = {
 
     let module = routerState.routes[currentRoute]
     let shouldRenderServerSide = R.defaultTo(true, module.shouldRenderServerSide)
-    let shouldLoad = (__IS_BROWSER__ && (!isInitialClientSideRender || !shouldRenderServerSide)) ||
+    let shouldLoad = __IS_BROWSER__ ? !isInitialClientSideRender || !shouldRenderServerSide :
       shouldRenderServerSide
-    cursor = cursor.mergeDeep({
-      router: {
-        isLoading: shouldLoad,
-        currentRoute,
-        currentRouteParams,
-        currentPath,
-        currentHash,
-        currentQueryParams,
-        navItems,
-        shouldRenderServerSide,
-      },
+
+    cursor = cursor.updateIn([`router`,], {}, (current) => {
+      current = current.set(`isLoading`, shouldLoad)
+      current = current.set(`currentRoute`, currentRoute)
+      current = current.set(`currentRouteParams`, currentRouteParams)
+      current = current.set(`currentPath`, currentPath)
+      current = current.set(`currentHash`, currentHash)
+      current = current.set(`currentQueryParams`, currentQueryParams)
+      current = current.set(`navItems`, navItems)
+      current = current.set(`shouldRenderServerSide`, shouldRenderServerSide)
+      return current
     })
 
     if (shouldLoad) {

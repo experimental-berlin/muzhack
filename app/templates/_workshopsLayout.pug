@@ -1,0 +1,24 @@
+doctype html
+html
+  head
+    meta(charset="utf-8")
+    title MuzHack
+    link(rel='icon' href='/assets/images/MuzHack-favicon.png')
+    link(rel='stylesheet' href='https://fonts.googleapis.com/css?family=Open+Sans')
+    style.
+      #container {visibility:hidden}
+  body
+    #fb-root
+    #initial-state(data-json=initialState)
+    article
+      block content
+    script(src="https://js.stripe.com/v2/")
+    script#facebook-jssdk(src="//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.6")
+    script.
+      (function () {
+        FB.init({
+          version: 'v2.6',
+          status: true,
+        })
+      }())
+    script(src="/workshops.bundle.js")

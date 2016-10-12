@@ -1,8 +1,10 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('server.api.apiUtils')
+let logger = require('@arve.knudsen/js-logger').get('server.api.apiUtils')
 let r = require('rethinkdb')
+let Promise = require('bluebird')
+let {connectToDb, closeDbConnection,} = require('../db')
 
-let getUserWithConn = (username, conn) => {
+let getUserWithConn = Promise.method((username, conn) => {
   if (username == null) {
     throw new Error(`username is null`)
   }
@@ -20,8 +22,19 @@ let getUserWithConn = (username, conn) => {
       )
     })
     .run(conn)
-}
+})
+
+let getUser = Promise.method((username) => {
+  return connectToDb()
+    .then((conn) => {
+      return getUserWithConn(username, conn)
+        .finally(() => {
+          closeDbConnection(conn)
+        })
+    })
+})
 
 module.exports = {
   getUserWithConn,
+  getUser,
 }

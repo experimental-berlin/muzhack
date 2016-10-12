@@ -1,6 +1,6 @@
 'use strict'
 let R = require('ramda')
-let logger = require('js-logger-aknudsen').get('userManagement')
+let logger = require('@arve.knudsen/js-logger').get('userManagement')
 
 module.exports = {
   getLoggedInUser: (cursor) => {

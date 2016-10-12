@@ -2,7 +2,7 @@
 let bcrypt = require('bcrypt')
 let Boom = require('boom')
 let S = require('underscore.string.fp')
-let logger = require('js-logger-aknudsen').get('auth')
+let logger = require('@arve.knudsen/js-logger').get('auth')
 let {withDb,} = require('./db')
 let r = require('rethinkdb')
 let R = require('ramda')
@@ -249,7 +249,7 @@ let hashPassword = (password) => {
   })
 }
 
-module.exports.register = (server) => {
+module.exports.register = (server, standardVHost, workshopsVHost) => {
   let ironPassword = getEnvParam('HAPI_IRON_PASSWORD')
   if (ironPassword.length < 32) {
     throw new Error(`$HAPI_IRON_PASSWORD must be at least 32 characters long`)
@@ -262,14 +262,22 @@ module.exports.register = (server) => {
     })
   })
 
-  server.route({
+  let routeApiMethod = (options) => {
+    options.path = `/api/${options.path}`
+    server.route(R.merge({
+      method: 'GET',
+      vhost: [standardVHost, workshopsVHost,],
+    }, options))
+  }
+
+  routeApiMethod({
     method: ['POST',],
-    path: '/api/login',
+    path: 'login',
     handler: logIn,
   })
-  server.route({
+  routeApiMethod({
     method: ['POST',],
-    path: '/api/signup',
+    path: 'signup',
     handler: (request, reply) => {
       logger.debug(`Handling request to sign user up`)
       if (!validateSignup(request, reply)) {
@@ -321,19 +329,18 @@ module.exports.register = (server) => {
         })
     },
   })
-  server.route({
+  routeApiMethod({
     method: ['POST',],
-    path: '/api/forgotPassword',
+    path: 'forgotPassword',
     handler: forgotPassword,
   })
-  server.route({
+  routeApiMethod({
     method: ['POST',],
-    path: '/api/resetPassword/{token}',
+    path: 'resetPassword/{token}',
     handler: resetPassword,
   })
-  server.route({
-    method: ['GET',],
-    path: '/api/logout',
+  routeApiMethod({
+    path: 'logout',
     config: {
       handler: requestHandler((request, reply) => {
         if (request.auth.credentials != null) {
@@ -342,7 +349,7 @@ module.exports.register = (server) => {
         } else {
           logger.debug(`User is already logged out`)
         }
-        
+
         reply()
       }),
     },

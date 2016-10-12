@@ -4,10 +4,9 @@ let component = require('omniscient')
 let immutable = require('immutable')
 let R = require('ramda')
 let S = require('underscore.string.fp')
-let logger = require('js-logger-aknudsen').get('router')
+let logger = require('@arve.knudsen/js-logger').get('router')
 let Promise = require('bluebird')
 
-let layout = require('./layout')
 let ajax = require('./ajax')
 let userManagement = require('./userManagement')
 let Loading = __IS_BROWSER__ ? require('./views/loading') : null
@@ -86,17 +85,26 @@ let perform = Promise.method((isInitial=false) => {
   let currentHash = document.location.hash.slice(1).toLowerCase()
   logger.debug(`Routing, current path: '${currentPath}', current hash: '${currentHash}'`)
   let routerState = cursor.cursor('router').toJS()
-  if (!isInitial && currentPath === routerState.currentPath) {
-    logger.debug(`Path did not change:`, currentPath)
+
+  let queryParams = {}
+  let queryStart = window.location.href.indexOf('?')
+  if (queryStart >= 0) {
+    let queryStrings = window.location.href.slice(queryStart + 1).split('&')
+    queryParams = R.fromPairs(R.map((elem) => {
+      return R.map((str) => {
+        return decodeURIComponent(str)
+      }, elem.split('='))
+    }, queryStrings))
+  }
+
+  if (!isInitial && R.equals(currentPath, routerState.currentPath) &&
+      R.equals(queryParams, routerState.currentQueryParams)) {
+    logger.debug(`URL did not change:`, currentPath)
     cursor = cursor.setIn(['router', 'currentHash',], currentHash)
     redirectIfNecessary(cursor)
     return
   }
 
-  let queryStrings = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&')
-  let queryParams = R.fromPairs(R.map((elem) => {
-    return elem.split('=')
-  }, queryStrings))
   logger.debug(`Current query parameters:`, queryParams)
   return updateRouterState(cursor, currentPath, currentHash, queryParams, isInitial)
     .then(([cursor, newState,]) => {

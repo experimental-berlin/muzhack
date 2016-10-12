@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('server.api')
+let logger = require('@arve.knudsen/js-logger').get('server.api')
 let Boom = require('boom')
 let R = require('ramda')
 let S = require('underscore.string.fp')
@@ -7,8 +7,9 @@ let moment = require('moment')
 let r = require('rethinkdb')
 let JSZip = require('jszip')
 let request = require('request')
-let gcloud = require('gcloud')
+let gcloud = require('google-cloud')
 let Promise = require('bluebird')
+let CryptoJs = require('crypto-js')
 
 let stripeApi = require('./api/stripeApi')
 let ajax = require('../ajax')
@@ -16,7 +17,7 @@ let {getEnvParam,} = require('./environment')
 let {withDb, connectToDb, closeDbConnection,} = require('./db')
 let {requestHandler,} = require('./requestHandler')
 let {createProject, updateProject, getProject, deleteProject,
-  updateProjectFromGitHub,} = require('./api/projectApi')
+    updateProjectFromGitHub,} = require('./api/projectApi')
 let {trimWhitespace,} = require('../stringUtils')
 let {getUserWithConn,} = require('./api/apiUtils')
 let {badRequest,} = require('../errors')
@@ -80,7 +81,9 @@ let verifyDiscourseSso = (request, reply) => {
 }
 
 let search = (request, reply) => {
-  logger.debug(`Searching for '${request.query.query}'`)
+  let page = Number(request.query.page)
+  let perPage = Number(request.query.perPage)
+  logger.debug(`Searching for '${request.query.query}', page: ${page}`)
   withDb(reply, (conn) => {
     let reTag = /\[[^\]]*\]/g
     let queryWithoutTags = ''
@@ -115,6 +118,7 @@ let search = (request, reply) => {
     }
     let regex = `(?i)${queryWithoutTags}`
     return r.table('projects')
+      .orderBy({index: r.desc(`created`),})
       .filter((project) => {
         let pred = project('projectId').match(regex).or(project('title').match(regex))
           .or(project('owner').match(regex))
@@ -123,14 +127,14 @@ let search = (request, reply) => {
         }, tags)
         return pred
       })
+      .skip(page * perPage)
+      .limit(perPage)
       .run(conn)
       .then((projectsCursor) => {
         return projectsCursor.toArray()
           .then((projects) => {
             logger.debug(`Found ${projects.length} project(s)`)
-            return R.sort((a, b) => {
-              return moment(b.created).diff(moment(a.created))
-            }, projects)
+            return projects
           }, (error) => {
             logger.warn(`Failed to iterate projects: '${error}'`, error.stack)
             throw new Error(error)
@@ -180,12 +184,15 @@ let getUser = (request, reply) => {
               }
               let extendedUser = R.merge(R.omit(restrictedAttributes, user), {
                 soundCloud: {
+                  username: soundCloud.username,
                   uploads: R.filter((x) => x != null, embeddables),
                 },
               })
-              logger.debug(`Returning user:`, extendedUser)
+              // logger.debug(`Returning user:`, extendedUser)
               if (!isLoggedInUser) {
-                logger.debug(`Filtering out the following properties:`, restrictedAttributes)
+                logger.debug(
+                  `Filtering the following properties since requesting user differs ` +
+                  `from requested user:`, restrictedAttributes)
               }
               return extendedUser
             }, (error) => {
@@ -441,28 +448,38 @@ let getOtherTrelloBoards = (request, reply) => {
     })
 }
 
-module.exports.register = (server) => {
+module.exports.register = (server, standardVHost, workshopsVHost) => {
+  logger.debug(`standardVHost: '${standardVHost}'`)
   let routeApiMethod = (options) => {
-    let path = `/api/${options.path}`
-    server.route(R.merge(options, {
-      path,
-    }))
+    options.path = `/api/${options.path}`
+    if (typeof options.handler === 'function') {
+      let origHandler = options.handler
+      options.handler = (request, reply) => {
+        Promise.method(origHandler)(request, reply)
+          .catch((error) => {
+            logger.error(`An uncaught exception occurred:`, error)
+            reply(Boom.badImplementation())
+          })
+      }
+    }
+    server.route(R.merge({
+      method: 'GET',
+      vhost: standardVHost,
+    }, options))
   }
 
   routeApiMethod({
-    method: ['GET',],
     path: 'search',
     handler: search,
   })
   routeApiMethod({
-    method: ['GET',],
     path: 'projects/{owner}/{projectId}',
     handler: requestHandler(getProject),
   })
   routeApiMethod({
-    method: ['GET',],
     path: 'users/{username}',
     handler: getUser,
+    vhost: [standardVHost, workshopsVHost,],
   })
   routeApiMethod({
     method: ['POST',],
@@ -480,12 +497,10 @@ module.exports.register = (server) => {
     handler: removeProjectPlan,
   })
   routeApiMethod({
-    method: ['GET',],
     path: 'users/{username}/otherTrelloBoards',
     handler: getOtherTrelloBoards,
   })
   routeApiMethod({
-    method: ['GET',],
     path: 'gcloudStorageSettings',
     config: {
       auth: 'session',
@@ -529,6 +544,7 @@ module.exports.register = (server) => {
       logger.error(`An error was logged on a client: ${error.message}:`, error.stack)
       reply()
     },
+    vhost: [standardVHost, workshopsVHost,],
   })
   routeApiMethod({
     method: ['POST',],
@@ -589,7 +605,6 @@ module.exports.register = (server) => {
     },
   })
   routeApiMethod({
-    method: ['GET',],
     path: 'isProjectIdAvailable',
     config: {
       auth: 'session',

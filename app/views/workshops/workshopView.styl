@@ -1,0 +1,70 @@
+@require '../_common'
+@require '../_tabs'
+
+tab-color = #4C4C4C
+pad-padding = 20px
+
+#workshop-pad
+  pad-base()
+
+  padding pad-padding
+
+  & >:first-child
+    margin-top 0
+
+#workshop-title
+  color white
+  margin-top -50px
+  position relative
+
+#workshop-date-container
+  margin-top 35px
+  margin-bottom 15px
+
+#workshop-date
+  display inline-block
+  font-weight bold
+  font-size 18px
+
+#workshop-host-name-and-address-container
+  display flex
+  align-items center
+  margin-bottom: 15px
+
+#workshop-host-name-and-address
+  display inline-block
+
+  a
+    text-decoration none
+    color black
+
+#workshop-host-name
+  display block
+  font-size 18px
+  font-weight bold
+
+#workshop-host-address
+  display inline-block
+
+#workshop-cover-wrapper
+  width 1170px
+  margin -(pad-padding)
+  overflow hidden
+  height 300px
+  position relative
+
+#workshop-cover-image
+  width 100%
+  position absolute
+  left 0
+
+#workshop-leader
+  font-size 18px
+  font-weight bold
+  
+  a
+    text-decoration none
+    color black
+
+#workshop-description
+  margin-top 30px

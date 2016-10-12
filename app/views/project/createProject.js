@@ -2,7 +2,7 @@
 let component = require('omniscient')
 let h = require('react-hyperscript')
 let R = require('ramda')
-let logger = require('js-logger-aknudsen').get('createProject')
+let logger = require('@arve.knudsen/js-logger').get('createProject')
 let S = require('underscore.string.fp')
 let React = require('react')
 let ReactAutoComplete = React.createFactory(require('@arve.knudsen/react-autocomplete'))
@@ -24,6 +24,7 @@ let {renderFieldError,} = editAndCreateProject
 
 let uploadProject
 let router
+let getUser
 if (__IS_BROWSER__) {
   uploadProject = require('./uploadProject')
   router = require('../../router')
@@ -32,6 +33,8 @@ if (__IS_BROWSER__) {
   require('./createProject.styl')
   require('dropzone/src/dropzone.scss')
   require('../dropzone.styl')
+} else {
+  getUser = require('../../server/api/apiUtils').getUser
 }
 
 let createProject = Promise.method((cursor) => {
@@ -45,15 +48,18 @@ let createProject = Promise.method((cursor) => {
   })
 
   return uploadProject(inputExtended, createCursor, cursor)
-    .then(({title, description, instructions, tags, licenseId, username, pictureFiles,
+    .then(({title, summary, description, instructions, tags, licenseId, username, pictureFiles,
         files,}) => {
       logger.debug(`Picture files:`, pictureFiles)
       logger.debug(`Files:`, files)
-      logger.debug(`title: ${title}, description: ${description}, tags: ${S.join(`,`, tags)}`)
+      logger.debug(
+        `title: ${title}, summary: ${summary}, description: ${description}, ` +
+        `tags: ${S.join(`,`, tags)}`)
       let qualifiedProjectId = `${username}/${input.id}`
       let data = {
         id: input.id,
         title,
+        summary,
         description,
         instructions,
         tags,
@@ -170,7 +176,7 @@ let renderCreateStandaloneProject = (cursor) => {
         placeholder: 'Project title',
         value: input.title,
         onChange: inputChangeHandler('title', (event, createCursor) => {
-          let title = trimWhitespace(event.target.value)
+          let title = event.target.value
           logger.debug(`Project title changed: '${title}'`)
           createCursor.set('title', title)
           if (S.isBlank(title)) {
@@ -224,6 +230,24 @@ let renderCreateStandaloneProject = (cursor) => {
       }, R.map(([id, license,]) => {
         return h('option', {value: id,}, license.name)
       }, R.toPairs(licenses))),
+    ]),
+    h('.input-group', [
+      h('input#summary-input', {
+        type: 'text',
+        placeholder: 'Project summary - One to two sentences',
+        value: input.summary,
+        onChange: inputChangeHandler('summary', (event, createCursor) => {
+          let summary = event.target.value
+          logger.debug(`Project summary changed: '${summary}'`)
+          createCursor.set('summary', summary)
+          if (S.isBlank(summary)) {
+            return `Summary must be filled in`
+          } else {
+            return null
+          }
+        }),
+      }),
+      renderFieldError(errors, 'summary'),
     ]),
     h('#description-editor',  {
       onChange: inputChangeHandler('description', (event, createCursor) => {
@@ -446,10 +470,16 @@ let loadGitHubRepositories = () => {
 }
 
 let CreateProjectPad = component('CreateProjectPad', (cursor) => {
+  logger.debug(`Rendering CreateProjectPad`)
   let createCursor = cursor.cursor('createProject')
   let gitHubAccessToken = createCursor.get('gitHubAccessToken')
   let shouldCreateStandalone = createCursor.get('shouldCreateStandalone')
   let failureBanner = createCursor.get('failureBanner')
+  if (gitHubAccessToken == null) {
+    logger.debug(`Have no GitHub access token - not letting user import from GitHUb`)
+  } else {
+    logger.debug(`Have a GitHub access token - letting user import from GitHUb`)
+  }
   return h('#create-project-pad', [
     failureBanner != null ? h('#failure-banner', failureBanner) : null,
     gitHubAccessToken != null ? h('.input-group', [
@@ -484,6 +514,25 @@ let CreateProjectPad = component('CreateProjectPad', (cursor) => {
     ])
 })
 
+let loadGitHubAccessToken = Promise.method((loggedInUser) => {
+  if (__IS_BROWSER__) {
+    logger.debug(`Loading logged in user ${loggedInUser.username}...`)
+    return ajax.getJson(`/api/users/${loggedInUser.username}`)
+      .then((user) => {
+        // logger.debug(`Loading user ${user.username} JSON succeeded:`, user)
+        return user.gitHubAccessToken
+      }, (error) => {
+        logger.warn(`Loading user ${loggedInUser.username} JSON failed:`, error)
+        throw error
+      })
+  } else {
+    return getUser(loggedInUser.username)
+      .then((user) => {
+        return user.gitHubAccessToken
+      })
+  }
+})
+
 module.exports = {
   requiresLogin: true,
   render: (cursor) => {
@@ -506,6 +555,7 @@ module.exports = {
           id: null,
           title: null,
           tags: null,
+          summary: null,
           description: null,
           pictures: null,
         },
@@ -523,19 +573,14 @@ module.exports = {
 
     let loggedInUser = userManagement.getLoggedInUser(cursor)
     if (loggedInUser != null) {
-      logger.debug(`Loading logged in user ${loggedInUser.username}...`)
-      return ajax.getJson(`/api/users/${loggedInUser.username}`)
-        .then((user) => {
-          logger.debug(`Loading user ${user.username} JSON succeeded:`, user)
+      return loadGitHubAccessToken(loggedInUser)
+        .then((gitHubAccessToken) => {
           state = R.mergeWith(R.merge, state, {
             createProject: {
-              gitHubAccessToken: user.gitHubAccessToken,
+              gitHubAccessToken,
             },
           })
           return state
-        }, (error) => {
-          logger.warn(`Loading user ${loggedInUser.username} JSON failed:`, error)
-          throw error
         })
     } else {
       return state

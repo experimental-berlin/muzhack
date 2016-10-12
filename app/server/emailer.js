@@ -1,6 +1,6 @@
 'use strict'
 let mandrill = require('mandrill-api/mandrill')
-let logger = require('js-logger-aknudsen').get('emailer')
+let logger = require('@arve.knudsen/js-logger').get('emailer')
 
 let {getEnvParam,} = require('./environment')
 

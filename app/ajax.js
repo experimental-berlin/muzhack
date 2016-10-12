@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('ajax')
+let logger = require('@arve.knudsen/js-logger').get('ajax')
 let R = require('ramda')
 let S = require('underscore.string.fp')
 let Promise = require('bluebird')
@@ -26,6 +26,12 @@ let ajax = Promise.method((method, uri, params, payload, options={}) => {
         return [result, response,]
       } else {
         return result
+      }
+    }, (error) => {
+      if (typeof error === 'string') {
+        throw new Error(error)
+      } else {
+        throw error
       }
     })
 })

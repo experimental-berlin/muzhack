@@ -1,5 +1,5 @@
 'use strict'
-let logger = require('js-logger-aknudsen').get('editAndCreateProject')
+let logger = require('@arve.knudsen/js-logger').get('editAndCreateProject')
 let immstruct = require('immstruct')
 let Promise = require('bluebird')
 let R = require('ramda')

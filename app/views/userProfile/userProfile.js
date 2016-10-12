@@ -4,14 +4,13 @@ let R = require('ramda')
 let S = require('underscore.string.fp')
 let h = require('react-hyperscript')
 let immutable = require('immutable')
-let logger = require('js-logger-aknudsen').get('userProfile')
+let logger = require('@arve.knudsen/js-logger').get('userProfile')
 
 let ajax = require('../../ajax')
 let {nbsp,} = require('../../specialChars')
 let VCard = require('./vcard')
 let {convertMarkdown,} = require('../../markdown')
 let datetime = require('../../datetime')
-let notification = require('../notification')
 let {ProjectPlans,} = require('./projectPlans')
 
 if (__IS_BROWSER__) {
@@ -115,9 +114,9 @@ module.exports = {
     })
   },
   loadData: (cursor, params) => {
-    return ajax.getJson(`/api/users/${params.user}`)
+    return ajax.getJson(`/api/users/${params.user}`, null, {cursor,})
       .then((user) => {
-        logger.debug(`Loading user JSON succeeded:`, user)
+        // logger.debug(`Loading user JSON succeeded:`, user)
         return {
           userProfile: {
             user: user,
@@ -126,11 +125,7 @@ module.exports = {
         }
       }, (error) => {
         logger.warn(`Loading user JSON failed:`, error)
-        if (typeof error !== 'string') {
-          throw error
-        } else {
-          throw new Error(error)
-        }
+        throw error
       })
   },
   render: (cursor) => {
@@ -149,7 +144,7 @@ module.exports = {
       return tab.name
     }, profileTabs)) ? currentHash : 'projects'
 
-    logger.debug(`Rendering profile of user '${user.username}', active tab '${activeTab}':`, user)
+    logger.debug(`Rendering profile of user '${user.username}', active tab '${activeTab}'`)
     logger.debug(`State:`, profileCursor.toJS())
     let tabContents
     if (activeTab === 'about') {
