@@ -7,7 +7,6 @@ let Logger = require('@arve.knudsen/js-logger')
 let ajax = require('./ajax')
 let routeMap = require('./workshopsRouteMap')
 
-require('./app.styl')
 require('./styles/fonts.css')
 
 Logger.useDefaults({

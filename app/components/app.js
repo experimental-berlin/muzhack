@@ -5,6 +5,10 @@ let logger = require('@arve.knudsen/js-logger').get('components.app')
 let Loading = require('../views/loading')
 let layout = require('../layout')
 
+if (__IS_BROWSER__) {
+  require('./app.styl')
+}
+
 module.exports = component('App', (cursor) => {
   logger.debug(`Rendering`)
   let routerState = cursor.cursor('router').toJS()
