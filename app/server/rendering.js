@@ -58,10 +58,11 @@ let getInitialRouterState = (request, workshopsUri) => {
 }
 
 let renderIndex = (request, reply) => {
-  let cookie = request.headers.cookie || ''
-  let authCookie = pipe(
+  const cookie = request.headers.cookie || ''
+  const authCookie = pipe(
     map((element) => {
-      return /([^=]+)=(.+)/.exec(element).slice(1)
+      const matches = /([^=]+)=(.+)/.exec(element)
+      return matches != null ? matches.slice(1) : ['', '',]
     }),
     filter(([key,]) => {
       logger.debug(`Got key '${key}'`)
