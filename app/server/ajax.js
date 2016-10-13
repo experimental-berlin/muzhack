@@ -11,7 +11,7 @@ module.exports = (uri, method, payloadJson, options, resolve, reject) => {
   let cookieJar = request.jar()
   if (uri.startsWith('/')) {
     uri = `${getEnvParam('APP_URI')}${uri}`
-    let authCookie = (options.cursor || {}).get('authCookie')
+    let authCookie = options.cursor != null ? options.cursor.get('authCookie') : null
     if (authCookie != null) {
       cookieJar.setCookie(request.cookie(`sid=${authCookie}`), uri)
       logger.debug(`Setting auth cookie on request to own server`)
