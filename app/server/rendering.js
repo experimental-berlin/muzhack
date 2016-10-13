@@ -58,6 +58,7 @@ let getInitialRouterState = (request, workshopsUri) => {
 }
 
 let renderIndex = (request, reply) => {
+  let cookie = request.headers.cookie || ''
   let authCookie = pipe(
     map((element) => {
       return /([^=]+)=(.+)/.exec(element).slice(1)
@@ -67,7 +68,7 @@ let renderIndex = (request, reply) => {
       return key === 'sid'
     }),
     fromPairs
-  )(request.headers.cookie.split(/; /)).sid
+  )(cookie.split(/; /)).sid
   logger.debug(`Rendering SPA index, user is logged in: ${request.auth.credentials != null}`)
   immstruct.clear()
   let appUri = getEnvParam('APP_URI')
