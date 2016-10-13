@@ -30,7 +30,7 @@ data = {
         'appEnvironment': 'production',
         'numReplicas': 2,
         'imageVariant': '',
-        'imageTag': 'v1.3.20',
+        'imageTag': 'v1.3.21',
         'projectProcessorImageTag': 'v1.2.1',
         'imagePullPolicy': 'IfNotPresent',
         'appUri': 'https://muzhack.com',
