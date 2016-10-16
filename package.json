@@ -5,7 +5,7 @@
   "main": "app/server.js",
   "scripts": {
     "test": "npm run lint && ./node_modules/.bin/jasmine",
-    "lint": "eslint ./app"
+    "lint": "./node_modules/.bin/eslint ./app"
   },
   "repository": {
     "type": "git",
@@ -30,11 +30,11 @@
     "coffee-loader": "^0.7.2",
     "coffee-script": "^1.10.0",
     "css-loader": "^0.25.0",
-    "eslint": "^3.0",
+    "eslint": "^3.8.0",
     "file-loader": "^0.9",
     "gulp": "^3.9.0",
     "gulp-babel": "^6.1.1",
-    "gulp-sourcemaps": "2.0",
+    "gulp-sourcemaps": "^2.1",
     "imports-loader": "^0.6.5",
     "jasmine": "^2.4.1",
     "json-loader": "^0.5.3",

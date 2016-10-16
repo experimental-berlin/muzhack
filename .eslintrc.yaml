@@ -1,7 +1,8 @@
 ---
+parserOptions:
+  ecmaVersion: 7
 env:
   browser: true
-  es6: true
   commonjs: true
 globals:
 rules:
