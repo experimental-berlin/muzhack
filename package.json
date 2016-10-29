@@ -5,7 +5,7 @@
   "main": "app/server.js",
   "scripts": {
     "test": "npm run lint && ./node_modules/.bin/jasmine",
-    "lint": "./node_modules/.bin/eslint ./app"
+    "lint": "eslint ./app"
   },
   "repository": {
     "type": "git",
