@@ -87,7 +87,6 @@ for environment in ['staging', 'production', ]:
 
     for fname in [
         'env-secret',
-        'quay-io-secret',
         'web-secret',
     ]:
         _render_template(fname, environment, secrets)
