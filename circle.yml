@@ -9,6 +9,7 @@ checkout:
     - git submodule update --init --recursive
 dependencies:
   pre:
+    - sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update
     - echo $GCLOUD_KEY | base64 --decode > ${HOME}/client-secret.json
     - gcloud --quiet components update app
     - gcloud auth activate-service-account --key-file ${HOME}/client-secret.json
