@@ -78,7 +78,7 @@
     "react": "^15.3.2",
     "react-dom": "^15.3.2",
     "react-hyperscript": "^2.2.0",
-    "react-masonry-component": "^4.2.1",
+    "react-masonry-component": "^4.3.2",
     "react-modal": "^1.2.0",
     "request": "^2.67.0",
     "rethinkdb": "^2.2.0",
