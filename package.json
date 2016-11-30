@@ -61,7 +61,7 @@
     "ent": "^2.2.0",
     "error": "^7.0.2",
     "google-cloud": "^0.43",
-    "hapi": "^15.0.1",
+    "hapi": "^16.0.0",
     "hapi-auth-cookie": "^6.1",
     "html-to-react": "^1.2.0",
     "immstruct": "^2.0.0",
