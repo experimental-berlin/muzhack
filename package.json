@@ -74,7 +74,7 @@
     "omniscient": "^4.0.0",
     "pug": "^2.0.0-alpha6",
     "purecss": "^0.6.0",
-    "ramda": "^0.22.0",
+    "ramda": "^0.23.0",
     "react": "^15.3.2",
     "react-dom": "^15.4.1",
     "react-hyperscript": "^2.2.0",
