@@ -15,7 +15,7 @@ module.exports = {
               reply(Boom.badRequest(error.message, error.data))
             } else {
               logger.debug(`Unhandled exception status code ${error.statusCode}`)
-              reply(boom.badImplementation())
+              reply(Boom.badImplementation())
             }
           } else {
             logger.error(`An uncaught exception occurred:`, error.stack)
