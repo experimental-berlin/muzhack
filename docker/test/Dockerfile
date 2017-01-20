@@ -6,7 +6,7 @@ ENTRYPOINT ["node", "dist/app/server.js"]
 ENV PORT=80
 EXPOSE 80
 
-RUN apt-get update && apt-get install -y libpython-dev python-pip
+RUN apt-get update && apt-get install -y python-dev python-pip
 
 # Cache dependencies in order to speed up builds
 COPY package.json package.json
