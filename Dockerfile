@@ -1,4 +1,4 @@
-FROM nodesource/jessie:6
+FROM node:7.4-wheezy
 MAINTAINER MuzHack Team <contact@muzhack.com>
 
 WORKDIR /app
