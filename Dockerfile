@@ -1,4 +1,4 @@
-FROM node:7.4-wheezy
+FROM node:7-slim
 MAINTAINER MuzHack Team <contact@muzhack.com>
 
 WORKDIR /app
@@ -6,7 +6,7 @@ ENTRYPOINT ["node", "dist/app/server.js"]
 ENV PORT=80
 EXPOSE 80
 
-RUN apt-get update && apt-get install -y python-dev python-pip
+RUN apt-get update && apt-get install -y python-pip
 
 # Cache dependencies in order to speed up builds
 COPY package.json package.json
