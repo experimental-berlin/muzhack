@@ -41,7 +41,7 @@
     "node-sass": "^4.2.0",
     "raw-loader": "^0.5.1",
     "run-sequence": "^1.1.5",
-    "sass-loader": "^4.1.1",
+    "sass-loader": "^5.0.0",
     "style-loader": "^0.13.0",
     "stylus": "^0.54.2",
     "stylus-loader": "^2.0.0",
