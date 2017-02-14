@@ -60,7 +60,7 @@
     "crypto-js": "^3.1.9-1",
     "ent": "^2.2.0",
     "error": "^7.0.2",
-    "google-cloud": "^0.45.0",
+    "google-cloud": "^0.47.0",
     "hapi": "^16.0.0",
     "hapi-auth-cookie": "^6.1",
     "html-to-react": "^1.2.0",
