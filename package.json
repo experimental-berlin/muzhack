@@ -63,7 +63,7 @@
     "google-cloud": "^0.47.0",
     "hapi": "^16.0.0",
     "hapi-auth-cookie": "^6.1",
-    "html-to-react": "^1.2.0",
+    "html-to-react": "^1.2.4",
     "immstruct": "^2.0.0",
     "inert": "^4.0.0",
     "jquery": "^3.0.0",
