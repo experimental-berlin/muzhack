@@ -1,10 +1,14 @@
 'use strict'
-let webpack = require('webpack')
-let isProduction = process.env.NODE_ENV === 'production'
+const webpack = require('webpack')
+const isProduction = process.env.NODE_ENV === 'production'
+const path = require('path')
 
 let plugins = [
   new webpack.DefinePlugin({
     __IS_BROWSER__: true,
+  }),
+  new webpack.LoaderOptionsPlugin({
+    debug: false,
   }),
 ]
 if (isProduction) {
@@ -71,11 +75,9 @@ module.exports = {
       },
     ],
   },
-  debug: false,
   resolve: {
-    root: ['/',],
-    modulesDirectories: ['node_modules', 'lib',],
-    extensions: ['', '.js',],
+    modules: [__dirname, 'node_modules', path.resolve(__dirname, 'lib'),],
+    extensions: ['.js',],
   },
   devServer: {
     historyApiFallback: false,
