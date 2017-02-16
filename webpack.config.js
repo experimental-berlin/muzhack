@@ -41,11 +41,11 @@ module.exports = {
       {
         test: /\.js$/,
         exclude: /(node_modules)/,
-        loader: 'babel',
+        loader: 'babel-loader',
       },
       {
         test: /\.styl$/,
-        loader: 'style-loader!raw!stylus-loader',
+        loader: 'style-loader!raw-loader!stylus-loader',
       },
       {
         test: /\.css$/,
@@ -57,7 +57,7 @@ module.exports = {
       },
       {
         test: /(isotope|masonry|outlayer|item|get-size|fizzy-ui-utils\/utils)\.js$/,
-        loader: 'imports?define=>false',
+        loader: 'imports-loader?define=>false',
       },
       {
         test: /\.json$/,
@@ -70,7 +70,7 @@ module.exports = {
       },
       {
         test: /\.scss$/,
-        loader: 'style!css!sass',
+        loader: 'style-loader!css-loader!sass-loader',
         exclude: /node_modules/,
       },
     ],
