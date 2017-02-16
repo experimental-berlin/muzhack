@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/muzhack/muzhack#readme",
   "devDependencies": {
-    "babel-cli": "^6.3.17",
+    "babel-cli": "^6.23.0",
     "babel-core": "^6.23.1",
     "babel-loader": "^6.3.2",
     "babel-polyfill": "^6.3.14",
