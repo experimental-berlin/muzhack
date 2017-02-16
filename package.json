@@ -31,7 +31,7 @@
     "coffee-script": "^1.10.0",
     "css-loader": "^0.26.0",
     "eslint": "^3.8.0",
-    "file-loader": "^0.9",
+    "file-loader": "^0.10",
     "gulp": "^3.9.0",
     "gulp-babel": "^6.1.1",
     "gulp-sourcemaps": "^2.3.0",
@@ -46,7 +46,7 @@
     "stylus": "^0.54.2",
     "stylus-loader": "^2.0.0",
     "url-loader": "^0.5.6",
-    "webpack": "^1.12.2",
+    "webpack": "^2.2",
     "webpack-dev-server": "^2.3.0"
   },
   "dependencies": {
@@ -72,7 +72,7 @@
     "moment": "^2.15.1",
     "normalize.css": "^5.0.0",
     "omniscient": "^4.0.0",
-    "pug": "^2.0.0-alpha6",
+    "pug": "2.0.0-beta11",
     "purecss": "^0.6.0",
     "ramda": "^0.23.0",
     "react": "^15.3.2",
