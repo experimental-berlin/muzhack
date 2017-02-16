@@ -72,7 +72,7 @@
     "moment": "^2.15.1",
     "normalize.css": "^5.0.0",
     "omniscient": "^4.0.0",
-    "pug": "2.0.0-beta11",
+    "pug": "^2.0.0-beta11",
     "purecss": "^0.6.0",
     "ramda": "^0.23.0",
     "react": "^15.3.2",
