@@ -76,7 +76,7 @@
     "purecss": "^0.6.0",
     "ramda": "^0.23.0",
     "react": "^15.3.2",
-    "react-dom": "^15.4.1",
+    "react-dom": "^15.5.0",
     "react-hyperscript": "^3.0.0",
     "react-masonry-component": "^5.0",
     "react-modal": "^1.2.0",
