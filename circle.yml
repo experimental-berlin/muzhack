@@ -23,7 +23,7 @@ deployment:
       - if [[ -e ~/docker/image-test.tar ]]; then docker load -i ~/docker/image-test.tar; fi
       - docker build -t $EXTERNAL_REGISTRY_ENDPOINT/muzhack-test -f docker/test/Dockerfile .
       - mkdir -p ~/docker; docker save $EXTERNAL_REGISTRY_ENDPOINT/muzhack-test > ~/docker/image-test.tar
-      - gcloud docker push $EXTERNAL_REGISTRY_ENDPOINT/muzhack-test
+      - gcloud docker -- push $EXTERNAL_REGISTRY_ENDPOINT/muzhack-test
   production:
     tag: /v[0-9]+(\.[0-9]+)*/
     owner: muzhack
@@ -31,4 +31,4 @@ deployment:
       - if [[ -e ~/docker/image-production.tar ]]; then docker load -i ~/docker/image-production.tar; fi
       - docker build -t $EXTERNAL_REGISTRY_ENDPOINT/muzhack:$CIRCLE_TAG .
       - mkdir -p ~/docker; docker save $EXTERNAL_REGISTRY_ENDPOINT/muzhack:$CIRCLE_TAG > ~/docker/image-production.tar
-      - gcloud docker push $EXTERNAL_REGISTRY_ENDPOINT/muzhack:$CIRCLE_TAG
+      - gcloud docker -- push $EXTERNAL_REGISTRY_ENDPOINT/muzhack:$CIRCLE_TAG
