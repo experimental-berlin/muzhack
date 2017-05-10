@@ -1,6 +1,8 @@
 MuzHack
 ===========
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/muzhack/muzhack.svg)](https://greenkeeper.io/)
+
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/muzhack/muzhack?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Stories in Ready](https://badge.waffle.io/muzhack/muzhack.png?label=ready&title=Ready)](https://waffle.io/muzhack/muzhack)
 [![Docker Repository on Quay.io](https://quay.io/repository/aknuds1/muzhack/status "Docker Repository on Quay.io")](https://quay.io/repository/aknuds1/muzhack)
